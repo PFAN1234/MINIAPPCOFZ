@@ -4,6 +4,7 @@
 
 - **Opus 5.5:** planejamento, decisões de arquitetura, revisão de resultados e tarefas complexas.
 - **Sonnet 5.5 ou Haiku 5.5:** tarefas simples ou braçais, como testes de rotina, documentação, ajustes repetitivos e conferências mecânicas. Ao delegar para um subagente, definir o modelo explicitamente.
+- **Economia de contexto:** quando uma tarefa for autocontida (implementar um script, escrever testes, pesquisar no código, gerar documentação), iniciar um subagente com contexto limpo e um prompt completo — objetivo, arquivos envolvidos, restrições e critério de pronto —, em vez de executar tudo na conversa principal. A conversa principal fica com o planejamento, as decisões e a revisão do resultado.
 
 ## Projeto
 
