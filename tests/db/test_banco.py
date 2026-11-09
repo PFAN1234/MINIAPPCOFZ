@@ -551,3 +551,136 @@ def test_seed_hto_carrega_e_e_idempotente(dsn):
                     "join public.obra o on o.id = a.obra_id where o.slug = 'hto' group by 1 order by 1")
         assert cur.fetchall() == [('1pav', 43), ('terreo', 44)]
         print(f'soma do seed: {soma}')
+
+
+# --- Plantas (fase 3) ---------------------------------------------------------
+
+def _planta(cur, obra, pav_codigo='terreo', revisao='R05'):
+    """Cria planta + detalhe (como superusuário) na obra do cenário; devolve (planta_id, ambiente_id)."""
+    cur.execute('select id from public.pavimento where obra_id = %s and codigo = %s', (obra, pav_codigo))
+    pav = cur.fetchone()[0]
+    cur.execute('select id from public.ambiente where obra_id = %s limit 1', (obra,))
+    amb = cur.fetchone()[0]
+    pid = uuid.uuid4()
+    cur.execute(
+        'insert into public.planta (id, obra_id, pavimento_id, revisao, pagina_largura_pt, pagina_altura_pt, '
+        'recorte_pt, imagem_path, imagem_largura, imagem_altura) '
+        "values (%s, %s, %s, %s, 100, 80, '{0,0,100,80}', %s, 200, 160)",
+        (pid, obra, pav, revisao, f'{obra}/{revisao}/{pav_codigo}/planta.webp'))
+    cur.execute(
+        'insert into public.planta_detalhe (planta_id, obra_id, ambiente_id, imagem_path, recorte_pt, largura, altura) '
+        "values (%s, %s, %s, %s, '{0,0,10,10}', 20, 20)",
+        (pid, obra, amb, f'{obra}/{revisao}/{pav_codigo}/ambientes/x.webp'))
+    return pid, amb
+
+
+@pytest.fixture
+def cenario_plantas(cenario):
+    with sessao(cenario.dsn, papel=None) as cur:
+        _planta(cur, cenario.obra_a)
+        _planta(cur, cenario.obra_b)
+    return cenario
+
+
+@pytest.mark.parametrize('tabela', ['planta', 'planta_detalhe'])
+def test_participante_le_plantas_so_da_propria_obra(cenario_plantas, tabela):
+    c = cenario_plantas
+    with sessao(c.dsn, c.equipe_a) as cur:
+        cur.execute(f'select obra_id from public.{tabela}')
+        assert cur.fetchall() == [(c.obra_a,)]
+    with sessao(c.dsn, c.gestor_b) as cur:
+        cur.execute(f'select obra_id from public.{tabela}')
+        assert cur.fetchall() == [(c.obra_b,)]
+    with sessao(c.dsn, c.sem_obra) as cur:
+        cur.execute(f'select count(*) from public.{tabela}')
+        assert cur.fetchone()[0] == 0
+
+
+@pytest.mark.parametrize('tabela', ['planta', 'planta_detalhe'])
+def test_anon_nao_le_plantas(cenario_plantas, tabela):
+    with pytest.raises(errors.InsufficientPrivilege):
+        with sessao(cenario_plantas.dsn, papel='anon') as cur:
+            cur.execute(f'select * from public.{tabela}')
+
+
+def test_authenticated_nao_grava_plantas(cenario_plantas):
+    c = cenario_plantas
+    with pytest.raises(errors.InsufficientPrivilege):
+        with sessao(c.dsn, c.gestor_a) as cur:
+            cur.execute("insert into public.planta (obra_id, pavimento_id, revisao, pagina_largura_pt, "
+                        "pagina_altura_pt, recorte_pt, imagem_path, imagem_largura, imagem_altura) "
+                        "select obra_id, id, 'R99', 1, 1, '{0,0,1,1}', 'x', 1, 1 from public.pavimento "
+                        "where obra_id = %s", (c.obra_a,))
+    for comando in ("update public.planta set ativa = false", "delete from public.planta",
+                    "update public.planta_detalhe set largura = 1", "delete from public.planta_detalhe"):
+        with pytest.raises(errors.InsufficientPrivilege):
+            with sessao(c.dsn, c.gestor_a) as cur:
+                cur.execute(comando)
+    assert contar(c.dsn, 'planta', obra_id=c.obra_a) == 1
+    assert contar(c.dsn, 'planta_detalhe', obra_id=c.obra_a) == 1
+
+
+def test_planta_restricoes(cenario):
+    c = cenario
+    with sessao(c.dsn, papel=None) as cur:
+        _planta(cur, c.obra_a)
+    with pytest.raises(errors.UniqueViolation):  # segunda planta ativa no mesmo pavimento
+        with sessao(c.dsn, papel=None) as cur:
+            _planta(cur, c.obra_a, revisao='R06')
+    with pytest.raises(errors.CheckViolation):  # recorte precisa de 4 itens
+        with sessao(c.dsn, papel=None) as cur:
+            cur.execute("insert into public.planta (obra_id, pavimento_id, revisao, ativa, pagina_largura_pt, "
+                        "pagina_altura_pt, recorte_pt, imagem_path, imagem_largura, imagem_altura) "
+                        "select obra_id, id, 'R07', false, 1, 1, '{0,0,1}', 'x', 1, 1 from public.pavimento "
+                        "where obra_id = %s", (c.obra_a,))
+
+
+def test_bucket_plantas_configurado(dsn):
+    with sessao(dsn, papel=None) as cur:
+        cur.execute("select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'plantas'")
+        assert cur.fetchone() == (False, 5242880, ['image/webp'])
+
+
+def test_politica_do_bucket_plantas(cenario):
+    c = cenario
+    with sessao(c.dsn, papel=None) as cur:
+        for obra in (c.obra_a, c.obra_b):
+            cur.execute("insert into storage.objects (bucket_id, name) values ('plantas', %s)",
+                        (f'{obra}/R05/terreo/planta.webp',))
+    with sessao(c.dsn, c.equipe_a) as cur:
+        cur.execute("select name from storage.objects where bucket_id = 'plantas' and name like %s",
+                    (f'{c.obra_a}/%',))
+        assert cur.fetchall() == [(f'{c.obra_a}/R05/terreo/planta.webp',)]
+        cur.execute("select count(*) from storage.objects where bucket_id = 'plantas' and name like %s",
+                    (f'{c.obra_b}/%',))
+        assert cur.fetchone()[0] == 0
+    with sessao(c.dsn, c.sem_obra) as cur:
+        cur.execute("select count(*) from storage.objects where bucket_id = 'plantas' and name like %s",
+                    (f'{c.obra_a}/%',))
+        assert cur.fetchone()[0] == 0
+    with sessao(c.dsn, papel='anon') as cur:
+        with pytest.raises(errors.InsufficientPrivilege):
+            cur.execute("select count(*) from storage.objects")
+    with pytest.raises(errors.InsufficientPrivilege):  # sem política de insert
+        with sessao(c.dsn, c.gestor_a) as cur:
+            cur.execute("insert into storage.objects (bucket_id, name) values ('plantas', %s)",
+                        (f'{c.obra_a}/R05/terreo/outra.webp',))
+
+
+def test_seed_hto_carrega_plantas_e_e_idempotente(dsn):
+    from pathlib import Path
+    seed = (Path(__file__).resolve().parents[2] / 'supabase' / 'seed' / 'hto.sql').read_text()
+    for _ in range(2):
+        with psycopg.connect(dsn, autocommit=True) as conn:
+            conn.execute(seed)
+    with sessao(dsn, papel=None) as cur:
+        cur.execute("select count(*) from public.planta pl join public.obra o on o.id = pl.obra_id "
+                    "where o.slug = 'hto' and pl.ativa")
+        assert cur.fetchone()[0] == 2
+        cur.execute("select count(*) from public.planta_detalhe d join public.obra o on o.id = d.obra_id "
+                    "where o.slug = 'hto'")
+        assert cur.fetchone()[0] == 87
+        cur.execute("select pl.imagem_path = o.id::text || '/R05/terreo/planta.webp' from public.planta pl "
+                    "join public.obra o on o.id = pl.obra_id join public.pavimento p on p.id = pl.pavimento_id "
+                    "where o.slug = 'hto' and p.codigo = 'terreo'")
+        assert cur.fetchone() == (True,)

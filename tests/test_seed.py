@@ -2,6 +2,8 @@ import importlib.util
 import json
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -30,8 +32,8 @@ def test_contagem_de_inserts():
 
 
 def test_contagem_por_pavimento():
-    assert sum("p.codigo = 'terreo'" in linha for linha in LINHAS) == 44
-    assert sum("p.codigo = '1pav'" in linha for linha in LINHAS) == 43
+    assert sum("p.codigo = 'terreo'" in linha for linha in LINHAS if linha.startswith("insert into public.ambiente ")) == 44
+    assert sum("p.codigo = '1pav'" in linha for linha in LINHAS if linha.startswith("insert into public.ambiente ")) == 43
 
 
 def test_arquivo_commitado_esta_atualizado():
@@ -71,6 +73,42 @@ def test_area_nula_aparece_como_null():
 def test_seed_contem_ambiente_conhecido():
     assert "'terreo-apto-101'" in SQL
     assert "23.88" in SQL
+
+
+def test_contagem_de_plantas_e_detalhes():
+    assert _contar("insert into public.planta ") == 2
+    assert _contar("insert into public.planta_detalhe ") == 87
+
+
+def test_caminhos_das_plantas_no_formato_acordado():
+    assert "o.id::text || '/R05/terreo/planta.webp'" in SQL
+    assert "o.id::text || '/R05/1pav/planta-hd.webp'" in SQL
+    assert "o.id::text || '/R05/terreo/ambientes/terreo-apto-101.webp'" in SQL
+    assert "array[83.437, 30.307, 2026.332, 1602.901]::numeric[]" in SQL
+
+
+def test_seed_falha_se_faltar_detalhe():
+    plantas = json.loads((ROOT / "data/hto/plantas.json").read_text(encoding="utf-8"))
+    del plantas["pavimentos"][0]["detalhes"]["terreo-apto-101"]
+    with pytest.raises(ValueError, match="terreo-apto-101"):
+        seed_mod.gerar(DADOS, plantas)
+
+
+def test_mapeamento_de_caminhos_da_publicacao(tmp_path):
+    publicar = _carregar("publicar_plantas", "scripts/publicar_plantas.py")
+    for rel in ("R05/terreo/planta.webp", "R05/terreo/planta-hd.webp", "R05/terreo/prova.png",
+                "R05/terreo/ambientes/terreo-apto-101.webp"):
+        arq = tmp_path / rel
+        arq.parent.mkdir(parents=True, exist_ok=True)
+        arq.write_bytes(b"x")
+    pares = publicar.mapear_caminhos(tmp_path, "OBRA")
+    assert sorted(c for _, c in pares) == [
+        "OBRA/R05/terreo/ambientes/terreo-apto-101.webp",
+        "OBRA/R05/terreo/planta-hd.webp",
+        "OBRA/R05/terreo/planta.webp",
+    ]
+    reais = publicar.mapear_caminhos(ROOT / "data/hto/plantas", "OBRA")
+    assert len(reais) == 2 * 2 + 87
 
 
 def test_geracao_deterministica():

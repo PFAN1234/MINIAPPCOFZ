@@ -18,6 +18,21 @@ python3 scripts/gerar_plantas.py
 
 O segundo depende da saída do primeiro.
 
+## Publicar no Supabase
+
+- `gerar_seed.py`: gera `supabase/seed/hto.sql` (obra, pavimentos, ambientes, plantas e detalhes) a partir de `data/hto/ambientes.json` e `data/hto/plantas.json`. Rode de novo depois de mudar qualquer um dos dois.
+- `publicar_plantas.py`: envia os `.webp` de `data/hto/plantas/` ao bucket privado `plantas` (não envia `prova.png`). Usa só a biblioteca padrão e lê o `obra.id` pela API REST, então o seed precisa ter sido aplicado antes.
+
+```bash
+python3 scripts/gerar_seed.py
+python3 scripts/publicar_plantas.py --dry-run     # lista caminho local -> caminho remoto
+export SUPABASE_URL=https://<ref>.supabase.co
+export SUPABASE_SECRET_KEY=...                    # chave secreta; nunca vai para o Git nem para a saída
+python3 scripts/publicar_plantas.py
+```
+
+O envio usa `x-upsert: true`, então pode ser repetido sem erro.
+
 ## Instalação
 
 ```bash
