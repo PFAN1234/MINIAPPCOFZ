@@ -28,6 +28,8 @@ export interface Repositorio {
    * dispensa login. Sem sessão o app pede para abrir pelo Telegram.
    */
   temSessao?(): Promise<boolean>
+  /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */
+  idUsuario(): Promise<string | null>
 }
 
 /**
@@ -38,7 +40,7 @@ export interface Repositorio {
 export async function criarRepositorio(): Promise<Repositorio> {
   if (import.meta.env.VITE_DADOS === 'fixture') {
     const { criarRepositorioFixture } = await import('./fixture.ts')
-    return criarRepositorioFixture()
+    return criarRepositorioFixture({ persistencia: localStorage })
   }
   const { criarRepositorioSupabase } = await import('./supabase.ts')
   return criarRepositorioSupabase()

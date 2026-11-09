@@ -1,0 +1,73 @@
+/** Persistência do cache do react-query no armazenamento local, por usuário. */
+import { dehydrate, hydrate, type DehydratedState, type QueryClient } from '@tanstack/react-query'
+import type { Armazenamento } from './armazenamento.ts'
+
+export const VERSAO_CACHE = 1
+export const IDADE_MAXIMA_MS = 7 * 24 * 60 * 60_000
+const ATRASO_GRAVACAO_MS = 1000
+const FORA_DO_CACHE = ['sessao', 'usuario']
+
+/** URLs `blob:` só valem na página que as criou; não adianta guardá-las. */
+function temUrlDeObjeto(dados: unknown): boolean {
+  return (
+    typeof dados === 'object' &&
+    dados !== null &&
+    Object.values(dados).some((v) => typeof v === 'string' && v.startsWith('blob:'))
+  )
+}
+
+export async function restaurarCache(
+  qc: QueryClient,
+  a: Armazenamento,
+  usuarioId: string,
+): Promise<void> {
+  try {
+    const salvo = await a.lerCache(usuarioId)
+    if (
+      salvo &&
+      salvo.versao === VERSAO_CACHE &&
+      Date.now() - salvo.salvoEm <= IDADE_MAXIMA_MS
+    ) {
+      hydrate(qc, salvo.estado as DehydratedState)
+    }
+  } catch {
+    // Cache ilegível: o app segue sem ele.
+  }
+  try {
+    await a.limparCachesExceto(usuarioId)
+  } catch {
+    // Limpeza é só higiene.
+  }
+}
+
+export function persistirCache(qc: QueryClient, a: Armazenamento, usuarioId: string): () => void {
+  let temporizador: ReturnType<typeof setTimeout> | null = null
+
+  async function gravar(): Promise<void> {
+    try {
+      const estado = dehydrate(qc, {
+        shouldDehydrateQuery: (q) =>
+          q.state.status === 'success' &&
+          !FORA_DO_CACHE.includes(String(q.queryKey[0])) &&
+          !(q.queryKey[0] === 'imagens' && temUrlDeObjeto(q.state.data)),
+      })
+      await a.salvarCache(usuarioId, { versao: VERSAO_CACHE, salvoEm: Date.now(), estado })
+    } catch {
+      // Falha de gravação não derruba o app.
+    }
+  }
+
+  const cancelarAssinatura = qc.getQueryCache().subscribe(() => {
+    if (temporizador !== null) clearTimeout(temporizador)
+    temporizador = setTimeout(() => {
+      temporizador = null
+      void gravar()
+    }, ATRASO_GRAVACAO_MS)
+  })
+
+  return () => {
+    if (temporizador !== null) clearTimeout(temporizador)
+    temporizador = null
+    cancelarAssinatura()
+  }
+}

@@ -174,6 +174,11 @@ export function criarRepositorioSupabase(
       return data.session !== null
     },
 
+    async idUsuario() {
+      const { data } = await cliente.auth.getSession()
+      return data.session?.user.id ?? null
+    },
+
     async listarObras() {
       return checar(
         await cliente.from('obra').select('id, slug, nome').order('ordem').order('nome'),

@@ -5,7 +5,7 @@
  */
 import ambientesJson from '../../../data/hto/ambientes.json'
 import plantasJson from '../../../data/hto/plantas.json'
-import { ErroEnvio } from './erros.ts'
+import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
 import type { Repositorio } from './repositorio.ts'
 import type {
   Ambiente,
@@ -199,11 +199,83 @@ function inteiroPositivo(v: unknown): boolean {
   return typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 999_999_999
 }
 
-export function criarRepositorioFixture(): Repositorio {
-  const novos: RegistroResumo[] = []
+const CHAVE_SERVIDOR = 'fixture-servidor'
+
+interface EstadoSalvo {
+  registros: RegistroResumo[]
+  /** caminho no bucket `fotos` -> data URL */
+  fotos: Record<string, string>
+}
+
+function blobParaDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader()
+    leitor.onload = () => resolve(String(leitor.result))
+    leitor.onerror = () => reject(leitor.error ?? new Error('Falha ao ler a foto.'))
+    leitor.readAsDataURL(blob)
+  })
+}
+
+function dataUrlParaBlob(url: string): Blob {
+  const virgula = url.indexOf(',')
+  const cabecalho = url.slice(5, virgula) // depois de "data:"
+  const tipo = cabecalho.replace(/;base64$/, '') || 'image/jpeg'
+  const binario = atob(url.slice(virgula + 1))
+  const bytes = new Uint8Array(binario.length)
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i)
+  return new Blob([bytes], { type: tipo })
+}
+
+function carregarEstado(persistencia: Storage | null): EstadoSalvo {
+  try {
+    const bruto = persistencia?.getItem(CHAVE_SERVIDOR)
+    if (bruto) {
+      const e = JSON.parse(bruto) as Partial<EstadoSalvo>
+      return {
+        registros: Array.isArray(e.registros) ? e.registros : [],
+        fotos: e.fotos && typeof e.fotos === 'object' ? e.fotos : {},
+      }
+    }
+  } catch {
+    // Estado corrompido ou sem acesso: começa vazio.
+  }
+  return { registros: [], fotos: {} }
+}
+
+export function criarRepositorioFixture(
+  opcoes: { persistencia?: Storage | null } = {},
+): Repositorio {
+  const persistencia = opcoes.persistencia ?? null
+  const salvo = carregarEstado(persistencia)
+  const novos: RegistroResumo[] = salvo.registros
   /** Objetos "enviados ao Storage": caminho no bucket `fotos` -> blob. */
   const blobs = new Map<string, Blob>()
+  /** Mesmo conteúdo de `blobs`, em data URL, para persistir. */
+  const dataUrls = new Map<string, string>(Object.entries(salvo.fotos))
+  for (const [path, url] of dataUrls) {
+    try {
+      blobs.set(path, dataUrlParaBlob(url))
+    } catch {
+      dataUrls.delete(path)
+    }
+  }
   const urlsDosBlobs = new Map<string, string>()
+
+  function persistir(): void {
+    if (!persistencia) return
+    try {
+      const estado: EstadoSalvo = { registros: novos, fotos: Object.fromEntries(dataUrls) }
+      persistencia.setItem(CHAVE_SERVIDOR, JSON.stringify(estado))
+    } catch {
+      // Sem espaço no localStorage: o "servidor" fica só na memória.
+    }
+  }
+
+  function exigirRede(): void {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new ErroEnvio('rede', MENSAGEM_REDE)
+    }
+  }
   const todos = () => [...REGISTROS, ...novos]
 
   function vinculada(path: string): boolean {
@@ -211,6 +283,10 @@ export function criarRepositorioFixture(): Repositorio {
   }
 
   return {
+    async idUsuario() {
+      return 'usuario-teste'
+    },
+
     async listarObras() {
       return OBRAS.map((o) => ({ ...o }))
     },
@@ -265,6 +341,7 @@ export function criarRepositorioFixture(): Repositorio {
     },
 
     async enviarFoto({ obraId, registroId, fotoId }, blob) {
+      exigirRede()
       for (const [v, nome] of [[obraId, 'obra'], [registroId, 'registro'], [fotoId, 'foto']] as const) {
         if (!UUID.test(v)) falhaValidacao(`Identificador inválido (${nome}).`)
       }
@@ -275,10 +352,16 @@ export function criarRepositorioFixture(): Repositorio {
       if (vinculada(path)) {
         throw new ErroEnvio('permissao', 'Sem permissão para enviar esta foto.')
       }
+      const url = persistencia ? await blobParaDataUrl(blob) : null
       blobs.set(path, blob)
+      if (url) {
+        dataUrls.set(path, url)
+        persistir()
+      }
     },
 
     async concluirRegistro(d: NovoRegistro) {
+      exigirRede()
       const amb = AMBIENTES_BASE.find((a) => a.id === d.ambienteId)
       if (!UUID.test(d.id) || !d.ambienteId) falhaValidacao('Identificadores obrigatórios')
       if (!amb) throw new ErroEnvio('nao_encontrado', 'Ambiente não encontrado')
@@ -342,6 +425,7 @@ export function criarRepositorioFixture(): Repositorio {
         fotos,
         publicacao: 'pendente',
       })
+      persistir()
       return { id: d.id }
     },
   }

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { enviarRegistro, criarRascunho } from './envio.ts'
 import { criarRepositorioFixture } from './fixture.ts'
 import type { NovoRegistro } from './tipos.ts'
@@ -127,5 +127,52 @@ describe('fixture: novo registro', () => {
     Object.assign(r, { id: d.id, fotos: d.fotos.map((f) => ({ ...f, blob: jpeg() })) })
     await enviarRegistro(repo, r)
     expect((await repo.listarRegistros({})).filter((x) => x.id === d.id)).toHaveLength(1)
+  })
+})
+
+describe('fixture: sem sinal e persistência', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('idUsuario é fixo', async () => {
+    expect(await criarRepositorioFixture().idUsuario()).toBe('usuario-teste')
+  })
+
+  it('sem sinal, enviarFoto e concluirRegistro lançam rede; leituras continuam', async () => {
+    const repo = criarRepositorioFixture()
+    const d = await dadosValidos(repo)
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+    await expect(
+      repo.enviarFoto({ obraId: OBRA, registroId: d.id, fotoId: d.fotos[0].id }, jpeg()),
+    ).rejects.toMatchObject({ tipo: 'rede' })
+    await expect(repo.concluirRegistro(d)).rejects.toMatchObject({ tipo: 'rede' })
+    expect(await repo.listarRegistros({})).toHaveLength(6)
+  })
+
+  it('o "servidor" persistido sobrevive a uma recriação, com as fotos como blob', async () => {
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: () => 'blob:recarregado' }))
+    const repo = criarRepositorioFixture({ persistencia: localStorage })
+    const d = await dadosValidos(repo, 2)
+    await subir(repo, d)
+    await repo.concluirRegistro(d)
+    expect(localStorage.getItem('fixture-servidor')).toContain(d.id)
+
+    const outro = criarRepositorioFixture({ persistencia: localStorage })
+    const lista = (await outro.listarRegistros({})).filter((x) => x.id === d.id)
+    expect(lista).toHaveLength(1)
+    const urls = await outro.urlsImagens(lista[0].fotos.map((f) => f.path), 'fotos')
+    expect(Object.values(urls)).toEqual(['blob:recarregado', 'blob:recarregado'])
+    // Reenvio após recarga continua idempotente.
+    await outro.concluirRegistro(d)
+    expect((await outro.listarRegistros({})).filter((x) => x.id === d.id)).toHaveLength(1)
+  })
+
+  it('sem persistência, uma nova instância começa vazia', async () => {
+    const repo = criarRepositorioFixture()
+    const d = await dadosValidos(repo)
+    await subir(repo, d)
+    await repo.concluirRegistro(d)
+    expect(await criarRepositorioFixture().listarRegistros({})).toHaveLength(6)
   })
 })
