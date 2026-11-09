@@ -73,11 +73,15 @@ Verificação: Playwright em viewport móvel com Telegram simulado navega Obras 
 
 ## 4. Novo registro e histórico
 
-- [ ] Câmera e galeria, várias fotos, compressão no cliente e remoção de localização EXIF.
-- [ ] Tipo Serviço/Pendência e legenda obrigatória; upload ao Storage e `concluir_registro`.
-- [ ] Histórico com foto, legenda, tipo, autor, horário e estado de publicação.
+Contrato: `docs/contrato-fase4.md`. Desenvolvido e testado com a fixture; o envio real ao Supabase é testado de ponta a ponta com o login da fase 6.
 
-Verificação: salvar e reabrir um registro de cada tipo; nenhuma foto vinculada à obra errada. Dependência: 3.
+- [x] Câmera e galeria, até 10 fotos, compressão no cliente (JPEG até 1920 px) sem EXIF/localização.
+- [x] Tipo Serviço/Pendência e legenda obrigatória; upload ao Storage e `concluir_registro` com os mesmos ids em toda tentativa (retomada sem duplicar).
+- [x] Erro com "Tentar de novo"; formulário travado depois de envio parcial; confirmação ao sair com o formulário preenchido.
+- [x] Histórico com miniatura, tipo, legenda, autor, horário, estado de publicação e visualizador de fotos.
+- [ ] Teste no Supabase remoto (sessão real → upload → `concluir_registro` → leitura com URL assinada) — junto com a fase 6.
+
+Verificação: Playwright (fixture) salva uma pendência com foto de 2400×1600 com GPS e confere o JPEG enviado (≤ 1920 px, 3:2, sem `Exif`/APP1); Vitest cobre orquestrador, erros e tela. Dependência: 3.
 
 ## 5. Registros com sinal instável
 
