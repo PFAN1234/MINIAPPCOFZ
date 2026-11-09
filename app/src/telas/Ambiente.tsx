@@ -7,6 +7,7 @@ import { ListaRegistros } from '../components/ListaRegistros.tsx'
 import { OndeFica } from '../components/OndeFica.tsx'
 import { useAmbiente, useRegistros } from '../dados/hooks.ts'
 import type { AmbienteDetalhe } from '../dados/tipos.ts'
+import { useRegistrosLocais } from '../offline/contexto.tsx'
 import { recursos } from '../recursos.ts'
 import { formatarArea } from '../util/formato.ts'
 
@@ -92,15 +93,24 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
 
 function Historico({ ambienteId }: { ambienteId: string }) {
   const registros = useRegistros({ ambienteId })
+  const locais = useRegistrosLocais({ ambienteId })
   return (
     <EstadoConsulta consulta={registros}>
-      {(lista) => <ListaRegistros local registros={lista} vazio="Nenhum registro neste ambiente" />}
+      {(lista) => (
+        <ListaRegistros
+          local
+          registros={lista}
+          locais={locais}
+          vazio="Nenhum registro neste ambiente"
+        />
+      )}
     </EstadoConsulta>
   )
 }
 
 function Pendencias({ ambienteId }: { ambienteId: string }) {
   const registros = useRegistros({ ambienteId, tipo: 'pendencia' })
+  const locais = useRegistrosLocais({ ambienteId, tipo: 'pendencia' })
   return (
     <EstadoConsulta consulta={registros}>
       {(lista) => {
@@ -110,6 +120,7 @@ function Pendencias({ ambienteId }: { ambienteId: string }) {
           <ListaRegistros
             local
             registros={[...abertas, ...resolvidas]}
+            locais={locais}
             vazio="Nenhuma pendência neste ambiente"
           />
         )

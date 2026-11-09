@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { EstadoConsulta } from '../components/Estado.tsx'
 import { MAX_FOTOS, SeletorFotos, type ItemFoto } from '../components/SeletorFotos.tsx'
 import { useTelaCheia } from '../components/telaCheia.ts'
-import { useAmbiente, useNovoRegistro } from '../dados/hooks.ts'
-import { criarRascunho, type Rascunho } from '../dados/envio.ts'
+import { useAmbiente } from '../dados/hooks.ts'
+import { criarRascunho } from '../dados/envio.ts'
+import { useFila } from '../offline/contexto.tsx'
 import type { AmbienteDetalhe, TipoRegistro } from '../dados/tipos.ts'
 import { disableClosingConfirmation, enableClosingConfirmation } from '../telegram.ts'
 import { registrarGuardaSaida } from '../util/guardaSaida.ts'
@@ -34,24 +35,18 @@ function criarPrevia(arquivo: File): string | null {
 function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const { obra, ambiente, pavimento } = detalhe
   const navigate = useNavigate()
-  const novo = useNovoRegistro()
+  const { estado: estadoFila, adicionar: adicionarNaFila } = useFila()
   const [fotos, setFotos] = useState<FotoEscolhida[]>([])
   const [tipo, setTipo] = useState<TipoRegistro | null>(null)
   const [legenda, setLegenda] = useState('')
   const [aviso, setAviso] = useState('')
-  const [progresso, setProgresso] = useState<{ enviadas: number; total: number } | null>(null)
+  const [guardando, setGuardando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  const rascunho = useRef<Rascunho | null>(null)
-  const enviadasMax = useRef(0)
-  // Depois que alguma foto chegou ao servidor, o registro pode já estar salvo:
-  // editar e reenviar com o mesmo id devolveria a versão antiga sem avisar.
-  const [travado, setTravado] = useState(false)
   const saindo = useRef(false)
   const contador = useRef(0)
   const previas = useRef<string[]>([])
   const fotosRef = useRef<FotoEscolhida[]>([])
 
-  const enviando = novo.isPending
   const legendaLimpa = legenda.trim()
   const preparando = fotos.some((f) => f.estado === 'preparando')
   const comErro = fotos.some((f) => f.estado === 'erro')
@@ -131,76 +126,41 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
     setAviso('')
   }
 
-  /** Reaproveita o rascunho se nada mudou; senão, atualiza o conteúdo mantendo o id quando algo já foi enviado. */
-  function rascunhoAtual(): Rascunho {
-    const preparadas = fotos.map((f) => f.preparada!)
-    const anterior = rascunho.current
-    const igual =
-      anterior !== null &&
-      anterior.tipo === tipo &&
-      anterior.legenda === legendaLimpa &&
-      anterior.fotos.length === preparadas.length &&
-      anterior.fotos.every((f, i) => f.id === preparadas[i].id)
-    if (anterior && igual) return anterior
-    const dados = {
+  async function salvar(e: FormEvent) {
+    e.preventDefault()
+    if (!valido || guardando) return
+    // Cada salvamento gera um registro novo: depois de salvo no aparelho ele é imutável.
+    const r = criarRascunho({
       obraId: obra.id,
       ambienteId: ambiente.id,
       tipo: tipo!,
       legenda: legendaLimpa,
-      fotos: preparadas,
-    }
-    if (anterior && enviadasMax.current > 0) {
-      // Algo pode ter chegado ao servidor: mantém ids e data de captura.
-      return { ...anterior, ...dados }
-    }
-    return criarRascunho({
-      ...dados,
       capturadoEm: capturadoEm(fotos.map((f) => f.arquivo)),
+      fotos: fotos.map((f) => f.preparada!),
     })
-  }
-
-  async function enviar(e: FormEvent) {
-    e.preventDefault()
-    if (!valido || enviando) return
-    const r = rascunhoAtual()
-    if (rascunho.current === null || rascunho.current.id !== r.id) enviadasMax.current = 0
-    rascunho.current = r
     setErro(null)
-    setProgresso({ enviadas: 0, total: r.fotos.length })
+    setGuardando(true)
     try {
-      await novo.mutateAsync({
+      await adicionarNaFila({
         rascunho: r,
-        slug: obra.slug,
-        codigo: ambiente.codigo,
-        aoProgredir: (p) => {
-          enviadasMax.current = Math.max(enviadasMax.current, p.enviadas)
-          setProgresso(p)
-        },
+        obra: { slug: obra.slug, nome: obra.nome },
+        ambiente: { codigo: ambiente.codigo, nome: ambiente.nome_operacional },
       })
     } catch (e) {
-      if (enviadasMax.current > 0) setTravado(true)
       setErro(
         e instanceof Error && e.message
           ? e.message
-          : 'Não foi possível salvar o registro. Tente de novo.',
+          : 'Não foi possível guardar o registro no aparelho. Tente de novo.',
       )
+      setGuardando(false)
       return
     }
     saindo.current = true
     navigate(`/obras/${obra.slug}/ambientes/${ambiente.codigo}`, {
       replace: true,
-      state: { aviso: 'Registro salvo' },
+      state: { aviso: 'Registro salvo no aparelho' },
     })
   }
-
-  const textoBotao = useMemo(() => {
-    if (enviando && progresso) {
-      return progresso.enviadas < progresso.total
-        ? `Enviando fotos ${progresso.enviadas + 1} de ${progresso.total}…`
-        : 'Concluindo…'
-    }
-    return erro ? 'Tentar de novo' : 'Salvar registro'
-  }, [enviando, progresso, erro])
 
   return (
     <section aria-labelledby="titulo-novo">
@@ -210,11 +170,11 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
       <p className="subtitulo">
         {obra.nome} · {pavimento.nome} · {ambiente.nome_operacional}
       </p>
-      <form className="form-registro" onSubmit={(e) => void enviar(e)} noValidate>
-        <fieldset className="form-conjunto" disabled={enviando || travado}>
+      <form className="form-registro" onSubmit={(e) => void salvar(e)} noValidate>
+        <fieldset className="form-conjunto" disabled={guardando}>
           <SeletorFotos
             itens={fotos}
-            desabilitado={enviando || travado}
+            desabilitado={guardando}
             onAdicionar={adicionar}
             onRemover={remover}
           />
@@ -274,19 +234,18 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
             {erro}
           </p>
         )}
-        {travado && (
+        {!estadoFila.persistente && (
           <p className="campo-dica">
-            Parte do registro já foi enviada, então ele não pode mais ser alterado. Tente de
-            novo ou volte para descartar.
+            Este aparelho não permite guardar registros. Não feche o app até o envio terminar.
           </p>
         )}
         <button
           type="submit"
           className="botao botao-bloco"
-          disabled={!valido || enviando}
-          aria-busy={enviando}
+          disabled={!valido || guardando}
+          aria-busy={guardando}
         >
-          {textoBotao}
+          {guardando ? 'Guardando…' : 'Salvar registro'}
         </button>
       </form>
     </section>

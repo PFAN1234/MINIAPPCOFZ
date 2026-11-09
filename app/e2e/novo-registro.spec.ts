@@ -100,13 +100,13 @@ test('Novo registro: foto da Galeria, Pendência, legenda e Salvar volta ao Hist
 
   // Volta ao Ambiente, na aba Histórico (sem `aba` na URL), com o aviso.
   await expect(page).toHaveURL(/\/obras\/hto\/ambientes\/terreo-apto-101$/)
-  await expect(page.getByRole('status').filter({ hasText: 'Registro salvo' })).toBeVisible()
+  await expect(page.getByRole('status').filter({ hasText: 'Registro salvo no aparelho' })).toBeVisible()
 
   const item = page.locator('.registro-item', { hasText: LEGENDA })
   await expect(item).toBeVisible()
   await expect(item.locator('.registro-legenda')).toHaveText(LEGENDA)
   await expect(item.locator('.selo')).toHaveText('Pendência aberta')
-  await expect(item.locator('.publicacao')).toHaveText('Aguardando publicação')
+  await expect(item.locator('.publicacao')).toHaveText('Salvo no servidor · aguardando publicação')
 
   // A miniatura é o blob que o app enviou (o repositório fixture o devolve por createObjectURL).
   const miniatura = item.locator('.miniatura-registro img')

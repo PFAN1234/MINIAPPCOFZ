@@ -1,8 +1,10 @@
 import { Link } from 'react-router'
 import type { RegistroResumo } from '../dados/tipos.ts'
-import { formatarDataHora, formatarRelativo } from '../util/formato.ts'
+import type { ItemFila } from '../offline/fila.ts'
+import { Horario } from './Horario.tsx'
 import { EstadoVazio } from './Estado.tsx'
 import { MiniaturaRegistro } from './MiniaturaRegistro.tsx'
+import { RegistroLocal } from './RegistroLocal.tsx'
 
 function Selo({ registro }: { registro: RegistroResumo }) {
   if (registro.tipo === 'servico') return <span className="selo selo-servico">Serviço</span>
@@ -13,19 +15,9 @@ function Selo({ registro }: { registro: RegistroResumo }) {
   )
 }
 
-function Horario({ iso }: { iso: string }) {
-  const relativo = formatarRelativo(iso)
-  return (
-    <time dateTime={iso}>
-      {formatarDataHora(iso)}
-      {relativo && ` (${relativo})`}
-    </time>
-  )
-}
-
 const TEXTO_PUBLICACAO: Record<NonNullable<RegistroResumo['publicacao']>, string> = {
-  pendente: 'Aguardando publicação',
-  enviando: 'Aguardando publicação',
+  pendente: 'Salvo no servidor · aguardando publicação',
+  enviando: 'Salvo no servidor · aguardando publicação',
   publicado: 'Publicado no tópico',
   incerto: 'Publicação com problema',
   falhou: 'Publicação com problema',
@@ -47,15 +39,29 @@ export function ListaRegistros({
   registros,
   vazio,
   local = false,
+  locais = [],
+  limite,
 }: {
   registros: RegistroResumo[]
   vazio: string
   local?: boolean
+  /** Registros ainda no aparelho; aparecem antes dos do servidor. */
+  locais?: ItemFila[]
+  /** Máximo de itens na soma de locais e servidor. */
+  limite?: number
 }) {
-  if (registros.length === 0) return <EstadoVazio titulo={vazio} />
+  const ids = new Set(registros.map((r) => r.id))
+  const proprios = locais.filter((i) => !ids.has(i.registro.id))
+  const total = limite ?? Infinity
+  const mostrarLocais = proprios.slice(0, total)
+  const mostrarServidor = registros.slice(0, Math.max(0, total - mostrarLocais.length))
+  if (mostrarLocais.length + mostrarServidor.length === 0) return <EstadoVazio titulo={vazio} />
   return (
     <ul className="lista">
-      {registros.map((r) => {
+      {mostrarLocais.map((i) => (
+        <RegistroLocal key={i.registro.id} item={i} local={local} />
+      ))}
+      {mostrarServidor.map((r) => {
         const conteudo = (
           <>
             <span className="registro-topo">

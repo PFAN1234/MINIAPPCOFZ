@@ -45,6 +45,7 @@ interface Consulta<T> {
   isError: boolean
   error: unknown
   refetch: () => unknown
+  fetchStatus?: 'fetching' | 'paused' | 'idle'
 }
 
 /** Trata carregamento e erro de uma consulta e entrega os dados prontos. */
@@ -55,10 +56,19 @@ export function EstadoConsulta<T>({
   consulta: Consulta<T>
   children: (dados: T) => ReactNode
 }) {
-  if (consulta.isPending) return <EstadoCarregando />
-  if (consulta.isError || consulta.data === undefined) {
-    const msg = consulta.error instanceof Error ? consulta.error.message : undefined
-    return <EstadoErro mensagem={msg} onTentarDeNovo={() => void consulta.refetch()} />
+  // Dados já vistos (inclusive os guardados no aparelho) valem mais que um erro de rede.
+  if (consulta.data !== undefined) return <>{children(consulta.data)}</>
+  if (consulta.fetchStatus === 'paused') {
+    return (
+      <div className="estado" role="status">
+        <p className="estado-texto">Sem conexão. Esta tela aparece quando o sinal voltar.</p>
+        <button type="button" className="botao" onClick={() => void consulta.refetch()}>
+          Tentar de novo
+        </button>
+      </div>
+    )
   }
-  return <>{children(consulta.data)}</>
+  if (consulta.isPending) return <EstadoCarregando />
+  const msg = consulta.error instanceof Error ? consulta.error.message : undefined
+  return <EstadoErro mensagem={msg} onTentarDeNovo={() => void consulta.refetch()} />
 }

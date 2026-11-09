@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { dentroDoTelegram } from '../telegram.ts'
 import { useBackButtonTelegram, useVoltar } from '../telegramBack.ts'
+import { BarraSincronizacao } from './BarraSincronizacao.tsx'
 import { BarraInferior } from './BarraInferior.tsx'
 import { TelaCheiaContexto } from './telaCheia.ts'
 
@@ -25,6 +26,7 @@ export function Layout() {
           )}
           <h1>Diário da obra</h1>
         </header>
+        <BarraSincronizacao />
         <main className="app-main">
           <Outlet />
         </main>

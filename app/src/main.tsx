@@ -14,7 +14,7 @@ expand()
 registrarSw()
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
+  defaultOptions: { queries: { staleTime: 30_000, retry: 1, networkMode: 'offlineFirst' } },
 })
 
 createRoot(document.getElementById('root')!).render(

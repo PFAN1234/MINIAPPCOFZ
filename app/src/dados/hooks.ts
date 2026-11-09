@@ -1,5 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { enviarRegistro, type Progresso, type Rascunho } from './envio.ts'
+import { useQuery } from '@tanstack/react-query'
 import { useRepositorio } from './contexto.tsx'
 import type { FiltroRegistros } from './tipos.ts'
 
@@ -44,35 +43,7 @@ export function useSessao() {
   const repo = useRepositorio()
   return useQuery({
     queryKey: ['sessao'],
+    networkMode: 'always',
     queryFn: async () => (repo.temSessao ? await repo.temSessao() : true),
-  })
-}
-
-export interface EntradaNovoRegistro {
-  rascunho: Rascunho
-  /** Slug da obra e código do ambiente, para invalidar as consultas certas. */
-  slug: string
-  codigo: string
-  aoProgredir?: (p: Progresso) => void
-}
-
-/**
- * Envia o rascunho (fotos e depois a RPC). Reutilize o mesmo `rascunho` ao
- * tentar de novo. No sucesso invalida `['registros']`, `['obra', slug]` e
- * `['ambiente', slug, codigo]`. Erros chegam como `ErroEnvio`.
- */
-export function useNovoRegistro() {
-  const repo = useRepositorio()
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: ({ rascunho, aoProgredir }: EntradaNovoRegistro) =>
-      enviarRegistro(repo, rascunho, aoProgredir),
-    onSuccess: async (_dados, { slug, codigo }) => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ['registros'] }),
-        qc.invalidateQueries({ queryKey: ['obra', slug] }),
-        qc.invalidateQueries({ queryKey: ['ambiente', slug, codigo] }),
-      ])
-    },
   })
 }

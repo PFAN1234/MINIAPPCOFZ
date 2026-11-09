@@ -932,3 +932,54 @@ body {
 .registro-topo {
   flex-wrap: wrap;
 }
+
+/* Barra de sincronização e itens guardados no aparelho */
+.barra-sinc {
+  padding: 8px 16px;
+  background: var(--bg-secundario);
+  border-bottom: 1px solid var(--borda);
+}
+
+.barra-sinc-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+}
+
+.barra-sinc-linha p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.barra-sinc-erro p {
+  color: #b42318;
+  font-weight: 600;
+}
+
+.barra-sinc-botao {
+  flex: none;
+}
+
+.barra-sinc-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  color: var(--tg-theme-link-color, #2481cc);
+}
+
+.registro-coluna {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.registro-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 12px 12px;
+}

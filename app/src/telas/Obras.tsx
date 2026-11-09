@@ -4,6 +4,7 @@ import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { ListaRegistros } from '../components/ListaRegistros.tsx'
 import { useObras, useRegistros } from '../dados/hooks.ts'
+import { useRegistrosLocais } from '../offline/contexto.tsx'
 import { normalizarTexto } from '../util/busca.ts'
 import { textoPendencias } from '../util/formato.ts'
 
@@ -12,6 +13,7 @@ const MINIMO_PARA_BUSCA = 5
 export default function Obras() {
   const obras = useObras()
   const recentes = useRegistros({ limite: 5 })
+  const locais = useRegistrosLocais()
   const abertas = useRegistros({ tipo: 'pendencia', situacao: 'aberta' })
   const [busca, setBusca] = useState('')
 
@@ -69,7 +71,7 @@ export default function Obras() {
       <section aria-labelledby="titulo-recentes">
         <h2 id="titulo-recentes">Últimos registros</h2>
         <EstadoConsulta consulta={recentes}>
-          {(lista) => <ListaRegistros registros={lista} vazio="Nenhum registro ainda" />}
+          {(lista) => <ListaRegistros registros={lista} locais={locais} limite={5} vazio="Nenhum registro ainda" />}
         </EstadoConsulta>
       </section>
     </>

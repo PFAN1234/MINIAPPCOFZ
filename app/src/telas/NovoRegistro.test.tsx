@@ -5,9 +5,10 @@ import { MemoryRouter } from 'react-router'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import App from '../App.tsx'
 import { RepositorioProvider } from '../dados/contexto.tsx'
-import { ErroEnvio } from '../dados/erros.ts'
+import { ErroEnvio, MENSAGEM_REDE } from '../dados/erros.ts'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
+import { MENSAGEM_COTA } from '../offline/armazenamento.ts'
 
 vi.mock('../util/imagem.ts', async (original) => ({
   ...(await original<typeof import('../util/imagem.ts')>()),
@@ -77,33 +78,55 @@ describe('Novo registro', () => {
     expect(salvar).toBeDisabled()
   })
 
-  it('sucesso volta ao Histórico com o registro novo e o aviso', async () => {
+  it('salvar volta ao Histórico com o item local e o aviso, e depois o envio conclui', async () => {
     const usuario = userEvent.setup()
-    renderizar(criarRepositorioFixture())
+    const base = criarRepositorioFixture()
+    let liberar!: () => void
+    const portao = new Promise<void>((r) => (liberar = r))
+    const repo: Repositorio = {
+      ...base,
+      enviarFoto: async (c, blob) => {
+        await portao
+        return base.enviarFoto(c, blob)
+      },
+      concluirRegistro: (d) => base.concluirRegistro(d),
+    }
+    renderizar(repo)
     await preencher(usuario)
     const salvar = screen.getByRole('button', { name: 'Salvar registro' })
     await waitFor(() => expect(salvar).toBeEnabled())
     await usuario.click(salvar)
 
     expect(await screen.findByRole('tab', { name: 'Histórico', selected: true })).toBeInTheDocument()
-    expect(await screen.findByText('Registro salvo')).toBeInTheDocument()
-    expect(await screen.findByText('Tomada solta na parede')).toBeInTheDocument()
-    expect(screen.getAllByText('Aguardando publicação').length).toBeGreaterThan(0)
-    const item = screen.getByText('Tomada solta na parede').closest('li')!
+    expect(await screen.findByText('Registro salvo no aparelho')).toBeInTheDocument()
+    const item = (await screen.findByText('Tomada solta na parede')).closest('li')!
+    expect(within(item).getByText('Pendência aberta')).toBeInTheDocument()
+    expect(within(item).getByText('Você')).toBeInTheDocument()
+    expect(within(item).getByText('Enviando fotos 1 de 1…')).toBeInTheDocument()
     expect(within(item).getByRole('button', { name: 'Abrir 1 foto do registro' })).toBeInTheDocument()
-    expect(within(item).getByText('Aguardando publicação')).toBeInTheDocument()
+
+    liberar()
+    await waitFor(() =>
+      expect(
+        within(screen.getByText('Tomada solta na parede').closest('li')!).getByText(
+          'Salvo no servidor · aguardando publicação',
+        ),
+      ).toBeInTheDocument(),
+    )
+    expect(screen.getAllByText('Tomada solta na parede')).toHaveLength(1)
+    await waitFor(() =>
+      expect(screen.queryByText(/registros? aguardando envio/)).not.toBeInTheDocument(),
+    )
   })
 
-  it('erro mostra "Tentar de novo" e reaproveita os mesmos ids', async () => {
+  it('falha de rede deixa o item no aparelho e "Tentar agora" envia depois', async () => {
     const usuario = userEvent.setup()
     const base = criarRepositorioFixture()
-    const chamadas: string[] = []
     let falhar = true
     const repo: Repositorio = {
       ...base,
       enviarFoto: async (c, blob) => {
-        chamadas.push(`${c.registroId}/${c.fotoId}`)
-        if (falhar) throw new ErroEnvio('rede', 'Sem conexão com o servidor.')
+        if (falhar) throw new ErroEnvio('rede', MENSAGEM_REDE)
         return base.enviarFoto(c, blob)
       },
       concluirRegistro: (d) => base.concluirRegistro(d),
@@ -113,42 +136,97 @@ describe('Novo registro', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Salvar registro' })).toBeEnabled())
     await usuario.click(screen.getByRole('button', { name: 'Salvar registro' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Sem conexão com o servidor.')
-    const tentar = screen.getByRole('button', { name: 'Tentar de novo' })
+    expect(await screen.findByText('Salvo no aparelho · aguardando envio')).toBeInTheDocument()
+    expect(screen.getByText('1 registro aguardando envio')).toBeInTheDocument()
+    const tentar = await screen.findByRole('button', { name: 'Tentar agora' })
+
     falhar = false
     await usuario.click(tentar)
-    expect(await screen.findByText('Registro salvo')).toBeInTheDocument()
-    expect(chamadas).toHaveLength(2)
-    expect(chamadas[0]).toBe(chamadas[1])
+    expect(
+      await screen.findByText('Salvo no servidor · aguardando publicação'),
+    ).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.queryByText('1 registro aguardando envio')).not.toBeInTheDocument(),
+    )
+    expect(screen.getAllByText('Tomada solta na parede')).toHaveLength(1)
   })
 
-  it('depois de enviar alguma foto, um erro trava os campos e só permite tentar de novo', async () => {
+  it('falha definitiva mostra o erro com "Tentar de novo" e "Descartar"', async () => {
     const usuario = userEvent.setup()
     const base = criarRepositorioFixture()
     let falhar = true
     const repo: Repositorio = {
       ...base,
-      // A resposta da RPC se perde depois de o registro já ter sido gravado.
-      concluirRegistro: async (d) => {
-        const r = await base.concluirRegistro(d)
-        if (falhar) throw new ErroEnvio('rede', 'Sem conexão com o servidor.')
-        return r
+      enviarFoto: async (c, blob) => {
+        if (falhar) throw new ErroEnvio('validacao', 'Legenda inválida.')
+        return base.enviarFoto(c, blob)
       },
+      concluirRegistro: (d) => base.concluirRegistro(d),
     }
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false)
     renderizar(repo)
     await preencher(usuario)
     await waitFor(() => expect(screen.getByRole('button', { name: 'Salvar registro' })).toBeEnabled())
     await usuario.click(screen.getByRole('button', { name: 'Salvar registro' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Sem conexão com o servidor.')
-    expect(screen.getByLabelText('Legenda')).toBeDisabled()
-    expect(screen.getByRole('radio', { name: 'Serviço' })).toBeDisabled()
-    expect(screen.getByText(/não pode mais ser alterado/)).toBeInTheDocument()
+    expect(await screen.findByText('Não foi possível enviar: Legenda inválida.')).toBeInTheDocument()
+    expect(screen.getByText('1 registro com erro no envio')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver' })).toHaveAttribute('href', '/registros')
+
+    // Descartar pede confirmação; ao recusar, o item continua.
+    await usuario.click(screen.getByRole('button', { name: 'Descartar' }))
+    expect(confirmar).toHaveBeenCalledWith('Descartar este registro? Ele ainda não foi enviado.')
+    expect(screen.getByText('Tomada solta na parede')).toBeInTheDocument()
 
     falhar = false
     await usuario.click(screen.getByRole('button', { name: 'Tentar de novo' }))
-    expect(await screen.findByText('Registro salvo')).toBeInTheDocument()
-    expect(await screen.findAllByText('Tomada solta na parede')).toHaveLength(1)
+    expect(
+      await screen.findByText('Salvo no servidor · aguardando publicação'),
+    ).toBeInTheDocument()
+  })
+
+  it('descartar com confirmação remove o item', async () => {
+    const usuario = userEvent.setup()
+    const base = criarRepositorioFixture()
+    const repo: Repositorio = {
+      ...base,
+      enviarFoto: async () => {
+        throw new ErroEnvio('conflito', 'Conflito no servidor.')
+      },
+    }
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    renderizar(repo)
+    await preencher(usuario)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Salvar registro' })).toBeEnabled())
+    await usuario.click(screen.getByRole('button', { name: 'Salvar registro' }))
+    await usuario.click(await screen.findByRole('button', { name: 'Descartar' }))
+    await waitFor(() =>
+      expect(screen.queryByText('Tomada solta na parede')).not.toBeInTheDocument(),
+    )
+  })
+
+  describe('sem espaço no aparelho', () => {
+    afterEach(() => {
+      // @ts-expect-error remove a simulação
+      delete navigator.storage
+    })
+
+    it('mostra o alerta e mantém o formulário preenchido', async () => {
+      const usuario = userEvent.setup()
+      Object.defineProperty(navigator, 'storage', {
+        configurable: true,
+        value: { estimate: async () => ({ quota: 1_000_000, usage: 999_000 }) },
+      })
+      renderizar(criarRepositorioFixture())
+      await preencher(usuario)
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Salvar registro' })).toBeEnabled())
+      await usuario.click(screen.getByRole('button', { name: 'Salvar registro' }))
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(MENSAGEM_COTA)
+      expect(screen.getByLabelText('Legenda')).toHaveValue('Tomada solta na parede')
+      expect(screen.getByRole('radio', { name: 'Pendência' })).toBeChecked()
+      expect(screen.getByRole('button', { name: 'Salvar registro' })).toBeEnabled()
+    })
   })
 
   it('pede confirmação ao sair com o formulário preenchido', async () => {

@@ -56,7 +56,7 @@ describe('ListaRegistros', () => {
         publicacao: p,
       })),
     )
-    expect(screen.getAllByText('Aguardando publicação')).toHaveLength(2)
+    expect(screen.getAllByText('Salvo no servidor · aguardando publicação')).toHaveLength(2)
     expect(screen.getByText('Publicado no tópico')).toBeInTheDocument()
     expect(screen.getByText('Publicação com problema')).toBeInTheDocument()
   })
