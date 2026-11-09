@@ -33,7 +33,7 @@ Verificação: CI verde em um commit vazio de funcionalidade; `vite dev` abre a 
 
 - [ ] `scripts/extrair_ambientes.py`: parear cada nome com o `A=xx m²` logo abaixo dele em `artifacts/validation/pdf/inventory.json`, gerando `data/hto/ambientes.json` (pavimento, nome da planta, nome operacional, categoria, área, PDF, revisão, bbox normalizada).
 - [ ] Sinalizar duplicatas (CIRC. SUL, Circulação), áreas “Não incluso” e rótulos sem área; banheiros separados dos apartamentos.
-- [ ] `scripts/gerar_plantas.py`: visão geral de cada pavimento (WebP) e recorte de detalhe por ambiente, com marcador no centro do par nome+área.
+- [ ] `scripts/gerar_plantas.py`: visão geral de cada pavimento (WebP) e recorte de detalhe por ambiente, com pino logo abaixo do par nome+área (sem cobrir o texto).
 - [ ] Imagem de prova com todos os marcadores; revisão humana da lista e dos marcadores; geração de `supabase/seed/hto.sql`.
 
 Verificação: pytest confere APTO. 101 = 23,88 m², SALÃO DE EVENTOS = 158,59 m² (Térreo) e APTO. 211 = 20,58 m² (1º pavimento). Dependência: 0.
