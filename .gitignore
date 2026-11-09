@@ -18,9 +18,8 @@ dist/
 .DS_Store
 *:Zone.Identifier
 
-# Original engineering documents are supplied separately (see DOCS HTO/README.md)
+# Original IFC models are supplied separately (see DOCS HTO/README.md)
 /DOCS HTO/IFC/*.ifc
-/DOCS HTO/PDF/*.pdf
 
 # Incomplete exports
 *.staged.glb

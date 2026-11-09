@@ -1,6 +1,6 @@
-# Documentos HTO — entradas locais
+# Documentos HTO
 
-Os arquivos originais de engenharia são fornecidos separadamente e ignorados pelo Git. O modelo ARQ tem aproximadamente 208 MB. Os scripts esperam esta organização, relativa à raiz do repositório:
+Os dois PDFs originais estão incluídos no repositório, em `PDF/`. Os modelos IFC são fornecidos separadamente e ignorados pelo Git; o modelo ARQ tem aproximadamente 208 MB. Os scripts esperam esta organização, relativa à raiz do repositório:
 
 ```text
 DOCS HTO/
