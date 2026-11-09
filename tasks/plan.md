@@ -47,7 +47,7 @@ Aceite: toque no interior do ambiente abre o recorte correspondente; ambientes v
 
 ## Modelos de trabalho
 
-Preferência do usuário: GPT-6 Astra com esforço high para planejamento e tarefas complexas; GPT-6.1 Sol ou Terra com esforço high para programação e tarefas simples. Definir explicitamente esses parâmetros em agentes delegados.
+Preferência do usuário (atualizada em 2026-11-09): Claude Opus 5.5 para planejamento, decisões de projeto e tarefas complexas; Claude Sonnet 5.5 ou Haiku 5.5 para tarefas simples ou braçais (testes de rotina, documentação, ajustes repetitivos). Definir o modelo explicitamente em agentes delegados. A regra também está em `CLAUDE.md`.
 
 ## Referências técnicas
 

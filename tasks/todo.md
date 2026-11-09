@@ -5,7 +5,8 @@ Detalhes de cada fase em `tasks/plano-app.md`. Decisão de 2026-11-09: o visuali
 ## Prioridade atual — fundação e dados da HTO (2026-11-09)
 
 - [ ] Criar o projeto Supabase de desenvolvimento e o projeto Vercel ligado a `app/`.
-- [ ] Extrair os ambientes dos dois PDFs para `data/hto/ambientes.json` e revisar a lista.
+- [x] Extrair os ambientes dos dois PDFs para `data/hto/ambientes.json`.
+- [ ] Revisar a lista de ambientes e os pinos nas imagens de prova.
 
 ## Mockups (concluído em 2026-11-06)
 
@@ -31,10 +32,12 @@ Verificação: CI verde em um commit vazio de funcionalidade; `vite dev` abre a 
 
 ## 1. Ambientes da HTO a partir dos PDFs
 
-- [ ] `scripts/extrair_ambientes.py`: parear cada nome com o `A=xx m²` logo abaixo dele em `artifacts/validation/pdf/inventory.json`, gerando `data/hto/ambientes.json` (pavimento, nome da planta, nome operacional, categoria, área, PDF, revisão, bbox normalizada).
-- [ ] Sinalizar duplicatas (CIRC. SUL, Circulação), áreas “Não incluso” e rótulos sem área; banheiros separados dos apartamentos.
-- [ ] `scripts/gerar_plantas.py`: visão geral de cada pavimento (WebP) e recorte de detalhe por ambiente, com pino logo acima do nome, apontando para ele (sem cobrir o texto).
-- [ ] Imagem de prova com todos os marcadores; revisão humana da lista e dos marcadores; geração de `supabase/seed/hto.sql`.
+- [x] `scripts/extrair_ambientes.py`: parear cada nome com o `A=xx m²` logo abaixo dele em `artifacts/validation/pdf/inventory.json`, gerando `data/hto/ambientes.json` (44 ambientes no térreo, 43 no 1º pavimento).
+- [x] Sinalizar duplicatas (CIRC. SUL, Circulação: um ambiente com dois pinos), Jardim repetido e área “Não incluso”; banheiros separados dos apartamentos.
+- [x] `scripts/gerar_plantas.py`: visão geral (WebP 2400 px e HD 4096 px) de cada pavimento, recorte de detalhe por ambiente e manifesto `data/hto/plantas.json`; legendas e carimbo cobertos.
+- [x] Imagem de prova com todos os pinos iguais, acima do nome (`data/hto/plantas/R05/<pavimento>/prova.png`).
+- [ ] Revisão humana da lista (nomes operacionais, Jardim 1/2, pinos dos banheiros empilhados) e marcar `status` como revisado.
+- [ ] Gerar `supabase/seed/hto.sql` a partir da lista revisada (junto com o schema da fase 2).
 
 Verificação: pytest confere APTO. 101 = 23,88 m², SALÃO DE EVENTOS = 158,59 m² (Térreo) e APTO. 211 = 20,58 m² (1º pavimento). Dependência: 0.
 
