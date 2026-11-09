@@ -1,0 +1,87 @@
+:root {
+  color-scheme: light dark;
+  --bg: var(--tg-theme-bg-color, #ffffff);
+  --bg-secundario: var(--tg-theme-secondary-bg-color, #f1f3f5);
+  --texto: var(--tg-theme-text-color, #1a1a1a);
+  --texto-suave: var(--tg-theme-hint-color, #6b7280);
+  --borda: color-mix(in srgb, var(--texto-suave) 35%, transparent);
+  font-family:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  line-height: 1.4;
+}
+
+/* Fora do Telegram, segue o tema do sistema; dentro dele, valem as variáveis --tg-theme-*. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--tg-theme-bg-color, #17212b);
+    --bg-secundario: var(--tg-theme-secondary-bg-color, #232e3c);
+    --texto: var(--tg-theme-text-color, #f5f5f5);
+    --texto-suave: var(--tg-theme-hint-color, #8b9aab);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--texto);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-header {
+  padding: 16px;
+  background: var(--bg-secundario);
+  border-bottom: 1px solid var(--borda);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.app-main {
+  flex: 1;
+  padding: 16px;
+}
+
+.app-main h2 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  color: var(--texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.estado-vazio {
+  padding: 32px 16px;
+  text-align: center;
+  background: var(--bg-secundario);
+  border: 1px dashed var(--borda);
+  border-radius: 12px;
+}
+
+.estado-vazio p {
+  margin: 0;
+}
+
+.estado-vazio-titulo {
+  font-weight: 600;
+}
+
+.estado-vazio-texto {
+  margin-top: 4px;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}

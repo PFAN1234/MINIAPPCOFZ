@@ -23,11 +23,12 @@ Detalhes de cada fase em `tasks/plano-app.md`. Decisão de 2026-11-09: o visuali
 ## 0. Fundação
 
 - [x] Criar projetos Supabase (dev) e Vercel: Supabase `miniappcofz-dev` (ref `nyfcualazkngqmrxcczh`, sa-east-1, organização PFAN1234) e Vercel `miniappcofz` (equipe PFAN1234, Root Directory `app`, framework Vite, ligado a `pfan1234/miniappcofz`). Segredos apenas em variáveis de ambiente.
-- [ ] `.env.example` versionado (raiz e `app/`).
+- [x] `.env.example` versionado (raiz e `app/`).
 - [ ] Liberar a URL de produção da Vercel para o Telegram: o projeto nasceu com Vercel Authentication em todas as URLs exceto domínios próprios, o que bloqueia a abertura pelo Telegram (resolver antes da fase 6).
-- [ ] Scaffold `app/` com Vite, React, TypeScript, ESLint, Vitest e o script `telegram-web-app.js`.
+- [x] Scaffold `app/` com Vite, React, TypeScript, ESLint, Vitest e o script `telegram-web-app.js`.
 - [x] Adicionar `requirements-dev.txt` com `pytest` e fazer `tests/` passar.
-- [ ] CI no GitHub Actions: typecheck, lint, Vitest, pytest e `supabase db lint`.
+- [x] CI no GitHub Actions: typecheck, lint, Vitest, build e pytest (`.github/workflows/ci.yml`).
+- [ ] Acrescentar `supabase db lint` ao CI junto com as primeiras migrations (fase 2).
 - [x] Confirmar o modo de chaves JWT do projeto Supabase: chaves de assinatura assimétricas; `auth-telegram` gera sessão pelo Supabase Auth (link mágico + `verifyOtp`), sem JWT próprio (ver `tasks/plano-app.md`, fase 2).
 
 Verificação: CI verde em um commit vazio de funcionalidade; `vite dev` abre a tela inicial. Dependência: nenhuma.
