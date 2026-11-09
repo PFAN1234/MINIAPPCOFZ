@@ -6,10 +6,12 @@ import './index.css'
 import App from './App.tsx'
 import { EstadoCarregando } from './components/Estado.tsx'
 import { RepositorioProvider } from './dados/contexto.tsx'
+import { registrarSw } from './registrarSw.ts'
 import { expand, ready } from './telegram.ts'
 
 ready()
 expand()
+registrarSw()
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
