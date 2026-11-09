@@ -1,5 +1,7 @@
 # Mini App Telegram — piloto HTO
 
+> **Atualização 2026-11-09:** a ordem de implementação foi revista em `tasks/plano-app.md`. O visualizador do modelo federado e a planta clicável passam para a última fase; antes vêm navegação por lista, registros, pendências, modo sem conexão e publicação no tópico da obra. A stack escolhida é Supabase (Postgres, RLS, Storage, Edge Functions) e frontend React/Vite na Vercel, no lugar de FastAPI. A publicação vai para o tópico de cada obra no supergrupo CO-FZ. Onde este documento divergir, prevalece `tasks/plano-app.md`.
+
 ## Objetivo confirmado
 
 Permitir que a equipe percorra obra → andar → planta 2D → ambiente → modelo federado 3D isolado e registre fotos com legenda e tipo: serviço em execução ou pendência. O histórico pertence ao ambiente e uma cópia é publicada no grupo da obra. Pendências são encerradas por gestor com foto de comprovação. O acesso é autorizado por obra. Registros feitos com sinal instável aguardam envio.
