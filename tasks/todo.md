@@ -58,11 +58,16 @@ Verificação: testes de banco — outra obra não lê nem grava; equipe não en
 
 ## 3. Navegação por lista
 
-- [ ] Tela Obras: obras permitidas, busca e últimos registros, sem obra pré-selecionada.
-- [ ] Tela da obra: abas Térreo / 1º pavimento, busca e lista única de ambientes em ordem alfabética; cartão do modelo federado oculto por feature flag.
-- [ ] Tela do ambiente: abas Histórico / Pendências, botão Novo registro e cartão “Onde fica” com o recorte da planta.
-- [ ] Aba Planta na obra: marcadores tocáveis, zoom/arraste, busca centralizando o ambiente, contagem de pendências e aviso “posição indicativa”.
-- [ ] Barra inferior, BackButton e tema do Telegram.
+Contrato: `docs/contrato-fase3.md`. Decisões de 2026-11-09: login real só na fase 6 (a fase 3 roda com dados de teste, `VITE_DADOS=fixture`); plantas em bucket privado com URL assinada.
+
+- [x] Tabelas `planta` e `planta_detalhe`, bucket privado `plantas` e seed (2 plantas, 87 recortes); aplicados no `miniappcofz-dev`.
+- [x] Base do app: rotas, camada de dados (Supabase e fixture fora do build de produção), sessão, BackButton, tema e barra inferior.
+- [x] Tela Obras: obras permitidas com pendências abertas, busca (mais de 5 obras) e últimos registros, sem obra pré-selecionada.
+- [x] Tela da obra: abas Térreo / 1º pavimento, busca e lista única em ordem alfabética natural; cartão do modelo federado oculto por feature flag.
+- [x] Tela do ambiente: abas Histórico / Pendências e cartão “Onde fica” com o recorte da planta; botão Novo registro oculto até a fase 4.
+- [x] Aba Planta na obra: marcadores tocáveis, zoom/arraste, busca centralizando o ambiente, contagem de pendências e aviso “posição indicativa”; cache das imagens por service worker.
+- [ ] Testes Playwright em viewport móvel e job `e2e` no CI.
+- [ ] Enviar as imagens ao bucket `plantas` com `scripts/publicar_plantas.py` (exige a chave secreta; necessário antes do teste com login real na fase 6).
 
 Verificação: Playwright em viewport móvel com Telegram simulado navega Obras → HTO → Apto. 101, pela lista e pelo marcador na planta. Dependência: 2.
 
