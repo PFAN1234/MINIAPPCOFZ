@@ -6,7 +6,7 @@ Detalhes de cada fase em `tasks/plano-app.md`. Decisão de 2026-11-09: o visuali
 
 - [ ] Criar o projeto Supabase de desenvolvimento e o projeto Vercel ligado a `app/`.
 - [x] Extrair os ambientes dos dois PDFs para `data/hto/ambientes.json`.
-- [ ] Revisar a lista de ambientes e os pinos nas imagens de prova.
+- [x] Revisar a lista de ambientes e os pinos nas imagens de prova.
 
 ## Mockups (concluído em 2026-11-06)
 
@@ -36,7 +36,7 @@ Verificação: CI verde em um commit vazio de funcionalidade; `vite dev` abre a 
 - [x] Sinalizar duplicatas (CIRC. SUL, Circulação: um ambiente com dois pinos), Jardim repetido e área “Não incluso”; banheiros separados dos apartamentos.
 - [x] `scripts/gerar_plantas.py`: visão geral (WebP 2400 px e HD 4096 px) de cada pavimento, recorte de detalhe por ambiente e manifesto `data/hto/plantas.json`; legendas e carimbo cobertos.
 - [x] Imagem de prova com todos os pinos iguais, acima do nome (`data/hto/plantas/R05/<pavimento>/prova.png`).
-- [ ] Revisão humana da lista (nomes operacionais, Jardim 1/2, pinos dos banheiros empilhados) e marcar `status` como revisado.
+- [x] Revisão humana da lista em 2026-11-09: nomes aprovados, Jardim 1/2 mantidos, pinos como estão, banheiros separados, circulações com dois pinos, todos os ambientes, lista sem grupos em ordem alfabética.
 - [ ] Gerar `supabase/seed/hto.sql` a partir da lista revisada (junto com o schema da fase 2).
 
 Verificação: pytest confere APTO. 101 = 23,88 m², SALÃO DE EVENTOS = 158,59 m² (Térreo) e APTO. 211 = 20,58 m² (1º pavimento). Dependência: 0.
@@ -53,7 +53,7 @@ Verificação: testes de banco — outra obra não lê nem grava; equipe não en
 ## 3. Navegação por lista
 
 - [ ] Tela Obras: obras permitidas, busca e últimos registros, sem obra pré-selecionada.
-- [ ] Tela da obra: abas Térreo / 1º pavimento, busca e lista de ambientes; cartão do modelo federado oculto por feature flag.
+- [ ] Tela da obra: abas Térreo / 1º pavimento, busca e lista única de ambientes em ordem alfabética; cartão do modelo federado oculto por feature flag.
 - [ ] Tela do ambiente: abas Histórico / Pendências, botão Novo registro e cartão “Onde fica” com o recorte da planta.
 - [ ] Aba Planta na obra: marcadores tocáveis, zoom/arraste, busca centralizando o ambiente, contagem de pendências e aviso “posição indicativa”.
 - [ ] Barra inferior, BackButton e tema do Telegram.

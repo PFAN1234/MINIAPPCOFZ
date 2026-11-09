@@ -34,6 +34,22 @@ DESVIO_CENTRO_MAX = 25.0
 
 PAVIMENTOS = {"Térreo": "terreo", "1º pavimento": "1pav"}
 
+# Decisões da revisão humana da lista (usuário, 2026-11-09). Se a planta mudar de
+# revisão, a lista volta para "aguardando_revisao_humana" até nova conferência.
+REVISAO_HUMANA = {
+    "data": "2026-11-09",
+    "revisao_planta": "R05",
+    "decisoes": [
+        "Nomes operacionais aprovados como gerados.",
+        "Os dois 'Jardim' do térreo ficam como 'Jardim 1' e 'Jardim 2'.",
+        "Pinos dos banheiros empilhados ficam como estão (tamanho fixo na tela separa com zoom).",
+        "Banheiros são ambientes separados dos apartamentos, inclusive na lista.",
+        "Ambiente rotulado duas vezes (circulações) é um único ambiente com dois pinos.",
+        "Todos os ambientes entram na lista, inclusive áreas externas e circulações.",
+        "Lista sem grupos: ordem alfabética natural com busca; 'categoria' fica só como metadado.",
+    ],
+}
+
 # Nomes operacionais para abreviações conhecidas da planta.
 NOMES_FIXOS = {
     "ADMIN.": "Administração",
@@ -213,13 +229,12 @@ def extrair(inventario: dict) -> dict:
     if duplicados:
         raise SystemExit(f"ids duplicados: {duplicados}")
 
-    ordem_cat = ["apartamento", "banheiro", "vestiario", "area_comum", "servico", "circulacao", "externa"]
-
     def ordem(a: dict):
+        # Lista sem grupos: ordem alfabética natural (Apto. 2 antes de Apto. 10), ignorando acentos.
         nome = a["nome_operacional"]
-        numeros = [int(n) for n in re.findall(r"\d+", nome)]
-        return (list(PAVIMENTOS.values()).index(a["pavimento"]), ordem_cat.index(a["categoria"]),
-                re.sub(r"\d+", "", nome), numeros, nome)
+        sem_acento = unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode().lower()
+        partes = [int(p) if p.isdigit() else p for p in re.split(r"(\d+)", sem_acento)]
+        return (list(PAVIMENTOS.values()).index(a["pavimento"]), partes)
 
     ambientes.sort(key=ordem)
     campos = ["id", "pavimento", "nome_operacional", "nome_planta", "categoria", "area_m2",
@@ -227,7 +242,8 @@ def extrair(inventario: dict) -> dict:
     return {
         "obra": "hto",
         "fonte": str(INVENTARIO.relative_to(ROOT)),
-        "status": "aguardando_revisao_humana",
+        "status": "revisado",
+        "revisao_humana": REVISAO_HUMANA,
         "coordenadas": "marcadores normalizados na página do PDF (0–1, origem no canto superior esquerdo); "
                        "x = centro do rótulo, y = topo do nome; o pino é desenhado acima desse ponto",
         "pavimentos": [{"id": v, "nome": k} for k, v in PAVIMENTOS.items()],
@@ -243,7 +259,7 @@ def main() -> int:
     for pav in resultado["pavimentos"]:
         n = sum(1 for a in resultado["ambientes"] if a["pavimento"] == pav["id"])
         print(f"{pav['nome']}: {n} ambientes")
-    print(f"Itens para revisão: {len(resultado['revisar'])}")
+    print(f"Casos conferidos na revisão: {len(resultado['revisar'])}")
     print(f"Gerado: {SAIDA.relative_to(ROOT)}")
     return 0
 

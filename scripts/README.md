@@ -35,6 +35,6 @@ A suíte completa (`.venv/bin/pytest -q tests`) inclui testes antigos que depend
 
 ## Revisão humana
 
-`data/hto/ambientes.json` tem `status: aguardando_revisao_humana`. A lista `revisar` aponta os casos duvidosos (nomes repetidos, ambientes rotulados mais de uma vez, área "Não incluso"). Os nomes operacionais e as categorias são provisórios até a revisão.
+`data/hto/ambientes.json` tem `status: revisado`, com as decisões da revisão humana em `revisao_humana` (definidas em `REVISAO_HUMANA` no script). A lista `revisar` registra os casos que foram conferidos: nomes repetidos, ambientes rotulados mais de uma vez e área "Não incluso". Uma nova revisão das plantas exige nova conferência antes de usar a lista.
 
 Para conferir visualmente a posição dos pinos, abra `data/hto/plantas/R05/<pavimento>/prova.png`: é a visão geral com todos os pinos desenhados. As imagens usadas pelo app não trazem o pino gravado; o frontend o desenha a partir do manifesto.

@@ -51,7 +51,7 @@ Tabelas (migrations): `obra` (slug, nome, ordem, `telegram_chat_id`, `telegram_t
 
 ### 3. Navegação (telas 1–3 do mockup)
 - **Obras** (home): lista das obras permitidas, busca, "Últimos registros". Nenhuma obra pré-selecionada.
-- **Obra (HTO):** abas Térreo / 1º pavimento, busca de ambiente, lista agrupada por categoria. O cartão "Visualizar modelo federado" fica **oculto** (feature flag) até a última fase.
+- **Obra (HTO):** abas Térreo / 1º pavimento, busca de ambiente e lista única em ordem alfabética natural, sem grupos (decisão de 2026-11-09; `categoria` fica só como metadado). Banheiros aparecem como ambientes próprios. O cartão "Visualizar modelo federado" fica **oculto** (feature flag) até a última fase.
 - **Ambiente:** abas Histórico / Pendências, botão "Novo registro" e cartão **"Onde fica"** (recorte da planta com o pino acima do nome do ambiente; ao tocar, abre a planta do pavimento em tela cheia, ampliada e centrada no ambiente).
 - **Aba "Planta" na obra**, ao lado da lista: `PlantaViewer` (`app/src/components/PlantaViewer.tsx`, imagem + pinos em SVG com tamanho constante na tela durante o zoom + `react-zoom-pan-pinch`; todos os pinos com a mesma cor e o mesmo tamanho; o ambiente em foco é indicado pelo enquadramento centrado e pelo título). Tocar no marcador abre o ambiente; a busca centraliza o ambiente; marcadores mostram a contagem de pendências abertas. Aviso fixo "Planta de arquitetura R05 · posição indicativa". Imagens da planta em Cache Storage para continuar visíveis sem sinal.
 - Barra inferior Início / Registros / Pendências; `BackButton` do Telegram; tema do Telegram (`themeParams`).
