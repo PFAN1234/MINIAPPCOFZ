@@ -75,6 +75,16 @@ export interface AmbienteDetalhe {
 export type TipoRegistro = 'servico' | 'pendencia'
 export type SituacaoRegistro = 'aberta' | 'resolvida'
 
+export type EstadoPublicacao = 'pendente' | 'enviando' | 'publicado' | 'incerto' | 'falhou'
+
+export interface FotoRegistro {
+  id: string
+  /** Caminho no bucket `fotos`: `<obra_id>/<registro_id>/<foto_id>.jpg`. */
+  path: string
+  largura: number
+  altura: number
+}
+
 export interface RegistroResumo {
   id: string
   tipo: TipoRegistro
@@ -85,6 +95,27 @@ export interface RegistroResumo {
   recebido_em: string
   ambiente: { id: string; codigo: string; nome: string }
   obra: { id: string; slug: string; nome: string }
+  /** Ordenadas por `ordem`. */
+  fotos: FotoRegistro[]
+  /** `null` se o registro não tem publicação (ou ela não é visível). */
+  publicacao: EstadoPublicacao | null
+}
+
+export interface NovoRegistro {
+  id: string
+  ambienteId: string
+  tipo: TipoRegistro
+  legenda: string
+  /** ISO. */
+  capturadoEm: string
+  /** Na ordem escolhida. */
+  fotos: { id: string; largura: number; altura: number; bytes: number }[]
+}
+
+export interface CaminhoFoto {
+  obraId: string
+  registroId: string
+  fotoId: string
 }
 
 export interface FiltroRegistros {

@@ -1,12 +1,16 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import type { Repositorio } from './repositorio.ts'
 import type {
   Ambiente,
   AmbienteDetalhe,
   DetalhePlanta,
+  EstadoPublicacao,
   FiltroRegistros,
+  FotoRegistro,
   ImagemPlanta,
   Marcador,
+  NovoRegistro,
   ObraDetalhe,
   ObraResumo,
   Pavimento,
@@ -16,6 +20,13 @@ import type {
 } from './tipos.ts'
 
 const SEGUNDOS_URL_ASSINADA = 3600
+const LOTE_IN = 100
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function exigirUuid(valor: string, nome: string): string {
+  if (!UUID.test(valor)) throw new ErroEnvio('validacao', `Identificador inválido (${nome}).`)
+  return valor
+}
 
 /** Cliente só com a URL e a chave publicável; o acesso é protegido por RLS. */
 export function criarClienteSupabase(): SupabaseClient {
@@ -35,6 +46,12 @@ function checar<T>(resposta: { data: T | null; error: { message: string } | null
 }
 
 type Linha = Record<string, unknown>
+
+function lotes<T>(itens: T[]): T[][] {
+  const saida: T[][] = []
+  for (let i = 0; i < itens.length; i += LOTE_IN) saida.push(itens.slice(i, i + LOTE_IN))
+  return saida
+}
 
 function imagem(path: unknown, largura: unknown, altura: unknown): ImagemPlanta {
   return { path: String(path), largura: Number(largura), altura: Number(altura) }
@@ -106,6 +123,49 @@ export function criarRepositorioSupabase(
     return checar(
       await cliente.from('planta').select('*').eq('obra_id', obraId).eq('ativa', true),
     ) as Linha[]
+  }
+
+  /** Consultas separadas (sem embed) para evitar ambiguidade de relacionamento no PostgREST. */
+  async function fotosDosRegistros(ids: string[]): Promise<Map<string, FotoRegistro[]>> {
+    const mapa = new Map<string, FotoRegistro[]>()
+    for (const lote of lotes(ids)) {
+      const linhas = checar(
+        await cliente
+          .from('foto')
+          .select('id, registro_id, storage_path, largura, altura, ordem')
+          .in('registro_id', lote)
+          .order('ordem'),
+      ) as Linha[]
+      for (const f of linhas) {
+        const chave = String(f.registro_id)
+        const lista = mapa.get(chave) ?? []
+        lista.push({
+          id: String(f.id),
+          path: String(f.storage_path),
+          largura: Number(f.largura),
+          altura: Number(f.altura),
+        })
+        mapa.set(chave, lista)
+      }
+    }
+    return mapa
+  }
+
+  async function publicacoesDosRegistros(
+    ids: string[],
+  ): Promise<Map<string, EstadoPublicacao>> {
+    const mapa = new Map<string, EstadoPublicacao>()
+    for (const lote of lotes(ids)) {
+      const linhas = checar(
+        await cliente
+          .from('publicacao_telegram')
+          .select('registro_id, estado')
+          .in('registro_id', lote)
+          .order('id'),
+      ) as Linha[]
+      for (const p of linhas) mapa.set(String(p.registro_id), p.estado as EstadoPublicacao)
+    }
+    return mapa
   }
 
   return {
@@ -213,6 +273,11 @@ export function criarRepositorioSupabase(
       if (filtro.situacao) q = q.eq('situacao', filtro.situacao)
       if (filtro.limite) q = q.limit(filtro.limite)
       const linhas = checar(await q) as unknown as Linha[]
+      const ids = linhas.map((l) => String(l.id))
+      const [fotos, publicacoes] = await Promise.all([
+        fotosDosRegistros(ids),
+        publicacoesDosRegistros(ids),
+      ])
       return linhas.map((l) => {
         const amb = l.ambiente as Linha
         return {
@@ -229,21 +294,53 @@ export function criarRepositorioSupabase(
             nome: String(amb.nome_operacional),
           },
           obra: l.obra as RegistroResumo['obra'],
+          fotos: fotos.get(String(l.id)) ?? [],
+          publicacao: publicacoes.get(String(l.id)) ?? null,
         }
       })
     },
 
-    async urlsImagens(paths) {
+    async urlsImagens(paths, bucket = 'plantas') {
       const unicos = [...new Set(paths)]
       if (unicos.length === 0) return {}
       const dados = checar(
-        await cliente.storage.from('plantas').createSignedUrls(unicos, SEGUNDOS_URL_ASSINADA),
+        await cliente.storage.from(bucket).createSignedUrls(unicos, SEGUNDOS_URL_ASSINADA),
       )
       const mapa: Record<string, string> = {}
       for (const item of dados) {
         if (item.path && item.signedUrl) mapa[item.path] = item.signedUrl
       }
       return mapa
+    },
+
+    async enviarFoto({ obraId, registroId, fotoId }, blob) {
+      const caminho = `${exigirUuid(obraId, 'obra')}/${exigirUuid(registroId, 'registro')}/${exigirUuid(fotoId, 'foto')}.jpg`
+      try {
+        const { error } = await cliente.storage
+          .from('fotos')
+          .upload(caminho, blob, { upsert: true, contentType: 'image/jpeg' })
+        if (error) throw error
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async concluirRegistro(d: NovoRegistro) {
+      try {
+        const { data, error } = await cliente.rpc('concluir_registro', {
+          p_id: d.id,
+          p_ambiente_id: d.ambienteId,
+          p_tipo: d.tipo,
+          p_legenda: d.legenda,
+          p_capturado_em: d.capturadoEm,
+          p_fotos: d.fotos,
+        })
+        if (error) throw error
+        const linha = (Array.isArray(data) ? data[0] : data) as Linha | null
+        return { id: String(linha?.id ?? d.id) }
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
     },
   }
 }

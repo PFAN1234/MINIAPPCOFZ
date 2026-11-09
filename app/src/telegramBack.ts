@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { BackButton, dentroDoTelegram } from './telegram.ts'
+import { podeSair } from './util/guardaSaida.ts'
 
 /** Volta no histórico; se a tela foi aberta direto (sem histórico), vai para o início. */
 export function useVoltar(): () => void {
   const navigate = useNavigate()
   return () => {
+    if (!podeSair()) return
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
     if (idx > 0) navigate(-1)
     else navigate('/', { replace: true })

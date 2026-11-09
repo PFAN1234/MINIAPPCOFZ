@@ -1,4 +1,6 @@
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
+import { Aviso } from '../components/Aviso.tsx'
 import { Abas } from '../components/Abas.tsx'
 import { EstadoConsulta } from '../components/Estado.tsx'
 import { ListaRegistros } from '../components/ListaRegistros.tsx'
@@ -27,11 +29,23 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const { obra, ambiente, pavimento } = detalhe
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [aviso, setAviso] = useState<string | null>(
+    (location.state as { aviso?: string } | null)?.aviso ?? null,
+  )
+  const fecharAviso = useCallback(() => setAviso(null), [])
+  // Consome o aviso do estado da rota, para que não reapareça ao voltar.
+  useEffect(() => {
+    if ((location.state as { aviso?: string } | null)?.aviso) {
+      navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+    }
+  }, [location, navigate])
   const aba = params.get('aba') === 'pendencias' ? 'pendencias' : 'historico'
   const area = formatarArea(ambiente.area_m2)
 
   return (
     <section aria-labelledby="titulo-ambiente">
+      {aviso && <Aviso texto={aviso} onFechar={fecharAviso} />}
       <h2 id="titulo-ambiente" className="titulo-tela">
         {ambiente.nome_operacional}
       </h2>
@@ -48,7 +62,11 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
         }
       />
       {recursos.novoRegistro && (
-        <button type="button" className="botao botao-bloco">
+        <button
+          type="button"
+          className="botao botao-bloco"
+          onClick={() => navigate(`/obras/${obra.slug}/ambientes/${ambiente.codigo}/novo`)}
+        >
           Novo registro
         </button>
       )}

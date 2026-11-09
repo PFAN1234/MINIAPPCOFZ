@@ -1,5 +1,7 @@
 import type {
   AmbienteDetalhe,
+  CaminhoFoto,
+  NovoRegistro,
   FiltroRegistros,
   ObraDetalhe,
   ObraResumo,
@@ -13,7 +15,14 @@ export interface Repositorio {
   obterAmbiente(slug: string, codigo: string): Promise<AmbienteDetalhe>
   listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]>
   /** URL assinada (1 h) ou local na fixture, indexada pelo caminho recebido. */
-  urlsImagens(paths: string[]): Promise<Record<string, string>>
+  urlsImagens(
+    paths: string[],
+    bucket?: 'plantas' | 'fotos',
+  ): Promise<Record<string, string>>
+  /** Envia o JPEG para `<obraId>/<registroId>/<fotoId>.jpg` (reenvio permitido até vincular). */
+  enviarFoto(caminho: CaminhoFoto, blob: Blob): Promise<void>
+  /** Idempotente pelo `id`. Falhas sobem como `ErroEnvio`. */
+  concluirRegistro(dados: NovoRegistro): Promise<{ id: string }>
   /**
    * Só na implementação Supabase: há sessão ativa? Ausente na fixture, que
    * dispensa login. Sem sessão o app pede para abrir pelo Telegram.

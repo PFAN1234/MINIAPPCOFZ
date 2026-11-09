@@ -129,18 +129,22 @@ describe('telas', () => {
     expect(await screen.findByTestId('aba-planta')).toHaveTextContent('foco terreo-apto-101')
   })
 
-  it('flags ocultam o modelo federado e o Novo registro, e os mostram quando ligadas', async () => {
-    renderizar('/obras/hto')
-    await screen.findByRole('link', { name: /Apto\. 101/ })
-    expect(screen.queryByText('Modelo federado')).not.toBeInTheDocument()
-    cleanup()
-    renderizar('/obras/hto/ambientes/terreo-apto-101')
-    await screen.findByRole('tab', { name: 'Histórico' })
-    expect(screen.queryByRole('button', { name: 'Novo registro' })).not.toBeInTheDocument()
-    cleanup()
+  it('flag desligada oculta o modelo federado e o Novo registro; ligada os mostra', async () => {
+    recursos.novoRegistro = false
+    try {
+      renderizar('/obras/hto')
+      await screen.findByRole('link', { name: /Apto\. 101/ })
+      expect(screen.queryByText('Modelo federado')).not.toBeInTheDocument()
+      cleanup()
+      renderizar('/obras/hto/ambientes/terreo-apto-101')
+      await screen.findByRole('tab', { name: 'Histórico' })
+      expect(screen.queryByRole('button', { name: 'Novo registro' })).not.toBeInTheDocument()
+      cleanup()
+    } finally {
+      recursos.novoRegistro = true
+    }
 
     recursos.modeloFederado = true
-    recursos.novoRegistro = true
     try {
       renderizar('/obras/hto')
       expect(await screen.findByText('Modelo federado')).toBeInTheDocument()
@@ -149,7 +153,6 @@ describe('telas', () => {
       expect(await screen.findByRole('button', { name: 'Novo registro' })).toBeInTheDocument()
     } finally {
       recursos.modeloFederado = false
-      recursos.novoRegistro = false
     }
   })
 })
@@ -162,8 +165,8 @@ describe('sessão e recursos', () => {
     ).toBeInTheDocument()
   })
 
-  it('flags de fases futuras começam desligadas', () => {
+  it('flags: só o modelo federado (fase 9) segue desligado', () => {
     expect(recursos.modeloFederado).toBe(false)
-    expect(recursos.novoRegistro).toBe(false)
+    expect(recursos.novoRegistro).toBe(true)
   })
 })

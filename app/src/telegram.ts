@@ -29,6 +29,8 @@ export interface TelegramWebApp {
   BackButton: TelegramBackButton
   ready(): void
   expand(): void
+  enableClosingConfirmation(): void
+  disableClosingConfirmation(): void
 }
 
 declare global {
@@ -88,4 +90,13 @@ export const BackButton: TelegramBackButton = {
   hide: () => webApp()?.BackButton.hide(),
   onClick: (callback) => webApp()?.BackButton.onClick(callback),
   offClick: (callback) => webApp()?.BackButton.offClick(callback),
+}
+
+/** Pede confirmação antes de o Telegram fechar o Mini App; sem efeito fora dele. */
+export function enableClosingConfirmation(): void {
+  webApp()?.enableClosingConfirmation()
+}
+
+export function disableClosingConfirmation(): void {
+  webApp()?.disableClosingConfirmation()
 }

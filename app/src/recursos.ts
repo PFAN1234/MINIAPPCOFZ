@@ -3,5 +3,5 @@ export const recursos = {
   /** Cartão do modelo federado (fase 9). */
   modeloFederado: false,
   /** Botão "Novo registro" (fase 4). */
-  novoRegistro: false,
+  novoRegistro: true,
 }

@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   BackButton,
   colorScheme,
+  disableClosingConfirmation,
+  enableClosingConfirmation,
   dentroDoTelegram,
   expand,
   initData,
@@ -23,6 +25,8 @@ function criarWebApp(): TelegramWebApp {
     },
     ready: vi.fn(),
     expand: vi.fn(),
+    enableClosingConfirmation: vi.fn(),
+    disableClosingConfirmation: vi.fn(),
   }
 }
 
@@ -39,6 +43,8 @@ describe('telegram sem window.Telegram', () => {
     expect(() => {
       ready()
       expand()
+      enableClosingConfirmation()
+      disableClosingConfirmation()
       BackButton.show()
       BackButton.hide()
       BackButton.onClick(() => {})
@@ -69,6 +75,8 @@ describe('telegram com window.Telegram', () => {
 
     ready()
     expand()
+    enableClosingConfirmation()
+    disableClosingConfirmation()
     BackButton.show()
     BackButton.hide()
     BackButton.onClick(cb)
@@ -76,6 +84,8 @@ describe('telegram com window.Telegram', () => {
 
     expect(app.ready).toHaveBeenCalledOnce()
     expect(app.expand).toHaveBeenCalledOnce()
+    expect(app.enableClosingConfirmation).toHaveBeenCalledOnce()
+    expect(app.disableClosingConfirmation).toHaveBeenCalledOnce()
     expect(app.BackButton.show).toHaveBeenCalledOnce()
     expect(app.BackButton.hide).toHaveBeenCalledOnce()
     expect(app.BackButton.onClick).toHaveBeenCalledWith(cb)
