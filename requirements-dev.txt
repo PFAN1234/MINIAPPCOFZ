@@ -1,0 +1,6 @@
+pytest
+numpy
+shapely
+trimesh
+ifcopenshell
+-r scripts/requirements.txt
