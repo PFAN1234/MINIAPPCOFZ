@@ -4,7 +4,7 @@ Detalhes de cada fase em `tasks/plano-app.md`. Decisão de 2026-11-09: o visuali
 
 ## Prioridade atual — fundação e dados da HTO (2026-11-09)
 
-- [ ] Criar o projeto Supabase de desenvolvimento e o projeto Vercel ligado a `app/`.
+- [x] Criar o projeto Supabase de desenvolvimento e o projeto Vercel ligado a `app/` (2026-11-09).
 - [x] Extrair os ambientes dos dois PDFs para `data/hto/ambientes.json`.
 - [x] Revisar a lista de ambientes e os pinos nas imagens de prova.
 
@@ -22,11 +22,13 @@ Detalhes de cada fase em `tasks/plano-app.md`. Decisão de 2026-11-09: o visuali
 
 ## 0. Fundação
 
-- [ ] Criar projetos Supabase (dev) e Vercel; segredos apenas em variáveis de ambiente e `.env.example` versionado.
+- [x] Criar projetos Supabase (dev) e Vercel: Supabase `miniappcofz-dev` (ref `nyfcualazkngqmrxcczh`, sa-east-1, organização PFAN1234) e Vercel `miniappcofz` (equipe PFAN1234, Root Directory `app`, framework Vite, ligado a `pfan1234/miniappcofz`). Segredos apenas em variáveis de ambiente.
+- [ ] `.env.example` versionado (raiz e `app/`).
+- [ ] Liberar a URL de produção da Vercel para o Telegram: o projeto nasceu com Vercel Authentication em todas as URLs exceto domínios próprios, o que bloqueia a abertura pelo Telegram (resolver antes da fase 6).
 - [ ] Scaffold `app/` com Vite, React, TypeScript, ESLint, Vitest e o script `telegram-web-app.js`.
-- [ ] Adicionar `requirements-dev.txt` com `pytest` e fazer `tests/` passar.
+- [x] Adicionar `requirements-dev.txt` com `pytest` e fazer `tests/` passar.
 - [ ] CI no GitHub Actions: typecheck, lint, Vitest, pytest e `supabase db lint`.
-- [ ] Confirmar o modo de chaves JWT do projeto Supabase para a sessão emitida a partir do Telegram.
+- [x] Confirmar o modo de chaves JWT do projeto Supabase: chaves de assinatura assimétricas; `auth-telegram` gera sessão pelo Supabase Auth (link mágico + `verifyOtp`), sem JWT próprio (ver `tasks/plano-app.md`, fase 2).
 
 Verificação: CI verde em um commit vazio de funcionalidade; `vite dev` abre a tela inicial. Dependência: nenhuma.
 
