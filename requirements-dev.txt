@@ -4,3 +4,4 @@ shapely
 trimesh
 ifcopenshell
 -r scripts/requirements.txt
+psycopg[binary]>=3.1

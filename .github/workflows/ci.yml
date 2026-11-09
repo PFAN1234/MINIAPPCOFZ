@@ -37,7 +37,50 @@ jobs:
             requirements-dev.txt
             scripts/requirements.txt
       - run: pip install -r requirements-dev.txt
-      - run: pytest -q
+      - run: pytest -q --ignore=tests/db
 
-  # TODO (fase 2): quando existirem migrations em supabase/migrations, adicionar um
-  # job com `supabase db lint` (supabase/setup-cli + `supabase start` + `supabase db lint`).
+
+  funcoes:
+    name: Edge Functions (Deno)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno fmt --check
+      - run: deno lint
+      - run: deno check */*.ts
+      - run: deno test
+
+  banco:
+    name: Banco (migrations, RLS e RPCs)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest "psycopg[binary]>=3.1"
+      - run: pytest -q tests/db
+
+  # TODO: adicionar `supabase db lint` (supabase/setup-cli + `supabase start`)
+  # quando houver como subir a pilha local do Supabase no CI.
