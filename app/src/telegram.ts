@@ -41,9 +41,14 @@ function webApp(): TelegramWebApp | undefined {
   return typeof window === 'undefined' ? undefined : window.Telegram?.WebApp
 }
 
-/** True quando o app está rodando dentro do Telegram. */
+/**
+ * True quando o app está rodando dentro do Telegram. O `telegram-web-app.js`
+ * define `window.Telegram.WebApp` até em navegador comum, mas só dentro do
+ * Telegram o `initData` vem preenchido.
+ */
 export function dentroDoTelegram(): boolean {
-  return webApp() !== undefined
+  const app = webApp()
+  return app !== undefined && app.initData !== ''
 }
 
 /** Avisa o Telegram que a interface está pronta. */

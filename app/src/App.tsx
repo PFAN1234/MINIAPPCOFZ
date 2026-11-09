@@ -1,20 +1,29 @@
+import { Route, Routes } from 'react-router'
+import { GuardaSessao } from './components/GuardaSessao.tsx'
+import { Layout } from './components/Layout.tsx'
+import Ambiente from './telas/Ambiente.tsx'
+import Obra from './telas/Obra.tsx'
+import Obras from './telas/Obras.tsx'
+import Pendencias from './telas/Pendencias.tsx'
+import Registros from './telas/Registros.tsx'
+
+/** Rotas do app. O roteador (BrowserRouter) e os provedores ficam em `main.tsx`. */
 export default function App() {
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Diário da obra</h1>
-      </header>
-      <main className="app-main">
-        <section aria-labelledby="titulo-obras">
-          <h2 id="titulo-obras">Obras</h2>
-          <div className="estado-vazio">
-            <p className="estado-vazio-titulo">Nenhuma obra por aqui ainda</p>
-            <p className="estado-vazio-texto">
-              A lista das obras que você pode acessar aparecerá aqui.
-            </p>
-          </div>
-        </section>
-      </main>
-    </div>
+    <GuardaSessao>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Obras />} />
+          <Route path="registros" element={<Registros />} />
+          <Route path="pendencias" element={<Pendencias />} />
+          <Route path="obras/:slug" element={<Obra />} />
+          <Route path="obras/:slug/ambientes/:codigo" element={<Ambiente />} />
+          <Route
+            path="*"
+            element={<p>Página não encontrada.</p>}
+          />
+        </Route>
+      </Routes>
+    </GuardaSessao>
   )
 }
