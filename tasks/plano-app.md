@@ -36,9 +36,10 @@ data/hto/ambientes.json   # lista revisada por humano (fonte do seed)
 - CI (GitHub Actions): typecheck, lint, vitest, pytest, `supabase db lint`.
 
 ### 1. Dados da HTO a partir dos PDFs
-- `scripts/extrair_ambientes.py`: lê `artifacts/validation/pdf/inventory.json` (já tem `text_spans` com `bbox`/`normalized_bbox` por página e `floor`). Pareia cada rótulo `A=xx m²` com o span de nome imediatamente abaixo (proximidade de bbox). Saída: `data/hto/ambientes.json` com `pavimento`, `nome_planta`, `nome_operacional` (ex.: `APTO. 101` → `Apto. 101`, `BHO 101` → `Banheiro 101`), `categoria` (apartamento, banheiro, área comum, serviço, externo), `area_m2`, `pdf`, `revisao` (R05), `bbox_normalizada` (guardada para a futura planta clicável).
+- `scripts/extrair_ambientes.py`: lê `artifacts/validation/pdf/inventory.json` (já tem `text_spans` com `bbox`/`normalized_bbox` por página e `floor`). Parte de `room_labels` e pareia cada nome com o rótulo `A=xx m²` logo **abaixo** dele na planta, pela proximidade dos bbox (a ordem do texto extraído é a inversa da visual). Saída: `data/hto/ambientes.json` com `pavimento`, `nome_planta`, `nome_operacional` (ex.: `APTO. 101` → `Apto. 101`, `BHO 101` → `Banheiro 101`), `categoria` (apartamento, banheiro, área comum, serviço, externo), `area_m2`, `pdf`, `revisao` (R05), `bbox_normalizada` (guardada para a futura planta clicável).
 - Sinalizar para revisão: duplicatas (`CIRC. SUL`, `Circulação` ×2), `A=Não incluso` (Jardim), `SHAFT`/rótulos sem área. Banheiros permanecem ambientes separados dos apartamentos.
 - Esperado: ~45 ambientes no Térreo e ~50 no 1º pavimento. Revisão humana do JSON antes de gerar `supabase/seed/hto.sql`.
+- **Localização na planta (sem IFC):** `scripts/gerar_plantas.py` (PyMuPDF, mesmo padrão de `artifacts/validation/pdf/reproduce/inspect_pdfs.py`) gera, por PDF e revisão, uma visão geral do pavimento recortada na área do edifício (WebP, ~2400 px) e um recorte de detalhe por ambiente (~1000 px). Cada ambiente ganha um **marcador** (`marcador_x`, `marcador_y` normalizados no centro do par nome+área), além de `planta_id` e `detalhe_path`; nova tabela `planta` (pavimento, revisão, PDF, sha256, imagem, recorte, dimensões). Imagens no bucket `plantas/` em `hto/<revisao>/<pavimento>/`. O script gera uma imagem de prova com todos os marcadores para a revisão humana; rótulos repetidos (CIRC. SUL) e ambientes sem rótulo são resolvidos nessa revisão. Marcador indica posição, não contorno; contornos ficam para a fase 9.
 - Teste pytest do pareamento usando o próprio `inventory.json` (ex.: `APTO. 101` = 23,88 m², `SALÃO DE EVENTOS` = 158,59 m², `APTO. 211` = 20,58 m² no 1º pav.).
 
 ### 2. Schema, RLS e autenticação Telegram
@@ -51,7 +52,8 @@ Tabelas (migrations): `obra` (slug, nome, ordem, `telegram_chat_id`, `telegram_t
 ### 3. Navegação (telas 1–3 do mockup)
 - **Obras** (home): lista das obras permitidas, busca, "Últimos registros". Nenhuma obra pré-selecionada.
 - **Obra (HTO):** abas Térreo / 1º pavimento, busca de ambiente, lista agrupada por categoria. O cartão "Visualizar modelo federado" fica **oculto** (feature flag) até a última fase.
-- **Ambiente:** abas Histórico / Pendências, botão "Novo registro".
+- **Ambiente:** abas Histórico / Pendências, botão "Novo registro" e cartão **"Onde fica"** (recorte da planta com marcador pulsante; ao tocar, abre a planta do pavimento em tela cheia, ampliada e centrada no ambiente).
+- **Aba "Planta" na obra**, ao lado da lista: `PlantaViewer` (`app/src/components/PlantaViewer.tsx`, imagem + marcadores em SVG + `react-zoom-pan-pinch`). Tocar no marcador abre o ambiente; a busca centraliza o ambiente; marcadores mostram a contagem de pendências abertas. Aviso fixo "Planta de arquitetura R05 · posição indicativa". Imagens da planta em Cache Storage para continuar visíveis sem sinal.
 - Barra inferior Início / Registros / Pendências; `BackButton` do Telegram; tema do Telegram (`themeParams`).
 
 ### 4. Novo registro online (tela 4)
@@ -89,6 +91,7 @@ Retomar `tasks/todo.md` §1–3 e `docs/validacao-hto.md`: validar federação (
 ## Verificação
 - **Unidade (Vitest):** validação de `initData` com vetor assinado por token de teste (válido, adulterado, expirado); compressão de imagem; máquina de estados da fila offline.
 - **Banco (`supabase test db`/pgTAP):** RLS — usuário de outra obra não lê nem grava; equipe não encerra pendência; `concluir_registro` repetido não duplica; encerramento concorrente só um vence.
-- **Python (pytest):** pareamento de ambientes do `inventory.json`.
+- **Python (pytest):** pareamento de ambientes do `inventory.json`; marcador de APTO. 101 dentro do apartamento e distinguível do de BHO 101; todo marcador dentro do recorte do edifício; tamanho da visão geral < ~1,5 MB e de cada recorte < ~250 KB.
+- **Planta no app (Playwright):** aba Planta → tocar no marcador do Apto. 101 abre o ambiente certo; "Onde fica" abre a planta centrada; planta já vista carrega offline.
 - **E2E (Playwright, Chromium pré-instalado):** `supabase start` local + `vite dev` com `window.Telegram.WebApp` simulado (initData assinado com token de teste) em viewport de celular: obras → HTO → ambiente → novo registro com foto → histórico; offline (`context.setOffline`) → reabrir → sincroniza sem duplicar; gestor encerra pendência.
 - **Telegram real:** bot e grupo de teste, publicação no tópico correto, link de retorno, aparelho físico. Emulação não substitui esse teste.

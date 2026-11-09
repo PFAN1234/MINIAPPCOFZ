@@ -31,9 +31,10 @@ Verificação: CI verde em um commit vazio de funcionalidade; `vite dev` abre a 
 
 ## 1. Ambientes da HTO a partir dos PDFs
 
-- [ ] `scripts/extrair_ambientes.py`: parear `A=xx m²` com o nome abaixo em `artifacts/validation/pdf/inventory.json`, gerando `data/hto/ambientes.json` (pavimento, nome da planta, nome operacional, categoria, área, PDF, revisão, bbox normalizada).
+- [ ] `scripts/extrair_ambientes.py`: parear cada nome com o `A=xx m²` logo abaixo dele em `artifacts/validation/pdf/inventory.json`, gerando `data/hto/ambientes.json` (pavimento, nome da planta, nome operacional, categoria, área, PDF, revisão, bbox normalizada).
 - [ ] Sinalizar duplicatas (CIRC. SUL, Circulação), áreas “Não incluso” e rótulos sem área; banheiros separados dos apartamentos.
-- [ ] Revisão humana da lista e geração de `supabase/seed/hto.sql`.
+- [ ] `scripts/gerar_plantas.py`: visão geral de cada pavimento (WebP) e recorte de detalhe por ambiente, com marcador no centro do par nome+área.
+- [ ] Imagem de prova com todos os marcadores; revisão humana da lista e dos marcadores; geração de `supabase/seed/hto.sql`.
 
 Verificação: pytest confere APTO. 101 = 23,88 m², SALÃO DE EVENTOS = 158,59 m² (Térreo) e APTO. 211 = 20,58 m² (1º pavimento). Dependência: 0.
 
@@ -50,10 +51,11 @@ Verificação: testes de banco — outra obra não lê nem grava; equipe não en
 
 - [ ] Tela Obras: obras permitidas, busca e últimos registros, sem obra pré-selecionada.
 - [ ] Tela da obra: abas Térreo / 1º pavimento, busca e lista de ambientes; cartão do modelo federado oculto por feature flag.
-- [ ] Tela do ambiente: abas Histórico / Pendências e botão Novo registro.
+- [ ] Tela do ambiente: abas Histórico / Pendências, botão Novo registro e cartão “Onde fica” com o recorte da planta.
+- [ ] Aba Planta na obra: marcadores tocáveis, zoom/arraste, busca centralizando o ambiente, contagem de pendências e aviso “posição indicativa”.
 - [ ] Barra inferior, BackButton e tema do Telegram.
 
-Verificação: Playwright em viewport móvel com Telegram simulado navega Obras → HTO → Apto. 101. Dependência: 2.
+Verificação: Playwright em viewport móvel com Telegram simulado navega Obras → HTO → Apto. 101, pela lista e pelo marcador na planta. Dependência: 2.
 
 ## 4. Novo registro e histórico
 
