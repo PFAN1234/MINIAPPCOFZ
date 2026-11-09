@@ -4,7 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import type { Connect, Plugin } from 'vite'
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 const PASTA_PLANTAS = fileURLToPath(new URL('../data/hto/plantas', import.meta.url))
 
@@ -65,5 +65,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Testes ponta a ponta ficam em e2e/ (Playwright), não no Vitest.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 })

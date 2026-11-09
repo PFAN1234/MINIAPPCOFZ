@@ -48,5 +48,20 @@ Os valores reais ficam em `.env.local` (ignorado pelo Git) e nas variáveis de a
 - `npm run lint`: ESLint
 - `npm test`: Vitest (`vitest run`)
 - `npm run build`: build de produção em `dist/`
+- `npm run test:e2e`: testes ponta a ponta (Playwright)
+
+## Testes de ponta a ponta
+
+Os testes ficam em `e2e/` e rodam num viewport móvel (390×844) com a fixture HTO. O Playwright sobe sozinho o servidor: `npm run build:fixture` gera `dist-fixture/` e o `vite preview` serve na porta 4174.
+
+```bash
+cd app
+npx playwright install chromium   # uma vez; no CI o job `e2e` faz isso
+npx playwright test               # ou: npm run test:e2e
+```
+
+Se o Chromium já estiver instalado em outro caminho, aponte `PW_CHROMIUM` para o executável (ex.: `PW_CHROMIUM=/opt/pw-browsers/chromium-1243/chrome-linux64/chrome npx playwright test`).
+
+O Telegram é simulado com `window.Telegram.WebApp` falso (`addInitScript`), e o `telegram-web-app.js` da internet é interceptado, para o teste não depender de rede.
 
 Observação: o TypeScript está fixado em 6.0.x porque o `typescript-eslint` ainda não suporta a 7.x.

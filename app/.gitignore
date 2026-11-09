@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build da fixture (testes ponta a ponta) e relatórios do Playwright
+dist-fixture
+test-results
+playwright-report
