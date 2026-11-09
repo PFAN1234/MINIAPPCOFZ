@@ -1,0 +1,66 @@
+[
+  {
+    "id": "fechar-diagnostico",
+    "section": "1. Diagnóstico dos arquivos",
+    "label": "Fechar correspondência e documentar a transformação",
+    "input": 90000,
+    "output": 9000,
+    "basis": "Revisão da evidência geométrica, documentação da transformação e relatório final."
+  },
+  {
+    "id": "ambiente-piloto",
+    "section": "2. Preparação do ambiente piloto",
+    "label": "Importação reproduzível, vínculos e recorte 3D",
+    "input": 1200000,
+    "output": 60000,
+    "basis": "Base de 1,2M tokens de entrada por etapa, calibrada pelo diagnóstico medido (6,5M)."
+  },
+  {
+    "id": "navegacao-2d-3d",
+    "section": "3. Navegação 2D → 3D",
+    "label": "Planta clicável, carregamento sob demanda e testes",
+    "input": 2000000,
+    "output": 100000,
+    "basis": "Maior esforço de frontend/Three.js; inclui testes em viewport móvel."
+  },
+  {
+    "id": "telegram-auth",
+    "section": "4. Acesso pelo Telegram",
+    "label": "Identidade, autorização por obra e bot de teste",
+    "input": 800000,
+    "output": 40000,
+    "basis": "Validação de initData, permissões e configuração HTTPS."
+  },
+  {
+    "id": "fotos-historico",
+    "section": "5. Foto e histórico por ambiente",
+    "label": "Captura, legenda, histórico e autoria",
+    "input": 1200000,
+    "output": 60000,
+    "basis": "Fluxo de fotos, armazenamento e consulta por ambiente."
+  },
+  {
+    "id": "offline-idempotencia",
+    "section": "6. Registros com sinal instável",
+    "label": "Rascunhos offline, idempotência e retomada",
+    "input": 1000000,
+    "output": 50000,
+    "basis": "IndexedDB, fila de sincronização e testes de quota/falha."
+  },
+  {
+    "id": "publicacao-pendencias",
+    "section": "7. Publicação e resolução",
+    "label": "Fila de publicação e encerramento de pendências",
+    "input": 900000,
+    "output": 45000,
+    "basis": "Integração com Bot API, reconciliação e permissões de gestor."
+  },
+  {
+    "id": "piloto-assistido",
+    "section": "8. Piloto assistido",
+    "label": "Cadastro dos ambientes, desempenho e aceite",
+    "input": 700000,
+    "output": 35000,
+    "basis": "Operação assistida, medição em aparelho real e aceite da equipe."
+  }
+]

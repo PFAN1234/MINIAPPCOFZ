@@ -1,0 +1,30 @@
+Use case: ui-mockup. Edit image 1, the two-screen Telegram-to-Mini-App launch mockup. Image 2 (six-screen board) is a style and layout reference: use its FIRST app screen as the destination.
+
+Preserve the same landscape board, two tall screens side by side, Telegram light theme, blue controls, pale green chat wallpaper, center arrow "Toque para abrir", overall title "Do Telegram para o Diário da obra", and small footer "Proposta visual · Bot e acesso ainda não configurados". Sharp legible Brazilian Portuguese typography.
+
+LEFT SCREEN:
+Change external label to "1  No tópico Geral".
+Change Telegram chat header from HTO to "Geral", replace suitcase icon with a simple # topic icon. Keep subtitle "CO-FZ · 2ª Etapa".
+Keep the native "Mensagem fixada" strip and preview "Diário da obra · Abrir aplicativo".
+Bot message authored "Diário da obra" (small "bot") must say exactly:
+"Registre serviços e acompanhe as pendências das obras."
+"Escolha a obra para acessar os ambientes e o modelo federado."
+Keep its prominent inline link button "Abrir Diário da obra".
+Below, replace the HTO-specific cleaning-photo message with a modest ordinary example document message from "João": a PDF document icon, filename "BA041126_COFZ.pdf", small time "15:16". Leave natural green chat background visible; do not enlarge the document card to fill all space.
+Keep bottom Telegram composer "Mensagem", paperclip, emoji and microphone. No keyboard.
+
+RIGHT SCREEN:
+Change external label to "2  Escolher a obra".
+This is the INITIAL Mini App home page with multiple works, closely matching screen 1 in image 2.
+Top native Mini App header: close X, centered "Diário da obra", three dots.
+Content: bold "CO-FZ", subtitle "2ª Etapa · 1ª Fase", main heading "Obras", short helper "Selecione a obra para continuar", search field "Buscar obra".
+Show FOUR equally prominent roomy tappable list cards with suitable simple icons and chevrons:
+"HTO"
+"Infraestruturas"
+"Rancho"
+"Telhados e Coberturas"
+No work preselected: HTO is an ordinary white card like the others, not a blue active page. Do NOT show HTO as the page heading, the model-viewer card, floor tabs or apartment list here.
+Below, keep the first-screen pattern "Últimos registros", with a compact cleaning-photo thumbnail from image 2 and texts "HTO · Apto. 101" and "Execução de limpeza". This small activity preview is clearly labeled HTO and does not mean HTO has been entered.
+Bottom navigation "Início" selected blue, "Registros", "Pendências".
+
+Functional meaning: Geral → Abrir Diário da obra → choose from all works → only THEN open the chosen work (such as HTO with its environments and model). Do not add a third screen. The opening link is generic; no automatic HTO destination. Preserve established app identity, exact text, coherent spacing, generous tap targets, and the conceptual-mockup status.

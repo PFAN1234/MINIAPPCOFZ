@@ -1,0 +1,4962 @@
+[
+  {
+    "id": 270,
+    "guid": "3Qi553C$XC9ur8APcwmdQr",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243896",
+    "bbox_in_arq_candidate_m": [
+      [
+        191.40817527710024,
+        277.9062687561159,
+        1.8209999999999997
+      ],
+      [
+        191.48617527750818,
+        277.9142687567509,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 9427,
+    "guid": "3Qi553C$XC9ur8APcwmdO0",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243981",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.62722449586215,
+        298.0662746755266,
+        1.8209999999999997
+      ],
+      [
+        192.7052244962701,
+        298.0742746761617,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 9452,
+    "guid": "3Qi553C$XC9ur8APcwmdLP",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30244820",
+    "bbox_in_arq_candidate_m": [
+      [
+        205.49768699546763,
+        275.41427467568786,
+        1.4409999999999996
+      ],
+      [
+        205.57568699587557,
+        275.42227467632296,
+        1.5589999999999997
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 9477,
+    "guid": "2s0VaRG5DEtANeTRZIQi8x",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30245541",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.701224496246,
+        298.0625755912895,
+        5.405999999979236
+      ],
+      [
+        192.77922449665394,
+        298.0705755919245,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 9412,
+    "guid": "3Qi553C$XC9ur8APcwmdQq",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30243897",
+    "bbox_in_arq_candidate_m": [
+      [
+        191.41217527618795,
+        277.91426875577315,
+        1.82575
+      ],
+      [
+        191.4821752775448,
+        277.9617687568761,
+        1.9342500000000002
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 9639,
+    "guid": "2s0VaRG5DEtANeTRZIQi8q",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30245546",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70122449524442,
+        298.2505755907832,
+        5.405999999979236
+      ],
+      [
+        192.77922449565236,
+        298.25857559141826,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 9438,
+    "guid": "3Qi553C$XC9ur8APcwmdO3",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30243982",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.63122449494986,
+        298.07427467518386,
+        1.82575
+      ],
+      [
+        192.70122449630668,
+        298.1217746762868,
+        1.9342500000000002
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 9488,
+    "guid": "2s0VaRG5DEtANeTRZIQi8u",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30245542",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7052244953337,
+        298.07057559094676,
+        5.410749999979236
+      ],
+      [
+        192.77522449669056,
+        298.1180755920497,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 9463,
+    "guid": "3Qi553C$XC9ur8APcwmdLO",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30244821",
+    "bbox_in_arq_candidate_m": [
+      [
+        205.50168699543102,
+        275.3667746755627,
+        1.4457499999999999
+      ],
+      [
+        205.57168699678786,
+        275.4142746766656,
+        1.5542500000000001
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 18653,
+    "guid": "2s0VaRG5DEtANeTRZIQiGG",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30246030",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70122449538735,
+        287.89427467564036,
+        5.405999999979234
+      ],
+      [
+        192.7792244957953,
+        287.9022746762754,
+        5.523999999979234
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 18678,
+    "guid": "2s0VaRG5DEtANeTRZIQiKE",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30246288",
+    "bbox_in_arq_candidate_m": [
+      [
+        172.82868699590975,
+        276.9538121786112,
+        5.405999999979236
+      ],
+      [
+        172.8366869968017,
+        277.031812178978,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 18703,
+    "guid": "2s0VaRG5DEtANeTRZIQiQX",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30246463",
+    "bbox_in_arq_candidate_m": [
+      [
+        173.01668699391433,
+        276.9538121785046,
+        5.405999999979236
+      ],
+      [
+        173.02468699480627,
+        277.0318121788714,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 18639,
+    "guid": "2s0VaRG5DEtANeTRZIQi8r",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30245547",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7052244952078,
+        298.20307559065805,
+        5.410749999979236
+      ],
+      [
+        192.77522449656465,
+        298.250575591761,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 18689,
+    "guid": "2s0VaRG5DEtANeTRZIQiKF",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30246289",
+    "bbox_in_arq_candidate_m": [
+      [
+        172.83668699616973,
+        276.95781217818256,
+        5.410749999979236
+      ],
+      [
+        172.88418699719955,
+        277.0278121794371,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 18664,
+    "guid": "2s0VaRG5DEtANeTRZIQiGH",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30246031",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70522449535073,
+        287.8467746755152,
+        5.410749999979235
+      ],
+      [
+        192.77522449670755,
+        287.8942746766181,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 18714,
+    "guid": "2s0VaRG5DEtANeTRZIQiRU",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30246464",
+    "bbox_in_arq_candidate_m": [
+      [
+        172.96918699351647,
+        276.9578121780456,
+        5.410749999979236
+      ],
+      [
+        173.0166869945463,
+        277.0278121793001,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48395,
+    "guid": "1lC_4mA5DFP9Hi_erNQpRI",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256432",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.62722449520587,
+        298.2742746777302,
+        1.8209999999999997
+      ],
+      [
+        192.7052244956138,
+        298.2822746783653,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 48420,
+    "guid": "1lC_4mA5DFP9Hi_erNQpP4",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256550",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.62722449650155,
+        308.4062746761368,
+        1.8209999999999997
+      ],
+      [
+        192.7052244969095,
+        308.41427467677187,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48445,
+    "guid": "1lC_4mA5DFP9Hi_erNQpP9",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256555",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.62722449549997,
+        308.5942746756305,
+        1.8209999999999997
+      ],
+      [
+        192.70522449590788,
+        308.6022746762656,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48406,
+    "guid": "1lC_4mA5DFP9Hi_erNQpRJ",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256433",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.63122449516928,
+        298.2267746776051,
+        1.8257499999999998
+      ],
+      [
+        192.7012244965261,
+        298.274274678708,
+        1.93425
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 48470,
+    "guid": "1lC_4mA5DFP9Hi_erNQpO4",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256614",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.62722449582117,
+        318.74627467542746,
+        1.8209999999999997
+      ],
+      [
+        192.7052244962291,
+        318.75427467606255,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48431,
+    "guid": "1lC_4mA5DFP9Hi_erNQpP5",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256551",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.63122449558927,
+        308.4142746757941,
+        1.82575
+      ],
+      [
+        192.7012244969461,
+        308.461774676897,
+        1.9342500000000002
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 48456,
+    "guid": "1lC_4mA5DFP9Hi_erNQpPE",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256556",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.63122449546336,
+        308.5467746755054,
+        1.8257499999999998
+      ],
+      [
+        192.70122449682017,
+        308.5942746766083,
+        1.93425
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48495,
+    "guid": "1lC_4mA5DFP9Hi_erNQpO9",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256619",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.62722449474256,
+        318.9342746750085,
+        1.8209999999999997
+      ],
+      [
+        192.7052244951505,
+        318.94227467564355,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48520,
+    "guid": "1lC_4mA5DFP9Hi_erNQpMe",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256714",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6272244967841,
+        329.03627467636426,
+        1.8209999999999997
+      ],
+      [
+        192.70522449719203,
+        329.04427467699935,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48481,
+    "guid": "1lC_4mA5DFP9Hi_erNQpO5",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256615",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.63122449490888,
+        318.75427467508473,
+        1.82575
+      ],
+      [
+        192.70122449626572,
+        318.8017746761877,
+        1.9342500000000002
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 48545,
+    "guid": "1lC_4mA5DFP9Hi_erNQpMj",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256719",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6272244957825,
+        329.224274675858,
+        1.8209999999999997
+      ],
+      [
+        192.70522449619045,
+        329.2322746764931,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48506,
+    "guid": "1lC_4mA5DFP9Hi_erNQpOE",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256620",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.63122449470595,
+        318.8867746748833,
+        1.8257499999999998
+      ],
+      [
+        192.7012244960628,
+        318.9342746759863,
+        1.93425
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48570,
+    "guid": "1lC_4mA5DFP9Hi_erNQpLf",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256779",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.62722449641393,
+        338.32257558914597,
+        1.8209999999999997
+      ],
+      [
+        192.70522449682187,
+        338.330575589781,
+        1.9389999999999998
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48531,
+    "guid": "1lC_4mA5DFP9Hi_erNQpMf",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256715",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.63122449587183,
+        329.0442746760216,
+        1.82575
+      ],
+      [
+        192.70122449722865,
+        329.0917746771245,
+        1.9342500000000002
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 48595,
+    "guid": "1lC_4mA5DFP9Hi_erNQogb",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257479",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70122449627738,
+        308.412575591324,
+        5.405999999979236
+      ],
+      [
+        192.77922449668532,
+        308.42057559195905,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48556,
+    "guid": "1lC_4mA5DFP9Hi_erNQpMo",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256720",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6312244957459,
+        329.1767746757329,
+        1.8257499999999998
+      ],
+      [
+        192.70122449710274,
+        329.2242746768358,
+        1.93425
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48620,
+    "guid": "1lC_4mA5DFP9Hi_erNQogk",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257484",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7012244952758,
+        308.60057559081775,
+        5.405999999979236
+      ],
+      [
+        192.77922449568374,
+        308.6085755914528,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48581,
+    "guid": "1lC_4mA5DFP9Hi_erNQpLk",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256780",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.63122449550164,
+        338.33057558880324,
+        1.82575
+      ],
+      [
+        192.7012244968585,
+        338.3780755899062,
+        1.9342500000000002
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 48645,
+    "guid": "1lC_4mA5DFP9Hi_erNQogw",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257496",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70122449699295,
+        318.7637755918953,
+        5.405999999979236
+      ],
+      [
+        192.7792244974009,
+        318.77177559253033,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48606,
+    "guid": "1lC_4mA5DFP9Hi_erNQogg",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257480",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70522449536512,
+        308.4205755909813,
+        5.410749999979236
+      ],
+      [
+        192.77522449672193,
+        308.46807559208423,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 48670,
+    "guid": "1lC_4mA5DFP9Hi_erNQog$",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257501",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70122449591435,
+        318.9517755914763,
+        5.405999999979236
+      ],
+      [
+        192.77922449632229,
+        318.9597755921114,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48380,
+    "guid": "2s0VaRG5DEtANeTRZIQigr",
+    "type": "IfcFlowTerminal",
+    "name": "AN-ANT-EXT-M-039:PARABOLICA:30247467",
+    "bbox_in_arq_candidate_m": [
+      [
+        189.67338174924095,
+        288.0151821713597,
+        5.591152092242504
+      ],
+      [
+        190.69668699363112,
+        289.2139636677567,
+        7.18194587650971
+      ]
+    ],
+    "vertices": 5478,
+    "triangles": 10794
+  },
+  {
+    "id": 48695,
+    "guid": "1lC_4mA5DFP9Hi_erNQog9",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257515",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70122449684357,
+        329.09377559184895,
+        5.405999999979236
+      ],
+      [
+        192.77922449725153,
+        329.101775592484,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48631,
+    "guid": "1lC_4mA5DFP9Hi_erNQogl",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257485",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7052244952392,
+        308.5530755906926,
+        5.410749999979236
+      ],
+      [
+        192.77522449659602,
+        308.6005755917955,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48720,
+    "guid": "1lC_4mA5DFP9Hi_erNQogI",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257520",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70122449584198,
+        329.28177559134264,
+        5.405999999979236
+      ],
+      [
+        192.77922449624992,
+        329.28977559197773,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48656,
+    "guid": "1lC_4mA5DFP9Hi_erNQogx",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257497",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70522449608066,
+        318.77177559155257,
+        5.410749999979236
+      ],
+      [
+        192.7752244974375,
+        318.8192755926555,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 48745,
+    "guid": "1lC_4mA5DFP9Hi_erNQofZ",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257537",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7012244956581,
+        339.2827755908216,
+        5.405999999979236
+      ],
+      [
+        192.77922449606604,
+        339.2907755914566,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48681,
+    "guid": "1lC_4mA5DFP9Hi_erNQogy",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257502",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70522449587773,
+        318.90427559135117,
+        5.410749999979236
+      ],
+      [
+        192.77522449723457,
+        318.9517755924541,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48770,
+    "guid": "1lC_4mA5DFP9Hi_erNQoWI",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258160",
+    "bbox_in_arq_candidate_m": [
+      [
+        184.94868699498002,
+        276.9538121777726,
+        5.405999999979234
+      ],
+      [
+        184.956686995872,
+        277.03181217813943,
+        5.523999999979234
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48706,
+    "guid": "1lC_4mA5DFP9Hi_erNQogE",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257516",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7052244959313,
+        329.1017755915062,
+        5.410749999979236
+      ],
+      [
+        192.77522449728812,
+        329.1492755926092,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 48795,
+    "guid": "1lC_4mA5DFP9Hi_erNQoWN",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258165",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.13668699298464,
+        276.953812177666,
+        5.405999999979234
+      ],
+      [
+        185.14468699387658,
+        277.03181217803285,
+        5.523999999979234
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48731,
+    "guid": "1lC_4mA5DFP9Hi_erNQogJ",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257521",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70522449580537,
+        329.2342755912175,
+        5.410749999979236
+      ],
+      [
+        192.7752244971622,
+        329.28177559232046,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48820,
+    "guid": "1lC_4mA5DFP9Hi_erNQo$d",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258181",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.03868699495604,
+        276.9538121778007,
+        5.405999999979234
+      ],
+      [
+        197.04668699584798,
+        277.0318121781675,
+        5.523999999979234
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48756,
+    "guid": "1lC_4mA5DFP9Hi_erNQofW",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257538",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.70522449474583,
+        339.29077559047886,
+        5.410749999979236
+      ],
+      [
+        192.77522449610265,
+        339.3382755915818,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48845,
+    "guid": "1lC_4mA5DFP9Hi_erNQo$e",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258186",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.34668699345116,
+        276.9538121780114,
+        5.405999999979234
+      ],
+      [
+        197.35468699434313,
+        277.03181217837823,
+        5.523999999979234
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48781,
+    "guid": "1lC_4mA5DFP9Hi_erNQoWJ",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258161",
+    "bbox_in_arq_candidate_m": [
+      [
+        184.95668699524003,
+        276.95781217734395,
+        5.410749999979235
+      ],
+      [
+        185.00418699626985,
+        277.0278121785985,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48870,
+    "guid": "1lC_4mA5DFP9Hi_erNQozI",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258352",
+    "bbox_in_arq_candidate_m": [
+      [
+        209.2486869930246,
+        276.95381217804874,
+        5.405999999979236
+      ],
+      [
+        209.25668699391653,
+        277.0318121784155,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48806,
+    "guid": "1lC_4mA5DFP9Hi_erNQoWK",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258166",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.08918699258678,
+        276.95781217720696,
+        5.410749999979235
+      ],
+      [
+        185.1366869936166,
+        277.0278121784615,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48895,
+    "guid": "1lC_4mA5DFP9Hi_erNQozN",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258357",
+    "bbox_in_arq_candidate_m": [
+      [
+        209.41668699315113,
+        276.9538121777376,
+        5.405999999979234
+      ],
+      [
+        209.42468699404307,
+        277.03181217810436,
+        5.523999999979234
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48831,
+    "guid": "1lC_4mA5DFP9Hi_erNQo$a",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258182",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.04668699521602,
+        276.95781217737203,
+        5.410749999979235
+      ],
+      [
+        197.09418699624584,
+        277.02781217862656,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48920,
+    "guid": "1lC_4mA5DFP9Hi_erNQoyV",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258429",
+    "bbox_in_arq_candidate_m": [
+      [
+        221.35868699327662,
+        276.9538121783787,
+        5.405999999979234
+      ],
+      [
+        221.3666869941686,
+        277.03181217874555,
+        5.523999999979234
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48856,
+    "guid": "1lC_4mA5DFP9Hi_erNQo$f",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258187",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.2991869930533,
+        276.95781217755234,
+        5.410749999979235
+      ],
+      [
+        197.34668699408311,
+        277.02781217880687,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48945,
+    "guid": "1gi_bk9pr74wNCTsU$7WNo",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30264067",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.59247171854506,
+        339.4903755886961,
+        5.405999999979236
+      ],
+      [
+        196.67047171895297,
+        339.49837558933115,
+        5.523999999979236
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48881,
+    "guid": "1lC_4mA5DFP9Hi_erNQozJ",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258353",
+    "bbox_in_arq_candidate_m": [
+      [
+        209.25668699328457,
+        276.9578121776201,
+        5.410749999979236
+      ],
+      [
+        209.3041869943144,
+        277.0278121788746,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 48970,
+    "guid": "1gi_bk9pr74wNCTsU$7WED",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30264700",
+    "bbox_in_arq_candidate_m": [
+      [
+        213.17768699290818,
+        275.41427467535493,
+        1.4409999999999996
+      ],
+      [
+        213.25568699331612,
+        275.42227467599,
+        1.5589999999999997
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 48906,
+    "guid": "1lC_4mA5DFP9Hi_erNQozK",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258358",
+    "bbox_in_arq_candidate_m": [
+      [
+        209.36918699275327,
+        276.9578121772785,
+        5.410749999979235
+      ],
+      [
+        209.4166869937831,
+        277.02781217853305,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 49012,
+    "guid": "1mwU$t6WHFfedSPmq3hhlN",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272001",
+    "bbox_in_arq_candidate_m": [
+      [
+        172.978736994738,
+        276.96495659824467,
+        5.519249999979236
+      ],
+      [
+        173.00463699331607,
+        276.9906677587841,
+        6.835699999974662
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 49035,
+    "guid": "1mwU$t6WHFfedSPmq3hhlO",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272014",
+    "bbox_in_arq_candidate_m": [
+      [
+        173.06348699367518,
+        276.9648621786602,
+        6.8946444200550925
+      ],
+      [
+        173.64622593470455,
+        276.9907621789431,
+        6.920355579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 49283,
+    "guid": "1mwU$t6WHFfedSPmq3hhk6",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30272080",
+    "bbox_in_arq_candidate_m": [
+      [
+        172.978736994738,
+        276.9648996881727,
+        6.8356999999746435
+      ],
+      [
+        173.0634869943298,
+        276.99072466903294,
+        6.9204499999746565
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 49300,
+    "guid": "1mwU$t6WHFfedSPmq3hhkX",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272119",
+    "bbox_in_arq_candidate_m": [
+      [
+        172.884186995258,
+        276.97986217789503,
+        5.452144420059666
+      ],
+      [
+        172.96918699426016,
+        277.0057621783554,
+        5.477855579898806
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 49322,
+    "guid": "1mwU$t6WHFfedSPmq3hhj2",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272148",
+    "bbox_in_arq_candidate_m": [
+      [
+        173.6632759336968,
+        277.06411217838723,
+        6.8946444200550925
+      ],
+      [
+        173.68917593367166,
+        281.4792746772235,
+        6.920355579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 50893,
+    "guid": "1mwU$t6WHFfedSPmq3hhjB",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30272157",
+    "bbox_in_arq_candidate_m": [
+      [
+        173.629225933018,
+        276.94906217818794,
+        6.879999999974663
+      ],
+      [
+        173.70622593362364,
+        277.0810621814226,
+        6.9349999999746625
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 50911,
+    "guid": "1mwU$t6WHFfedSPmq3hhfD",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272411",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.09873699470083,
+        276.99495659823083,
+        5.519249999979234
+      ],
+      [
+        185.12463699327887,
+        277.02066775877023,
+        6.818199999974662
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 50933,
+    "guid": "1mwU$t6WHFfedSPmq3hhea",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272498",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.18348699363798,
+        276.99486217844134,
+        6.877144420055092
+      ],
+      [
+        185.29231235113545,
+        277.02076217892926,
+        6.902855579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 50950,
+    "guid": "1mwU$t6WHFfedSPmq3hhsU",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30272584",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.09873699470083,
+        276.99489968815885,
+        6.818199999974643
+      ],
+      [
+        185.18348699429262,
+        277.0207246690191,
+        6.902949999974656
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 50966,
+    "guid": "1mwU$t6WHFfedSPmq3hhsv",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272623",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.0041869957251,
+        276.97986217828867,
+        5.452144420059664
+      ],
+      [
+        185.08918699472724,
+        277.005762178749,
+        5.4778555798988045
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 50988,
+    "guid": "1mwU$t6WHFfedSPmq3hhoV",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272841",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.0941869957011,
+        276.9798621784942,
+        5.452144420059664
+      ],
+      [
+        197.2991869944802,
+        277.00576217900425,
+        5.4778555798988045
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51011,
+    "guid": "1mwU$t6WHFfedSPmq3hhob",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272883",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.3087369939539,
+        276.9649560180207,
+        5.519249994243232
+      ],
+      [
+        197.33463699400573,
+        276.9906677583782,
+        6.818200915760226
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51034,
+    "guid": "1mwU$t6WHFfedSPmq3hhnM",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30272896",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.39348699301777,
+        276.9648615980152,
+        6.877145313644861
+      ],
+      [
+        197.39668699657673,
+        276.99076159871913,
+        6.902856506403588
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51051,
+    "guid": "1mwU$t6WHFfedSPmq3hhnc",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30272944",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.3087369940309,
+        276.9648991079487,
+        6.818200910024205
+      ],
+      [
+        197.3934869936227,
+        276.9907240888089,
+        6.902950910024218
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 51067,
+    "guid": "1mwU$t6WHFfedSPmq3hh$R",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30273037",
+    "bbox_in_arq_candidate_m": [
+      [
+        209.30418699376966,
+        276.97986217836024,
+        5.452144420059664
+      ],
+      [
+        209.36918699481674,
+        277.0057621790251,
+        5.4778555798988045
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51089,
+    "guid": "1mwU$t6WHFfedSPmq3hh$Z",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30273077",
+    "bbox_in_arq_candidate_m": [
+      [
+        209.26873699501908,
+        276.96495659854355,
+        5.519249999979236
+      ],
+      [
+        209.29463699359712,
+        276.990667759083,
+        6.8357467969230274
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51112,
+    "guid": "1mwU$t6WHFfedSPmq3hh_K",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30273090",
+    "bbox_in_arq_candidate_m": [
+      [
+        208.5209398957795,
+        276.9648623608221,
+        6.894691200755892
+      ],
+      [
+        209.20988699453235,
+        276.99076236142736,
+        6.920402393090139
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51134,
+    "guid": "1mwU$t6WHFfedSPmq3hhzu",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30273198",
+    "bbox_in_arq_candidate_m": [
+      [
+        221.37873699484388,
+        276.99495659837874,
+        5.519249999979234
+      ],
+      [
+        221.40463699342192,
+        277.0206677589182,
+        6.835699999974661
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51156,
+    "guid": "1mwU$t6WHFfedSPmq3hhzf",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30273215",
+    "bbox_in_arq_candidate_m": [
+      [
+        220.61956477543572,
+        276.99486217810164,
+        6.894644420055092
+      ],
+      [
+        221.31988699404715,
+        277.02076217850265,
+        6.920355579894232
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51173,
+    "guid": "1mwU$t6WHFfedSPmq3hhyx",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30273261",
+    "bbox_in_arq_candidate_m": [
+      [
+        221.31988699383012,
+        276.9948996881299,
+        6.8356999999746435
+      ],
+      [
+        221.40463699342192,
+        277.02072466899017,
+        6.9204499999746565
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 51189,
+    "guid": "1mwU$t6WHFfedSPmq3hg3x",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30273837",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74227449651147,
+        287.85641909555005,
+        5.519249999979234
+      ],
+      [
+        192.7681744950895,
+        287.8821302560895,
+        6.775000521889298
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51213,
+    "guid": "1mwU$t6WHFfedSPmq3hg3i",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30273850",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74236891624616,
+        287.98427437678384,
+        6.877050703391933
+      ],
+      [
+        192.76808007708757,
+        288.6892747256325,
+        6.902953358155239
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51235,
+    "guid": "1mwU$t6WHFfedSPmq3hg0E",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274008",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74227449744285,
+        298.08272001184093,
+        5.519249999979236
+      ],
+      [
+        192.76817449602092,
+        298.1084311723804,
+        6.818199999974662
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51257,
+    "guid": "1mwU$t6WHFfedSPmq3hg0p",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274021",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7422744953166,
+        297.3271714760641,
+        6.877144420055092
+      ],
+      [
+        192.76817449529145,
+        298.0237755916756,
+        6.902855579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51274,
+    "guid": "1mwU$t6WHFfedSPmq3hgF5",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274067",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74231200611297,
+        298.02377559169383,
+        6.818199999974655
+      ],
+      [
+        192.7681369883339,
+        298.10852559225214,
+        6.902949999974668
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 51290,
+    "guid": "1mwU$t6WHFfedSPmq3hgFx",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274093",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.72727449570655,
+        298.1180755903864,
+        5.452144420059666
+      ],
+      [
+        192.75317449568138,
+        298.2030755915991,
+        5.477855579898806
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51312,
+    "guid": "1mwU$t6WHFfedSPmq3hgD4",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274194",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74227449747423,
+        308.43272001187546,
+        5.519249999979236
+      ],
+      [
+        192.7681744960523,
+        308.4584311724149,
+        6.818199999974662
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51334,
+    "guid": "1mwU$t6WHFfedSPmq3hgD9",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274207",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74227449666773,
+        307.64197382801154,
+        6.877144420055092
+      ],
+      [
+        192.76817449664262,
+        308.37377559254213,
+        6.902855579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51351,
+    "guid": "1mwU$t6WHFfedSPmq3hgCR",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274253",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74231200614437,
+        308.37377559172836,
+        6.818199999974654
+      ],
+      [
+        192.76813698836528,
+        308.45852559228666,
+        6.902949999974667
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 51367,
+    "guid": "1mwU$t6WHFfedSPmq3hgC_",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274280",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.72727449573793,
+        308.4680755904209,
+        5.452144420059666
+      ],
+      [
+        192.75317449571278,
+        308.5530755916336,
+        5.477855579898806
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51389,
+    "guid": "1mwU$t6WHFfedSPmq3hgAT",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274379",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.742274496793,
+        318.78392001121455,
+        5.519249999979236
+      ],
+      [
+        192.76817449537106,
+        318.80963117175395,
+        6.818199999974662
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51411,
+    "guid": "1mwU$t6WHFfedSPmq3hgAE",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274392",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7422744973833,
+        318.0889144709129,
+        6.877144420055092
+      ],
+      [
+        192.76817449743518,
+        318.72497559266776,
+        6.902855579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51428,
+    "guid": "1mwU$t6WHFfedSPmq3hg9H",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274439",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74231200546313,
+        318.7249755910674,
+        6.818199999974653
+      ],
+      [
+        192.76813698768404,
+        318.8097255916257,
+        6.902949999974666
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 51444,
+    "guid": "1mwU$t6WHFfedSPmq3hg9t",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274465",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.72727449645348,
+        318.8192755909922,
+        5.452144420059666
+      ],
+      [
+        192.75317449642833,
+        318.9042755922049,
+        5.477855579898806
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51466,
+    "guid": "1mwU$t6WHFfedSPmq3hg8A",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274524",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74227449664363,
+        329.1139200111682,
+        5.519249999979236
+      ],
+      [
+        192.7681744952217,
+        329.1396311717076,
+        6.818199999974662
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51488,
+    "guid": "1mwU$t6WHFfedSPmq3hg8$",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274537",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74227449723395,
+        328.3610361844872,
+        6.877144420055092
+      ],
+      [
+        192.76817449728583,
+        329.05497559262136,
+        6.902855579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51505,
+    "guid": "1mwU$t6WHFfedSPmq3hgNF",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274585",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74231200531375,
+        329.05497559102105,
+        6.818199999974654
+      ],
+      [
+        192.7681369875347,
+        329.13972559157935,
+        6.902949999974667
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 51521,
+    "guid": "1mwU$t6WHFfedSPmq3hgNb",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274611",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7272744963811,
+        329.14927559085857,
+        5.452144420059666
+      ],
+      [
+        192.753174496356,
+        329.23427559207124,
+        5.477855579898806
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51543,
+    "guid": "1mwU$t6WHFfedSPmq3hgLC",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274714",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74227449693197,
+        339.3029200112858,
+        5.519249999979236
+      ],
+      [
+        192.76817449551,
+        339.3286311718252,
+        6.818199999974662
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51565,
+    "guid": "1mwU$t6WHFfedSPmq3hgLn",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274727",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74227449612548,
+        338.14577559047177,
+        6.877192743475578
+      ],
+      [
+        192.76817449610033,
+        339.24397559154306,
+        6.902903903314718
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51582,
+    "guid": "1mwU$t6WHFfedSPmq3hgK3",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274773",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7423120056021,
+        339.2439755911386,
+        6.818199999974655
+      ],
+      [
+        192.768136987823,
+        339.3287255916969,
+        6.902949999974668
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 51598,
+    "guid": "1mwU$t6WHFfedSPmq3hgJJ",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274821",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.63352171966918,
+        339.4525200086058,
+        5.519249999979236
+      ],
+      [
+        196.65942171824722,
+        339.4782311691452,
+        6.774997506584765
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51621,
+    "guid": "1mwU$t6WHFfedSPmq3hgJg",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274876",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.6335217199794,
+        338.14677511134255,
+        6.877095202660127
+      ],
+      [
+        196.65942171995422,
+        339.35037357615005,
+        6.902851287359727
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 51643,
+    "guid": "2YfiXzpu13_BTwtpB4r9fQ",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30274954",
+    "bbox_in_arq_candidate_m": [
+      [
+        220.576614776172,
+        277.0941121776897,
+        6.8946444200550925
+      ],
+      [
+        220.60251477614685,
+        281.47927467662834,
+        6.920355579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 48931,
+    "guid": "1lC_4mA5DFP9Hi_erNQoyS",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258430",
+    "bbox_in_arq_candidate_m": [
+      [
+        221.36668699353663,
+        276.9578121779501,
+        5.410749999979235
+      ],
+      [
+        221.41418699456645,
+        277.0278121792046,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 53235,
+    "guid": "2YfiXzpu13_BTwtpB4r9f3",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30274963",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.46743986331936,
+        281.48742467586015,
+        6.890772855446148
+      ],
+      [
+        208.42743992984114,
+        281.5211246765192,
+        6.924248842126701
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 53259,
+    "guid": "2YfiXzpu13_BTwtpB4r9dB",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30275099",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.41373699524235,
+        277.0641114602719,
+        6.877097866469945
+      ],
+      [
+        197.43963699529422,
+        281.473788282576,
+        6.902855579893535
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 53208,
+    "guid": "2YfiXzpu13_BTwtpB4r9f1",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30274961",
+    "bbox_in_arq_candidate_m": [
+      [
+        220.5595647758335,
+        276.9790621774904,
+        6.879999999974663
+      ],
+      [
+        220.6365647762096,
+        277.111062180725,
+        6.9349999999746625
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 48956,
+    "guid": "1gi_bk9pr74wNCTsU$7WNr",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30264068",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.59647171850844,
+        339.4428755885709,
+        5.410749999979236
+      ],
+      [
+        196.66647171986526,
+        339.4903755896739,
+        5.519249999979236
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3412
+  },
+  {
+    "id": 53278,
+    "guid": "2YfiXzpu13_BTwtpB4r9df",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30275129",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.37968699532345,
+        276.9490613082261,
+        6.86250000050345
+      ],
+      [
+        197.45668699658012,
+        277.0810617954061,
+        6.917501213196797
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 55557,
+    "guid": "2YfiXzpu13_BTwtpB4r9ah",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30275323",
+    "bbox_in_arq_candidate_m": [
+      [
+        208.47798989648138,
+        277.0641122248021,
+        6.89464442281134
+      ],
+      [
+        208.50388989653325,
+        281.4732748098072,
+        6.920401478527433
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 55540,
+    "guid": "2YfiXzpu13_BTwtpB4r9ae",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30275320",
+    "bbox_in_arq_candidate_m": [
+      [
+        209.20988699415074,
+        276.96489987114194,
+        6.835746796922996
+      ],
+      [
+        209.29463699374253,
+        276.9907248520022,
+        6.920496796923009
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 58512,
+    "guid": "2YfiXzpu13_BTwtpB4r9Zb",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275381",
+    "bbox_in_arq_candidate_m": [
+      [
+        208.5544398957154,
+        281.4908246757529,
+        6.894148065618044
+      ],
+      [
+        220.5033147767975,
+        281.5177246761068,
+        6.9208519343312815
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 48981,
+    "guid": "1gi_bk9pr74wNCTsU$7WEC",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30264701",
+    "bbox_in_arq_candidate_m": [
+      [
+        213.18168699287156,
+        275.3667746752298,
+        1.4457499999999999
+      ],
+      [
+        213.2516869942284,
+        275.4142746763327,
+        1.5542500000000001
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 60094,
+    "guid": "2YfiXzpu13_BTwtpB4r9XT",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30275469",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.3093623499226,
+        277.09411217752825,
+        6.877144420055092
+      ],
+      [
+        185.33526234997444,
+        281.50628814736064,
+        6.902855579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 60116,
+    "guid": "2YfiXzpu13_BTwtpB4r9ga",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275573",
+    "bbox_in_arq_candidate_m": [
+      [
+        173.74522593284098,
+        281.4908246759306,
+        6.894148065618044
+      ],
+      [
+        185.25881235074783,
+        281.51772467648846,
+        6.9208519343312815
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 55527,
+    "guid": "2YfiXzpu13_BTwtpB4r9cs",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30275174",
+    "bbox_in_arq_candidate_m": [
+      [
+        220.50056477536387,
+        281.45927467532135,
+        6.882499999974662
+      ],
+      [
+        220.61256477559618,
+        281.52927467646725,
+        6.933689367066318
+      ]
+    ],
+    "vertices": 744,
+    "triangles": 1306
+  },
+  {
+    "id": 60078,
+    "guid": "2YfiXzpu13_BTwtpB4r9Ze",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30275384",
+    "bbox_in_arq_candidate_m": [
+      [
+        208.46093989548504,
+        276.9490620741068,
+        6.880045899130497
+      ],
+      [
+        208.53793989652456,
+        277.08106255599773,
+        6.935047096186195
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 62393,
+    "guid": "2YfiXzpu13_BTwtpB4r9V6",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275606",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.38581234978207,
+        281.4908246759055,
+        6.894148065618044
+      ],
+      [
+        197.36581235113402,
+        281.5177246764796,
+        6.9208519343312815
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 62426,
+    "guid": "2YfiXzpu13_BTwtpB4r9Vc",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30275638",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.703971718707,
+        338.10282559137033,
+        6.877191338945702
+      ],
+      [
+        197.39168699426654,
+        338.12872559184206,
+        6.902902498784842
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 58495,
+    "guid": "2YfiXzpu13_BTwtpB4r9Za",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30275380",
+    "bbox_in_arq_candidate_m": [
+      [
+        208.41143989736747,
+        281.4522746759963,
+        6.877500000235033
+      ],
+      [
+        208.5704398967649,
+        281.5342746771746,
+        6.938689371360033
+      ]
+    ],
+    "vertices": 883,
+    "triangles": 1496
+  },
+  {
+    "id": 62377,
+    "guid": "2YfiXzpu13_BTwtpB4r9VO",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30275592",
+    "bbox_in_arq_candidate_m": [
+      [
+        173.65322593331913,
+        281.4593246755021,
+        6.882499999974662
+      ],
+      [
+        173.7652259342035,
+        281.52932467656285,
+        6.933689367066318
+      ]
+    ],
+    "vertices": 744,
+    "triangles": 1306
+  },
+  {
+    "id": 62471,
+    "guid": "2YfiXzpu13_BTwtpB4r9TK",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30275716",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.8415243908153,
+        297.2842214767624,
+        6.877144420055521
+      ],
+      [
+        197.38568709836505,
+        297.3101214770453,
+        6.902892657033085
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 62494,
+    "guid": "2YfiXzpu13_BTwtpB4r9T$",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30275759",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.841524363373,
+        307.59902382715836,
+        6.877144420055767
+      ],
+      [
+        197.39522462768002,
+        307.6249238278478,
+        6.902902226734552
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 62516,
+    "guid": "2YfiXzpu13_BTwtpB4r9SE",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30275806",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.84152449516188,
+        318.0459644705536,
+        6.877191066896079
+      ],
+      [
+        197.38568699423385,
+        318.0718644712418,
+        6.902902226735219
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 62539,
+    "guid": "2YfiXzpu13_BTwtpB4r9RT",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30275853",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.84152436008054,
+        328.3180861841278,
+        6.877143701684502
+      ],
+      [
+        197.40168850331452,
+        328.34398618465355,
+        6.902903020890307
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 62443,
+    "guid": "2YfiXzpu13_BTwtpB4r9Vh",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30275643",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.72647449617781,
+        338.08577559155896,
+        6.862548323395147
+      ],
+      [
+        192.85847449896184,
+        338.162775592019,
+        6.917548323395147
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 64299,
+    "guid": "2YfiXzpu13_BTwtpB4r9Rj",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30275901",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.8415244953603,
+        338.1028255913075,
+        6.877191338945702
+      ],
+      [
+        196.5879717199065,
+        338.1287255916276,
+        6.902902498784842
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 62410,
+    "guid": "2YfiXzpu13_BTwtpB4r9V9",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30275609",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.2753123501626,
+        276.9790621785612,
+        6.862499999974663
+      ],
+      [
+        185.35231235076824,
+        277.11106218179583,
+        6.9174999999746625
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 64563,
+    "guid": "2YfiXzpu13_BTwtpB4r9Vj",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275932",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.4032369945585,
+        328.38853618459757,
+        6.87669471245903
+      ],
+      [
+        197.4301369946046,
+        338.0467755925668,
+        6.903398581172268
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64547,
+    "guid": "2YfiXzpu13_BTwtpB4r9QJ",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30275907",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.63355923121162,
+        339.35037261209675,
+        6.7749975065847465
+      ],
+      [
+        196.65938420616155,
+        339.47832558901695,
+        6.902947506529205
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 64596,
+    "guid": "2YfiXzpu13_BTwtpB4r9Qf",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275961",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.40323699363495,
+        318.12241447027225,
+        6.87669471245903
+      ],
+      [
+        197.43013699372213,
+        328.27253618485076,
+        6.903398581172268
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64618,
+    "guid": "2YfiXzpu13_BTwtpB4r9P6",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275990",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.39983699405806,
+        307.6694738279466,
+        6.873319502287097
+      ],
+      [
+        197.43353699444654,
+        317.99541447154115,
+        6.906773791344201
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64282,
+    "guid": "2YfiXzpu13_BTwtpB4r9Ri",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TT-CON-000:PVC TIPO T:30275900",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.57197171995563,
+        338.08577559166565,
+        6.8624507825707415
+      ],
+      [
+        196.71997172179618,
+        338.16177559241765,
+        6.917450782570741
+      ]
+    ],
+    "vertices": 523,
+    "triangles": 920
+  },
+  {
+    "id": 64651,
+    "guid": "2YfiXzpu13_BTwtpB4r9PZ",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30276019",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.4032369938345,
+        297.3606714766557,
+        6.876648065618044
+      ],
+      [
+        197.43013699367816,
+        307.55347382858355,
+        6.9033519343312815
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 62454,
+    "guid": "2YfiXzpu13_BTwtpB4r9UO",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30275656",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.37173699386327,
+        338.0267755915022,
+        6.865046646815649
+      ],
+      [
+        197.44173699492944,
+        338.13877559217866,
+        6.916236013907304
+      ]
+    ],
+    "vertices": 744,
+    "triangles": 1306
+  },
+  {
+    "id": 64580,
+    "guid": "2YfiXzpu13_BTwtpB4r9Qe",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30275960",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.36468699361106,
+        317.9794144722875,
+        6.860046646815649
+      ],
+      [
+        197.44668699479715,
+        318.1384144703736,
+        6.921236013476569
+      ]
+    ],
+    "vertices": 883,
+    "triangles": 1496
+  },
+  {
+    "id": 64670,
+    "guid": "2YfiXzpu13_BTwtpB4r9LH",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30276225",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7264742712652,
+        297.2671714765468,
+        6.862499296373779
+      ],
+      [
+        192.85847464935514,
+        297.34417147765856,
+        6.91750023450768
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 64635,
+    "guid": "2YfiXzpu13_BTwtpB4r9PY",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30276018",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.3646869938757,
+        297.2176714786709,
+        6.859999999974662
+      ],
+      [
+        197.44668699506175,
+        297.37667147675705,
+        6.921189366635582
+      ]
+    ],
+    "vertices": 883,
+    "triangles": 1496
+  },
+  {
+    "id": 64708,
+    "guid": "2pAQtCjp1EXR4$HUGc4Yhf",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30276715",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.668274496214,
+        338.34272000846516,
+        1.9342499999999996
+      ],
+      [
+        192.69417449479204,
+        338.3684311690046,
+        3.488199999979232
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64730,
+    "guid": "2pAQtCjp1EXR4$HUGc4YeX",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30276771",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.66827449548452,
+        337.5455755885732,
+        3.547144420059667
+      ],
+      [
+        192.69417449545938,
+        338.28377558953207,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64763,
+    "guid": "2pAQtCjp1EXR4$HUGc4Ylu",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30276986",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.65327449624465,
+        329.0917746754612,
+        1.8671444200804304
+      ],
+      [
+        192.67917449621947,
+        329.1767746766739,
+        1.8928555799195699
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64785,
+    "guid": "2pAQtCjp1EXR4$HUGc4Yix",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277049",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.66827449658416,
+        329.0564190956835,
+        1.93425
+      ],
+      [
+        192.6941744951622,
+        329.08213025622297,
+        3.488199999979237
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64681,
+    "guid": "2YfiXzpu13_BTwtpB4r9L5",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30276245",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7264744957164,
+        307.5819738278665,
+        6.862499999974663
+      ],
+      [
+        192.8584744985004,
+        307.65897382832657,
+        6.9174999999746625
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 64807,
+    "guid": "2pAQtCjp1EXR4$HUGc4Yj4",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277062",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6682744958547,
+        328.27787847574416,
+        3.547144420059667
+      ],
+      [
+        192.69417449582951,
+        328.99747467585354,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64840,
+    "guid": "2pAQtCjp1EXR4$HUGc4YW9",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277259",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6532744966785,
+        318.8017746757566,
+        1.8671444200804306
+      ],
+      [
+        192.67917449665336,
+        318.8867746769693,
+        1.89285557991957
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64862,
+    "guid": "2pAQtCjp1EXR4$HUGc4YWx",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277305",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.66827449701802,
+        318.76641909597896,
+        1.9342499999999998
+      ],
+      [
+        192.6941744955961,
+        318.79213025651836,
+        3.488199999979237
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64747,
+    "guid": "2pAQtCjp1EXR4$HUGc4YlD",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30276943",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.66831200488411,
+        338.28377558831806,
+        3.4881999999792264
+      ],
+      [
+        192.69413698710503,
+        338.36852558887637,
+        3.5729499999792393
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 64884,
+    "guid": "2pAQtCjp1EXR4$HUGc4YX6",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277316",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.66827449621152,
+        318.05216981866374,
+        3.547144420059667
+      ],
+      [
+        192.69417449618638,
+        318.70747467623625,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64906,
+    "guid": "2pAQtCjp1EXR4$HUGc4Ych",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277417",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6532744960391,
+        308.4617746751464,
+        1.8671444200804306
+      ],
+      [
+        192.67917449601396,
+        308.5467746763591,
+        1.89285557991957
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64928,
+    "guid": "2pAQtCjp1EXR4$HUGc4YdH",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277459",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6682744963016,
+        308.426419095456,
+        1.9342499999999996
+      ],
+      [
+        192.69417449487966,
+        308.4521302559955,
+        3.488199999979237
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64950,
+    "guid": "2pAQtCjp1EXR4$HUGc4YdS",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277470",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6682744968919,
+        307.6926306911572,
+        3.547144420059667
+      ],
+      [
+        192.6941744969438,
+        308.36747467690924,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64983,
+    "guid": "2pAQtCjp1EXR4$HUGc4Yb2",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277568",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6532744971418,
+        298.1217746758557,
+        1.8671444200804306
+      ],
+      [
+        192.67917449711666,
+        298.22677467930475,
+        1.89285557991957
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 65005,
+    "guid": "2pAQtCjp1EXR4$HUGc4Ybe",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277610",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.668274497059,
+        298.0864190960781,
+        1.9342500000000038
+      ],
+      [
+        192.69417449563704,
+        298.1121302566175,
+        3.488199999979237
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 65027,
+    "guid": "2pAQtCjp1EXR4$HUGc4Ybr",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277623",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.66827449632953,
+        297.3249953718748,
+        3.547144420059667
+      ],
+      [
+        192.69417449630438,
+        298.02747467714494,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 64824,
+    "guid": "2pAQtCjp1EXR4$HUGc4YZY",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30277216",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.66831200525428,
+        328.9974746755364,
+        3.4881999999792175
+      ],
+      [
+        192.6941369874752,
+        329.0822246760947,
+        3.5729499999792305
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 65060,
+    "guid": "2pAQtCjp1EXR4$HUGc4TRd",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277733",
+    "bbox_in_arq_candidate_m": [
+      [
+        191.4492252782971,
+        277.9264131766673,
+        1.93425
+      ],
+      [
+        191.47512527687513,
+        277.9521243372068,
+        3.488199999979237
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 65082,
+    "guid": "2pAQtCjp1EXR4$HUGc4TRm",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277746",
+    "bbox_in_arq_candidate_m": [
+      [
+        191.4492252774906,
+        277.3992687567172,
+        3.547144420059667
+      ],
+      [
+        191.47512527746545,
+        277.86746875782154,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64967,
+    "guid": "2pAQtCjp1EXR4$HUGc4Ya8",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30277514",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6683120049717,
+        308.3674746753089,
+        3.4881999999792273
+      ],
+      [
+        192.69413698719265,
+        308.4522246758672,
+        3.5729499999792402
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 65115,
+    "guid": "2pAQtCjp1EXR4$HUGc4TU7",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277893",
+    "bbox_in_arq_candidate_m": [
+      [
+        191.51967527630902,
+        277.3263187563267,
+        3.547144420059667
+      ],
+      [
+        197.85388408849354,
+        277.35221875679514,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 65137,
+    "guid": "2pAQtCjp1EXR4$HUGc4TUI",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277904",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.87093408764937,
+        277.42556875568647,
+        3.547144420059667
+      ],
+      [
+        197.89683408762423,
+        283.71327467623547,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 65159,
+    "guid": "2pAQtCjp1EXR4$HUGc4TVO",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277978",
+    "bbox_in_arq_candidate_m": [
+      [
+        213.188736994938,
+        275.3764190961313,
+        1.5542499999999997
+      ],
+      [
+        213.21463699351605,
+        275.4021302566708,
+        3.488199999979237
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 65044,
+    "guid": "2pAQtCjp1EXR4$HUGc4TQX",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30277667",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.66831200572912,
+        298.02747467593093,
+        3.488199999979229
+      ],
+      [
+        192.69413698795003,
+        298.11222467648923,
+        3.572949999979242
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 65181,
+    "guid": "2pAQtCjp1EXR4$HUGc4TVd",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30277989",
+    "bbox_in_arq_candidate_m": [
+      [
+        213.18873699313497,
+        275.46107467530487,
+        3.547144420059667
+      ],
+      [
+        213.21463699318684,
+        283.7192746764359,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 65214,
+    "guid": "2pAQtCjp1EXR4$HUGc4TTD",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278095",
+    "bbox_in_arq_candidate_m": [
+      [
+        205.50873699749746,
+        275.37641909646425,
+        1.554250000000006
+      ],
+      [
+        205.53463699607553,
+        275.4021302570037,
+        3.488199999979237
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 65099,
+    "guid": "2pAQtCjp1EXR4$HUGc4TU0",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30277890",
+    "bbox_in_arq_candidate_m": [
+      [
+        191.4492627869672,
+        277.8674687565202,
+        3.488199999979255
+      ],
+      [
+        191.47508776918812,
+        277.9522187570785,
+        3.5729499999792678
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 65236,
+    "guid": "2pAQtCjp1EXR4$HUGc4TTU",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278108",
+    "bbox_in_arq_candidate_m": [
+      [
+        205.50873699569257,
+        275.4610746755505,
+        3.547144420059667
+      ],
+      [
+        205.53463699574445,
+        283.71827467661586,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 65258,
+    "guid": "2pAQtCjp1EXR4$HUGc4TIJ",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278161",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.9473840879558,
+        283.7308246761771,
+        3.546648065622618
+      ],
+      [
+        205.46968699689214,
+        283.7577246769621,
+        3.5733519343358555
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 65198,
+    "guid": "2pAQtCjp1EXR4$HUGc4TSJ",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30278033",
+    "bbox_in_arq_candidate_m": [
+      [
+        213.18877450262502,
+        275.37632467625957,
+        3.4881999999792295
+      ],
+      [
+        213.21459948484593,
+        275.4610746768179,
+        3.5729499999792425
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 70612,
+    "guid": "2pAQtCjp1EXR4$HUGc4TIs",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278196",
+    "bbox_in_arq_candidate_m": [
+      [
+        205.5736869952166,
+        283.7308246752235,
+        3.5466480656226027
+      ],
+      [
+        213.13268699417566,
+        283.75772467599967,
+        3.5733519343358404
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70629,
+    "guid": "2pAQtCjp1EXR4$HUGc4TIr",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30278199",
+    "bbox_in_arq_candidate_m": [
+      [
+        205.50877450518448,
+        275.3763246765925,
+        3.4881999999792397
+      ],
+      [
+        205.5345994874054,
+        275.4610746771508,
+        3.5729499999792527
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 70645,
+    "guid": "2pAQtCjp1EXR4$HUGc4THH",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278355",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.76752449588298,
+        337.50262558944604,
+        3.547144420059657
+      ],
+      [
+        197.39418699479313,
+        337.52852559003827,
+        3.5728555798987967
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 64692,
+    "guid": "2YfiXzpu13_BTwtpB4r9Lr",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30276261",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7264744959794,
+        318.02891447076786,
+        6.862499999974663
+      ],
+      [
+        192.85847449876343,
+        318.10591447122795,
+        6.9174999999746625
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 70662,
+    "guid": "2pAQtCjp1EXR4$HUGc4THO",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30278362",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6524744966235,
+        337.4855755897476,
+        3.532499999979237
+      ],
+      [
+        192.78447449940754,
+        337.5625755902077,
+        3.5874999999792365
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 70689,
+    "guid": "2pAQtCjp1EXR4$HUGc4THz",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278399",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.76752449513478,
+        297.28204537147514,
+        3.547144420059657
+      ],
+      [
+        197.36668699421526,
+        297.3079453717984,
+        3.5728555798987967
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 70711,
+    "guid": "2pAQtCjp1EXR4$HUGc4TMc",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278436",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.40233699390646,
+        297.35249537190464,
+        3.5432728554506845
+      ],
+      [
+        197.43603699437193,
+        307.59913069178833,
+        3.576727144507789
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 67516,
+    "guid": "2pAQtCjp1EXR4$HUGc4TIQ",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30278168",
+    "bbox_in_arq_candidate_m": [
+      [
+        213.11268699374625,
+        283.69932467603405,
+        3.5349999999792368
+      ],
+      [
+        213.22468699490196,
+        283.7693246767691,
+        3.5861893670708924
+      ]
+    ],
+    "vertices": 744,
+    "triangles": 1306
+  },
+  {
+    "id": 70744,
+    "guid": "3quSOso_XDlexWAKDFfSvf",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278479",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.76752449526708,
+        328.2349284766171,
+        3.547144420059667
+      ],
+      [
+        197.38818699428,
+        328.2608284769,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70673,
+    "guid": "2pAQtCjp1EXR4$HUGc4THX",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30278371",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.37423699299308,
+        337.42657558846616,
+        3.5349999999792368
+      ],
+      [
+        197.44423699405928,
+        337.53857558914257,
+        3.5861893670708924
+      ]
+    ],
+    "vertices": 744,
+    "triangles": 1306
+  },
+  {
+    "id": 70777,
+    "guid": "3quSOso_XDlexWAKDFfSvQ",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278524",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.40573699374409,
+        328.31137847643055,
+        3.546648065622618
+      ],
+      [
+        197.43263699373443,
+        337.446575589618,
+        3.5733519343358555
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70596,
+    "guid": "2pAQtCjp1EXR4$HUGc4TIn",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30278195",
+    "bbox_in_arq_candidate_m": [
+      [
+        205.4556869946242,
+        283.6992746750358,
+        3.534999999979221
+      ],
+      [
+        205.58768699664705,
+        283.7692746758494,
+        3.586189367070877
+      ]
+    ],
+    "vertices": 937,
+    "triangles": 1560
+  },
+  {
+    "id": 70810,
+    "guid": "3quSOso_XDlexWAKDFfSwg",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278540",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.7675244956108,
+        318.0092198194963,
+        3.547144420059667
+      ],
+      [
+        197.36668699469126,
+        318.03511981981956,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70832,
+    "guid": "3quSOso_XDlexWAKDFfSx1",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278631",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.4023369940465,
+        318.07966981869356,
+        3.5432728554506845
+      ],
+      [
+        197.4360369931589,
+        328.1843784774071,
+        3.576727144507789
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70854,
+    "guid": "3quSOso_XDlexWAKDFfSxH",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278647",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.76752449500634,
+        307.6496806907105,
+        3.5471444200596616
+      ],
+      [
+        197.38818699401926,
+        307.67558069099346,
+        3.572855579898801
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70728,
+    "guid": "2pAQtCjp1EXR4$HUGc4TMb",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30278439",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6524744958753,
+        297.26499537181707,
+        3.532499999979237
+      ],
+      [
+        192.78447449865934,
+        297.3419953722771,
+        3.5874999999792365
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952,
+    "selected_by": "AABB intersection expanded APTO101; entire elements, no boolean clipping",
+    "in_glb": true
+  },
+  {
+    "id": 70887,
+    "guid": "3quSOso_XDlexWAKDFfSaz",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278683",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.40573699315354,
+        307.72613069052403,
+        3.546648065622618
+      ],
+      [
+        197.43263699326192,
+        317.9636698196166,
+        3.5733519343358555
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70794,
+    "guid": "3quSOso_XDlexWAKDFfSvP",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30278527",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.6524744960076,
+        328.21787847691866,
+        3.532499999979237
+      ],
+      [
+        192.78447449879164,
+        328.2948784773787,
+        3.5874999999792365
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 70920,
+    "guid": "3quSOso_XDlexWAKDFfSaN",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278705",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.40233699442928,
+        291.84634920937964,
+        3.5432728554506845
+      ],
+      [
+        197.43603699489478,
+        297.2364953729215,
+        3.576727144507789
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70942,
+    "guid": "3quSOso_XDlexWAKDFfSaI",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278708",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.8912244954223,
+        291.76189920926316,
+        3.547144420059667
+      ],
+      [
+        197.36668699451124,
+        291.78779920954855,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70964,
+    "guid": "3quSOso_XDlexWAKDFfSbO",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278782",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.84827449629682,
+        291.76199362877185,
+        3.6462999999792314
+      ],
+      [
+        196.87417449487486,
+        291.78770478931125,
+        6.860000349686821
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70988,
+    "guid": "3quSOso_XDlexWAKDFfScv",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30278815",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.84836891649695,
+        288.9189491070052,
+        6.8770500107070545
+      ],
+      [
+        196.87408007656015,
+        291.6885492119689,
+        6.902950352276543
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 71010,
+    "guid": "3quSOso_XDlexWAKDFfSde",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278862",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.3998369943227,
+        288.84449907554097,
+        6.87327285544611
+      ],
+      [
+        197.43353699478817,
+        297.23367147792,
+        6.906727144503215
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 71032,
+    "guid": "2NqrxqQyH9P9Yurw8RMh6P",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30309979",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.4023369941864,
+        288.0429901000181,
+        3.5432728554506845
+      ],
+      [
+        197.436036993371,
+        291.6866901011337,
+        3.576727144507789
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 71054,
+    "guid": "2NqrxqQyH9P9Yurw8RMh52",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30310016",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.402336992779,
+        287.5016900994929,
+        3.3509618726698234
+      ],
+      [
+        197.43603699324447,
+        287.92669010028465,
+        3.3844161617269277
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 71076,
+    "guid": "2NqrxqQyH9P9Yurw8RMh5f",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30310059",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.40233699413056,
+        287.454962955768,
+        3.453989017198375
+      ],
+      [
+        197.43603699319925,
+        287.4884172452423,
+        3.5299999999792373
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 71098,
+    "guid": "2NqrxqQyH9P9Yurw8RMh4L",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30310103",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.4023369936715,
+        287.93996295547555,
+        3.4539890171983756
+      ],
+      [
+        197.43603699274018,
+        287.97341724494987,
+        3.5299999999792346
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 70761,
+    "guid": "3quSOso_XDlexWAKDFfSvT",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30278523",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.3671869937202,
+        328.1683784784458,
+        3.529999999979237
+      ],
+      [
+        197.44918699490628,
+        328.3273784765319,
+        3.5911893666401564
+      ]
+    ],
+    "vertices": 883,
+    "triangles": 1496
+  },
+  {
+    "id": 70904,
+    "guid": "3quSOso_XDlexWAKDFfSau",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30278686",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.65247449574684,
+        307.63263069101214,
+        3.532499999979237
+      ],
+      [
+        192.78447449853087,
+        307.70963069147217,
+        3.5874999999792365
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 73478,
+    "guid": "2NqrxqQyH9P9Yurw8RMaxD",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30310671",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.36668699447122,
+        291.67484920896015,
+        3.4599999999792335
+      ],
+      [
+        197.4716869932681,
+        291.87484921010275,
+        3.6599999999792336
+      ]
+    ],
+    "vertices": 28,
+    "triangles": 48
+  },
+  {
+    "id": 73490,
+    "guid": "3RY7pcXGT29PdmVicaz2$2",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30312405",
+    "bbox_in_arq_candidate_m": [
+      [
+        185.2223123503935,
+        281.45427467616656,
+        6.789999999974664
+      ],
+      [
+        185.4223123513412,
+        281.55927467707386,
+        6.989999999974664
+      ]
+    ],
+    "vertices": 28,
+    "triangles": 48
+  },
+  {
+    "id": 73501,
+    "guid": "3RY7pcXGT29PdmVicaz2EC",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30313371",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.3266869951691,
+        281.45427467523837,
+        6.789999999979234
+      ],
+      [
+        197.52668699611678,
+        281.55927467614566,
+        6.989999999979235
+      ]
+    ],
+    "vertices": 28,
+    "triangles": 48
+  },
+  {
+    "id": 73512,
+    "guid": "3RY7pcXGT29PdmVicaz2Nb",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30313970",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.3666869941752,
+        328.2310361837056,
+        6.789999999979235
+      ],
+      [
+        197.47168699297208,
+        328.4310361848482,
+        6.9899999999792355
+      ]
+    ],
+    "vertices": 28,
+    "triangles": 48
+  },
+  {
+    "id": 70871,
+    "guid": "3quSOso_XDlexWAKDFfSay",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30278682",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.36718699345946,
+        307.58313069253927,
+        3.529999999979237
+      ],
+      [
+        197.44918699464552,
+        307.7421306906254,
+        3.5911893666401564
+      ]
+    ],
+    "vertices": 883,
+    "triangles": 1496
+  },
+  {
+    "id": 73363,
+    "guid": "2NqrxqQyH9P9Yurw8RMh4j",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30310127",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.38799762635662,
+        287.3634401031347,
+        3.508049999979236
+      ],
+      [
+        197.4491869943778,
+        287.50044010086043,
+        3.5900499999792377
+      ]
+    ],
+    "vertices": 730,
+    "triangles": 1300
+  },
+  {
+    "id": 73374,
+    "guid": "2NqrxqQyH9P9Yurw8RMh4n",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30310131",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.38918699304483,
+        287.4416401000895,
+        3.338939017198375
+      ],
+      [
+        197.45037636098544,
+        287.5236401011129,
+        3.4759390140274085
+      ]
+    ],
+    "vertices": 730,
+    "triangles": 1300
+  },
+  {
+    "id": 78051,
+    "guid": "2yLHKaRzz1Ze1Fkh7gAGiO",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30318188",
+    "bbox_in_arq_candidate_m": [
+      [
+        190.65823699329133,
+        288.70984714048456,
+        5.8194999850907445
+      ],
+      [
+        190.68513699306993,
+        288.7365510095049,
+        6.820999987577295
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78073,
+    "guid": "2yLHKaRzz1Ze1Fkh7gAGi4",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30318192",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.87622449499543,
+        288.7417490749456,
+        6.873669938995749
+      ],
+      [
+        197.38668699419202,
+        288.77464907577536,
+        6.906330060953575
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 75768,
+    "guid": "3RY7pcXGT29PdmVicaz3EI",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30317445",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.38918699249294,
+        287.92794009985744,
+        3.5079999999792366
+      ],
+      [
+        197.45037636051416,
+        288.06494009758325,
+        3.589999999979238
+      ]
+    ],
+    "vertices": 730,
+    "triangles": 1300
+  },
+  {
+    "id": 78106,
+    "guid": "2NbsF7Xf979PXp81zFuBrK",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30321724",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.40233699361565,
+        283.7742746751892,
+        3.5432728554506845
+      ],
+      [
+        197.43603699408115,
+        287.38539010099174,
+        3.576727144507789
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78123,
+    "guid": "2NbsF7Xf979PXp81zFuA5b",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30322701",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.36668699417524,
+        297.1949953711721,
+        3.4599999999792335
+      ],
+      [
+        197.4716869929721,
+        297.3949953723147,
+        3.6599999999792336
+      ]
+    ],
+    "vertices": 28,
+    "triangles": 48
+  },
+  {
+    "id": 78024,
+    "guid": "3RY7pcXGT29PdmVicaz3ER",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30317452",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.38918699248813,
+        287.90474009960496,
+        3.338939017198375
+      ],
+      [
+        197.45037636048903,
+        287.98674010040617,
+        3.4759390140274085
+      ]
+    ],
+    "vertices": 730,
+    "triangles": 1300
+  },
+  {
+    "id": 78134,
+    "guid": "2NbsF7Xf979PXp81zFuA5z",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30322709",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.36668699465125,
+        317.92216981919324,
+        3.4599999999792335
+      ],
+      [
+        197.47168699344812,
+        318.12216982033584,
+        3.6599999999792336
+      ]
+    ],
+    "vertices": 28,
+    "triangles": 48
+  },
+  {
+    "id": 78161,
+    "guid": "3EENG3CM5FUBLEE7WUxqM8",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30322897",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.50548699336792,
+        283.7274246760855,
+        3.5432728554506845
+      ],
+      [
+        197.82038408919425,
+        283.76112467644145,
+        3.576727144507789
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78035,
+    "guid": "3RY7pcXGT29PdmVicaz3Is",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30317729",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.83122449551308,
+        291.74734920865416,
+        3.53124999997923
+      ],
+      [
+        196.90822449617224,
+        291.80234920942894,
+        3.6632500022203653
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 78420,
+    "guid": "3EENG3CM5FUBLEE7WUxq5Z",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30323770",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.74231200387203,
+        287.8563246756783,
+        6.77500052188928
+      ],
+      [
+        192.768136986401,
+        287.9842744735041,
+        6.902950703391662
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 78090,
+    "guid": "2NbsF7Xf979PXp81zFuBrf",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30321665",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.83688408821786,
+        277.3105187566321,
+        3.532499999979237
+      ],
+      [
+        197.9138840888235,
+        277.44251875986674,
+        3.5874999999792365
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 78522,
+    "guid": "3EENG3CM5FUBLEE7WUxqse",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-DIV-VAR-QUA-200:40x40x15cm:30324977",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.5552244963366,
+        288.56014910890593,
+        6.833749999979237
+      ],
+      [
+        192.95522449693786,
+        288.96014910934275,
+        6.9887499999792375
+      ]
+    ],
+    "vertices": 28,
+    "triangles": 48
+  },
+  {
+    "id": 78541,
+    "guid": "3EENG3CM5FUBLEE7WUxqm7",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30325086",
+    "bbox_in_arq_candidate_m": [
+      [
+        190.69668645502517,
+        288.70984714042265,
+        6.876549999974666
+      ],
+      [
+        192.7066748050723,
+        288.73655101013566,
+        6.903450997196537
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78570,
+    "guid": "1cCXM_YETFngSauMaqUqV9",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30328920",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.65247449642834,
+        317.9921698197509,
+        3.532499999979237
+      ],
+      [
+        192.78447449921234,
+        318.06916982021096,
+        3.5874999999792365
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 78178,
+    "guid": "3EENG3CM5FUBLEE7WUxqHj",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30322996",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.39043699355872,
+        283.7142246757056,
+        3.529999999979237
+      ],
+      [
+        197.52743699153416,
+        283.79622467658595,
+        3.5911893666401564
+      ]
+    ],
+    "vertices": 730,
+    "triangles": 1300
+  },
+  {
+    "id": 78592,
+    "guid": "1lAunpPy14DP9xTZU4BU10",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30333382",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.36668699479742,
+        307.51427467584614,
+        6.789999999974664
+      ],
+      [
+        197.4716869935943,
+        307.71427467698874,
+        6.989999999974664
+      ]
+    ],
+    "vertices": 28,
+    "triangles": 48
+  },
+  {
+    "id": 78608,
+    "guid": "3S41izuTH0MxJe95dnzjn7",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30356911",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.392586994346,
+        281.4732975314262,
+        6.7235499999746615
+      ],
+      [
+        197.4262869934147,
+        281.50675182090055,
+        6.78999999997923
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78581,
+    "guid": "1cCXM_YETFngSauMaqUqVB",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30328922",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.66831200568816,
+        318.7074746758318,
+        3.488199999979236
+      ],
+      [
+        192.69413698790908,
+        318.7922246763901,
+        3.572949999979249
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 78145,
+    "guid": "3EENG3CM5FUBLEE7WUxqN0",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30322841",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.80438408890294,
+        283.69227467507125,
+        3.529999999979237
+      ],
+      [
+        197.96338408690377,
+        283.7742746759719,
+        3.5911893666401564
+      ]
+    ],
+    "vertices": 883,
+    "triangles": 1496
+  },
+  {
+    "id": 78559,
+    "guid": "1EjfmHKc135hq0TIMjRovi",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30328183",
+    "bbox_in_arq_candidate_m": [
+      [
+        190.64663645372576,
+        288.69700970843024,
+        6.800999977950296
+      ],
+      [
+        190.71663647221195,
+        288.7481990766738,
+        6.912999997474983
+      ]
+    ],
+    "vertices": 744,
+    "triangles": 1306
+  },
+  {
+    "id": 78665,
+    "guid": "0a2AOMMi1ETuvbNWkwt4f4",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30359850",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.87622449526376,
+        288.6707990425433,
+        6.877144420055092
+      ],
+      [
+        197.37943699447288,
+        288.69669904293136,
+        6.902855579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78687,
+    "guid": "0a2AOMMi1ETuvbNWkwt4eX",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30359887",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.876224494742,
+        288.8196991078947,
+        6.877144420055092
+      ],
+      [
+        196.83122449581683,
+        288.8455991083889,
+        6.902855579894233
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78638,
+    "guid": "0a2AOMMi1ETuvbNWkwt32G",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30358526",
+    "bbox_in_arq_candidate_m": [
+      [
+        192.72647426720093,
+        328.3010361840728,
+        6.862499282020522
+      ],
+      [
+        192.85847465179663,
+        328.37803618480933,
+        6.917500239292075
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 78706,
+    "guid": "0a2AOMMi1ETuvbNWkwt4gh",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30360005",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.81422449551204,
+        288.8038991051603,
+        6.862499996405095
+      ],
+      [
+        196.89122449636727,
+        288.9358991133827,
+        6.917500010683367
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 78733,
+    "guid": "0a2AOMMi1ETuvbNWkwt4zw",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30360596",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.39258699488641,
+        288.66702189841834,
+        6.723549999974661
+      ],
+      [
+        197.4262869939551,
+        288.70047618789266,
+        6.803699999974662
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78625,
+    "guid": "3S41izuTH0MxJe95dnzjnU",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30356918",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.37824762660023,
+        281.4612746755536,
+        6.663549999974659
+      ],
+      [
+        197.43943699458214,
+        281.59827467353387,
+        6.745549999974661
+      ]
+    ],
+    "vertices": 730,
+    "triangles": 1300
+  },
+  {
+    "id": 78766,
+    "guid": "0a2AOMMi1ETuvbNWkwt4z3",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30360621",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.3925869943715,
+        281.57632467596875,
+        6.676822855446108
+      ],
+      [
+        197.426286994837,
+        288.59744904364203,
+        6.7102771445032126
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78649,
+    "guid": "0a2AOMMi1ETuvbNWkwt4lc",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30359688",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.36473699346305,
+        288.72944907542956,
+        6.859999999974662
+      ],
+      [
+        197.44673699404552,
+        288.86644907307965,
+        6.921189366635582
+      ]
+    ],
+    "vertices": 730,
+    "triangles": 1300
+  },
+  {
+    "id": 78717,
+    "guid": "0a2AOMMi1ETuvbNWkwt4gY",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30360012",
+    "bbox_in_arq_candidate_m": [
+      [
+        196.83372449490952,
+        291.671599206194,
+        6.843000349686816
+      ],
+      [
+        196.888724496245,
+        291.80359920941277,
+        6.920000349686822
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 80485,
+    "guid": "2mO0qrbuL5ROq_IW_23F2m",
+    "type": "IfcFlowFitting",
+    "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30367602",
+    "bbox_in_arq_candidate_m": [
+      [
+        186.22407727360655,
+        277.9062687570378,
+        2.1509999999999994
+      ],
+      [
+        186.3020772740145,
+        277.91426875767286,
+        2.2689999999999992
+      ]
+    ],
+    "vertices": 32,
+    "triangles": 60
+  },
+  {
+    "id": 80470,
+    "guid": "0a2AOMMi1ETuvbNWkwt4_P",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TE-CON-000:ALU TIPO E:30360823",
+    "bbox_in_arq_candidate_m": [
+      [
+        190.64549762549987,
+        288.6981990745776,
+        5.721499985090743
+      ],
+      [
+        190.69668699386978,
+        288.74819907548317,
+        5.833499985090744
+      ]
+    ],
+    "vertices": 491,
+    "triangles": 960
+  },
+  {
+    "id": 80512,
+    "guid": "2mO0qrbuL5ROq_IW_23F2q",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30367606",
+    "bbox_in_arq_candidate_m": [
+      [
+        186.2651272734066,
+        277.9264131763571,
+        2.2642499999999997
+      ],
+      [
+        186.29102727198466,
+        277.9521243368965,
+        3.488199999979237
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 80534,
+    "guid": "2mO0qrbuL5ROq_IW_23F2r",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30367607",
+    "bbox_in_arq_candidate_m": [
+      [
+        186.2651272739969,
+        277.3692687568144,
+        3.547144420059667
+      ],
+      [
+        186.29102727397176,
+        277.8674687578466,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 80556,
+    "guid": "2mO0qrbuL5ROq_IW_23F1T",
+    "type": "IfcFlowSegment",
+    "name": "Conduite com conexões:Eletroduto Rígido PVC:30367647",
+    "bbox_in_arq_candidate_m": [
+      [
+        186.36437727198899,
+        277.32631875636775,
+        3.547144420059667
+      ],
+      [
+        191.41807727302964,
+        277.3522187568448,
+        3.5728555798988064
+      ]
+    ],
+    "vertices": 52,
+    "triangles": 100
+  },
+  {
+    "id": 78750,
+    "guid": "0a2AOMMi1ETuvbNWkwt4zr",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30360603",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.35748699375517,
+        288.6537490426413,
+        6.78175000314563
+      ],
+      [
+        197.43948699443678,
+        288.71493841037693,
+        6.918749999974663
+      ]
+    ],
+    "vertices": 730,
+    "triangles": 1300
+  },
+  {
+    "id": 78783,
+    "guid": "0a2AOMMi1ETuvbNWkwt4$S",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30360754",
+    "bbox_in_arq_candidate_m": [
+      [
+        197.37824762711247,
+        288.57549904578497,
+        6.663499999974659
+      ],
+      [
+        197.4394369951337,
+        288.7124990435108,
+        6.745499999974661
+      ]
+    ],
+    "vertices": 730,
+    "triangles": 1300
+  },
+  {
+    "id": 80496,
+    "guid": "2mO0qrbuL5ROq_IW_23F2n",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30367603",
+    "bbox_in_arq_candidate_m": [
+      [
+        186.22807727269426,
+        277.9142687566951,
+        2.15575
+      ],
+      [
+        186.2980772740511,
+        277.96176875779804,
+        2.26425
+      ]
+    ],
+    "vertices": 1356,
+    "triangles": 3456
+  },
+  {
+    "id": 80573,
+    "guid": "2mO0qrbuL5ROq_IW_23F0B",
+    "type": "IfcFlowFitting",
+    "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30367689",
+    "bbox_in_arq_candidate_m": [
+      [
+        186.24932727272952,
+        277.3092687566694,
+        3.532499999979237
+      ],
+      [
+        186.38132727551354,
+        277.3862687571294,
+        3.5874999999792365
+      ]
+    ],
+    "vertices": 518,
+    "triangles": 952
+  },
+  {
+    "id": 80584,
+    "guid": "2mO0qrbuL5ROq_IW_23F09",
+    "type": "IfcFlowFitting",
+    "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30367691",
+    "bbox_in_arq_candidate_m": [
+      [
+        186.26516478207674,
+        277.8674687562099,
+        3.4881999999792637
+      ],
+      [
+        186.29098976429765,
+        277.9522187567682,
+        3.5729499999792766
+      ]
+    ],
+    "vertices": 48,
+    "triangles": 92
+  },
+  {
+    "id": 80595,
+    "guid": "2mO0qrbuL5ROq_IW_23C$7",
+    "type": "IfcFlowFitting",
+    "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30367749",
+    "bbox_in_arq_candidate_m": [
+      [
+        191.36217527855024,
+        277.2390728063535,
+        3.489999999979222
+      ],
+      [
+        191.56217527737704,
+        277.43907280730605,
+        3.594999999979222
+      ]
+    ],
+    "vertices": 28,
+    "triangles": 48
+  }
+]

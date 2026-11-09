@@ -1,0 +1,101 @@
+{
+  "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+  "page": 1,
+  "ifc": "DOCS HTO/IFC/CE01-14PE01-ARQ-R05.ifc",
+  "ifc_coordinate_frame": "bbox_world_m/footprint_world_xy_m from inspection JSON; excludes IfcGeometricRepresentationContext georeferencing offset",
+  "method": "axis swap + uniform scale + translation fitted to two visually measured opposite APTO101 interior corners; independent Vestiário Masc corner control",
+  "equations": {
+    "pdf_x": "scale*ifc_y + tx",
+    "pdf_y": "scale*ifc_x + ty"
+  },
+  "scale_pt_per_m": 22.677821011674272,
+  "tx_pt": -5800.472963677355,
+  "ty_pt": -3613.1408682403426,
+  "expected_scale_1_to_125_pt_per_m": 22.67716535433071,
+  "calibration_points": [
+    {
+      "ifc_xy_m": [
+        191.01668699387676,
+        294.114274675714
+      ],
+      "pdf_xy_pt": [
+        869.4,
+        718.7
+      ],
+      "predicted_pdf_xy_pt": [
+        869.39791439689,
+        718.7013696498034
+      ],
+      "residual_pt": 0.0024951314426775954
+    },
+    {
+      "ifc_xy_m": [
+        197.04668699387665,
+        298.0742746757135
+      ],
+      "pdf_xy_pt": [
+        959.2,
+        855.45
+      ],
+      "predicted_pdf_xy_pt": [
+        959.2020856031095,
+        855.4486303501972
+      ],
+      "residual_pt": 0.002495131441952835
+    }
+  ],
+  "independent_control": {
+    "room": "1X$_tLf0fF9e27wM7c9tiD",
+    "description": "Vestiário Masc.: junction of left interior room boundary and lower horizontal partition",
+    "ifc_xy_m": [
+      168.68668699387678,
+      275.4142746757136
+    ],
+    "pdf_xy_pt": [
+      445.4,
+      212.2
+    ],
+    "predicted_pdf_xy_pt": [
+      445.3226614785717,
+      212.30562645911732
+    ],
+    "residual_pt": 0.13091293199059728
+  },
+  "measurement_uncertainty_pt": 0.5,
+  "status": "Exploratory manually measured similarity, visually checked overlay. Not survey-grade or automatically inferred.",
+  "pilot_room": {
+    "pdf_label": "APTO. 101",
+    "ifc_name": "23",
+    "ifc_guid": "0vfo$Cu9vBkhdNguKiGtzT",
+    "area_ifc_m2": 23.878799999996687,
+    "area_pdf_m2": 23.88,
+    "pdf_polygon_from_ifc": [
+      [
+        959.2020856031095,
+        718.7013696498034
+      ],
+      [
+        959.2020856031095,
+        855.4486303501972
+      ],
+      [
+        869.39791439689,
+        855.4486303501972
+      ],
+      [
+        869.39791439689,
+        718.7013696498034
+      ],
+      [
+        959.2020856031095,
+        718.7013696498034
+      ]
+    ],
+    "identity_evidence": [
+      "matching 23.88m2 area",
+      "rectangle 6.03m x3.96m",
+      "next room along IFC+Y Name24=23.6979m2 matches PDF APTO102=23.70m2",
+      "neighbors along IFC-Y Name22=5.4464m2 and Name14=5.244m2 match PDF DESPENSA=5.45m2 and BHO101=5.24m2"
+    ]
+  }
+}

@@ -1,0 +1,461 @@
+{
+  "method": "ARQ local engineering geometry to ANT/TLD engineering coordinates: XY rotation from ARQ TrueNorth, translation from ARQ WCS. Validate independently by transformed ANT face midpoint coinciding with actual IfcSpace boundary. No fitted translation or rotation and no manual offsets used.",
+  "test_tolerance_m": 0.001,
+  "matches_count": 13,
+  "spatially_separated_matches": [
+    {
+      "ant_guid": "3Qi553C$XC9ur8APcwmdQr",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243896",
+      "space_guid": "2Y6doLhXP6tv7OwqmemriC",
+      "space_name": "19",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        191.4471752773042,
+        277.9142687567509,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 3.838636075670366e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          191.40817527710024,
+          277.9062687561159,
+          1.8209999999999997
+        ],
+        [
+          191.48617527750818,
+          277.9142687567509,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "3Qi553C$XC9ur8APcwmdO0",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243981",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGtzT",
+      "space_name": "23",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449606612,
+        298.0742746761617,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 4.4815351429861034e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449586215,
+          298.0662746755266,
+          1.8209999999999997
+        ],
+        [
+          192.7052244962701,
+          298.0742746761617,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpO4",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256614",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs6U",
+      "space_name": "27",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449602514,
+        318.75427467606255,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 3.4918912206194364e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449582117,
+          318.74627467542746,
+          1.8209999999999997
+        ],
+        [
+          192.7052244962291,
+          318.75427467606255,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpLf",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256779",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs4R",
+      "space_name": "31",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.6662244966179,
+        338.330575589781,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 9.374616638524458e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449641393,
+          338.32257558914597,
+          1.8209999999999997
+        ],
+        [
+          192.70522449682187,
+          338.330575589781,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1gi_bk9pr74wNCTsU$7WED",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30264700",
+      "space_guid": "2iZxilRpbClg7SXniOsbUN",
+      "space_name": "88",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        213.21668699311215,
+        275.41427467535493,
+        1.4999999999999996
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 3.5879565984942024e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          213.17768699290818,
+          275.41427467535493,
+          1.4409999999999996
+        ],
+        [
+          213.25568699331612,
+          275.42227467599,
+          1.5589999999999997
+        ]
+      ]
+    }
+  ],
+  "all_matches": [
+    {
+      "ant_guid": "3Qi553C$XC9ur8APcwmdQr",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243896",
+      "space_guid": "2Y6doLhXP6tv7OwqmemriC",
+      "space_name": "19",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        191.4471752773042,
+        277.9142687567509,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 3.838636075670366e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          191.40817527710024,
+          277.9062687561159,
+          1.8209999999999997
+        ],
+        [
+          191.48617527750818,
+          277.9142687567509,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "3Qi553C$XC9ur8APcwmdO0",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243981",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGtzT",
+      "space_name": "23",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449606612,
+        298.0742746761617,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 4.4815351429861034e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449586215,
+          298.0662746755266,
+          1.8209999999999997
+        ],
+        [
+          192.7052244962701,
+          298.0742746761617,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "3Qi553C$XC9ur8APcwmdLP",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30244820",
+      "space_guid": "2iZxilRpbClg7SXniOsbUN",
+      "space_name": "88",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        205.5366869956716,
+        275.41427467568786,
+        1.4999999999999996
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 2.5863755581667647e-11,
+      "panel_bbox_in_arq_m": [
+        [
+          205.49768699546763,
+          275.41427467568786,
+          1.4409999999999996
+        ],
+        [
+          205.57568699587557,
+          275.42227467632296,
+          1.5589999999999997
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpRI",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256432",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs0p",
+      "space_name": "24",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449540984,
+        298.2742746777302,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 2.0166908143437468e-09,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449520587,
+          298.2742746777302,
+          1.8209999999999997
+        ],
+        [
+          192.7052244956138,
+          298.2822746783653,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpP4",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256550",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs1H",
+      "space_name": "25",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449670552,
+        308.41427467677187,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 1.0584244591882452e-09,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449650155,
+          308.4062746761368,
+          1.8209999999999997
+        ],
+        [
+          192.7052244969095,
+          308.41427467677187,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpP9",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256555",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs1p",
+      "space_name": "26",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449570394,
+        308.5942746756305,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 8.299139153677971e-11,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449549997,
+          308.5942746756305,
+          1.8209999999999997
+        ],
+        [
+          192.70522449590788,
+          308.6022746762656,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpO4",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256614",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs6U",
+      "space_name": "27",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449602514,
+        318.75427467606255,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 3.4918912206194364e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449582117,
+          318.74627467542746,
+          1.8209999999999997
+        ],
+        [
+          192.7052244962291,
+          318.75427467606255,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpO9",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256619",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs6y",
+      "space_name": "28",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449494653,
+        318.9342746750085,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 7.049152372928802e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449474256,
+          318.9342746750085,
+          1.8209999999999997
+        ],
+        [
+          192.7052244951505,
+          318.94227467564355,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpMe",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256714",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs7V",
+      "space_name": "29",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449698806,
+        329.04427467699935,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 1.2860255083069205e-09,
+      "panel_bbox_in_arq_m": [
+        [
+          192.6272244967841,
+          329.03627467636426,
+          1.8209999999999997
+        ],
+        [
+          192.70522449719203,
+          329.04427467699935,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpMj",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256719",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs7x",
+      "space_name": "30",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.66622449598648,
+        329.224274675858,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 1.446096575818956e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          192.6272244957825,
+          329.224274675858,
+          1.8209999999999997
+        ],
+        [
+          192.70522449619045,
+          329.2322746764931,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1lC_4mA5DFP9Hi_erNQpLf",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256779",
+      "space_guid": "0vfo$Cu9vBkhdNguKiGs4R",
+      "space_name": "31",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        192.6662244966179,
+        338.330575589781,
+        1.88
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 9.374616638524458e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          192.62722449641393,
+          338.32257558914597,
+          1.8209999999999997
+        ],
+        [
+          192.70522449682187,
+          338.330575589781,
+          1.9389999999999998
+        ]
+      ]
+    },
+    {
+      "ant_guid": "1gi_bk9pr74wNCTsU$7WED",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30264700",
+      "space_guid": "2iZxilRpbClg7SXniOsbUN",
+      "space_name": "88",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        213.21668699311215,
+        275.41427467535493,
+        1.4999999999999996
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 3.5879565984942024e-10,
+      "panel_bbox_in_arq_m": [
+        [
+          213.17768699290818,
+          275.41427467535493,
+          1.4409999999999996
+        ],
+        [
+          213.25568699331612,
+          275.42227467599,
+          1.5589999999999997
+        ]
+      ]
+    },
+    {
+      "ant_guid": "2mO0qrbuL5ROq_IW_23F2m",
+      "ant_name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30367602",
+      "space_guid": "2Y6doLhXP6tv7OwqmemonN",
+      "space_name": "18",
+      "space_long_name": "Ambiente",
+      "point_in_arq_m": [
+        186.26307727381052,
+        277.91426875767286,
+        2.209999999999999
+      ],
+      "distance_panel_face_midpoint_to_space_boundary_m": 1.305750174651621e-09,
+      "panel_bbox_in_arq_m": [
+        [
+          186.22407727360655,
+          277.9062687570378,
+          2.1509999999999994
+        ],
+        [
+          186.3020772740145,
+          277.91426875767286,
+          2.2689999999999992
+        ]
+      ]
+    }
+  ],
+  "interpretation": "Supports candidate horizontal registration over sampled locations. It is not a complete clash check, surveyed control-point validation, CRS proof or engineering signoff. Vertical floor metadata differs by 0.035m at first floor.",
+  "formal_map_conversion_present": false
+}

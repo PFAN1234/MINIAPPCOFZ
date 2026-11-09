@@ -1,0 +1,38 @@
+Use case: ui-mockup. Create a new high-fidelity two-screen transition board for the established Telegram Mini App.
+
+INPUTS:
+Image 1: existing model-viewer mockup; reuse the SAME recognizable HTO building view (white L-shaped two-story building, pink roofs, arcades, courtyard and pool), viewer controls, and visual identity.
+Image 2: existing six-screen board; use its HTO screen (top center) as the LEFT screen source.
+Image 3: user-provided file list; source of exact discipline abbreviations. Include exactly these NINE codes, each once: ARQ, ELT, HID, ESG, DRE, PCI, VES, TLD, ANT. Important: ELT, not ELE; VES, not VET. Display ONLY the three-letter codes for discipline labels; no expanded names or filenames/revisions.
+
+COMPOSITION:
+Landscape presentation board, two equally sized large tall mobile viewports side by side, complete and legible, with thin rounded edges but no physical phone hardware. Title "HTO · Do início ao modelo federado". External left label "1  Início da HTO"; external right label "2  Modelo federado". Connecting blue arrow across the middle gap, labeled "Visualizar modelo". Footer "Mockup conceitual · Imagem de referência". Match existing clean white/light-gray Telegram interface, blue controls, black type, crisp outline icons. Highest practical resolution, approximately 1536x1024 or larger with same proportions. Do not reproduce the six-screen board.
+
+LEFT: HTO HOME
+Native top bar with close X, centered "Diário da obra", overflow menu.
+Back link "Obras" (current agreed user naming).
+Small context "CO-FZ · 2ª Etapa".
+Heading "HTO".
+Prominent pale-blue card with blue outline cube, exact label "Visualizar modelo federado", right chevron. It is the action leading to the right screen.
+Section "Ambientes", tabs "Térreo" selected and "1º pavimento".
+Search "Buscar ambiente".
+Four rows "Apto. 101", "Apto. 102", "Salão de eventos", "Vestiários". Apto. 101 lightly selected.
+Bottom blue "Abrir ambiente" button.
+Comfortable spacing consistent with image 2.
+
+RIGHT: MODEL VIEWER, WITH ALL NINE DISCIPLINES VISIBLE
+Native top bar X / "Diário da obra" / overflow.
+Back link "HTO".
+Heading "Modelo federado" with small expand icon.
+Compact floor dropdown "Todos os pavimentos".
+Large central viewport showing the same full architectural HTO model from image 1, generously fitted, light gray-blue background. Preserve distinctive roof shapes, white arcades, L-shaped structure and courtyard. Small view cube "Frente", plus/minus zoom controls on right. Do not invent new building geometry or colorful fake pipes.
+Short hint "Arraste para girar".
+Compact toolbar with labels "Girar", "Mover", "Enquadrar", "Modelos", blue highlight for Girar.
+Below toolbar, panel headed "Modelos exibidos". It MUST contain a clearly legible THREE-COLUMN by THREE-ROW GRID of independently selectable compact tiles. EXACT grid:
+row 1: ARQ | ELT | HID
+row 2: ESG | DRE | PCI
+row 3: VES | TLD | ANT
+Every tile has a small checkbox/visibility control plus ONLY its three-letter label. ARQ selected blue with check; other eight unselected white/light gray with empty checkbox. This matches the architectural-only reference view. Do not omit, duplicate or expand any abbreviation. All nine tiles must fit on screen and be visible simultaneously, with mobile-friendly spacing.
+Small bottom safe area.
+
+Invariants: exactly two screens and nine unique discipline codes. Keep the user-provided building visual, app design language and correct Portuguese accents. No Telegram chat launch screen, no 2D floorplan, no login, no claim of working federation or completed integration. The new deliverable shows the transition from HTO home into the viewer and the expanded model selector.

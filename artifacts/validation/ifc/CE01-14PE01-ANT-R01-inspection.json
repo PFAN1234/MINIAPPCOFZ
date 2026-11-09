@@ -1,0 +1,4096 @@
+{
+  "file": "CE01-14PE01-ANT-R01.ifc",
+  "bytes": 4445458,
+  "schema": "IFC2X3",
+  "ifcopenshell": "0.9.0.post1",
+  "length_unit_to_m": 1.0,
+  "units": [
+    {
+      "id": 19,
+      "type": "IfcSIUnit",
+      "Dimensions": null,
+      "UnitType": "LENGTHUNIT",
+      "Prefix": null,
+      "Name": "METRE"
+    },
+    {
+      "id": 48997,
+      "type": "IfcConversionBasedUnit",
+      "Dimensions": "#48995=IfcDimensionalExponents(0,0,0,0,0,0,0)",
+      "UnitType": "PLANEANGLEUNIT",
+      "Name": "DEGREE",
+      "ConversionFactor": "#48996=IfcMeasureWithUnit(IfcPlaneAngleMeasure(0.017453292519943278),#48994)"
+    },
+    {
+      "id": 48998,
+      "type": "IfcSIUnit",
+      "Dimensions": null,
+      "UnitType": "AREAUNIT",
+      "Prefix": null,
+      "Name": "SQUARE_METRE"
+    }
+  ],
+  "entities_count": 82319,
+  "products_count": 569,
+  "element_counts": {
+    "IfcFlowFitting": 140,
+    "IfcFlowSegment": 106,
+    "IfcFlowTerminal": 1
+  },
+  "contexts": [
+    {
+      "id": 22,
+      "identifier": null,
+      "type": "Model",
+      "world_coordinate_system": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "true_north": [
+        6.123031769111886e-17,
+        1.0
+      ]
+    }
+  ],
+  "spatial": [
+    {
+      "id": 65,
+      "type": "IfcSite",
+      "guid": "2cPl69Hgz2IAIvNyiuhZBJ",
+      "name": "Default",
+      "long_name": null,
+      "matrix": [
+        [
+          -0.6615518497771224,
+          0.7498994266276429,
+          0.0,
+          553391.1230759618
+        ],
+        [
+          -0.7498994266276429,
+          -0.6615518497771224,
+          0.0,
+          9583737.940604294
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.3600000000000005
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "elevation": null,
+      "placement_chain": [
+        {
+          "id": 64,
+          "relative": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "type": "IfcBuilding",
+      "guid": "2cPl69Hgz2IAIvNyiuhZBG",
+      "name": "",
+      "long_name": "",
+      "matrix": [
+        [
+          -0.6615518497771224,
+          0.7498994266276429,
+          0.0,
+          553391.1230759618
+        ],
+        [
+          -0.7498994266276429,
+          -0.6615518497771224,
+          0.0,
+          9583737.940604294
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.3600000000000005
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "elevation": null,
+      "placement_chain": [
+        {
+          "id": 30,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 64,
+          "relative": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "type": "IfcBuildingStorey",
+      "guid": "0FOVz64wD9zBJYBNEOCW5F",
+      "name": "TÉRREO",
+      "long_name": "TÉRREO",
+      "matrix": [
+        [
+          -0.6615518497771224,
+          0.7498994266276429,
+          0.0,
+          553391.1230759618
+        ],
+        [
+          -0.7498994266276429,
+          -0.6615518497771224,
+          0.0,
+          9583737.940604294
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "elevation": -0.3600000000000005,
+      "placement_chain": [
+        {
+          "id": 35,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 30,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 64,
+          "relative": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "type": "IfcBuildingStorey",
+      "guid": "2yp22tmGP5KAxAQoScDfnz",
+      "name": "TÉRREO +0,14",
+      "long_name": "TÉRREO +0,14",
+      "matrix": [
+        [
+          -0.6615518497771224,
+          0.7498994266276429,
+          0.0,
+          553391.1230759618
+        ],
+        [
+          -0.7498994266276429,
+          -0.6615518497771224,
+          0.0,
+          9583737.940604294
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.14000000000000065
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "elevation": -0.21999999999999983,
+      "placement_chain": [
+        {
+          "id": 39,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -0.21999999999999983
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 30,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 64,
+          "relative": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "type": "IfcBuildingStorey",
+      "guid": "2yp22tmGP5KAxAQoScDf81",
+      "name": "TÉRREO +0,38",
+      "long_name": "TÉRREO +0,38",
+      "matrix": [
+        [
+          -0.6615518497771224,
+          0.7498994266276429,
+          0.0,
+          553391.1230759618
+        ],
+        [
+          -0.7498994266276429,
+          -0.6615518497771224,
+          0.0,
+          9583737.940604294
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.3800000000000001
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "elevation": 0.01999999999999964,
+      "placement_chain": [
+        {
+          "id": 43,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.01999999999999964
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 30,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 64,
+          "relative": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "type": "IfcBuildingStorey",
+      "guid": "2yp22tmGP5KAxAQoScDfQv",
+      "name": "TÉRREO +0,71",
+      "long_name": "TÉRREO +0,71",
+      "matrix": [
+        [
+          -0.6615518497771224,
+          0.7498994266276429,
+          0.0,
+          553391.1230759618
+        ],
+        [
+          -0.7498994266276429,
+          -0.6615518497771224,
+          0.0,
+          9583737.940604294
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.7099999999999997
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "elevation": 0.3499999999999992,
+      "placement_chain": [
+        {
+          "id": 47,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3499999999999992
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 30,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 64,
+          "relative": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "type": "IfcBuildingStorey",
+      "guid": "0Zy0Xpfkj5DxNBXKeNHosw",
+      "name": "INFRA - TE (AN)",
+      "long_name": "INFRA - TE (AN)",
+      "matrix": [
+        [
+          -0.6615518497771224,
+          0.7498994266276429,
+          0.0,
+          553391.1230759618
+        ],
+        [
+          -0.7498994266276429,
+          -0.6615518497771224,
+          0.0,
+          9583737.940604294
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          3.5599999999792367
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "elevation": 3.1999999999792363,
+      "placement_chain": [
+        {
+          "id": 51,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.1999999999792363
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 30,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 64,
+          "relative": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 56,
+      "type": "IfcBuildingStorey",
+      "guid": "36TNs3WKL3SeLq2$nGMbBl",
+      "name": "1° PAVIMENTO",
+      "long_name": "1° PAVIMENTO",
+      "matrix": [
+        [
+          -0.6615518497771224,
+          0.7498994266276429,
+          0.0,
+          553391.1230759618
+        ],
+        [
+          -0.7498994266276429,
+          -0.6615518497771224,
+          0.0,
+          9583737.940604294
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          3.964999999979236
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "elevation": 3.6049999999792357,
+      "placement_chain": [
+        {
+          "id": 55,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.6049999999792357
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 30,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 64,
+          "relative": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 60,
+      "type": "IfcBuildingStorey",
+      "guid": "24tYyp0G57GhRJuT5y$MBv",
+      "name": "INFRA - 1P (AN)",
+      "long_name": "INFRA - 1P (AN)",
+      "matrix": [
+        [
+          -0.6615518497771224,
+          0.7498994266276429,
+          0.0,
+          553391.1230759618
+        ],
+        [
+          -0.7498994266276429,
+          -0.6615518497771224,
+          0.0,
+          9583737.940604294
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          6.889999999974663
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "elevation": 6.529999999974662,
+      "placement_chain": [
+        {
+          "id": 59,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              6.529999999974662
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 30,
+          "relative": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        },
+        {
+          "id": 64,
+          "relative": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3600000000000005
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "spaces": [],
+  "geolocation": {
+    "helmert_parameters": "None",
+    "wcs": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  },
+  "element_placements": [
+    {
+      "guid": "3Qi553C$XC9ur8APcwmdQr",
+      "id": 270,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243896",
+      "origin_world_m": [
+        553174.1635178524,
+        9583568.533174455,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "3Qi553C$XC9ur8APcwmdQq",
+      "id": 9412,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30243897",
+      "origin_world_m": [
+        553174.1635178524,
+        9583568.533174455,
+        0.39999999999999974
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "3Qi553C$XC9ur8APcwmdO0",
+      "id": 9427,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243981",
+      "origin_world_m": [
+        553188.4750304666,
+        9583554.282120937,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "3Qi553C$XC9ur8APcwmdO3",
+      "id": 9438,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30243982",
+      "origin_world_m": [
+        553188.4750304666,
+        9583554.282120937,
+        0.39999999999999974
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "3Qi553C$XC9ur8APcwmdLP",
+      "id": 9452,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30244820",
+      "origin_world_m": [
+        553162.9678311849,
+        9583559.621333404,
+        1.4999999999999998
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "3Qi553C$XC9ur8APcwmdLO",
+      "id": 9463,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30244821",
+      "origin_world_m": [
+        553162.9678311849,
+        9583559.621333404,
+        0.01999999999999965
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQi8x",
+      "id": 9477,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30245541",
+      "origin_world_m": [
+        553188.4233016883,
+        9583554.229075516,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQi8u",
+      "id": 9488,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30245542",
+      "origin_world_m": [
+        553188.4233016883,
+        9583554.229075516,
+        3.9849999999792356
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQi8q",
+      "id": 9639,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30245546",
+      "origin_world_m": [
+        553188.558283585,
+        9583554.109996183,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQi8r",
+      "id": 18639,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30245547",
+      "origin_world_m": [
+        553188.558283585,
+        9583554.109996183,
+        7.569999999958472
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQiGG",
+      "id": 18653,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30246030",
+      "origin_world_m": [
+        553180.7920994667,
+        9583560.96122621,
+        5.464999999979234
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQiGH",
+      "id": 18664,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30246031",
+      "origin_world_m": [
+        553180.7920994667,
+        9583560.96122621,
+        7.569999999958471
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQiKE",
+      "id": 18678,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30246288",
+      "origin_world_m": [
+        553185.7843210404,
+        9583583.09876025,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQiKF",
+      "id": 18689,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30246289",
+      "origin_world_m": [
+        553185.7843210404,
+        9583583.09876025,
+        7.569999999958472
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQiQX",
+      "id": 18703,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30246463",
+      "origin_world_m": [
+        553185.665241709,
+        9583582.963778354,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQiRU",
+      "id": 18714,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30246464",
+      "origin_world_m": [
+        553185.665241709,
+        9583582.963778354,
+        7.569999999958472
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpRI",
+      "id": 48395,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256432",
+      "origin_world_m": [
+        553188.6250103536,
+        9583554.149810566,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpRJ",
+      "id": 48406,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256433",
+      "origin_world_m": [
+        553188.6250103536,
+        9583554.149810566,
+        3.9849999999792356
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpP4",
+      "id": 48420,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256550",
+      "origin_world_m": [
+        553196.2289905379,
+        9583547.44167481,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpP5",
+      "id": 48431,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256551",
+      "origin_world_m": [
+        553196.2289905379,
+        9583547.44167481,
+        0.39999999999999974
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpP9",
+      "id": 48445,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256555",
+      "origin_world_m": [
+        553196.3639724347,
+        9583547.322595477,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpPE",
+      "id": 48456,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256556",
+      "origin_world_m": [
+        553196.3639724347,
+        9583547.322595477,
+        3.9849999999792356
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpO4",
+      "id": 48470,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256614",
+      "origin_world_m": [
+        553203.9829506092,
+        9583540.601228684,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpO5",
+      "id": 48481,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256615",
+      "origin_world_m": [
+        553203.9829506092,
+        9583540.601228684,
+        0.39999999999999974
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpO9",
+      "id": 48495,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256619",
+      "origin_world_m": [
+        553204.117932506,
+        9583540.482149351,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpOE",
+      "id": 48506,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256620",
+      "origin_world_m": [
+        553204.117932506,
+        9583540.482149351,
+        3.9849999999792356
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpMe",
+      "id": 48520,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256714",
+      "origin_world_m": [
+        553211.6994157092,
+        9583533.793860149,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpMf",
+      "id": 48531,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256715",
+      "origin_world_m": [
+        553211.6994157092,
+        9583533.793860149,
+        0.39999999999999974
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpMj",
+      "id": 48545,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256719",
+      "origin_world_m": [
+        553211.834397606,
+        9583533.674780816,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpMo",
+      "id": 48556,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256720",
+      "origin_world_m": [
+        553211.834397606,
+        9583533.674780816,
+        3.9849999999792356
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpLf",
+      "id": 48570,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256779",
+      "origin_world_m": [
+        553218.6632074395,
+        9583527.650490602,
+        1.88
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQpLk",
+      "id": 48581,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30256780",
+      "origin_world_m": [
+        553218.6632074395,
+        9583527.650490602,
+        0.39999999999999974
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogb",
+      "id": 48595,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257479",
+      "origin_world_m": [
+        553196.1847607539,
+        9583547.38201387,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogg",
+      "id": 48606,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257480",
+      "origin_world_m": [
+        553196.1847607539,
+        9583547.38201387,
+        3.9849999999792356
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogk",
+      "id": 48620,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257484",
+      "origin_world_m": [
+        553196.3197426506,
+        9583547.262934538,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogl",
+      "id": 48631,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257485",
+      "origin_world_m": [
+        553196.3197426506,
+        9583547.262934538,
+        7.569999999958472
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogw",
+      "id": 48645,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257496",
+      "origin_world_m": [
+        553203.9471196987,
+        9583540.534158362,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogx",
+      "id": 48656,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257497",
+      "origin_world_m": [
+        553203.9471196987,
+        9583540.534158362,
+        3.9849999999792356
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQog$",
+      "id": 48670,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257501",
+      "origin_world_m": [
+        553204.0821015956,
+        9583540.41507903,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogy",
+      "id": 48681,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257502",
+      "origin_world_m": [
+        553204.0821015956,
+        9583540.41507903,
+        7.569999999958472
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQog9",
+      "id": 48695,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257515",
+      "origin_world_m": [
+        553211.6935807759,
+        9583533.700327754,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogE",
+      "id": 48706,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257516",
+      "origin_world_m": [
+        553211.6935807759,
+        9583533.700327754,
+        3.9849999999792356
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogI",
+      "id": 48720,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257520",
+      "origin_world_m": [
+        553211.8285626726,
+        9583533.581248421,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQogJ",
+      "id": 48731,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257521",
+      "origin_world_m": [
+        553211.8285626726,
+        9583533.581248421,
+        7.569999999958472
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQofZ",
+      "id": 48745,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30257537",
+      "origin_world_m": [
+        553219.3343060338,
+        9583526.959775958,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQofW",
+      "id": 48756,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30257538",
+      "origin_world_m": [
+        553219.3343060338,
+        9583526.959775958,
+        7.569999999958472
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQoWI",
+      "id": 48770,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258160",
+      "origin_world_m": [
+        553177.7663126211,
+        9583574.0099792,
+        5.464999999979234
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQoWJ",
+      "id": 48781,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258161",
+      "origin_world_m": [
+        553177.7663126211,
+        9583574.0099792,
+        7.569999999958471
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQoWN",
+      "id": 48795,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258165",
+      "origin_world_m": [
+        553177.6472332897,
+        9583573.874997305,
+        5.464999999979234
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQoWK",
+      "id": 48806,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258166",
+      "origin_world_m": [
+        553177.6472332897,
+        9583573.874997305,
+        7.569999999958471
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQo$d",
+      "id": 48820,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258181",
+      "origin_world_m": [
+        553169.7681507573,
+        9583564.943695132,
+        5.464999999979234
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQo$a",
+      "id": 48831,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258182",
+      "origin_world_m": [
+        553169.7681507573,
+        9583564.943695132,
+        7.569999999958471
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQo$e",
+      "id": 48845,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258186",
+      "origin_world_m": [
+        553169.5696852038,
+        9583564.718725305,
+        5.464999999979234
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQo$f",
+      "id": 48856,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258187",
+      "origin_world_m": [
+        553169.5696852038,
+        9583564.718725305,
+        7.569999999958471
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQozI",
+      "id": 48870,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258352",
+      "origin_world_m": [
+        553161.690602673,
+        9583555.787423134,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQozJ",
+      "id": 48881,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258353",
+      "origin_world_m": [
+        553161.690602673,
+        9583555.787423134,
+        7.569999999958472
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQozN",
+      "id": 48895,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258357",
+      "origin_world_m": [
+        553161.584754377,
+        9583555.667439226,
+        5.464999999979234
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQozK",
+      "id": 48906,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258358",
+      "origin_world_m": [
+        553161.584754377,
+        9583555.667439226,
+        7.569999999958471
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQoyV",
+      "id": 48920,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30258429",
+      "origin_world_m": [
+        553153.6792097723,
+        9583546.706141077,
+        5.464999999979234
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1lC_4mA5DFP9Hi_erNQoyS",
+      "id": 48931,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30258430",
+      "origin_world_m": [
+        553153.6792097723,
+        9583546.706141077,
+        7.569999999958471
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1gi_bk9pr74wNCTsU$7WNo",
+      "id": 48945,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30264067",
+      "origin_world_m": [
+        553216.9097241592,
+        9583523.909686148,
+        5.464999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1gi_bk9pr74wNCTsU$7WNr",
+      "id": 48956,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30264068",
+      "origin_world_m": [
+        553216.9097241592,
+        9583523.909686148,
+        7.569999999958472
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1gi_bk9pr74wNCTsU$7WED",
+      "id": 48970,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30264700",
+      "origin_world_m": [
+        553157.88711298,
+        9583553.86210581,
+        1.4999999999999998
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "1gi_bk9pr74wNCTsU$7WEC",
+      "id": 48981,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30264701",
+      "origin_world_m": [
+        553157.88711298,
+        9583553.86210581,
+        0.01999999999999965
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhk6",
+      "id": 49283,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30272080",
+      "origin_world_m": [
+        553185.6705320138,
+        9583582.992449118,
+        6.907499999974648
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhjB",
+      "id": 50893,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30272157",
+      "origin_world_m": [
+        553185.2176740121,
+        9583582.47911376,
+        6.907499999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhsU",
+      "id": 50950,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30272584",
+      "origin_world_m": [
+        553177.6750205773,
+        9583573.883821512,
+        6.8899999999746475
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhnc",
+      "id": 51051,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30272944",
+      "origin_world_m": [
+        553169.574975074,
+        9583564.747396452,
+        6.8900009100242094
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhyx",
+      "id": 51173,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30273261",
+      "origin_world_m": [
+        553153.6739194674,
+        9583546.677470313,
+        6.907499999974648
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgF5",
+      "id": 51274,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274067",
+      "origin_world_m": [
+        553188.4321258962,
+        9583554.201288227,
+        6.889999999974659
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgCR",
+      "id": 51351,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274253",
+      "origin_world_m": [
+        553196.1935849618,
+        9583547.354226582,
+        6.889999999974658
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hg9H",
+      "id": 51428,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274439",
+      "origin_world_m": [
+        553203.9559439067,
+        9583540.506371075,
+        6.889999999974657
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgNF",
+      "id": 51505,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274585",
+      "origin_world_m": [
+        553211.7024049838,
+        9583533.672540467,
+        6.889999999974658
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgK3",
+      "id": 51582,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30274773",
+      "origin_world_m": [
+        553219.3431302416,
+        9583526.93198867,
+        6.889999999974659
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9f1",
+      "id": 53208,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30274961",
+      "origin_world_m": [
+        553154.2045649042,
+        9583547.278981306,
+        6.907499999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9df",
+      "id": 53278,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30275129",
+      "origin_world_m": [
+        553169.5055121284,
+        9583564.66865701,
+        6.8900009100242245
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9cs",
+      "id": 55527,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30275174",
+      "origin_world_m": [
+        553157.5764595531,
+        9583544.304338222,
+        6.907499999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9ae",
+      "id": 55540,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30275320",
+      "origin_world_m": [
+        553161.6628155224,
+        9583555.778598804,
+        6.907546796923
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Za",
+      "id": 58495,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30275380",
+      "origin_world_m": [
+        553165.580327222,
+        9583553.377090082,
+        6.907500002730213
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Ze",
+      "id": 60078,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30275384",
+      "origin_world_m": [
+        553162.1859357273,
+        9583556.3715796,
+        6.9075467969230155
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9VO",
+      "id": 62377,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30275592",
+      "origin_world_m": [
+        553188.6120656437,
+        9583579.484624121,
+        6.907499999974663
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9V9",
+      "id": 62410,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30275609",
+      "origin_world_m": [
+        553177.5356809832,
+        9583573.725873677,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Vh",
+      "id": 62443,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30275643",
+      "origin_world_m": [
+        553218.4432509297,
+        9583527.72585089,
+        6.890048323395147
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9UO",
+      "id": 62454,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30275656",
+      "origin_world_m": [
+        553215.3594517916,
+        9583524.230222834,
+        6.890046646815649
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Ri",
+      "id": 64282,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TT-CON-000:PVC TIPO T:30275900",
+      "origin_world_m": [
+        553215.8689891312,
+        9583524.807806827,
+        6.889950782570741
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9QJ",
+      "id": 64547,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30275907",
+      "origin_world_m": [
+        553216.8810533957,
+        9583523.914976453,
+        6.889999999974669
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Qe",
+      "id": 64580,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30275960",
+      "origin_world_m": [
+        553200.3188231374,
+        9583537.49887641,
+        6.890046646815649
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9PY",
+      "id": 64635,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30276018",
+      "origin_world_m": [
+        553184.7496039706,
+        9583551.233845891,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9LH",
+      "id": 64670,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30276225",
+      "origin_world_m": [
+        553187.8334031085,
+        9583554.729473947,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9L5",
+      "id": 64681,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30276245",
+      "origin_world_m": [
+        553195.5684674775,
+        9583547.905697372,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Lr",
+      "id": 64692,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30276261",
+      "origin_world_m": [
+        553203.4026222754,
+        9583540.994504465,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4YlD",
+      "id": 64747,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30276943",
+      "origin_world_m": [
+        553218.6720316474,
+        9583527.622703316,
+        3.5599999999792304
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4YZY",
+      "id": 64824,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30277216",
+      "origin_world_m": [
+        553211.7082399172,
+        9583533.766072862,
+        3.5599999999792216
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4Ya8",
+      "id": 64967,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30277514",
+      "origin_world_m": [
+        553196.2378147459,
+        9583547.413887523,
+        3.5599999999792313
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TQX",
+      "id": 65044,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30277667",
+      "origin_world_m": [
+        553188.4838546745,
+        9583554.254333649,
+        3.559999999979233
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TU0",
+      "id": 65099,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30277890",
+      "origin_world_m": [
+        553174.1723420604,
+        9583568.505387167,
+        3.559999999979259
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TSJ",
+      "id": 65198,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30278033",
+      "origin_world_m": [
+        553157.8782887721,
+        9583553.889893096,
+        3.5599999999792336
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TIQ",
+      "id": 67516,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30278168",
+      "origin_world_m": [
+        553164.1436984816,
+        9583548.36262739,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TIn",
+      "id": 70596,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30278195",
+      "origin_world_m": [
+        553169.2244166863,
+        9583554.121854987,
+        3.559999999979221
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TIr",
+      "id": 70629,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30278199",
+      "origin_world_m": [
+        553162.9590069769,
+        9583559.64912069,
+        3.5599999999792438
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4THO",
+      "id": 70662,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30278362",
+      "origin_world_m": [
+        553218.0421161291,
+        9583528.178406868,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4THX",
+      "id": 70673,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30278371",
+      "origin_world_m": [
+        553214.9077082744,
+        9583524.625411509,
+        3.5599999999792367
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TMb",
+      "id": 70728,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30278439",
+      "origin_world_m": [
+        553187.8807260855,
+        9583554.786406111,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSvT",
+      "id": 70761,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30278523",
+      "origin_world_m": [
+        553207.9578675239,
+        9583530.756473675,
+        3.5599999999792367
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSvP",
+      "id": 70794,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30278527",
+      "origin_world_m": [
+        553211.0922753784,
+        9583534.309469037,
+        3.5599999999792367
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSay",
+      "id": 70871,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30278682",
+      "origin_world_m": [
+        553192.5210020124,
+        9583544.374682426,
+        3.5599999999792367
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSau",
+      "id": 70904,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30278686",
+      "origin_world_m": [
+        553195.655409867,
+        9583547.927677788,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2NqrxqQyH9P9Yurw8RMh4j",
+      "id": 73363,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30310127",
+      "origin_world_m": [
+        553177.3798272404,
+        9583557.732036524,
+        3.559999999979237
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2NqrxqQyH9P9Yurw8RMh4n",
+      "id": 73374,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30310131",
+      "origin_world_m": [
+        553177.3798272404,
+        9583557.732036524,
+        3.3676890171983755
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2NqrxqQyH9P9Yurw8RMaxD",
+      "id": 73478,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30310671",
+      "origin_world_m": [
+        553180.5753400759,
+        9583554.849653432,
+        3.559999999979234
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "3RY7pcXGT29PdmVicaz2$2",
+      "id": 73490,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30312405",
+      "origin_world_m": [
+        553180.9450706034,
+        9583570.718153002,
+        6.889999999974664
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "3RY7pcXGT29PdmVicaz2EC",
+      "id": 73501,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30313371",
+      "origin_world_m": [
+        553172.937399166,
+        9583561.641089397,
+        6.889999999979235
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "3RY7pcXGT29PdmVicaz2Nb",
+      "id": 73512,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30313970",
+      "origin_world_m": [
+        553207.9888037281,
+        9583530.665840318,
+        6.889999999979235
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "3RY7pcXGT29PdmVicaz3EI",
+      "id": 75768,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30317445",
+      "origin_world_m": [
+        553177.7435284624,
+        9583557.411183877,
+        3.5599999999792367
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "3RY7pcXGT29PdmVicaz3ER",
+      "id": 78024,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30317452",
+      "origin_world_m": [
+        553177.7435284624,
+        9583557.411183877,
+        3.3676890171983755
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "3RY7pcXGT29PdmVicaz3Is",
+      "id": 78035,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30317729",
+      "origin_world_m": [
+        553180.9758849113,
+        9583555.303689413,
+        3.559999999979231
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2NbsF7Xf979PXp81zFuBrf",
+      "id": 78090,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30321665",
+      "origin_world_m": [
+        553169.4741090616,
+        9583564.08668252,
+        3.5599999999792367
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2NbsF7Xf979PXp81zFuA5b",
+      "id": 78123,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30322701",
+      "origin_world_m": [
+        553184.714894518,
+        9583551.197790528,
+        3.559999999979234
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2NbsF7Xf979PXp81zFuA5z",
+      "id": 78134,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30322709",
+      "origin_world_m": [
+        553200.2581907519,
+        9583537.48568993,
+        3.559999999979234
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "3EENG3CM5FUBLEE7WUxqN0",
+      "id": 78145,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TT-CON-000:ALU TIPO T:30322841",
+      "origin_world_m": [
+        553174.2772193282,
+        9583559.849439008,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3EENG3CM5FUBLEE7WUxqHj",
+      "id": 78178,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30322996",
+      "origin_world_m": [
+        553174.5846405507,
+        9583560.197915092,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3EENG3CM5FUBLEE7WUxq5Z",
+      "id": 78420,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30323770",
+      "origin_world_m": [
+        553180.7634287032,
+        9583560.966516515,
+        6.890000270346271
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "3EENG3CM5FUBLEE7WUxqse",
+      "id": 78522,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-DIV-VAR-QUA-200:40x40x15cm:30324977",
+      "origin_world_m": [
+        553181.4314949294,
+        9583560.377156885,
+        6.838749999979237
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1EjfmHKc135hq0TIMjRovi",
+      "id": 78559,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30328183",
+      "origin_world_m": [
+        553182.7821545609,
+        9583561.964045225,
+        6.889999987577164
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1cCXM_YETFngSauMaqUqV9",
+      "id": 78570,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30328920",
+      "origin_world_m": [
+        553203.4240223193,
+        9583541.074305514,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "1cCXM_YETFngSauMaqUqVB",
+      "id": 78581,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30328922",
+      "origin_world_m": [
+        553203.9917748171,
+        9583540.573441396,
+        3.55999999997924
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "1lAunpPy14DP9xTZU4BU10",
+      "id": 78592,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30333382",
+      "origin_world_m": [
+        553192.4533161514,
+        9583544.371052215,
+        6.8899999999746635
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "3S41izuTH0MxJe95dnzjnU",
+      "id": 78625,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30356918",
+      "origin_world_m": [
+        553172.9006298988,
+        9583561.696529869,
+        6.69354999997466
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt32G",
+      "id": 78638,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30358526",
+      "origin_world_m": [
+        553211.1056804587,
+        9583534.198963344,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4lc",
+      "id": 78649,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30359688",
+      "origin_world_m": [
+        553178.3462334627,
+        9583556.88281888,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4gh",
+      "id": 78706,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30360005",
+      "origin_world_m": [
+        553178.7695307427,
+        9583557.250107331,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4gY",
+      "id": 78717,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30360012",
+      "origin_world_m": [
+        553180.9758849113,
+        9583555.303689413,
+        6.8900003496868205
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4zr",
+      "id": 78750,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30360603",
+      "origin_world_m": [
+        553178.2951996765,
+        9583556.937508207,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4$S",
+      "id": 78783,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TLR-CON-000:ALU TIPO LR:30360754",
+      "origin_world_m": [
+        553178.2951996765,
+        9583556.937508207,
+        6.69354999997466
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4_P",
+      "id": 80470,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-ALU-TE-CON-000:ALU TIPO E:30360823",
+      "origin_world_m": [
+        553182.7821542094,
+        9583561.964044828,
+        5.767499985090744
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2mO0qrbuL5ROq_IW_23F2m",
+      "id": 80485,
+      "type": "IfcFlowFitting",
+      "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30367602",
+      "origin_world_m": [
+        553177.5930674768,
+        9583572.420726575,
+        2.2099999999999995
+      ],
+      "storey": "TÉRREO +0,71"
+    },
+    {
+      "guid": "2mO0qrbuL5ROq_IW_23F2n",
+      "id": 80496,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-PVC-PAR-4X2-200:CAIXA EM PVC 4\" X2\" AMARELA:30367603",
+      "origin_world_m": [
+        553177.5930674768,
+        9583572.420726575,
+        0.7299999999999994
+      ],
+      "storey": "TÉRREO +0,71"
+    },
+    {
+      "guid": "2mO0qrbuL5ROq_IW_23F0B",
+      "id": 80573,
+      "type": "IfcFlowFitting",
+      "name": "EL-COD-PVC-TLR-CON-000:PVC TIPO LR:30367689",
+      "origin_world_m": [
+        553177.1519520287,
+        9583572.789870398,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2mO0qrbuL5ROq_IW_23F09",
+      "id": 80584,
+      "type": "IfcFlowFitting",
+      "name": "EL-CUV-PVC-90-A-000:CURVA PVC 90:30367691",
+      "origin_world_m": [
+        553177.6018916847,
+        9583572.392939288,
+        3.5599999999792677
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2mO0qrbuL5ROq_IW_23C$7",
+      "id": 80595,
+      "type": "IfcFlowFitting",
+      "name": "EL-CXA-DIV-VAR-QUA-200:20x20x10cm:30367749",
+      "origin_world_m": [
+        553173.7222554613,
+        9583568.902447907,
+        3.494999999979222
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhlN",
+      "id": 49012,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272001",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhlO",
+      "id": 49035,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272014",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhkX",
+      "id": 49300,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272119",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhj2",
+      "id": 49322,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272148",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhfD",
+      "id": 50911,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272411",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhea",
+      "id": 50933,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272498",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhsv",
+      "id": 50966,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272623",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhoV",
+      "id": 50988,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272841",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhob",
+      "id": 51011,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272883",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhnM",
+      "id": 51034,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30272896",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hh$R",
+      "id": 51067,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30273037",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hh$Z",
+      "id": 51089,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30273077",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hh_K",
+      "id": 51112,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30273090",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhzu",
+      "id": 51134,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30273198",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hhzf",
+      "id": 51156,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30273215",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hg3x",
+      "id": 51189,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30273837",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hg3i",
+      "id": 51213,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30273850",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hg0E",
+      "id": 51235,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274008",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hg0p",
+      "id": 51257,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274021",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgFx",
+      "id": 51290,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274093",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgD4",
+      "id": 51312,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274194",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgD9",
+      "id": 51334,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274207",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgC_",
+      "id": 51367,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274280",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgAT",
+      "id": 51389,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274379",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgAE",
+      "id": 51411,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274392",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hg9t",
+      "id": 51444,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274465",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hg8A",
+      "id": 51466,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274524",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hg8$",
+      "id": 51488,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274537",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgNb",
+      "id": 51521,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274611",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgLC",
+      "id": 51543,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274714",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgLn",
+      "id": 51565,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274727",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgJJ",
+      "id": 51598,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274821",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "1mwU$t6WHFfedSPmq3hgJg",
+      "id": 51621,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274876",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9fQ",
+      "id": 51643,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30274954",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9f3",
+      "id": 53235,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30274963",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9dB",
+      "id": 53259,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30275099",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9ah",
+      "id": 55557,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30275323",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Zb",
+      "id": 58512,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275381",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9XT",
+      "id": 60094,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30275469",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9ga",
+      "id": 60116,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275573",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9V6",
+      "id": 62393,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275606",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Vc",
+      "id": 62426,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30275638",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9TK",
+      "id": 62471,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30275716",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9T$",
+      "id": 62494,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30275759",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9SE",
+      "id": 62516,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30275806",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9RT",
+      "id": 62539,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30275853",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Rj",
+      "id": 64299,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30275901",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Vj",
+      "id": 64563,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275932",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9Qf",
+      "id": 64596,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275961",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9P6",
+      "id": 64618,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30275990",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2YfiXzpu13_BTwtpB4r9PZ",
+      "id": 64651,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30276019",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4Yhf",
+      "id": 64708,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30276715",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.3800000000000001
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4YeX",
+      "id": 64730,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30276771",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4Ylu",
+      "id": 64763,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30276986",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4Yix",
+      "id": 64785,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277049",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.3800000000000001
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4Yj4",
+      "id": 64807,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277062",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4YW9",
+      "id": 64840,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277259",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4YWx",
+      "id": 64862,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277305",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.3800000000000001
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4YX6",
+      "id": 64884,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277316",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4Ych",
+      "id": 64906,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277417",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4YdH",
+      "id": 64928,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277459",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.3800000000000001
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4YdS",
+      "id": 64950,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277470",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4Yb2",
+      "id": 64983,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277568",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4Ybe",
+      "id": 65005,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277610",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.3800000000000001
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4Ybr",
+      "id": 65027,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277623",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TRd",
+      "id": 65060,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277733",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.3800000000000001
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TRm",
+      "id": 65082,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277746",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TU7",
+      "id": 65115,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277893",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TUI",
+      "id": 65137,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277904",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TVO",
+      "id": 65159,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277978",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TVd",
+      "id": 65181,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30277989",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TTD",
+      "id": 65214,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278095",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TTU",
+      "id": 65236,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278108",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TIJ",
+      "id": 65258,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278161",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TIs",
+      "id": 70612,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278196",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4THH",
+      "id": 70645,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278355",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4THz",
+      "id": 70689,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278399",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2pAQtCjp1EXR4$HUGc4TMc",
+      "id": 70711,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278436",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSvf",
+      "id": 70744,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278479",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSvQ",
+      "id": 70777,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278524",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSwg",
+      "id": 70810,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278540",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSx1",
+      "id": 70832,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278631",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSxH",
+      "id": 70854,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278647",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSaz",
+      "id": 70887,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278683",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSaN",
+      "id": 70920,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278705",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSaI",
+      "id": 70942,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278708",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSbO",
+      "id": 70964,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278782",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfScv",
+      "id": 70988,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30278815",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "3quSOso_XDlexWAKDFfSde",
+      "id": 71010,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30278862",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2NqrxqQyH9P9Yurw8RMh6P",
+      "id": 71032,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30309979",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2NqrxqQyH9P9Yurw8RMh52",
+      "id": 71054,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30310016",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2NqrxqQyH9P9Yurw8RMh5f",
+      "id": 71076,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30310059",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2NqrxqQyH9P9Yurw8RMh4L",
+      "id": 71098,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30310103",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.0
+      ],
+      "storey": "TÉRREO"
+    },
+    {
+      "guid": "2yLHKaRzz1Ze1Fkh7gAGiO",
+      "id": 78051,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30318188",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2yLHKaRzz1Ze1Fkh7gAGi4",
+      "id": 78073,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30318192",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "2NbsF7Xf979PXp81zFuBrK",
+      "id": 78106,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30321724",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3EENG3CM5FUBLEE7WUxqM8",
+      "id": 78161,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30322897",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "3EENG3CM5FUBLEE7WUxqm7",
+      "id": 78541,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30325086",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "3S41izuTH0MxJe95dnzjn7",
+      "id": 78608,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30356911",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4f4",
+      "id": 78665,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30359850",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4eX",
+      "id": 78687,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30359887",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4zw",
+      "id": 78733,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30360596",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        6.889999999974663
+      ],
+      "storey": "INFRA - 1P (AN)"
+    },
+    {
+      "guid": "0a2AOMMi1ETuvbNWkwt4z3",
+      "id": 78766,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Aço Galvanizado:30360621",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.964999999979236
+      ],
+      "storey": "1° PAVIMENTO"
+    },
+    {
+      "guid": "2mO0qrbuL5ROq_IW_23F2q",
+      "id": 80512,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30367606",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        0.3800000000000001
+      ],
+      "storey": "TÉRREO +0,38"
+    },
+    {
+      "guid": "2mO0qrbuL5ROq_IW_23F2r",
+      "id": 80534,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30367607",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2mO0qrbuL5ROq_IW_23F1T",
+      "id": 80556,
+      "type": "IfcFlowSegment",
+      "name": "Conduite com conexões:Eletroduto Rígido PVC:30367647",
+      "origin_world_m": [
+        553391.1230759618,
+        9583737.940604294,
+        3.5599999999792367
+      ],
+      "storey": "INFRA - TE (AN)"
+    },
+    {
+      "guid": "2s0VaRG5DEtANeTRZIQigr",
+      "id": 48380,
+      "type": "IfcFlowTerminal",
+      "name": "AN-ANT-EXT-M-039:PARABOLICA:30247467",
+      "origin_world_m": [
+        553182.7536297895,
+        9583562.097426014,
+        5.664999999979235
+      ],
+      "storey": "1° PAVIMENTO"
+    }
+  ],
+  "elapsed_s": 0.1357119083404541
+}

@@ -1,0 +1,1736 @@
+{
+  "schema_version": 1,
+  "length_unit_to_m": {
+    "ARQ": 1.0,
+    "ANT": 1.0,
+    "TLD": 1.0
+  },
+  "status": "not_validated",
+  "publish_as_validated_federation": false,
+  "input_sha256": {
+    "ifc/CE01-14PE01-ARQ-R05-inspection.json": "3c8197f8729823da6bdbfd6c85d7c794edb1f6755ed3a5bf17faee330638ea7f",
+    "ifc/CE01-14PE01-ANT-R01-inspection.json": "4548d2bbbcbb88ec4bd6125541d2ca7d4daafbca55a38b2306bf7dad9acced81",
+    "ifc/CE01-14PE01-TLD-R00-inspection.json": "08548de56259046774a5d5635f648680f31627322495440a60ca74421a2a9271",
+    "ifc/ANT-element-geometry.json": "ab3de29f019fc8b1169bb15d01243bf666613c327087390958b2d6950fa8e665",
+    "ifc/TLD-element-geometry.json": "7fe91e047daab388b2c8f60f2634e7bd7da083842c6c9ba40854489a1034a22c",
+    "ifc/alignment-evidence.json": "885e5f696dad68960f8d040d7540b6a384094a40d03afb137f6be90eeabdf848",
+    "pdf/registration-ground.json": "d7773be9a7e7fbfd51d5dd0bc33ba8d44aedace8653b99d4e267449ea69529e0",
+    "pdf/pilot-candidate.json": "d101bfa45b7bb38585d5b774951b01bd8241d1e41861af07ec3149d943575578"
+  },
+  "candidate_transform": {
+    "status": "candidate",
+    "convention": "Column homogeneous vectors; units metres. ARQ frame is inspection mesh engineering coordinates without WCS offset. MEP frame is ANT/TLD engineering world coordinates.",
+    "derivation": "XY rotation from ARQ TrueNorth, translation from ARQ context WCS; Z remains unchanged. Not a formal CRS/map conversion.",
+    "arq_to_ant": [
+      [
+        -0.6615518497771224,
+        0.749899426627643,
+        0.0,
+        553092.4079999995
+      ],
+      [
+        -0.749899426627643,
+        -0.6615518497771224,
+        0.0,
+        9583895.954
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "ant_to_arq": [
+      [
+        -0.6615518497771223,
+        -0.749899426627643,
+        0.0,
+        7552857.386373669
+      ],
+      [
+        0.7498994266276429,
+        -0.6615518497771223,
+        0.0,
+        5925480.416808877
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "arq_to_tld": [
+      [
+        -0.6615518497771224,
+        0.749899426627643,
+        0.0,
+        553092.4079999995
+      ],
+      [
+        -0.749899426627643,
+        -0.6615518497771224,
+        0.0,
+        9583895.954
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "tld_to_arq": [
+      [
+        -0.6615518497771223,
+        -0.749899426627643,
+        0.0,
+        7552857.386373669
+      ],
+      [
+        0.7498994266276429,
+        -0.6615518497771223,
+        0.0,
+        5925480.416808877
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "determinant_rotation": 1.0000000000000002,
+    "roundtrip_max_error_m": 2.359003358083735e-09,
+    "roundtrip_point_count": 103,
+    "mep_rotation_max_difference": {
+      "ANT": 1.1102230246251565e-16,
+      "TLD": 1.1102230246251565e-16
+    },
+    "limitation": "Inverse/round-trip proves arithmetic only; does not independently validate XY or Z. Existing element bboxes already use this candidate."
+  },
+  "pdf_apto101": {
+    "status": "candidate",
+    "ifc_guid": "0vfo$Cu9vBkhdNguKiGtzT",
+    "pdf_label": "APTO. 101",
+    "arq_xy_m_to_pdf_pt": [
+      [
+        0.0,
+        22.677821011674272,
+        -5800.472963677355
+      ],
+      [
+        22.677821011674272,
+        0.0,
+        -3613.1408682403426
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "pdf_pt_to_arq_xy_m": [
+      [
+        0.0,
+        0.04409594729075655,
+        159.3248692800045
+      ],
+      [
+        0.04409594729075655,
+        0.0,
+        255.77735006777507
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "fitted_controls": [
+      {
+        "ifc_xy_m": [
+          191.01668699387676,
+          294.114274675714
+        ],
+        "measured_pdf_xy_pt": [
+          869.4,
+          718.7
+        ],
+        "predicted_pdf_xy_pt": [
+          869.39791439689,
+          718.7013696498034
+        ],
+        "residual_pt": 0.0024951314426775954,
+        "residual_in_model_m": 0.00011002518457982059,
+        "within_reported_measurement_uncertainty": true
+      },
+      {
+        "ifc_xy_m": [
+          197.04668699387665,
+          298.0742746757135
+        ],
+        "measured_pdf_xy_pt": [
+          959.2,
+          855.45
+        ],
+        "predicted_pdf_xy_pt": [
+          959.2020856031095,
+          855.4486303501972
+        ],
+        "residual_pt": 0.002495131441952835,
+        "residual_in_model_m": 0.00011002518454786159,
+        "within_reported_measurement_uncertainty": true
+      }
+    ],
+    "held_out_control": {
+      "ifc_xy_m": [
+        168.68668699387678,
+        275.4142746757136
+      ],
+      "measured_pdf_xy_pt": [
+        445.4,
+        212.2
+      ],
+      "predicted_pdf_xy_pt": [
+        445.3226614785717,
+        212.30562645911732
+      ],
+      "residual_pt": 0.13091293199059728,
+      "residual_in_model_m": 0.005772729748735774,
+      "within_reported_measurement_uncertainty": true
+    },
+    "measurement_uncertainty_pt": 0.5,
+    "scale_pt_per_m": 22.677821011674272,
+    "expected_scale_pt_per_m": 22.67716535433071,
+    "computed_footprint_area_m2": 23.878799999996687,
+    "reported_pdf_area_m2": 23.88,
+    "area_difference_m2": -0.0012000000033118852,
+    "limitation": "Recomputes existing manually measured controls; no new observation. Area and scale support APTO101 candidate identity but do not approve it or prove exact clickable boundaries."
+  },
+  "floor_metadata": {
+    "method": "Root-to-child product of placement_chain relative matrices; Elevation not used.",
+    "storeys": {
+      "ARQ": [
+        {
+          "guid": "0O5B4G3Pj6kgzRmKh3Tue4",
+          "name": "PISCINA",
+          "composed_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              291.739625175152
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -529.8182204685241
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              -1.4600000000000009
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": -1.4600000000000009,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "3Zu5Bv0LOHrPC10026FoQQ",
+          "name": "TÉRREO",
+          "composed_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              291.739625175152
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -529.8182204685241
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 0.0,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "15Z0v90RiHrPC20026FoKR",
+          "name": "1º PAV.",
+          "composed_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              291.739625175152
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -529.8182204685241
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              4.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 4.0,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "2Fbt_IUc94yfs2$HbNaK7z",
+          "name": "COBERTA",
+          "composed_matrix": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              291.739625175152
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              -529.8182204685241
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              10.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 10.0,
+          "exported_matrix_max_error": 0.0
+        }
+      ],
+      "ANT": [
+        {
+          "guid": "0FOVz64wD9zBJYBNEOCW5F",
+          "name": "TÉRREO",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 0.0,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "2yp22tmGP5KAxAQoScDfnz",
+          "name": "TÉRREO +0,14",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.14000000000000065
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 0.14000000000000065,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "2yp22tmGP5KAxAQoScDf81",
+          "name": "TÉRREO +0,38",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3800000000000001
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 0.3800000000000001,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "2yp22tmGP5KAxAQoScDfQv",
+          "name": "TÉRREO +0,71",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.7099999999999997
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 0.7099999999999997,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "0Zy0Xpfkj5DxNBXKeNHosw",
+          "name": "INFRA - TE (AN)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.5599999999792367
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 3.5599999999792367,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "36TNs3WKL3SeLq2$nGMbBl",
+          "name": "1° PAVIMENTO",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.964999999979236
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 3.964999999979236,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "24tYyp0G57GhRJuT5y$MBv",
+          "name": "INFRA - 1P (AN)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              6.889999999974663
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 6.889999999974663,
+          "exported_matrix_max_error": 0.0
+        }
+      ],
+      "TLD": [
+        {
+          "guid": "2yp22tmGP5KAxAQoScDfnz",
+          "name": "TÉRREO",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 0.0,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "2yp22tmGP5KAxAQoScDfQv",
+          "name": "TÉRREO +0,14",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.14000000000000068
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 0.14000000000000068,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "0FOVz64wD9zBJYBNEOCW5F",
+          "name": "TÉRREO +0,38",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.3800000000000003
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 0.3800000000000003,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "2yp22tmGP5KAxAQoScDfod",
+          "name": "TÉRREO +0,71",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              0.71
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 0.71,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "1ZsqnH6ZL7OAmUVw8Ywq6h",
+          "name": "ELETROCALHA -TE (EL/CE)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.45
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 3.45,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "1ZsqnH6ZL7OAmUVw8Ywq6g",
+          "name": "INFRA - TE (CE)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.6099999999792383
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 3.6099999999792383,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "1ZsqnH6ZL7OAmUVw8Ywq6e",
+          "name": "INFRA - TE (EL)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.659999999979238
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 3.659999999979238,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "1ZsqnH6ZL7OAmUVw8Ywq6b",
+          "name": "INFRA - TE (SI)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.7099999999792383
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 3.7099999999792383,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "36TNs3WKL3SeLq2$nGMbBl",
+          "name": "1° PAVIMENTO",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.964999999979238
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 3.964999999979238,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "0m4X5$arDDIQbcYipsmIK0",
+          "name": "SUPORTE ELETRO (TE)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              6.892499999974664
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 6.892499999974664,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "1ZsqnH6ZL7OAmUVw8YwqVc",
+          "name": "ELETROCALHA -1P (EL/CE)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              6.939999999974665
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 6.939999999974665,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "3LGGPeHOLCwOEiXxULj2hd",
+          "name": "INFRA - 1P (CE)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              7.019999999981368
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 7.019999999981368,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "3rsQHPzkj8DP1x3WoBSOKp",
+          "name": "INFRA - 1P (EL)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              7.069999999981368
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 7.069999999981368,
+          "exported_matrix_max_error": 0.0
+        },
+        {
+          "guid": "3rsQHPzkj8DP1x3WoBSOhD",
+          "name": "INFRA - 1P (SI)",
+          "composed_matrix": [
+            [
+              -0.6615518497771224,
+              0.7498994266276429,
+              0.0,
+              553391.1230759618
+            ],
+            [
+              -0.7498994266276429,
+              -0.6615518497771224,
+              0.0,
+              9583737.940604294
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              7.119999999981367
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "composed_z_m": 7.119999999981367,
+          "exported_matrix_max_error": 0.0
+        }
+      ]
+    },
+    "comparison": {
+      "ARQ": {
+        "ground_z_m": 0.0,
+        "first_floor_z_m": 4.0
+      },
+      "ANT": {
+        "ground_z_m": 0.0,
+        "first_floor_z_m": 3.964999999979236
+      },
+      "TLD": {
+        "ground_z_m": 0.0,
+        "first_floor_z_m": 3.964999999979238
+      }
+    },
+    "first_floor_arq_minus_ant_m": 0.03500000002076398,
+    "first_floor_arq_minus_tld_m": 0.0350000000207622,
+    "limitation": "Metadata agreement is not physical Z validation. No global Z correction is justified; first-floor difference requires discipline-specific controls."
+  },
+  "ant_boundary_audit": {
+    "status": "candidate",
+    "eligibility": "All ANT names containing PLACA RETANGULAR with candidate bbox center 0 < Z < 3.5m; no XY filtering.",
+    "measurement": "Minimum of four XY AABB face midpoints to every ground IfcSpace footprint boundary (including holes). This is a bbox-derived proxy, not an exact physical-face or surveyed correspondence.",
+    "ground_space_count": 53,
+    "inspection_panel_count": 33,
+    "geometry_panel_count": 33,
+    "missing_geometry_guids": [],
+    "eligible_panel_count": 13,
+    "hit_panel_count": 13,
+    "miss_panel_count": 0,
+    "panel_space_pair_hits": 13,
+    "tolerance_m": 0.001,
+    "previous_pair_hits": 13,
+    "previous_pairs_missing": [],
+    "new_pair_hits": [],
+    "excluded_panels": [
+      {
+        "guid": "2s0VaRG5DEtANeTRZIQi8x",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "2s0VaRG5DEtANeTRZIQi8q",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "2s0VaRG5DEtANeTRZIQiGG",
+        "center_z_m": 5.464999999979234,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "2s0VaRG5DEtANeTRZIQiKE",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "2s0VaRG5DEtANeTRZIQiQX",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQogb",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQogk",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQogw",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQog$",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQog9",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQogI",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQofZ",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQoWI",
+        "center_z_m": 5.464999999979234,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQoWN",
+        "center_z_m": 5.464999999979234,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQo$d",
+        "center_z_m": 5.464999999979234,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQo$e",
+        "center_z_m": 5.464999999979234,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQozI",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQozN",
+        "center_z_m": 5.464999999979234,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQoyV",
+        "center_z_m": 5.464999999979234,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      },
+      {
+        "guid": "1gi_bk9pr74wNCTsU$7WNo",
+        "center_z_m": 5.464999999979236,
+        "reason": "Outside original open Z eligibility interval (0, 3.5)m"
+      }
+    ],
+    "panels": [
+      {
+        "guid": "3Qi553C$XC9ur8APcwmdQr",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243896",
+        "bbox_arq_candidate_m": [
+          [
+            191.40817527710024,
+            277.9062687561159,
+            1.8209999999999997
+          ],
+          [
+            191.48617527750818,
+            277.9142687567509,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "2Y6doLhXP6tv7OwqmemriC",
+          "space_name": "19",
+          "distance_m": 3.838636075672934e-10,
+          "face_midpoint_arq_m": [
+            191.4471752773042,
+            277.9142687567509,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "2Y6doLhXP6tv7OwqmemriC",
+            "space_name": "19",
+            "distance_m": 3.838636075672934e-10,
+            "face_midpoint_arq_m": [
+              191.4471752773042,
+              277.9142687567509,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "3Qi553C$XC9ur8APcwmdO0",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30243981",
+        "bbox_arq_candidate_m": [
+          [
+            192.62722449586215,
+            298.0662746755266,
+            1.8209999999999997
+          ],
+          [
+            192.7052244962701,
+            298.0742746761617,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "0vfo$Cu9vBkhdNguKiGtzT",
+          "space_name": "23",
+          "distance_m": 4.481535142986104e-10,
+          "face_midpoint_arq_m": [
+            192.66622449606612,
+            298.0742746761617,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "0vfo$Cu9vBkhdNguKiGtzT",
+            "space_name": "23",
+            "distance_m": 4.481535142986104e-10,
+            "face_midpoint_arq_m": [
+              192.66622449606612,
+              298.0742746761617,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "3Qi553C$XC9ur8APcwmdLP",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30244820",
+        "bbox_arq_candidate_m": [
+          [
+            205.49768699546763,
+            275.41427467568786,
+            1.4409999999999996
+          ],
+          [
+            205.57568699587557,
+            275.42227467632296,
+            1.5589999999999997
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "2iZxilRpbClg7SXniOsbUN",
+          "space_name": "88",
+          "distance_m": 2.5863755581667647e-11,
+          "face_midpoint_arq_m": [
+            205.5366869956716,
+            275.41427467568786,
+            1.4999999999999996
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "2iZxilRpbClg7SXniOsbUN",
+            "space_name": "88",
+            "distance_m": 2.5863755581667647e-11,
+            "face_midpoint_arq_m": [
+              205.5366869956716,
+              275.41427467568786,
+              1.4999999999999996
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQpRI",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256432",
+        "bbox_arq_candidate_m": [
+          [
+            192.62722449520587,
+            298.2742746777302,
+            1.8209999999999997
+          ],
+          [
+            192.7052244956138,
+            298.2822746783653,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "0vfo$Cu9vBkhdNguKiGs0p",
+          "space_name": "24",
+          "distance_m": 2.0166908143437468e-09,
+          "face_midpoint_arq_m": [
+            192.66622449540984,
+            298.2742746777302,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "0vfo$Cu9vBkhdNguKiGs0p",
+            "space_name": "24",
+            "distance_m": 2.0166908143437468e-09,
+            "face_midpoint_arq_m": [
+              192.66622449540984,
+              298.2742746777302,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQpP4",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256550",
+        "bbox_arq_candidate_m": [
+          [
+            192.62722449650155,
+            308.4062746761368,
+            1.8209999999999997
+          ],
+          [
+            192.7052244969095,
+            308.41427467677187,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "0vfo$Cu9vBkhdNguKiGs1H",
+          "space_name": "25",
+          "distance_m": 1.0584244591882686e-09,
+          "face_midpoint_arq_m": [
+            192.66622449670552,
+            308.41427467677187,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "0vfo$Cu9vBkhdNguKiGs1H",
+            "space_name": "25",
+            "distance_m": 1.0584244591882686e-09,
+            "face_midpoint_arq_m": [
+              192.66622449670552,
+              308.41427467677187,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQpP9",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256555",
+        "bbox_arq_candidate_m": [
+          [
+            192.62722449549997,
+            308.5942746756305,
+            1.8209999999999997
+          ],
+          [
+            192.70522449590788,
+            308.6022746762656,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "0vfo$Cu9vBkhdNguKiGs1p",
+          "space_name": "26",
+          "distance_m": 8.29913915367797e-11,
+          "face_midpoint_arq_m": [
+            192.66622449570394,
+            308.5942746756305,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "0vfo$Cu9vBkhdNguKiGs1p",
+            "space_name": "26",
+            "distance_m": 8.29913915367797e-11,
+            "face_midpoint_arq_m": [
+              192.66622449570394,
+              308.5942746756305,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQpO4",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256614",
+        "bbox_arq_candidate_m": [
+          [
+            192.62722449582117,
+            318.74627467542746,
+            1.8209999999999997
+          ],
+          [
+            192.7052244962291,
+            318.75427467606255,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "0vfo$Cu9vBkhdNguKiGs6U",
+          "space_name": "27",
+          "distance_m": 3.4918912206194364e-10,
+          "face_midpoint_arq_m": [
+            192.66622449602514,
+            318.75427467606255,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "0vfo$Cu9vBkhdNguKiGs6U",
+            "space_name": "27",
+            "distance_m": 3.4918912206194364e-10,
+            "face_midpoint_arq_m": [
+              192.66622449602514,
+              318.75427467606255,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQpO9",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256619",
+        "bbox_arq_candidate_m": [
+          [
+            192.62722449474256,
+            318.9342746750085,
+            1.8209999999999997
+          ],
+          [
+            192.7052244951505,
+            318.94227467564355,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "0vfo$Cu9vBkhdNguKiGs6y",
+          "space_name": "28",
+          "distance_m": 7.049152372934398e-10,
+          "face_midpoint_arq_m": [
+            192.66622449494653,
+            318.9342746750085,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "0vfo$Cu9vBkhdNguKiGs6y",
+            "space_name": "28",
+            "distance_m": 7.049152372934398e-10,
+            "face_midpoint_arq_m": [
+              192.66622449494653,
+              318.9342746750085,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQpMe",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256714",
+        "bbox_arq_candidate_m": [
+          [
+            192.6272244967841,
+            329.03627467636426,
+            1.8209999999999997
+          ],
+          [
+            192.70522449719203,
+            329.04427467699935,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "0vfo$Cu9vBkhdNguKiGs7V",
+          "space_name": "29",
+          "distance_m": 1.2860255083069398e-09,
+          "face_midpoint_arq_m": [
+            192.66622449698806,
+            329.04427467699935,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "0vfo$Cu9vBkhdNguKiGs7V",
+            "space_name": "29",
+            "distance_m": 1.2860255083069398e-09,
+            "face_midpoint_arq_m": [
+              192.66622449698806,
+              329.04427467699935,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQpMj",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256719",
+        "bbox_arq_candidate_m": [
+          [
+            192.6272244957825,
+            329.224274675858,
+            1.8209999999999997
+          ],
+          [
+            192.70522449619045,
+            329.2322746764931,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "0vfo$Cu9vBkhdNguKiGs7x",
+          "space_name": "30",
+          "distance_m": 1.446096575818956e-10,
+          "face_midpoint_arq_m": [
+            192.66622449598648,
+            329.224274675858,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "0vfo$Cu9vBkhdNguKiGs7x",
+            "space_name": "30",
+            "distance_m": 1.446096575818956e-10,
+            "face_midpoint_arq_m": [
+              192.66622449598648,
+              329.224274675858,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "1lC_4mA5DFP9Hi_erNQpLf",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30256779",
+        "bbox_arq_candidate_m": [
+          [
+            192.62722449641393,
+            338.32257558914597,
+            1.8209999999999997
+          ],
+          [
+            192.70522449682187,
+            338.330575589781,
+            1.9389999999999998
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "0vfo$Cu9vBkhdNguKiGs4R",
+          "space_name": "31",
+          "distance_m": 9.374616638524458e-10,
+          "face_midpoint_arq_m": [
+            192.6662244966179,
+            338.330575589781,
+            1.88
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "0vfo$Cu9vBkhdNguKiGs4R",
+            "space_name": "31",
+            "distance_m": 9.374616638524458e-10,
+            "face_midpoint_arq_m": [
+              192.6662244966179,
+              338.330575589781,
+              1.88
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "1gi_bk9pr74wNCTsU$7WED",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30264700",
+        "bbox_arq_candidate_m": [
+          [
+            213.17768699290818,
+            275.41427467535493,
+            1.4409999999999996
+          ],
+          [
+            213.25568699331612,
+            275.42227467599,
+            1.5589999999999997
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "2iZxilRpbClg7SXniOsbUN",
+          "space_name": "88",
+          "distance_m": 3.587956598494202e-10,
+          "face_midpoint_arq_m": [
+            213.21668699311215,
+            275.41427467535493,
+            1.4999999999999996
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "2iZxilRpbClg7SXniOsbUN",
+            "space_name": "88",
+            "distance_m": 3.587956598494202e-10,
+            "face_midpoint_arq_m": [
+              213.21668699311215,
+              275.41427467535493,
+              1.4999999999999996
+            ]
+          }
+        ]
+      },
+      {
+        "guid": "2mO0qrbuL5ROq_IW_23F2m",
+        "name": "EL-TAP-PVC-4X2-TCE-100:PLACA RETANGULAR 4\"X2\"-TAMPA CEGA:30367602",
+        "bbox_arq_candidate_m": [
+          [
+            186.22407727360655,
+            277.9062687570378,
+            2.1509999999999994
+          ],
+          [
+            186.3020772740145,
+            277.91426875767286,
+            2.2689999999999992
+          ]
+        ],
+        "nearest_ground_space": {
+          "space_guid": "2Y6doLhXP6tv7OwqmemonN",
+          "space_name": "18",
+          "distance_m": 1.305750174651621e-09,
+          "face_midpoint_arq_m": [
+            186.26307727381052,
+            277.91426875767286,
+            2.209999999999999
+          ]
+        },
+        "hit": true,
+        "matches_below_tolerance": [
+          {
+            "space_guid": "2Y6doLhXP6tv7OwqmemonN",
+            "space_name": "18",
+            "distance_m": 1.305750174651621e-09,
+            "face_midpoint_arq_m": [
+              186.26307727381052,
+              277.91426875767286,
+              2.209999999999999
+            ]
+          }
+        ]
+      }
+    ],
+    "limitation": "Full denominator audits the prior selective evidence. Nearest boundary and small residual alone do not establish semantic correspondence or an independent control dataset."
+  },
+  "tld_diagnostic": {
+    "status": "not_validated",
+    "existing_candidate_geometry_count": 1534,
+    "pilot_bbox_arq_m": [
+      [
+        191.01668699387676,
+        294.114274675714,
+        0.0
+      ],
+      [
+        197.04668699387665,
+        298.0742746757135,
+        3.499999999999999
+      ]
+    ],
+    "candidate_bbox_overlap_count": 7,
+    "candidate_bbox_overlap_guids": [
+      "14IVmC5f970gFQw9l8qVUd",
+      "1HeQq8K3P9aRUNqMuQiIg6",
+      "1HeQq8K3P9aRUNqMuQiIem",
+      "1HeQq8K3P9aRUNqMuQiIg7",
+      "3RJbjGy6H78f2bsP44yvZL",
+      "3RJbjGy6H78f2bsP44yvSB",
+      "3RJbjGy6H78f2bsP44yv3H"
+    ],
+    "independent_xy_control_count": 0,
+    "independent_z_control_count": 0,
+    "limitation": "AABB overlap documents candidate presence only. Shared metadata, bbox transforms, round-trip and occupancy are not independent TLD XY/Z proof."
+  },
+  "gates": {
+    "human_pdf_room_identity_and_boundary_approval": false,
+    "distributed_semantic_ant_xy_controls_including_held_out_point": false,
+    "tld_independent_xy_control": false,
+    "tld_independent_z_control": false,
+    "physical_z_controls_and_first_floor_difference_resolution": false
+  },
+  "pending_gates": [
+    "human_pdf_room_identity_and_boundary_approval",
+    "distributed_semantic_ant_xy_controls_including_held_out_point",
+    "tld_independent_xy_control",
+    "tld_independent_z_control",
+    "physical_z_controls_and_first_floor_difference_resolution"
+  ]
+}

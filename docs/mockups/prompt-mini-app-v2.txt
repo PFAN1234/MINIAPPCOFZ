@@ -1,0 +1,9 @@
+Edit the supplied UI mockup board with a precise localized change. Use case: ui-mockup. Preserve the overall six-screen 3-column by 2-row layout, Telegram visual style, white background, blue actions, all photographs and all other screens.
+
+Change ONLY screen 2 (top center) so that after the user taps HTO on screen 1, this HTO page offers access to the federated model in addition to the environment list.
+
+Above screen 2, change its external title from "Escolher ambiente" to "HTO: modelo e ambientes". Inside screen 2, use a small back link "Frentes da obra" and the main page heading "HTO". Immediately below HTO, add a prominent full-width pale-blue card with a clean outline cube icon on the left, exact label "Visualizar modelo federado" (may wrap naturally to two lines for readability) and a right-facing chevron. This is an independent tappable option at the HTO level, available before selecting an apartment. Do not draw a floor plan or a 3D viewer in this board.
+
+Below this card, keep the "Ambientes" section, the floor tabs "Térreo" and "1º pavimento", the search "Buscar ambiente", and four compact rows "Apto. 101", "Apto. 102", "Salão de eventos", "Vestiários". Keep Apto. 101 selected and the bottom blue "Abrir ambiente" button. Remove the old small helper sentence to make room if needed. Use comfortable spacing and readable text; fit within the existing phone viewport height without overlap.
+
+Keep screens 1, 3, 4, 5, 6 unchanged, including all their labels, state, colors, photographs and layout. Keep the left board title and footer "Mockup conceitual · Dados ilustrativos". Correct Brazilian Portuguese, crisp high fidelity. The only functional addition is the "Visualizar modelo federado" entry on the HTO page.

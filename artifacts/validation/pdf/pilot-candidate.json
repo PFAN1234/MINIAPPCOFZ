@@ -1,0 +1,61 @@
+{
+  "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+  "page": 1,
+  "floor": "Térreo",
+  "pdf_label": "APTO. 101",
+  "pdf_reported_area_m2": 23.88,
+  "text_bbox_points": [
+    887.527,
+    736.74,
+    917.208,
+    744.93
+  ],
+  "hotspot_polygon_points": [
+    [
+      871,
+      721
+    ],
+    [
+      957,
+      721
+    ],
+    [
+      957,
+      853
+    ],
+    [
+      871,
+      853
+    ]
+  ],
+  "hotspot_polygon_normalized": [
+    [
+      0.3653646,
+      0.4282185
+    ],
+    [
+      0.4014397,
+      0.4282185
+    ],
+    [
+      0.4014397,
+      0.5066163
+    ],
+    [
+      0.3653646,
+      0.5066163
+    ]
+  ],
+  "hotspot_type": "manually inspected approximate inset rectangle",
+  "hotspot_note": "Inside room walls based on rendered PDF. This is a click target, not exact room boundary or IFC spatial extent; excludes wall thickness and door threshold. Requires explicit IFC association.",
+  "room_detail_preview": "artifacts/validation/pdf/ground-apto101-detail.png",
+  "room_detail_clip_points": [
+    810,
+    700,
+    1050,
+    870
+  ],
+  "room_detail_scale_pixels_per_point": 4,
+  "vestiarios_detail_preview": "artifacts/validation/pdf/ground-vestiarios-detail.png",
+  "vestiario_note": "VEST. MASC. annotation is outside curved room with leader line; text bbox must not be used as room boundary."
+}

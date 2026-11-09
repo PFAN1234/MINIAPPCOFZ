@@ -1,0 +1,27 @@
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+dist/
+
+# Credentials and local runtime data
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.state/
+*.log
+.DS_Store
+*:Zone.Identifier
+
+# Original engineering documents are supplied separately (see DOCS HTO/README.md)
+/DOCS HTO/IFC/*.ifc
+/DOCS HTO/PDF/*.pdf
+
+# Incomplete exports
+*.staged.glb
+*.staged.json

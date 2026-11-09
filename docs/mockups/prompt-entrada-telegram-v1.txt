@@ -1,0 +1,30 @@
+Use case: ui-mockup.
+Create a high-fidelity TWO-SCREEN presentation showing exactly how the construction Mini App starts from Telegram. Use the supplied images as reference:
+1. Telegram HTO topic screenshot: reference for actual group name, pale green Telegram chat wallpaper, construction photo messages and cleaning photo.
+2. Existing Mini App mockup board: strict visual style reference for white surfaces, Telegram blue buttons, typography and HTO screen with "Visualizar modelo federado".
+
+Landscape design board, two large tall mobile viewports side by side, same size, fully visible, thin subtle rounded outline, no physical phone hardware. Simple connecting arrow between them with short label "Toque para abrir". Small overall title "Do Telegram para o Diário da obra". Each screen should be readable and polished. Left external label "1  No tópico HTO"; right external label "2  Mini App aberto". Small footer "Proposta visual · Bot e acesso ainda não configurados". Highest practical resolution. Brazilian Portuguese exact accents. Consistent light theme.
+
+LEFT SCREEN is TELEGRAM ITSELF, not the Mini App:
+- Normal mobile Telegram topic chat header with back arrow, suitcase-like topic icon, title "HTO", smaller group context "CO-FZ · 2ª Etapa", overflow menu.
+- Native pinned-message strip directly beneath header with pin icon, "Mensagem fixada" and preview "Diário da obra · Abrir aplicativo".
+- Main chat background pale green with very subtle Telegram doodles, matching screenshot.
+- Near upper-middle, a white incoming BOT MESSAGE bubble, visibly authored "Diário da obra" and tiny "bot" label, with text "Registre serviços e acompanhe as pendências da HTO." and next line "Acesse os ambientes e o modelo federado."
+- Immediately attached BELOW that bot message, a broad native Telegram inline URL button with blue text "Abrir Diário da obra" and small northeast arrow icon. This is the dominant entry action, clearly inside the message, not a fictional native global Telegram toolbar button. The button represents a direct t.me Mini App link; do not display a fabricated bot username or actual URL.
+- Below the bot message, show one recent ordinary chat message by "João" containing a faithful small crop of the actual cleaning photograph from reference 1 (wood cupboards, stepladder), with caption "Execução de limpeza" and "Apto. 101 · Térreo". Small time "15:16".
+- Bottom native Telegram composer with paperclip, placeholder "Mensagem", emoji and microphone icons. No keyboard expanded.
+- Keep the bot launch message prominent and fully visible. No browser, no new app installation.
+
+RIGHT SCREEN is the MINI APP opened within Telegram:
+- Full-height Telegram Mini App sheet/webview, white background, top native bar with close X, centered "Diário da obra", three-dot menu. No browser address bar, no login form.
+- Small back link "Frentes da obra", project context "CO-FZ · 2ª Etapa", main heading "HTO".
+- Prominent pale blue card with outline cube icon and exact label "Visualizar modelo federado", chevron on right, closely matching reference 2.
+- Section heading "Ambientes".
+- Segmented floor tabs "Térreo" selected and "1º pavimento".
+- Search "Buscar ambiente".
+- Four tappable rows "Apto. 101", "Apto. 102", "Salão de eventos", "Vestiários"; Apto. 101 highlighted, consistent with the previous mockup.
+- Bottom primary blue action "Abrir ambiente".
+- Comfortable spacing, mobile touch controls, modest safe area.
+The link in the HTO topic opens the HTO context directly; do not force a second selection of HTO, and do not show the all-fronts home screen instead.
+
+Constraints: show only these two states, never the six-screen board. Preserve reference photos and UI identity. No invented chat permissions prompts, no biometric verification, no full desktop screenshot inside a phone, no 2D plan, no claim that bot is already running. This is a clear conceptual demonstration of launch UX.

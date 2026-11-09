@@ -1,0 +1,27 @@
+Use case: ui-mockup.
+Create a high-fidelity mobile screen mockup by compositing the supplied building-viewer screenshot into a new screen of the existing Telegram Mini App.
+
+INPUTS:
+Image 1 is the actual user-provided HTO architectural model screenshot. Use its building as the visual reference: white two-story L-shaped building with long arcaded galleries, pink pitched roofs, rounded end volumes, enclosed courtyard and rectangular pool. Preserve this recognizable building, proportions, model geometry appearance, roof colors, courtyard and original isometric orientation. Remove the original desktop application toolbars, file header, sidebars and background excess; fit the complete building and site naturally into the mobile model viewport. Do not invent colored piping, additional engineering systems or a different building.
+Image 2 is the existing six-screen app board, used ONLY as UI style reference. Match its white and soft gray surfaces, Telegram blue, clean black typography, subtle rounded corners and crisp outline icons. Do not reproduce the six-screen board.
+
+OUTPUT:
+One large polished PORTRAIT mobile-screen design presentation, highest resolution practical (approximately 1024x1536). A single complete tall app screen fills almost the entire image, straight-on, minimal framing, no physical phone hardware and no tilted perspective. Small external label above the screen "07  Modelo federado". Small external footer "Mockup conceitual · Imagem de referência". All Portuguese labels readable, correctly accented.
+
+SCREEN CONTENT in order:
+- Compact native Telegram Mini App top bar: close X on the left, centered "Diário da obra", three-dot menu right.
+- Back link "HTO".
+- Main title "Modelo federado", with a small outline expand/fullscreen icon on the right.
+- Slim floor filter dropdown "Todos os pavimentos".
+- Large central 3D model viewport occupying most of the screen, subtle light gray-blue background, containing the actual HTO building from image 1, generously sized and fully visible. Show its recognizable roofs, white arcades, L-shaped volumes, courtyard and pool. Keep the model centered, not tiny.
+- Inside the viewport: small unobtrusive orientation cube top right with "Frente"; a compact vertical plus and minus zoom control at right center; a small circular fit-to-view icon bottom right. Minimal tool clutter.
+- Small hint near the bottom of the viewport: "Arraste para girar · Pinça para ampliar".
+- A clean toolbar directly below the viewport: four evenly spaced outline icons with readable labels "Girar" (selected blue), "Mover", "Enquadrar", "Modelos".
+- A compact white layer panel below that, heading "Modelos exibidos". Three horizontal rows with colored square indicators and toggles:
+   "Arquitetura · ARQ" toggle ON in blue.
+   "ANT" toggle OFF in gray.
+   "TLD" toggle OFF in gray.
+These acronyms refer to the actual available model disciplines; do not invent their expanded names. Only architecture is switched on, matching the supplied architectural screenshot. This screen is reached directly from the HTO card "Visualizar modelo federado", independently of choosing an apartment.
+- Modest bottom safe area.
+
+Constraints: conceptual mockup only. No 2D plan, no room registration workflow, no invented simulation data, no project percentages, no georeferencing labels, no dense BIM desktop toolbar, no fabricated claim of verified federation. Do not label the screenshot as a completed live integration. The main objective is a clear mobile visualization of the exact reference building within the existing app design.
