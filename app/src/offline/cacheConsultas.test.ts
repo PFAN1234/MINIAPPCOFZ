@@ -98,3 +98,34 @@ describe('cache de consultas', () => {
     cancelar()
   })
 })
+
+describe('cache de consultas restaurado e app em segundo plano', () => {
+  it('o cache restaurado fica vencido (menos imagens), para ser refeito ao montar', async () => {
+    const a = criarArmazenamentoMemoria()
+    const origem = novoQc()
+    const cancelar = persistirCache(origem, a, 'u1')
+    await popular(origem)
+    window.dispatchEvent(new Event('pagehide'))
+    await vi.waitFor(async () => expect(await a.lerCache('u1')).toBeDefined())
+    cancelar()
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: 60_000 } } })
+    await restaurarCache(qc, a, 'u1')
+    expect(qc.getQueryData(['obras'])).toEqual([{ slug: 'hto' }])
+    expect(qc.getQueryState(['obras'])?.isInvalidated).toBe(true)
+    expect(qc.getQueryState(['imagens', 'fotos', 'x'])?.isInvalidated).toBe(false)
+  })
+
+  it('grava na hora quando a página vai para segundo plano', async () => {
+    const a = criarArmazenamentoMemoria()
+    const qc = novoQc()
+    const cancelar = persistirCache(qc, a, 'u1')
+    await qc.fetchQuery({ queryKey: ['obras'], queryFn: async () => [] })
+    expect(await a.lerCache('u1')).toBeUndefined()
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' })
+    document.dispatchEvent(new Event('visibilitychange'))
+    await vi.waitFor(async () => expect(await a.lerCache('u1')).toBeDefined())
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' })
+    cancelar()
+  })
+})

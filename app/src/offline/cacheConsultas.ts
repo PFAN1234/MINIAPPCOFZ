@@ -29,6 +29,13 @@ export async function restaurarCache(
       Date.now() - salvo.salvoEm <= IDADE_MAXIMA_MS
     ) {
       hydrate(qc, salvo.estado as DehydratedState)
+      // O cache serve para mostrar algo na hora (ou sem sinal), mas pode ser
+      // anterior a um envio: marca como vencido para ser refeito ao montar.
+      // As imagens ficam como estão (a URL antiga ainda serve pelo SW).
+      void qc.invalidateQueries({
+        predicate: (q) => q.queryKey[0] !== 'imagens',
+        refetchType: 'none',
+      })
     }
   } catch {
     // Cache ilegível: o app segue sem ele.
@@ -65,9 +72,24 @@ export function persistirCache(qc: QueryClient, a: Armazenamento, usuarioId: str
     }, ATRASO_GRAVACAO_MS)
   })
 
+  // O app pode ser fechado a qualquer momento: grava já ao ir para segundo plano.
+  const gravarAgora = () => {
+    if (temporizador === null) return
+    clearTimeout(temporizador)
+    temporizador = null
+    void gravar()
+  }
+  const aoMudarVisibilidade = () => {
+    if (document.visibilityState === 'hidden') gravarAgora()
+  }
+  window.addEventListener('pagehide', gravarAgora)
+  document.addEventListener('visibilitychange', aoMudarVisibilidade)
+
   return () => {
     if (temporizador !== null) clearTimeout(temporizador)
     temporizador = null
     cancelarAssinatura()
+    window.removeEventListener('pagehide', gravarAgora)
+    document.removeEventListener('visibilitychange', aoMudarVisibilidade)
   }
 }

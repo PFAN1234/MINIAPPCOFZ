@@ -85,11 +85,15 @@ Verificação: Playwright (fixture) salva uma pendência com foto de 2400×1600 
 
 ## 5. Registros com sinal instável
 
-- [ ] Rascunhos e fotos em IndexedDB, confirmados antes de exibir “aguardando envio”.
-- [ ] Sincronizar ao abrir, no evento `online` e por tentativa manual, sem duplicar.
-- [ ] Estados salvo no aparelho / salvo no servidor / publicado; detecção de falta de espaço; rascunhos isolados por usuário.
+Contrato: `docs/contrato-fase5.md`. Decisões de 2026-11-09: ao salvar, o app volta na hora e envia em segundo plano; o uso sem sinal (app e dados já vistos no aparelho por até 7 dias) entra nesta fase.
 
-Verificação: Playwright offline → reabrir → sincronizar sem duplicar; quota excedida exibida. Dependência: 4.
+- [x] Rascunhos e fotos em IndexedDB, confirmados antes de exibir “aguardando envio”.
+- [x] Sincronizar ao abrir, no evento `online`, ao voltar ao app e por tentativa manual, sem duplicar; backoff de 15 s a 5 min; falha definitiva pede "Tentar de novo" ou "Descartar".
+- [x] Estados salvo no aparelho / salvo no servidor / publicado; detecção de falta de espaço; rascunhos e cache isolados por usuário.
+- [x] App abre sem sinal pelo service worker (precache por manifesto) e mostra os dados já vistos (cache de consultas no aparelho, refeito ao abrir com sinal).
+- [ ] Conferir no Telegram real (fase 6): Android sem sinal; no iPhone o WebView não roda service worker, então lá só a fila funciona.
+
+Verificação: Playwright offline → salvar → recarregar offline → voltar o sinal → enviado sem duplicar; cota simulada exibe o alerta. Vitest cobre armazenamento, fila, cache e telas. Dependência: 4.
 
 ## 6. Bot e publicação no tópico da obra
 
