@@ -527,3 +527,27 @@ def test_solicitacao_pendente_duplicada_da_23505(cenario):
         with sessao(c.dsn, c.sem_obra) as cur:
             cur.execute('insert into public.solicitacao_acesso (obra_id, usuario_id) values (%s, %s)',
                         (c.obra_a, c.sem_obra))
+
+
+# --- Seed da HTO -------------------------------------------------------------
+
+SOMA_SEED = """select count(*), md5(string_agg(concat_ws('|', a.codigo, p.codigo, a.nome_operacional, a.nome_planta,
+    a.categoria, a.area_m2, a.revisao_planta, a.marcadores::text, a.ordem), ';' order by a.ordem))
+  from public.ambiente a join public.pavimento p on p.id = a.pavimento_id
+  join public.obra o on o.id = a.obra_id where o.slug = 'hto'"""
+
+
+def test_seed_hto_carrega_e_e_idempotente(dsn):
+    from pathlib import Path
+    seed = (Path(__file__).resolve().parents[2] / 'supabase' / 'seed' / 'hto.sql').read_text()
+    for _ in range(2):
+        with psycopg.connect(dsn, autocommit=True) as conn:
+            conn.execute(seed)
+    with sessao(dsn, papel=None) as cur:
+        cur.execute(SOMA_SEED)
+        total, soma = cur.fetchone()
+        assert total == 87
+        cur.execute("select p.codigo, count(*) from public.ambiente a join public.pavimento p on p.id = a.pavimento_id "
+                    "join public.obra o on o.id = a.obra_id where o.slug = 'hto' group by 1 order by 1")
+        assert cur.fetchall() == [('1pav', 43), ('terreo', 44)]
+        print(f'soma do seed: {soma}')

@@ -28,7 +28,7 @@ Detalhes de cada fase em `tasks/plano-app.md`. Decisão de 2026-11-09: o visuali
 - [x] Scaffold `app/` com Vite, React, TypeScript, ESLint, Vitest e o script `telegram-web-app.js`.
 - [x] Adicionar `requirements-dev.txt` com `pytest` e fazer `tests/` passar.
 - [x] CI no GitHub Actions: typecheck, lint, Vitest, build e pytest (`.github/workflows/ci.yml`).
-- [ ] Acrescentar `supabase db lint` ao CI junto com as primeiras migrations (fase 2).
+- [x] CI com testes de banco (PostgreSQL 17 + stub do Supabase) e das Edge Functions (Deno), no lugar do `supabase db lint`, que exige a stack local em Docker.
 - [x] Confirmar o modo de chaves JWT do projeto Supabase: chaves de assinatura assimétricas; `auth-telegram` gera sessão pelo Supabase Auth (link mágico + `verifyOtp`), sem JWT próprio (ver `tasks/plano-app.md`, fase 2).
 
 Verificação: CI verde em um commit vazio de funcionalidade; `vite dev` abre a tela inicial. Dependência: nenhuma.
@@ -40,16 +40,19 @@ Verificação: CI verde em um commit vazio de funcionalidade; `vite dev` abre a 
 - [x] `scripts/gerar_plantas.py`: visão geral (WebP 2400 px e HD 4096 px) de cada pavimento, recorte de detalhe por ambiente e manifesto `data/hto/plantas.json`; legendas e carimbo cobertos.
 - [x] Imagem de prova com todos os pinos iguais, acima do nome (`data/hto/plantas/R05/<pavimento>/prova.png`).
 - [x] Revisão humana da lista em 2026-11-09: nomes aprovados, Jardim 1/2 mantidos, pinos como estão, banheiros separados, circulações com dois pinos, todos os ambientes, lista sem grupos em ordem alfabética.
-- [ ] Gerar `supabase/seed/hto.sql` a partir da lista revisada (junto com o schema da fase 2).
+- [x] Gerar `supabase/seed/hto.sql` a partir da lista revisada (`scripts/gerar_seed.py`); carregado no `miniappcofz-dev` (87 ambientes, soma conferida com o seed local).
 
 Verificação: pytest confere APTO. 101 = 23,88 m², SALÃO DE EVENTOS = 158,59 m² (Térreo) e APTO. 211 = 20,58 m² (1º pavimento). Dependência: 0.
 
 ## 2. Banco, permissões e autenticação Telegram
 
-- [ ] Migrations: obra, usuário, participação, solicitação de acesso, pavimento, ambiente, registro, foto, encerramento e publicação Telegram.
-- [ ] RLS por participação na obra; encerramento só por gestor; bucket privado `fotos` com política pelo caminho da obra.
-- [ ] RPCs `concluir_registro` (idempotente pelo id do cliente) e `encerrar_pendencia` (gestor, pendência aberta, `for update`), ambas enfileirando a publicação na mesma transação.
-- [ ] Edge Function `auth-telegram`: validar `initData` (assinatura e `auth_date`), criar/atualizar usuário e emitir sessão.
+- [x] Migrations: obra, usuário, participação, solicitação de acesso, pavimento, ambiente, registro, foto, encerramento e publicação Telegram (contrato em `docs/esquema-fase2.md`; aplicadas no `miniappcofz-dev` em 2026-11-09).
+- [x] RLS por participação na obra; encerramento só por gestor; bucket privado `fotos` com política pelo caminho da obra; foto vinculada a registro não pode ser sobrescrita.
+- [x] RPCs `concluir_registro` (idempotente pelo id do cliente) e `encerrar_pendencia` (gestor, pendência aberta, `for update`), ambas enfileirando a publicação na mesma transação.
+- [x] Edge Function `auth-telegram`: validar `initData` (assinatura e `auth_date`), criar/atualizar usuário e emitir sessão (código e testes; 18 testes Deno).
+- [ ] Deploy da `auth-telegram` com `TELEGRAM_BOT_TOKEN` e `ALLOWED_ORIGINS` (depende do bot de teste, fase 6) e teste com um `initData` real, conferindo o campo `signature`.
+- [ ] Teste de ponta a ponta no projeto remoto: sessão real → upload no Storage → `concluir_registro` (confere `owner_id` e acesso do `postgres` a `storage.objects`).
+- [ ] Descoberta de obras para quem ainda não participa (pedir acesso sem conhecer o `obra_id`) — fase 7.
 
 Verificação: testes de banco — outra obra não lê nem grava; equipe não encerra; repetir `concluir_registro` não duplica; initData adulterado ou expirado é rejeitado. Dependência: 1.
 
