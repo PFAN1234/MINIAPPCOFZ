@@ -122,6 +122,35 @@ describe('Novo registro', () => {
     expect(chamadas[0]).toBe(chamadas[1])
   })
 
+  it('depois de enviar alguma foto, um erro trava os campos e só permite tentar de novo', async () => {
+    const usuario = userEvent.setup()
+    const base = criarRepositorioFixture()
+    let falhar = true
+    const repo: Repositorio = {
+      ...base,
+      // A resposta da RPC se perde depois de o registro já ter sido gravado.
+      concluirRegistro: async (d) => {
+        const r = await base.concluirRegistro(d)
+        if (falhar) throw new ErroEnvio('rede', 'Sem conexão com o servidor.')
+        return r
+      },
+    }
+    renderizar(repo)
+    await preencher(usuario)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Salvar registro' })).toBeEnabled())
+    await usuario.click(screen.getByRole('button', { name: 'Salvar registro' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Sem conexão com o servidor.')
+    expect(screen.getByLabelText('Legenda')).toBeDisabled()
+    expect(screen.getByRole('radio', { name: 'Serviço' })).toBeDisabled()
+    expect(screen.getByText(/não pode mais ser alterado/)).toBeInTheDocument()
+
+    falhar = false
+    await usuario.click(screen.getByRole('button', { name: 'Tentar de novo' }))
+    expect(await screen.findByText('Registro salvo')).toBeInTheDocument()
+    expect(await screen.findAllByText('Tomada solta na parede')).toHaveLength(1)
+  })
+
   it('pede confirmação ao sair com o formulário preenchido', async () => {
     const usuario = userEvent.setup()
     const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false)

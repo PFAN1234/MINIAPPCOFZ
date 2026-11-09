@@ -43,6 +43,9 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const [erro, setErro] = useState<string | null>(null)
   const rascunho = useRef<Rascunho | null>(null)
   const enviadasMax = useRef(0)
+  // Depois que alguma foto chegou ao servidor, o registro pode já estar salvo:
+  // editar e reenviar com o mesmo id devolveria a versão antiga sem avisar.
+  const [travado, setTravado] = useState(false)
   const saindo = useRef(false)
   const contador = useRef(0)
   const previas = useRef<string[]>([])
@@ -175,6 +178,7 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
         },
       })
     } catch (e) {
+      if (enviadasMax.current > 0) setTravado(true)
       setErro(
         e instanceof Error && e.message
           ? e.message
@@ -207,10 +211,10 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
         {obra.nome} · {pavimento.nome} · {ambiente.nome_operacional}
       </p>
       <form className="form-registro" onSubmit={(e) => void enviar(e)} noValidate>
-        <fieldset className="form-conjunto" disabled={enviando}>
+        <fieldset className="form-conjunto" disabled={enviando || travado}>
           <SeletorFotos
             itens={fotos}
-            desabilitado={enviando}
+            desabilitado={enviando || travado}
             onAdicionar={adicionar}
             onRemover={remover}
           />
@@ -268,6 +272,12 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
         {erro && (
           <p className="form-erro" role="alert">
             {erro}
+          </p>
+        )}
+        {travado && (
+          <p className="campo-dica">
+            Parte do registro já foi enviada, então ele não pode mais ser alterado. Tente de
+            novo ou volte para descartar.
           </p>
         )}
         <button
