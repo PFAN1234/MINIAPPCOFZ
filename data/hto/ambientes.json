@@ -1,0 +1,2077 @@
+{
+  "obra": "hto",
+  "fonte": "artifacts/validation/pdf/inventory.json",
+  "status": "revisado",
+  "revisao_humana": {
+    "data": "2026-11-09",
+    "revisao_planta": "R05",
+    "decisoes": [
+      "Nomes operacionais aprovados como gerados.",
+      "Os dois 'Jardim' do térreo ficam como 'Jardim 1' e 'Jardim 2'.",
+      "Pinos dos banheiros empilhados ficam como estão (tamanho fixo na tela separa com zoom).",
+      "Banheiros são ambientes separados dos apartamentos, inclusive na lista.",
+      "Ambiente rotulado duas vezes (circulações) é um único ambiente com dois pinos.",
+      "Todos os ambientes entram na lista, inclusive áreas externas e circulações.",
+      "Lista sem grupos: ordem alfabética natural com busca; 'categoria' fica só como metadado."
+    ]
+  },
+  "coordenadas": "marcadores normalizados na página do PDF (0–1, origem no canto superior esquerdo); x = centro do rótulo, y = topo do nome; o pino é desenhado acima desse ponto",
+  "pavimentos": [
+    {
+      "id": "terreo",
+      "nome": "Térreo"
+    },
+    {
+      "id": "1pav",
+      "nome": "1º pavimento"
+    }
+  ],
+  "ambientes": [
+    {
+      "id": "terreo-administracao",
+      "pavimento": "terreo",
+      "nome_operacional": "Administração",
+      "nome_planta": "ADMIN.",
+      "categoria": "servico",
+      "area_m2": 21.35,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.209922,
+          "y": 0.302944,
+          "rotulo_bbox": [
+            0.20308,
+            0.302944,
+            0.216933,
+            0.312721
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-alojamento",
+      "pavimento": "terreo",
+      "nome_operacional": "Alojamento",
+      "nome_planta": "ALOJAMENTO",
+      "categoria": "servico",
+      "area_m2": 9.78,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.200483,
+          "y": 0.361214,
+          "rotulo_bbox": [
+            0.191953,
+            0.361214,
+            0.209014,
+            0.370992
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-apto-101",
+      "pavimento": "terreo",
+      "nome_operacional": "Apto. 101",
+      "nome_planta": "APTO. 101",
+      "categoria": "apartamento",
+      "area_m2": 23.88,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.378523,
+          "y": 0.437567,
+          "rotulo_bbox": [
+            0.371667,
+            0.437567,
+            0.38552,
+            0.447344
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-apto-102",
+      "pavimento": "terreo",
+      "nome_operacional": "Apto. 102",
+      "nome_planta": "APTO. 102",
+      "categoria": "apartamento",
+      "area_m2": 23.7,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.416268,
+          "y": 0.437567,
+          "rotulo_bbox": [
+            0.409412,
+            0.437567,
+            0.423265,
+            0.447344
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-apto-103",
+      "pavimento": "terreo",
+      "nome_operacional": "Apto. 103",
+      "nome_planta": "APTO. 103",
+      "categoria": "apartamento",
+      "area_m2": 23.52,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.674295,
+          "y": 0.437142,
+          "rotulo_bbox": [
+            0.667439,
+            0.437142,
+            0.681293,
+            0.446918
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-apto-104",
+      "pavimento": "terreo",
+      "nome_operacional": "Apto. 104",
+      "nome_planta": "APTO. 104",
+      "categoria": "apartamento",
+      "area_m2": 23.19,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.715881,
+          "y": 0.437142,
+          "rotulo_bbox": [
+            0.709025,
+            0.437142,
+            0.722879,
+            0.446918
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-apto-105",
+      "pavimento": "terreo",
+      "nome_operacional": "Apto. 105",
+      "nome_planta": "APTO. 105",
+      "categoria": "apartamento",
+      "area_m2": 18.51,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.772078,
+          "y": 0.437142,
+          "rotulo_bbox": [
+            0.765222,
+            0.437142,
+            0.779076,
+            0.446918
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-apto-autoridades-01",
+      "pavimento": "terreo",
+      "nome_operacional": "Apto. Autoridades 01",
+      "nome_planta": "APTO. AUTORIDADES (01)",
+      "categoria": "apartamento",
+      "area_m2": 23.82,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.48299,
+          "y": 0.437567,
+          "rotulo_bbox": [
+            0.467187,
+            0.437567,
+            0.498793,
+            0.447344
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-apto-autoridades-02",
+      "pavimento": "terreo",
+      "nome_operacional": "Apto. Autoridades 02",
+      "nome_planta": "APTO. AUTORIDADES (02)",
+      "categoria": "apartamento",
+      "area_m2": 23.88,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.521617,
+          "y": 0.437567,
+          "rotulo_bbox": [
+            0.505814,
+            0.437567,
+            0.537419,
+            0.447344
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-apto-autoridades-03",
+      "pavimento": "terreo",
+      "nome_operacional": "Apto. Autoridades 03",
+      "nome_planta": "APTO. AUTORIDADES (03)",
+      "categoria": "apartamento",
+      "area_m2": 23.82,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.579656,
+          "y": 0.437142,
+          "rotulo_bbox": [
+            0.563854,
+            0.437142,
+            0.595459,
+            0.446918
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-apto-autoridades-04",
+      "pavimento": "terreo",
+      "nome_operacional": "Apto. Autoridades 04",
+      "nome_planta": "APTO. AUTORIDADES (04)",
+      "categoria": "apartamento",
+      "area_m2": 23.82,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.619059,
+          "y": 0.437142,
+          "rotulo_bbox": [
+            0.603256,
+            0.437142,
+            0.634862,
+            0.446918
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-101",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro 101",
+      "nome_planta": "BHO 101",
+      "categoria": "banheiro",
+      "area_m2": 5.24,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.354105,
+          "y": 0.479239,
+          "rotulo_bbox": [
+            0.348026,
+            0.479239,
+            0.36039,
+            0.489015
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-102",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro 102",
+      "nome_planta": "BHO 102",
+      "categoria": "banheiro",
+      "area_m2": 5.46,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.452369,
+          "y": 0.441069,
+          "rotulo_bbox": [
+            0.446289,
+            0.441069,
+            0.458654,
+            0.450846
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-103",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro 103",
+      "nome_planta": "BHO 103",
+      "categoria": "banheiro",
+      "area_m2": 5.12,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.648964,
+          "y": 0.471132,
+          "rotulo_bbox": [
+            0.642885,
+            0.471132,
+            0.655249,
+            0.480909
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-104",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro 104",
+      "nome_planta": "BHO 104",
+      "categoria": "banheiro",
+      "area_m2": 5.27,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.745047,
+          "y": 0.455743,
+          "rotulo_bbox": [
+            0.738967,
+            0.455743,
+            0.751332,
+            0.46552
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-105",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro 105",
+      "nome_planta": "BHO 105",
+      "categoria": "banheiro",
+      "area_m2": 5.16,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.746759,
+          "y": 0.46985,
+          "rotulo_bbox": [
+            0.740679,
+            0.46985,
+            0.753044,
+            0.479626
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-adm",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro Adm.",
+      "nome_planta": "BHO ADM",
+      "categoria": "banheiro",
+      "area_m2": 3.62,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.23446,
+          "y": 0.388736,
+          "rotulo_bbox": [
+            0.22835,
+            0.388736,
+            0.240714,
+            0.398513
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-autoridades-01",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro Autoridades 01",
+      "nome_planta": "BHO AUT. (01)",
+      "categoria": "banheiro",
+      "area_m2": 5.25,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.453336,
+          "y": 0.471088,
+          "rotulo_bbox": [
+            0.444806,
+            0.471088,
+            0.461867,
+            0.480865
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-autoridades-02",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro Autoridades 02",
+      "nome_planta": "BHO AUT. (02)",
+      "categoria": "banheiro",
+      "area_m2": 5.41,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.550707,
+          "y": 0.454855,
+          "rotulo_bbox": [
+            0.542176,
+            0.454855,
+            0.559237,
+            0.464631
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-autoridades-03",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro Autoridades 03",
+      "nome_planta": "BHO AUT. (03)",
+      "categoria": "banheiro",
+      "area_m2": 5.09,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.551658,
+          "y": 0.47128,
+          "rotulo_bbox": [
+            0.543127,
+            0.47128,
+            0.560189,
+            0.481057
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-banheiro-autoridades-04",
+      "pavimento": "terreo",
+      "nome_operacional": "Banheiro Autoridades 04",
+      "nome_planta": "BHO AUT. (04)",
+      "categoria": "banheiro",
+      "area_m2": 5.35,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.648788,
+          "y": 0.455311,
+          "rotulo_bbox": [
+            0.640257,
+            0.455311,
+            0.657318,
+            0.465088
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-barbearia",
+      "pavimento": "terreo",
+      "nome_operacional": "Barbearia",
+      "nome_planta": "BARBEARIA",
+      "categoria": "area_comum",
+      "area_m2": 15.41,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.210234,
+          "y": 0.197074,
+          "rotulo_bbox": [
+            0.203031,
+            0.197074,
+            0.217437,
+            0.206851
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-buffet",
+      "pavimento": "terreo",
+      "nome_operacional": "Buffet",
+      "nome_planta": "BUFFET",
+      "categoria": "area_comum",
+      "area_m2": 34.78,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.223662,
+          "y": 0.8088,
+          "rotulo_bbox": [
+            0.2168,
+            0.8088,
+            0.230653,
+            0.818577
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-circulacao-norte",
+      "pavimento": "terreo",
+      "nome_operacional": "Circulação norte",
+      "nome_planta": "CIRC. NORTE",
+      "categoria": "circulacao",
+      "area_m2": 33.61,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.254679,
+          "y": 0.205794,
+          "rotulo_bbox": [
+            0.2465,
+            0.205794,
+            0.262859,
+            0.215571
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-circulacao-sul",
+      "pavimento": "terreo",
+      "nome_operacional": "Circulação sul",
+      "nome_planta": "CIRC. SUL",
+      "categoria": "circulacao",
+      "area_m2": 107.67,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.173751,
+          "y": 0.650208,
+          "rotulo_bbox": [
+            0.166155,
+            0.650208,
+            0.181497,
+            0.659984
+          ]
+        },
+        {
+          "x": 0.173036,
+          "y": 0.683419,
+          "rotulo_bbox": [
+            0.16544,
+            0.683419,
+            0.180782,
+            0.693196
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-copa-adm",
+      "pavimento": "terreo",
+      "nome_operacional": "Copa Adm.",
+      "nome_planta": "COPA ADM.",
+      "categoria": "servico",
+      "area_m2": 5.86,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.226285,
+          "y": 0.35268,
+          "rotulo_bbox": [
+            0.219223,
+            0.35268,
+            0.233348,
+            0.362457
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-copa-hospedes",
+      "pavimento": "terreo",
+      "nome_operacional": "Copa hóspedes",
+      "nome_planta": "COPA HÓSPEDES",
+      "categoria": "servico",
+      "area_m2": 17.15,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.324273,
+          "y": 0.442224,
+          "rotulo_bbox": [
+            0.313364,
+            0.442224,
+            0.335182,
+            0.452001
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-copa-salao",
+      "pavimento": "terreo",
+      "nome_operacional": "Copa salão",
+      "nome_planta": "COPA SALÃO",
+      "categoria": "servico",
+      "area_m2": 22.05,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.206644,
+          "y": 0.865678,
+          "rotulo_bbox": [
+            0.198531,
+            0.865678,
+            0.214756,
+            0.875454
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-cpd",
+      "pavimento": "terreo",
+      "nome_operacional": "CPD",
+      "nome_planta": "CPD",
+      "categoria": "servico",
+      "area_m2": 6.35,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.315214,
+          "y": 0.48882,
+          "rotulo_bbox": [
+            0.309097,
+            0.48882,
+            0.321462,
+            0.498597
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-deposito",
+      "pavimento": "terreo",
+      "nome_operacional": "Depósito",
+      "nome_planta": "DEPÓSITO",
+      "categoria": "servico",
+      "area_m2": 5.5,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.23474,
+          "y": 0.187812,
+          "rotulo_bbox": [
+            0.228237,
+            0.187812,
+            0.241243,
+            0.197589
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-despensa",
+      "pavimento": "terreo",
+      "nome_operacional": "Despensa",
+      "nome_planta": "DESPENSA",
+      "categoria": "servico",
+      "area_m2": 5.45,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.353238,
+          "y": 0.44053,
+          "rotulo_bbox": [
+            0.346385,
+            0.44053,
+            0.360091,
+            0.450307
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-dml",
+      "pavimento": "terreo",
+      "nome_operacional": "DML",
+      "nome_planta": "DML",
+      "categoria": "servico",
+      "area_m2": 6.08,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.272799,
+          "y": 0.243204,
+          "rotulo_bbox": [
+            0.266725,
+            0.243204,
+            0.279089,
+            0.25298
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-jardim-1",
+      "pavimento": "terreo",
+      "nome_operacional": "Jardim 1",
+      "nome_planta": "Jardim",
+      "categoria": "externa",
+      "area_m2": 18.83,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.346549,
+          "y": 0.559944,
+          "rotulo_bbox": [
+            0.339665,
+            0.559944,
+            0.353518,
+            0.569721
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-jardim-2",
+      "pavimento": "terreo",
+      "nome_operacional": "Jardim 2",
+      "nome_planta": "Jardim",
+      "categoria": "externa",
+      "area_m2": null,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.461935,
+          "y": 0.610179,
+          "rotulo_bbox": [
+            0.451555,
+            0.610179,
+            0.472592,
+            0.619955
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-lavanderia-hospedes",
+      "pavimento": "terreo",
+      "nome_operacional": "Lavanderia hóspedes",
+      "nome_planta": "LAVAND. HÓSPEDES",
+      "categoria": "servico",
+      "area_m2": 33.94,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.812406,
+          "y": 0.458087,
+          "rotulo_bbox": [
+            0.799679,
+            0.458087,
+            0.825134,
+            0.467863
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-lobby",
+      "pavimento": "terreo",
+      "nome_operacional": "Lobby",
+      "nome_planta": "LOBBY",
+      "categoria": "area_comum",
+      "area_m2": 37.19,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.220852,
+          "y": 0.481505,
+          "rotulo_bbox": [
+            0.21398,
+            0.481505,
+            0.227834,
+            0.491282
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-piscina",
+      "pavimento": "terreo",
+      "nome_operacional": "Piscina",
+      "nome_planta": "Piscina",
+      "categoria": "externa",
+      "area_m2": 151.33,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.52114,
+          "y": 0.727456,
+          "rotulo_bbox": [
+            0.513506,
+            0.727456,
+            0.528847,
+            0.737233
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-recepcao",
+      "pavimento": "terreo",
+      "nome_operacional": "Recepção",
+      "nome_planta": "RECEPÇÃO",
+      "categoria": "servico",
+      "area_m2": 9.35,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.198224,
+          "y": 0.418556,
+          "rotulo_bbox": [
+            0.191162,
+            0.418556,
+            0.205286,
+            0.428333
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-salao-de-espera",
+      "pavimento": "terreo",
+      "nome_operacional": "Salão de espera",
+      "nome_planta": "SALÃO DE ESPERA",
+      "categoria": "area_comum",
+      "area_m2": 7.45,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.229062,
+          "y": 0.430282,
+          "rotulo_bbox": [
+            0.217312,
+            0.430282,
+            0.240811,
+            0.440059
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-salao-de-eventos",
+      "pavimento": "terreo",
+      "nome_operacional": "Salão de eventos",
+      "nome_planta": "SALÃO DE EVENTOS",
+      "categoria": "area_comum",
+      "area_m2": 158.59,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.223117,
+          "y": 0.658827,
+          "rotulo_bbox": [
+            0.210458,
+            0.658827,
+            0.235775,
+            0.668604
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-vestiario-feminino",
+      "pavimento": "terreo",
+      "nome_operacional": "Vestiário feminino",
+      "nome_planta": "VEST. FEM.",
+      "categoria": "vestiario",
+      "area_m2": 21.58,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.197924,
+          "y": 0.267646,
+          "rotulo_bbox": [
+            0.190931,
+            0.267646,
+            0.204917,
+            0.277423
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-vestiario-masculino",
+      "pavimento": "terreo",
+      "nome_operacional": "Vestiário masculino",
+      "nome_planta": "VEST. MASC.",
+      "categoria": "vestiario",
+      "area_m2": 14.49,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.187158,
+          "y": 0.059041,
+          "rotulo_bbox": [
+            0.179186,
+            0.059041,
+            0.195129,
+            0.068818
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-vestiario-masculino-chuveiros",
+      "pavimento": "terreo",
+      "nome_operacional": "Vestiário masculino (chuveiros)",
+      "nome_planta": "VEST. MASC. (CHUVEIROS)",
+      "categoria": "vestiario",
+      "area_m2": 15.12,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.276284,
+          "y": 0.077995,
+          "rotulo_bbox": [
+            0.259643,
+            0.077995,
+            0.292925,
+            0.087772
+          ]
+        }
+      ]
+    },
+    {
+      "id": "terreo-vestiario-masculino-mictorios",
+      "pavimento": "terreo",
+      "nome_operacional": "Vestiário masculino (mictórios)",
+      "nome_planta": "VEST. MASC. (MICTÓRIOS)",
+      "categoria": "vestiario",
+      "area_m2": 9.97,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.209366,
+          "y": 0.161726,
+          "rotulo_bbox": [
+            0.193075,
+            0.161726,
+            0.225657,
+            0.171502
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-201",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 201",
+      "nome_planta": "APTO. 201",
+      "categoria": "apartamento",
+      "area_m2": 24.13,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.319703,
+          "y": 0.439248,
+          "rotulo_bbox": [
+            0.312847,
+            0.439248,
+            0.326701,
+            0.449024
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-202",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 202",
+      "nome_planta": "APTO. 202",
+      "categoria": "apartamento",
+      "area_m2": 24.56,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.378382,
+          "y": 0.437488,
+          "rotulo_bbox": [
+            0.371526,
+            0.437488,
+            0.38538,
+            0.447264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-203",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 203",
+      "nome_planta": "APTO. 203",
+      "categoria": "apartamento",
+      "area_m2": 24.43,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.422152,
+          "y": 0.437488,
+          "rotulo_bbox": [
+            0.415296,
+            0.437488,
+            0.429149,
+            0.447264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-204",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 204",
+      "nome_planta": "APTO. 204",
+      "categoria": "apartamento",
+      "area_m2": 24.56,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.482002,
+          "y": 0.437488,
+          "rotulo_bbox": [
+            0.475147,
+            0.437488,
+            0.489,
+            0.447264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-205",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 205",
+      "nome_planta": "APTO. 205",
+      "categoria": "apartamento",
+      "area_m2": 24.43,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.521615,
+          "y": 0.437488,
+          "rotulo_bbox": [
+            0.51476,
+            0.437488,
+            0.528613,
+            0.447264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-206",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 206",
+      "nome_planta": "APTO. 206",
+      "categoria": "apartamento",
+      "area_m2": 24.56,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.581247,
+          "y": 0.437488,
+          "rotulo_bbox": [
+            0.574391,
+            0.437488,
+            0.588245,
+            0.447264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-207",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 207",
+      "nome_planta": "APTO. 207",
+      "categoria": "apartamento",
+      "area_m2": 24.43,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.621143,
+          "y": 0.437488,
+          "rotulo_bbox": [
+            0.614287,
+            0.437488,
+            0.62814,
+            0.447264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-208",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 208",
+      "nome_planta": "APTO. 208",
+      "categoria": "apartamento",
+      "area_m2": 24.43,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.679173,
+          "y": 0.437488,
+          "rotulo_bbox": [
+            0.672317,
+            0.437488,
+            0.68617,
+            0.447264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-209",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 209",
+      "nome_planta": "APTO. 209",
+      "categoria": "apartamento",
+      "area_m2": 24.43,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.718215,
+          "y": 0.437488,
+          "rotulo_bbox": [
+            0.711359,
+            0.437488,
+            0.725213,
+            0.447264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-210",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 210",
+      "nome_planta": "APTO. 210",
+      "categoria": "apartamento",
+      "area_m2": 23.57,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.775392,
+          "y": 0.437488,
+          "rotulo_bbox": [
+            0.768536,
+            0.437488,
+            0.78239,
+            0.447264
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-211",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 211",
+      "nome_planta": "APTO. 211",
+      "categoria": "apartamento",
+      "area_m2": 20.58,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.216148,
+          "y": 0.151636,
+          "rotulo_bbox": [
+            0.209293,
+            0.151636,
+            0.223146,
+            0.161412
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-212",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 212",
+      "nome_planta": "APTO. 212",
+      "categoria": "apartamento",
+      "area_m2": 25.51,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.214372,
+          "y": 0.192799,
+          "rotulo_bbox": [
+            0.207517,
+            0.192799,
+            0.22137,
+            0.202576
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-213",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 213",
+      "nome_planta": "APTO. 213",
+      "categoria": "apartamento",
+      "area_m2": 25.55,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.214862,
+          "y": 0.302523,
+          "rotulo_bbox": [
+            0.208007,
+            0.302523,
+            0.22186,
+            0.3123
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-214",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 214",
+      "nome_planta": "APTO. 214",
+      "categoria": "apartamento",
+      "area_m2": 25.45,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.214862,
+          "y": 0.356754,
+          "rotulo_bbox": [
+            0.208007,
+            0.356754,
+            0.22186,
+            0.366531
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-215",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 215",
+      "nome_planta": "APTO. 215",
+      "categoria": "apartamento",
+      "area_m2": 24.86,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.216016,
+          "y": 0.464898,
+          "rotulo_bbox": [
+            0.209161,
+            0.464898,
+            0.223014,
+            0.474675
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-216",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 216",
+      "nome_planta": "APTO. 216",
+      "categoria": "apartamento",
+      "area_m2": 25.25,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.213162,
+          "y": 0.517919,
+          "rotulo_bbox": [
+            0.206307,
+            0.517919,
+            0.22016,
+            0.527695
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-217",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 217",
+      "nome_planta": "APTO. 217",
+      "categoria": "apartamento",
+      "area_m2": 25.79,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.21412,
+          "y": 0.627493,
+          "rotulo_bbox": [
+            0.207265,
+            0.627493,
+            0.221118,
+            0.63727
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-218",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 218",
+      "nome_planta": "APTO. 218",
+      "categoria": "apartamento",
+      "area_m2": 25.84,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.21412,
+          "y": 0.680221,
+          "rotulo_bbox": [
+            0.207265,
+            0.680221,
+            0.221118,
+            0.689998
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-apto-219",
+      "pavimento": "1pav",
+      "nome_operacional": "Apto. 219",
+      "nome_planta": "APTO. 219",
+      "categoria": "apartamento",
+      "area_m2": 22.4,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.21487,
+          "y": 0.7894,
+          "rotulo_bbox": [
+            0.208015,
+            0.7894,
+            0.221868,
+            0.799177
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-201",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 201",
+      "nome_planta": "BHO 201",
+      "categoria": "banheiro",
+      "area_m2": 5.39,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.354121,
+          "y": 0.455948,
+          "rotulo_bbox": [
+            0.348041,
+            0.455948,
+            0.360406,
+            0.465725
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-202",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 202",
+      "nome_planta": "BHO 202",
+      "categoria": "banheiro",
+      "area_m2": 5.23,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.354121,
+          "y": 0.472143,
+          "rotulo_bbox": [
+            0.348041,
+            0.472143,
+            0.360406,
+            0.481919
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-203",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 203",
+      "nome_planta": "BHO 203",
+      "categoria": "banheiro",
+      "area_m2": 5.39,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.452118,
+          "y": 0.456556,
+          "rotulo_bbox": [
+            0.446039,
+            0.456556,
+            0.458403,
+            0.466333
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-204",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 204",
+      "nome_planta": "BHO 204",
+      "categoria": "banheiro",
+      "area_m2": 5.23,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.452397,
+          "y": 0.471873,
+          "rotulo_bbox": [
+            0.446318,
+            0.471873,
+            0.458682,
+            0.48165
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-205",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 205",
+      "nome_planta": "BHO 205",
+      "categoria": "banheiro",
+      "area_m2": 5.36,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.550232,
+          "y": 0.455449,
+          "rotulo_bbox": [
+            0.544153,
+            0.455449,
+            0.556517,
+            0.465226
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-206",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 206",
+      "nome_planta": "BHO 206",
+      "categoria": "banheiro",
+      "area_m2": 5.32,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.550963,
+          "y": 0.471999,
+          "rotulo_bbox": [
+            0.544884,
+            0.471999,
+            0.557248,
+            0.481776
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-207",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 207",
+      "nome_planta": "BHO 207",
+      "categoria": "banheiro",
+      "area_m2": 5.39,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.649494,
+          "y": 0.456639,
+          "rotulo_bbox": [
+            0.643414,
+            0.456639,
+            0.655779,
+            0.466416
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-208",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 208",
+      "nome_planta": "BHO 208",
+      "categoria": "banheiro",
+      "area_m2": 5.23,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.649845,
+          "y": 0.471873,
+          "rotulo_bbox": [
+            0.643765,
+            0.471873,
+            0.656129,
+            0.48165
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-209",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 209",
+      "nome_planta": "BHO 209",
+      "categoria": "banheiro",
+      "area_m2": 5.39,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.747295,
+          "y": 0.455344,
+          "rotulo_bbox": [
+            0.741216,
+            0.455344,
+            0.75358,
+            0.465121
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-210",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 210",
+      "nome_planta": "BHO 210",
+      "categoria": "banheiro",
+      "area_m2": 5.23,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.747458,
+          "y": 0.471873,
+          "rotulo_bbox": [
+            0.741379,
+            0.471873,
+            0.753743,
+            0.48165
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-211",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 211",
+      "nome_planta": "BHO 211",
+      "categoria": "banheiro",
+      "area_m2": 8.95,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.20577,
+          "y": 0.078172,
+          "rotulo_bbox": [
+            0.19969,
+            0.078172,
+            0.212055,
+            0.087948
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-212",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 212",
+      "nome_planta": "BHO 212",
+      "categoria": "banheiro",
+      "area_m2": 7.86,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.234674,
+          "y": 0.264611,
+          "rotulo_bbox": [
+            0.228595,
+            0.264611,
+            0.240959,
+            0.274388
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-213",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 213",
+      "nome_planta": "BHO 213",
+      "categoria": "banheiro",
+      "area_m2": 8.14,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.194977,
+          "y": 0.257885,
+          "rotulo_bbox": [
+            0.188897,
+            0.257885,
+            0.201262,
+            0.267661
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-214",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 214",
+      "nome_planta": "BHO 214",
+      "categoria": "banheiro",
+      "area_m2": 8.26,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.234438,
+          "y": 0.425193,
+          "rotulo_bbox": [
+            0.228358,
+            0.425193,
+            0.240723,
+            0.43497
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-215",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 215",
+      "nome_planta": "BHO 215",
+      "categoria": "banheiro",
+      "area_m2": 8.28,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.195517,
+          "y": 0.421569,
+          "rotulo_bbox": [
+            0.189438,
+            0.421569,
+            0.201802,
+            0.431345
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-216",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 216",
+      "nome_planta": "BHO 216",
+      "categoria": "banheiro",
+      "area_m2": 7.97,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.234722,
+          "y": 0.58868,
+          "rotulo_bbox": [
+            0.228643,
+            0.58868,
+            0.241007,
+            0.598457
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-217",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 217",
+      "nome_planta": "BHO 217",
+      "categoria": "banheiro",
+      "area_m2": 7.95,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.195267,
+          "y": 0.585092,
+          "rotulo_bbox": [
+            0.189188,
+            0.585092,
+            0.201552,
+            0.594869
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-218",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 218",
+      "nome_planta": "BHO 218",
+      "categoria": "banheiro",
+      "area_m2": 7.83,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.233679,
+          "y": 0.751677,
+          "rotulo_bbox": [
+            0.2276,
+            0.751677,
+            0.239964,
+            0.761453
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-219",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro 219",
+      "nome_planta": "BHO 219",
+      "categoria": "banheiro",
+      "area_m2": 7.91,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.203908,
+          "y": 0.751677,
+          "rotulo_bbox": [
+            0.197828,
+            0.751677,
+            0.210193,
+            0.761453
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-banheiro-tripulacao",
+      "pavimento": "1pav",
+      "nome_operacional": "Banheiro Tripulação",
+      "nome_planta": "BHO Tripulação",
+      "categoria": "banheiro",
+      "area_m2": 4.55,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.806456,
+          "y": 0.43008,
+          "rotulo_bbox": [
+            0.797505,
+            0.43008,
+            0.815407,
+            0.439857
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-circulacao",
+      "pavimento": "1pav",
+      "nome_operacional": "Circulação",
+      "nome_planta": "Circulação",
+      "categoria": "circulacao",
+      "area_m2": 233.0,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.267349,
+          "y": 0.434648,
+          "rotulo_bbox": [
+            0.259675,
+            0.434648,
+            0.275017,
+            0.444425
+          ]
+        },
+        {
+          "x": 0.452499,
+          "y": 0.51946,
+          "rotulo_bbox": [
+            0.444825,
+            0.51946,
+            0.460167,
+            0.529236
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-coworking",
+      "pavimento": "1pav",
+      "nome_operacional": "Coworking",
+      "nome_planta": "COWORKING",
+      "categoria": "area_comum",
+      "area_m2": 29.84,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.22164,
+          "y": 0.850118,
+          "rotulo_bbox": [
+            0.213601,
+            0.850118,
+            0.22968,
+            0.859894
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-dml-rouparia",
+      "pavimento": "1pav",
+      "nome_operacional": "DML / Rouparia",
+      "nome_planta": "DML / ROUPARIA",
+      "categoria": "servico",
+      "area_m2": 19.65,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.239777,
+          "y": 0.088189,
+          "rotulo_bbox": [
+            0.229498,
+            0.088189,
+            0.250055,
+            0.097965
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1pav-sala-de-apoio",
+      "pavimento": "1pav",
+      "nome_operacional": "Sala de apoio",
+      "nome_planta": "SALA DE APOIO",
+      "categoria": "area_comum",
+      "area_m2": 19.62,
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "revisao": "R05",
+      "marcadores": [
+        {
+          "x": 0.813995,
+          "y": 0.486662,
+          "rotulo_bbox": [
+            0.804343,
+            0.486662,
+            0.823647,
+            0.496439
+          ]
+        }
+      ]
+    }
+  ],
+  "revisar": [
+    {
+      "pavimento": "terreo",
+      "motivo": "mesmo nome em ambientes diferentes; numerados provisoriamente",
+      "nomes": [
+        "Jardim 1",
+        "Jardim 2"
+      ]
+    },
+    {
+      "pavimento": "terreo",
+      "motivo": "ambiente rotulado mais de uma vez; mantidos todos os pinos",
+      "nome": "Circulação sul"
+    },
+    {
+      "pavimento": "terreo",
+      "motivo": "área marcada como 'Não incluso' na planta",
+      "nome": "Jardim 2"
+    },
+    {
+      "pavimento": "1pav",
+      "motivo": "ambiente rotulado mais de uma vez; mantidos todos os pinos",
+      "nome": "Circulação"
+    }
+  ]
+}

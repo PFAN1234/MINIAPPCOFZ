@@ -1,0 +1,1252 @@
+{
+  "obra": "hto",
+  "pavimentos": [
+    {
+      "id": "terreo",
+      "nome": "Térreo",
+      "revisao": "R05",
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1,
+      "sha256": "2a82b438ac9ca4f7c5caac3e7624af11a2991578d8c2fa1fcf087d70c817e8ba",
+      "pagina_pt": [
+        2383.919921875,
+        1683.719970703125
+      ],
+      "recorte_pt": [
+        83.437,
+        30.307,
+        2026.332,
+        1602.901
+      ],
+      "mascaras_normalizadas": [
+        [
+          0.776,
+          0.0,
+          1.0,
+          0.395
+        ],
+        [
+          0.776,
+          0.556,
+          1.0,
+          1.0
+        ],
+        [
+          0.634,
+          0.828,
+          0.776,
+          1.0
+        ]
+      ],
+      "imagens": {
+        "planta": {
+          "arquivo": "data/hto/plantas/R05/terreo/planta.webp",
+          "largura": 2401,
+          "altura": 1944,
+          "escala_px_por_pt": 1.23527,
+          "bytes": 191976
+        },
+        "planta-hd": {
+          "arquivo": "data/hto/plantas/R05/terreo/planta-hd.webp",
+          "largura": 4097,
+          "altura": 3317,
+          "escala_px_por_pt": 2.108195,
+          "bytes": 480744
+        }
+      },
+      "prova": "data/hto/plantas/R05/terreo/prova.png",
+      "detalhes": {
+        "terreo-apto-101": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-apto-101.webp",
+          "recorte_pt": [
+            792.537,
+            688.721,
+            1012.537,
+            813.721
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 30794
+        },
+        "terreo-apto-102": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-apto-102.webp",
+          "recorte_pt": [
+            882.518,
+            688.721,
+            1102.518,
+            813.721
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 33562
+        },
+        "terreo-apto-103": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-apto-103.webp",
+          "recorte_pt": [
+            1497.635,
+            688.005,
+            1717.635,
+            813.005
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 33824
+        },
+        "terreo-apto-104": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-apto-104.webp",
+          "recorte_pt": [
+            1596.772,
+            688.005,
+            1816.772,
+            813.005
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 33338
+        },
+        "terreo-apto-105": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-apto-105.webp",
+          "recorte_pt": [
+            1730.741,
+            688.005,
+            1950.741,
+            813.005
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 32012
+        },
+        "terreo-apto-autoridades-01": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-apto-autoridades-01.webp",
+          "recorte_pt": [
+            1041.409,
+            688.721,
+            1261.409,
+            813.721
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 36572
+        },
+        "terreo-apto-autoridades-02": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-apto-autoridades-02.webp",
+          "recorte_pt": [
+            1133.492,
+            688.721,
+            1353.492,
+            813.721
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 36952
+        },
+        "terreo-apto-autoridades-03": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-apto-autoridades-03.webp",
+          "recorte_pt": [
+            1271.855,
+            688.005,
+            1491.855,
+            813.005
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 37682
+        },
+        "terreo-apto-autoridades-04": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-apto-autoridades-04.webp",
+          "recorte_pt": [
+            1365.787,
+            688.005,
+            1585.787,
+            813.005
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 36496
+        },
+        "terreo-banheiro-101": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-101.webp",
+          "recorte_pt": [
+            734.404,
+            758.884,
+            954.404,
+            883.884
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 25828
+        },
+        "terreo-banheiro-102": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-102.webp",
+          "recorte_pt": [
+            968.656,
+            694.618,
+            1188.656,
+            819.618
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 34094
+        },
+        "terreo-banheiro-103": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-103.webp",
+          "recorte_pt": [
+            1437.324,
+            745.235,
+            1657.324,
+            870.235
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 26916
+        },
+        "terreo-banheiro-104": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-104.webp",
+          "recorte_pt": [
+            1666.377,
+            719.324,
+            1886.377,
+            844.324
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27738
+        },
+        "terreo-banheiro-105": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-105.webp",
+          "recorte_pt": [
+            1670.458,
+            743.076,
+            1890.458,
+            868.076
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27994
+        },
+        "terreo-banheiro-adm": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-adm.webp",
+          "recorte_pt": [
+            449.105,
+            606.503,
+            669.106,
+            731.503
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 40180
+        },
+        "terreo-banheiro-autoridades-01": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-autoridades-01.webp",
+          "recorte_pt": [
+            970.718,
+            745.161,
+            1190.718,
+            870.161
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27758
+        },
+        "terreo-banheiro-autoridades-02": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-autoridades-02.webp",
+          "recorte_pt": [
+            1202.84,
+            717.828,
+            1422.84,
+            842.828
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 31426
+        },
+        "terreo-banheiro-autoridades-03": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-autoridades-03.webp",
+          "recorte_pt": [
+            1205.109,
+            745.484,
+            1425.109,
+            870.484
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27688
+        },
+        "terreo-banheiro-autoridades-04": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-banheiro-autoridades-04.webp",
+          "recorte_pt": [
+            1436.657,
+            718.597,
+            1656.657,
+            843.597
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 29292
+        },
+        "terreo-vestiario-feminino": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-vestiario-feminino.webp",
+          "recorte_pt": [
+            361.835,
+            402.622,
+            581.835,
+            527.622
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 25828
+        },
+        "terreo-vestiario-masculino": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-vestiario-masculino.webp",
+          "recorte_pt": [
+            336.168,
+            51.389,
+            556.169,
+            176.389
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 43042
+        },
+        "terreo-vestiario-masculino-chuveiros": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-vestiario-masculino-chuveiros.webp",
+          "recorte_pt": [
+            548.639,
+            83.303,
+            768.639,
+            208.303
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 40752
+        },
+        "terreo-vestiario-masculino-mictorios": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-vestiario-masculino-mictorios.webp",
+          "recorte_pt": [
+            389.112,
+            224.281,
+            609.112,
+            349.281
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 29104
+        },
+        "terreo-barbearia": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-barbearia.webp",
+          "recorte_pt": [
+            391.181,
+            283.798,
+            611.181,
+            408.798
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 23830
+        },
+        "terreo-buffet": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-buffet.webp",
+          "recorte_pt": [
+            423.346,
+            1313.774,
+            643.346,
+            1438.774
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 19270
+        },
+        "terreo-lobby": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-lobby.webp",
+          "recorte_pt": [
+            416.625,
+            762.7,
+            636.625,
+            887.7
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 55242
+        },
+        "terreo-salao-de-espera": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-salao-de-espera.webp",
+          "recorte_pt": [
+            436.064,
+            676.455,
+            656.064,
+            801.455
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 41796
+        },
+        "terreo-salao-de-eventos": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-salao-de-eventos.webp",
+          "recorte_pt": [
+            421.892,
+            1061.261,
+            641.892,
+            1186.261
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 42346
+        },
+        "terreo-administracao": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-administracao.webp",
+          "recorte_pt": [
+            390.639,
+            462.054,
+            610.639,
+            587.054
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 18352
+        },
+        "terreo-alojamento": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-alojamento.webp",
+          "recorte_pt": [
+            367.937,
+            560.165,
+            587.937,
+            685.165
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 32720
+        },
+        "terreo-cpd": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-cpd.webp",
+          "recorte_pt": [
+            641.601,
+            775.017,
+            861.601,
+            900.017
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 35552
+        },
+        "terreo-copa-adm": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-copa-adm.webp",
+          "recorte_pt": [
+            429.447,
+            545.795,
+            649.447,
+            670.795
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 31118
+        },
+        "terreo-copa-hospedes": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-copa-hospedes.webp",
+          "recorte_pt": [
+            663.041,
+            696.562,
+            883.041,
+            821.562
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 35912
+        },
+        "terreo-copa-salao": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-copa-salao.webp",
+          "recorte_pt": [
+            382.622,
+            1409.539,
+            602.622,
+            1534.539
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 59994
+        },
+        "terreo-dml": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-dml.webp",
+          "recorte_pt": [
+            540.588,
+            361.467,
+            760.588,
+            486.467
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 35318
+        },
+        "terreo-deposito": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-deposito.webp",
+          "recorte_pt": [
+            449.601,
+            268.204,
+            669.601,
+            393.204
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 34616
+        },
+        "terreo-despensa": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-despensa.webp",
+          "recorte_pt": [
+            732.091,
+            693.71,
+            952.091,
+            818.71
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 32644
+        },
+        "terreo-lavanderia-hospedes": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-lavanderia-hospedes.webp",
+          "recorte_pt": [
+            1826.712,
+            723.27,
+            2046.712,
+            848.27
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 24038
+        },
+        "terreo-recepcao": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-recepcao.webp",
+          "recorte_pt": [
+            362.55,
+            656.712,
+            582.55,
+            781.712
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 35812
+        },
+        "terreo-circulacao-norte": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-circulacao-norte.webp",
+          "recorte_pt": [
+            497.136,
+            298.48,
+            717.136,
+            423.48
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 34122
+        },
+        "terreo-circulacao-sul": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-circulacao-sul.webp",
+          "recorte_pt": [
+            304.387,
+            1046.748,
+            524.387,
+            1171.748
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27876
+        },
+        "terreo-jardim-1": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-jardim-1.webp",
+          "recorte_pt": [
+            716.246,
+            894.77,
+            936.246,
+            1019.77
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 7970
+        },
+        "terreo-jardim-2": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-jardim-2.webp",
+          "recorte_pt": [
+            991.546,
+            979.351,
+            1211.546,
+            1104.351
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 2796
+        },
+        "terreo-piscina": {
+          "arquivo": "data/hto/plantas/R05/terreo/ambientes/terreo-piscina.webp",
+          "recorte_pt": [
+            1132.443,
+            1176.813,
+            1352.443,
+            1301.813
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 12460
+        }
+      },
+      "aviso": "Planta de arquitetura R05 · posição indicativa"
+    },
+    {
+      "id": "1pav",
+      "nome": "1º pavimento",
+      "revisao": "R05",
+      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1,
+      "sha256": "09340f1d2ad133996484f0781a399351df93744bf46decfe00e7058c7d5e50cd",
+      "pagina_pt": [
+        2383.919921875,
+        1683.719970703125
+      ],
+      "recorte_pt": [
+        83.437,
+        30.307,
+        2026.332,
+        1602.901
+      ],
+      "mascaras_normalizadas": [
+        [
+          0.776,
+          0.0,
+          1.0,
+          0.395
+        ],
+        [
+          0.776,
+          0.556,
+          1.0,
+          1.0
+        ],
+        [
+          0.634,
+          0.828,
+          0.776,
+          1.0
+        ]
+      ],
+      "imagens": {
+        "planta": {
+          "arquivo": "data/hto/plantas/R05/1pav/planta.webp",
+          "largura": 2401,
+          "altura": 1944,
+          "escala_px_por_pt": 1.23527,
+          "bytes": 140648
+        },
+        "planta-hd": {
+          "arquivo": "data/hto/plantas/R05/1pav/planta-hd.webp",
+          "largura": 4097,
+          "altura": 3317,
+          "escala_px_por_pt": 2.108195,
+          "bytes": 317542
+        }
+      },
+      "prova": "data/hto/plantas/R05/1pav/prova.png",
+      "detalhes": {
+        "1pav-apto-201": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-201.webp",
+          "recorte_pt": [
+            652.316,
+            691.551,
+            872.316,
+            816.551
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 30448
+        },
+        "1pav-apto-202": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-202.webp",
+          "recorte_pt": [
+            792.202,
+            688.587,
+            1012.202,
+            813.587
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 25278
+        },
+        "1pav-apto-203": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-203.webp",
+          "recorte_pt": [
+            896.545,
+            688.587,
+            1116.545,
+            813.587
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 24830
+        },
+        "1pav-apto-204": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-204.webp",
+          "recorte_pt": [
+            1039.225,
+            688.587,
+            1259.225,
+            813.587
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 25958
+        },
+        "1pav-apto-205": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-205.webp",
+          "recorte_pt": [
+            1133.659,
+            688.587,
+            1353.659,
+            813.587
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 26100
+        },
+        "1pav-apto-206": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-206.webp",
+          "recorte_pt": [
+            1275.816,
+            688.587,
+            1495.816,
+            813.587
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 25540
+        },
+        "1pav-apto-207": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-207.webp",
+          "recorte_pt": [
+            1370.923,
+            688.587,
+            1590.923,
+            813.587
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 25546
+        },
+        "1pav-apto-208": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-208.webp",
+          "recorte_pt": [
+            1509.262,
+            688.587,
+            1729.262,
+            813.587
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 25550
+        },
+        "1pav-apto-209": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-209.webp",
+          "recorte_pt": [
+            1602.336,
+            688.587,
+            1822.336,
+            813.587
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 25256
+        },
+        "1pav-apto-210": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-210.webp",
+          "recorte_pt": [
+            1738.642,
+            688.587,
+            1958.642,
+            813.587
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 30590
+        },
+        "1pav-apto-211": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-211.webp",
+          "recorte_pt": [
+            405.45,
+            207.293,
+            625.45,
+            332.293
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 20204
+        },
+        "1pav-apto-212": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-212.webp",
+          "recorte_pt": [
+            401.216,
+            276.6,
+            621.216,
+            401.6
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 18814
+        },
+        "1pav-apto-213": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-213.webp",
+          "recorte_pt": [
+            402.384,
+            461.345,
+            622.384,
+            586.345
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 20092
+        },
+        "1pav-apto-214": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-214.webp",
+          "recorte_pt": [
+            402.384,
+            552.655,
+            622.384,
+            677.655
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 19796
+        },
+        "1pav-apto-215": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-215.webp",
+          "recorte_pt": [
+            405.135,
+            734.739,
+            625.135,
+            859.739
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 23268
+        },
+        "1pav-apto-216": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-216.webp",
+          "recorte_pt": [
+            398.332,
+            824.011,
+            618.332,
+            949.011
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 20598
+        },
+        "1pav-apto-217": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-217.webp",
+          "recorte_pt": [
+            400.615,
+            1008.503,
+            620.615,
+            1133.503
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 22526
+        },
+        "1pav-apto-218": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-218.webp",
+          "recorte_pt": [
+            400.615,
+            1097.283,
+            620.615,
+            1222.283
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 17686
+        },
+        "1pav-apto-219": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-apto-219.webp",
+          "recorte_pt": [
+            402.403,
+            1281.109,
+            622.403,
+            1406.109
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 19580
+        },
+        "1pav-banheiro-201": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-201.webp",
+          "recorte_pt": [
+            734.44,
+            719.67,
+            954.44,
+            844.67
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27572
+        },
+        "1pav-banheiro-202": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-202.webp",
+          "recorte_pt": [
+            734.44,
+            746.937,
+            954.44,
+            871.937
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27788
+        },
+        "1pav-banheiro-203": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-203.webp",
+          "recorte_pt": [
+            968.059,
+            720.693,
+            1188.059,
+            845.693
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27250
+        },
+        "1pav-banheiro-204": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-204.webp",
+          "recorte_pt": [
+            968.724,
+            746.483,
+            1188.724,
+            871.483
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 26682
+        },
+        "1pav-banheiro-205": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-205.webp",
+          "recorte_pt": [
+            1201.955,
+            718.829,
+            1421.955,
+            843.829
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 28226
+        },
+        "1pav-banheiro-206": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-206.webp",
+          "recorte_pt": [
+            1203.697,
+            746.695,
+            1423.697,
+            871.695
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27250
+        },
+        "1pav-banheiro-207": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-207.webp",
+          "recorte_pt": [
+            1438.586,
+            720.833,
+            1658.586,
+            845.833
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27694
+        },
+        "1pav-banheiro-208": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-208.webp",
+          "recorte_pt": [
+            1439.422,
+            746.483,
+            1659.422,
+            871.483
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 26554
+        },
+        "1pav-banheiro-209": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-209.webp",
+          "recorte_pt": [
+            1671.737,
+            718.653,
+            1891.737,
+            843.653
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 28134
+        },
+        "1pav-banheiro-210": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-210.webp",
+          "recorte_pt": [
+            1672.126,
+            746.483,
+            1892.126,
+            871.483
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 26984
+        },
+        "1pav-banheiro-211": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-211.webp",
+          "recorte_pt": [
+            380.784,
+            83.6,
+            600.784,
+            208.6
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 41684
+        },
+        "1pav-banheiro-212": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-212.webp",
+          "recorte_pt": [
+            449.69,
+            397.512,
+            669.69,
+            522.512
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 30410
+        },
+        "1pav-banheiro-213": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-213.webp",
+          "recorte_pt": [
+            355.054,
+            386.186,
+            575.054,
+            511.186
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 20402
+        },
+        "1pav-banheiro-214": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-214.webp",
+          "recorte_pt": [
+            449.126,
+            667.887,
+            669.126,
+            792.887
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 28820
+        },
+        "1pav-banheiro-215": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-215.webp",
+          "recorte_pt": [
+            356.342,
+            661.784,
+            576.342,
+            786.784
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 22814
+        },
+        "1pav-banheiro-216": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-216.webp",
+          "recorte_pt": [
+            449.804,
+            943.153,
+            669.804,
+            1068.153
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 19984
+        },
+        "1pav-banheiro-217": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-217.webp",
+          "recorte_pt": [
+            355.746,
+            937.112,
+            575.746,
+            1062.112
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 24504
+        },
+        "1pav-banheiro-218": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-218.webp",
+          "recorte_pt": [
+            447.318,
+            1217.594,
+            667.318,
+            1342.594
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 23146
+        },
+        "1pav-banheiro-219": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-219.webp",
+          "recorte_pt": [
+            376.345,
+            1217.594,
+            596.345,
+            1342.594
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 22904
+        },
+        "1pav-banheiro-tripulacao": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-banheiro-tripulacao.webp",
+          "recorte_pt": [
+            1812.526,
+            676.115,
+            2032.526,
+            801.115
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 24118
+        },
+        "1pav-coworking": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-coworking.webp",
+          "recorte_pt": [
+            418.373,
+            1383.341,
+            638.373,
+            1508.341
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 28100
+        },
+        "1pav-sala-de-apoio": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-sala-de-apoio.webp",
+          "recorte_pt": [
+            1830.499,
+            771.383,
+            2050.499,
+            896.383
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 25268
+        },
+        "1pav-dml-rouparia": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-dml-rouparia.webp",
+          "recorte_pt": [
+            461.608,
+            100.466,
+            681.608,
+            225.466
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 39332
+        },
+        "1pav-circulacao": {
+          "arquivo": "data/hto/plantas/R05/1pav/ambientes/1pav-circulacao.webp",
+          "recorte_pt": [
+            527.331,
+            683.806,
+            747.331,
+            808.806
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 27906
+        }
+      },
+      "aviso": "Planta de arquitetura R05 · posição indicativa"
+    }
+  ]
+}

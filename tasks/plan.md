@@ -1,5 +1,7 @@
 # Mini App Telegram — piloto HTO
 
+> **Atualização 2026-11-09:** a ordem de implementação foi revista em `tasks/plano-app.md`. O visualizador do modelo federado e a planta clicável passam para a última fase; antes vêm navegação por lista, registros, pendências, modo sem conexão e publicação no tópico da obra. A stack escolhida é Supabase (Postgres, RLS, Storage, Edge Functions) e frontend React/Vite na Vercel, no lugar de FastAPI. A publicação vai para o tópico de cada obra no supergrupo CO-FZ. Onde este documento divergir, prevalece `tasks/plano-app.md`.
+
 ## Objetivo confirmado
 
 Permitir que a equipe percorra obra → andar → planta 2D → ambiente → modelo federado 3D isolado e registre fotos com legenda e tipo: serviço em execução ou pendência. O histórico pertence ao ambiente e uma cópia é publicada no grupo da obra. Pendências são encerradas por gestor com foto de comprovação. O acesso é autorizado por obra. Registros feitos com sinal instável aguardam envio.
@@ -45,7 +47,7 @@ Aceite: toque no interior do ambiente abre o recorte correspondente; ambientes v
 
 ## Modelos de trabalho
 
-Preferência do usuário: GPT-6 Astra com esforço high para planejamento e tarefas complexas; GPT-6.1 Sol ou Terra com esforço high para programação e tarefas simples. Definir explicitamente esses parâmetros em agentes delegados.
+Preferência do usuário (atualizada em 2026-11-09): Claude Opus 5.5 para planejamento, decisões de projeto e tarefas complexas; Claude Sonnet 5.5 ou Haiku 5.5 para tarefas simples ou braçais (testes de rotina, documentação, ajustes repetitivos). Definir o modelo explicitamente em agentes delegados. A regra também está em `CLAUDE.md`.
 
 ## Referências técnicas
 
