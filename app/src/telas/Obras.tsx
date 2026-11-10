@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { CampoBusca } from '../components/CampoBusca.tsx'
-import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
+import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { ListaRegistros } from '../components/ListaRegistros.tsx'
-import { useObras, useRegistros } from '../dados/hooks.ts'
+import type { ObraDisponivel } from '../dados/tipos.ts'
+import { useObras, useObrasDisponiveis, useRegistros, useSolicitarAcesso } from '../dados/hooks.ts'
 import { useRegistrosLocais } from '../offline/contexto.tsx'
+import { useOnline } from '../util/online.ts'
 import { normalizarTexto } from '../util/busca.ts'
 import { textoPendencias } from '../util/formato.ts'
 
@@ -16,6 +18,11 @@ export default function Obras() {
   const locais = useRegistrosLocais()
   const abertas = useRegistros({ tipo: 'pendencia', situacao: 'aberta' })
   const [busca, setBusca] = useState('')
+  const online = useOnline()
+  const disponiveis = useObrasDisponiveis()
+  const outras = online ? (disponiveis.data ?? []) : []
+  // Só afirma que não há obras depois de saber se há outras para pedir acesso.
+  const outrasConhecidas = !online || !disponiveis.isPending
 
   const porObra = useMemo(() => {
     const m = new Map<string, number>()
@@ -30,10 +37,12 @@ export default function Obras() {
         <EstadoConsulta consulta={obras}>
           {(lista) => {
             if (lista.length === 0) {
+              if (!outrasConhecidas) return <EstadoCarregando />
+              if (outras.length > 0) return null
               return (
                 <EstadoVazio
-                  titulo="Nenhuma obra por aqui ainda"
-                  texto="A lista das obras que você pode acessar aparecerá aqui."
+                  titulo="Você ainda não tem acesso a nenhuma obra"
+                  texto="Entre no grupo da obra no Telegram e abra o app de novo para pedir acesso."
                 />
               )
             }
@@ -68,6 +77,7 @@ export default function Obras() {
           }}
         </EstadoConsulta>
       </section>
+      {outras.length > 0 && <OutrasObras obras={outras} />}
       <section aria-labelledby="titulo-recentes">
         <h2 id="titulo-recentes">Últimos registros</h2>
         <EstadoConsulta consulta={recentes}>
@@ -75,5 +85,42 @@ export default function Obras() {
         </EstadoConsulta>
       </section>
     </>
+  )
+}
+
+function OutrasObras({ obras }: { obras: ObraDisponivel[] }) {
+  const solicitar = useSolicitarAcesso()
+  return (
+    <section aria-labelledby="titulo-outras">
+      <h2 id="titulo-outras">Outras obras</h2>
+      <ul className="lista">
+        {obras.map((o) => (
+          <li key={o.id} className="lista-item lista-item-linha">
+            <span className="item-texto">
+              <span className="lista-titulo">{o.nome}</span>
+              {o.solicitacao === 'recusada' && <span className="lista-sub">Pedido recusado</span>}
+            </span>
+            {o.solicitacao === 'pendente' ? (
+              <span className="selo">Aguardando aprovação</span>
+            ) : (
+              <button
+                type="button"
+                className="botao"
+                disabled={solicitar.isPending}
+                aria-label={`${o.solicitacao === 'recusada' ? 'Pedir de novo' : 'Solicitar acesso'}: ${o.nome}`}
+                onClick={() => solicitar.mutate(o.id)}
+              >
+                {o.solicitacao === 'recusada' ? 'Pedir de novo' : 'Solicitar acesso'}
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {solicitar.isError && (
+        <p className="erro-texto" role="alert">
+          {solicitar.error instanceof Error ? solicitar.error.message : 'Não foi possível pedir acesso.'}
+        </p>
+      )}
+    </section>
   )
 }

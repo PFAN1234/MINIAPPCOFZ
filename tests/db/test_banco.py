@@ -488,9 +488,11 @@ def test_storage_foto_vinculada_nao_pode_ser_sobrescrita(cenario):
 
 def test_solicitacao_propria_pendente_e_aceita(cenario):
     c = cenario
-    with sessao(c.dsn, c.sem_obra) as cur:
+    # Fase 6: o pedido entra só pela RPC solicitar_acesso (ver test_fase6.py); aqui só a leitura (RLS).
+    with sessao(c.dsn, papel=None) as cur:
         cur.execute('insert into public.solicitacao_acesso (obra_id, usuario_id) values (%s, %s)',
                     (c.obra_a, c.sem_obra))
+    with sessao(c.dsn, c.sem_obra) as cur:
         cur.execute("select estado from public.solicitacao_acesso where usuario_id = %s", (c.sem_obra,))
         assert cur.fetchall() == [('pendente',)]
     with sessao(c.dsn, c.gestor_a) as cur:  # o gestor da obra enxerga
@@ -501,7 +503,7 @@ def test_solicitacao_propria_pendente_e_aceita(cenario):
         assert cur.fetchone()[0] == 0
 
 
-def test_solicitacao_em_nome_de_outro_ou_aprovada_e_negada(cenario):
+def test_solicitacao_insert_direto_e_negado(cenario):
     c = cenario
     with pytest.raises(errors.InsufficientPrivilege):
         with sessao(c.dsn, c.sem_obra) as cur:
@@ -520,11 +522,11 @@ def test_solicitacao_em_nome_de_outro_ou_aprovada_e_negada(cenario):
 
 def test_solicitacao_pendente_duplicada_da_23505(cenario):
     c = cenario
-    with sessao(c.dsn, c.sem_obra) as cur:
+    with sessao(c.dsn, papel=None) as cur:
         cur.execute('insert into public.solicitacao_acesso (obra_id, usuario_id) values (%s, %s)',
                     (c.obra_a, c.sem_obra))
     with pytest.raises(errors.UniqueViolation):
-        with sessao(c.dsn, c.sem_obra) as cur:
+        with sessao(c.dsn, papel=None) as cur:
             cur.execute('insert into public.solicitacao_acesso (obra_id, usuario_id) values (%s, %s)',
                         (c.obra_a, c.sem_obra))
 

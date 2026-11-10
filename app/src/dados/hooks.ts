@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorio } from './contexto.tsx'
 import type { FiltroRegistros } from './tipos.ts'
 
@@ -39,11 +39,57 @@ export function useUrlsImagens(paths: string[], bucket: 'plantas' | 'fotos' = 'p
   })
 }
 
+/**
+ * A sessão é resolvida uma vez por abertura do app. Ao entrar, as demais
+ * consultas são invalidadas (podem ser de outro usuário ou de antes do login).
+ */
 export function useSessao() {
   const repo = useRepositorio()
+  const qc = useQueryClient()
   return useQuery({
     queryKey: ['sessao'],
     networkMode: 'always',
-    queryFn: async () => (repo.temSessao ? await repo.temSessao() : true),
+    staleTime: Infinity,
+    queryFn: async () => {
+      if (!repo.temSessao) return true
+      const entrou = await repo.temSessao()
+      if (entrou) {
+        void qc.invalidateQueries({ predicate: (q) => q.queryKey[0] !== 'sessao' })
+      }
+      return entrou
+    },
+  })
+}
+
+export function useObrasDisponiveis() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['obras-disponiveis'], queryFn: () => repo.obrasDisponiveis() })
+}
+
+export function useSolicitarAcesso() {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (obraId: string) => repo.solicitarAcesso(obraId),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['obras-disponiveis'] }),
+  })
+}
+
+export function useSolicitacoes(obraId: string | undefined, habilitado = true) {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['solicitacoes', obraId],
+    queryFn: () => repo.listarSolicitacoes(obraId!),
+    enabled: habilitado && !!obraId,
+  })
+}
+
+export function useDecidirSolicitacao() {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, aprovar }: { id: string; aprovar: boolean }) =>
+      repo.decidirSolicitacao(id, aprovar),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['solicitacoes'] }),
   })
 }

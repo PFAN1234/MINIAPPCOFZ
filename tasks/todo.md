@@ -97,10 +97,18 @@ Verificação: Playwright offline → salvar → recarregar offline → voltar o
 
 ## 6. Bot e publicação no tópico da obra
 
-- [ ] Bot de teste, Mini App com Direct Link e mensagem fixada no tópico Geral.
-- [ ] `bot-webhook`: `/vincular_obra <slug>` grava chat e tópico da obra; `/start` em privado.
-- [ ] `publish-outbox` com pg_cron: foto(s), obra, pavimento, ambiente, tipo, legenda, autor e link `startapp` de retorno; backoff e estado `incerto` para respostas ambíguas.
-- [ ] Abrir o app pelo link `startapp` leva ao registro.
+Contrato: `docs/contrato-fase6.md`. Decisão de 2026-11-10: acesso "grupo + aprovação" (admin do grupo vira gestor; membro pede acesso e um gestor aprova; quem sai do grupo perde o acesso no próximo login).
+
+- [x] Bot de teste `@diarioobra_cofz_bot`, grupo TesteDev com tópico HTO e Mini App `t.me/diarioobra_cofz_bot/fiscalcofz`.
+- [x] Migration: `membro_grupo`, pedidos de acesso por RPC, aprovação pelo gestor, fila de publicação e disparo por pg_cron/pg_net (testes de banco).
+- [x] `auth-telegram` sincroniza o acesso pelo grupo (`getChatMember`).
+- [x] `bot-webhook`: `/vincular_obra <slug>` grava chat e tópico da obra; `/fixar_botao`; `/start` em privado.
+- [x] `publish-outbox`: foto(s), obra, pavimento, ambiente, tipo, legenda, autor e link `startapp` de retorno; backoff e estado `incerto` para respostas ambíguas; aviso de pedido de acesso no tópico.
+- [x] App: login real, "Outras obras" com pedido de acesso, tela de pedidos para o gestor, abertura pelo link `startapp`.
+- [ ] Cadastrar `TELEGRAM_BOT_TOKEN` nos segredos das Edge Functions (usuário) e dar ao bot as permissões de fixar mensagens e gerenciar tópicos.
+- [ ] Aplicar a migration, criar os segredos do Vault, publicar as funções e configurar o webhook.
+- [ ] `/vincular_obra hto` no tópico HTO e `/fixar_botao` no Geral.
+- [ ] Teste real: login, registro publicado no tópico, link de volta, pedido de acesso de um segundo membro.
 
 Verificação: registro publicado no tópico certo do grupo de teste; falha simulada do Telegram mantém o registro no histórico. Dependência: 5.
 

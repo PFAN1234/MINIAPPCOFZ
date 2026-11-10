@@ -5,7 +5,7 @@ import type { Armazenamento } from './armazenamento.ts'
 export const VERSAO_CACHE = 1
 export const IDADE_MAXIMA_MS = 7 * 24 * 60 * 60_000
 const ATRASO_GRAVACAO_MS = 1000
-const FORA_DO_CACHE = ['sessao', 'usuario']
+const FORA_DO_CACHE = ['sessao', 'usuario', 'obras-disponiveis', 'solicitacoes']
 
 /** URLs `blob:` só valem na página que as criou; não adianta guardá-las. */
 function temUrlDeObjeto(dados: unknown): boolean {

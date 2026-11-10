@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App.tsx'
 import { RepositorioProvider } from './dados/contexto.tsx'
 import { criarRepositorioFixture } from './dados/fixture.ts'
@@ -168,5 +168,137 @@ describe('sessão e recursos', () => {
   it('flags: só o modelo federado (fase 9) segue desligado', () => {
     expect(recursos.modeloFederado).toBe(false)
     expect(recursos.novoRegistro).toBe(true)
+  })
+})
+
+describe('acesso às obras', () => {
+  it('Obras mostra "Outras obras" e o pedido vira "Aguardando aprovação"', async () => {
+    const usuario = userEvent.setup()
+    renderizar()
+    expect(await screen.findByRole('heading', { level: 2, name: 'Outras obras' })).toBeInTheDocument()
+    expect(screen.getByText('Obra Demonstração')).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: /Solicitar acesso/ }))
+    expect(await screen.findByText('Aguardando aprovação')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Solicitar acesso/ })).not.toBeInTheDocument()
+  })
+
+  it('pedido recusado oferece "Pedir de novo" e o erro da RPC aparece como mensagem', async () => {
+    const usuario = userEvent.setup()
+    const repo: Repositorio = {
+      ...criarRepositorioFixture(),
+      obrasDisponiveis: async () => [
+        { id: 'o1', slug: 'x', nome: 'Obra X', solicitacao: 'recusada' },
+      ],
+      solicitarAcesso: () =>
+        Promise.reject(new Error('Pedido recusado recentemente. Fale com o gestor da obra.')),
+    }
+    renderizar('/', repo)
+    await usuario.click(await screen.findByRole('button', { name: /Pedir de novo/ }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Pedido recusado recentemente')
+  })
+
+  it('sem obras e sem disponíveis mostra a orientação para entrar no grupo', async () => {
+    const repo: Repositorio = {
+      ...criarRepositorioFixture(),
+      listarObras: async () => [],
+      obrasDisponiveis: async () => [],
+    }
+    renderizar('/', repo)
+    expect(await screen.findByText('Você ainda não tem acesso a nenhuma obra')).toBeInTheDocument()
+    expect(
+      screen.getByText('Entre no grupo da obra no Telegram e abra o app de novo para pedir acesso.'),
+    ).toBeInTheDocument()
+  })
+
+  it('Obra (gestor) mostra o link de pedidos e a tela Acessos aprova', async () => {
+    const usuario = userEvent.setup()
+    renderizar('/obras/hto')
+    await usuario.click(await screen.findByRole('link', { name: '1 pedido de acesso' }))
+    expect(await screen.findByRole('heading', { level: 2, name: 'Pedidos de acesso' })).toBeInTheDocument()
+    expect(await screen.findByText('Maria Souza')).toBeInTheDocument()
+    expect(screen.getByText('@maria')).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: /Aprovar/ }))
+    expect(await screen.findByText('Nenhum pedido de acesso pendente.')).toBeInTheDocument()
+  })
+
+  it('Recusar pede confirmação', async () => {
+    const usuario = userEvent.setup()
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)
+    renderizar('/obras/hto/acessos')
+    await usuario.click(await screen.findByRole('button', { name: /Recusar/ }))
+    expect(confirmar).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('Maria Souza')).toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: /Recusar/ }))
+    expect(await screen.findByText('Nenhum pedido de acesso pendente.')).toBeInTheDocument()
+    confirmar.mockRestore()
+  })
+
+  it('quem não é gestor vê a mensagem de restrição', async () => {
+    const base = criarRepositorioFixture()
+    renderizar('/obras/hto/acessos', {
+      ...base,
+      obterObra: async (slug) => ({ ...(await base.obterObra(slug)), papel: 'equipe' }),
+    })
+    expect(
+      await screen.findByText('Só gestores da obra veem os pedidos de acesso.'),
+    ).toBeInTheDocument()
+  })
+})
+
+describe('abertura por link startapp', () => {
+  const ID_REGISTRO = '00000000-0000-4000-8000-000000000101'
+
+  function simularTelegram(startParam: string) {
+    window.Telegram = {
+      WebApp: {
+        initData: '',
+        initDataUnsafe: { start_param: startParam },
+        colorScheme: 'light',
+        themeParams: {},
+        BackButton: { show() {}, hide() {}, onClick() {}, offClick() {} },
+        ready() {},
+        expand() {},
+        enableClosingConfirmation() {},
+        disableClosingConfirmation() {},
+      },
+    }
+  }
+
+  afterEach(() => {
+    delete window.Telegram
+    sessionStorage.clear()
+  })
+
+  it('registro_<id> abre o ambiente com o registro destacado e o visualizador', async () => {
+    sessionStorage.clear()
+    simularTelegram(`registro_${ID_REGISTRO}`)
+    renderizar('/')
+    expect(await screen.findByRole('heading', { level: 2, name: 'Apto. 101' })).toBeInTheDocument()
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    const item = screen.getByText(/Tomada da sala/).closest('li')
+    expect(item).toHaveClass('registro-destaque')
+    expect(screen.getByRole('tab', { name: 'Pendências' })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('acessos_<slug> abre a tela Acessos', async () => {
+    sessionStorage.clear()
+    simularTelegram('acessos_hto')
+    renderizar('/')
+    expect(await screen.findByRole('heading', { level: 2, name: 'Pedidos de acesso' })).toBeInTheDocument()
+  })
+
+  it('registro inexistente mostra o aviso', async () => {
+    sessionStorage.clear()
+    simularTelegram('registro_00000000-0000-4000-8000-0000000009ff')
+    renderizar('/')
+    expect(await screen.findByText('Registro não encontrado ou sem acesso.')).toBeInTheDocument()
+  })
+
+  it('o parâmetro é consumido uma vez por abertura', async () => {
+    sessionStorage.setItem('startapp-consumido', 'acessos_hto')
+    simularTelegram('acessos_hto')
+    renderizar('/')
+    expect(await screen.findByRole('heading', { level: 2, name: 'Obras' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Pedidos de acesso' })).not.toBeInTheDocument()
   })
 })

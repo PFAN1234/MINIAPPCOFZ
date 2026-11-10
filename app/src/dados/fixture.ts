@@ -17,15 +17,36 @@ import type {
   ImagemPlanta,
   NovoRegistro,
   ObraDetalhe,
+  ObraDisponivel,
   ObraResumo,
   Pavimento,
   Planta,
   RecortePt,
+  RegistroLocalizado,
   RegistroResumo,
+  SolicitacaoAcesso,
 } from './tipos.ts'
 
 const ID_HTO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 const ID_AURORA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e02'
+
+const ID_DEMONSTRACAO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e03'
+const ID_PEDIDO_MARIA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4f01'
+
+/** Obra em que o usuário de teste está no grupo do Telegram, mas sem acesso. */
+const OBRA_DEMONSTRACAO: ObraResumo = {
+  id: ID_DEMONSTRACAO,
+  slug: 'demonstracao',
+  nome: 'Obra Demonstração',
+}
+
+const PEDIDO_MARIA: SolicitacaoAcesso = {
+  id: ID_PEDIDO_MARIA,
+  usuario_id: '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a01',
+  nome: 'Maria Souza',
+  username: 'maria',
+  criado_em: '2026-11-09T18:30:00Z',
+}
 
 const OBRAS: ObraResumo[] = [
   { id: ID_HTO, slug: 'hto', nome: 'HTO' },
@@ -205,6 +226,10 @@ interface EstadoSalvo {
   registros: RegistroResumo[]
   /** caminho no bucket `fotos` -> data URL */
   fotos: Record<string, string>
+  /** Pedidos de acesso do usuário de teste por obra. */
+  pedidos: Record<string, 'pendente' | 'recusada'>
+  /** Decisões do gestor sobre os pedidos de outras pessoas, por id do pedido. */
+  decisoes: Record<string, 'aprovada' | 'recusada'>
 }
 
 function blobParaDataUrl(blob: Blob): Promise<string> {
@@ -234,12 +259,14 @@ function carregarEstado(persistencia: Storage | null): EstadoSalvo {
       return {
         registros: Array.isArray(e.registros) ? e.registros : [],
         fotos: e.fotos && typeof e.fotos === 'object' ? e.fotos : {},
+        pedidos: e.pedidos && typeof e.pedidos === 'object' ? e.pedidos : {},
+        decisoes: e.decisoes && typeof e.decisoes === 'object' ? e.decisoes : {},
       }
     }
   } catch {
     // Estado corrompido ou sem acesso: começa vazio.
   }
-  return { registros: [], fotos: {} }
+  return { registros: [], fotos: {}, pedidos: {}, decisoes: {} }
 }
 
 export function criarRepositorioFixture(
@@ -260,11 +287,18 @@ export function criarRepositorioFixture(
     }
   }
   const urlsDosBlobs = new Map<string, string>()
+  const pedidos = salvo.pedidos
+  const decisoes = salvo.decisoes
 
   function persistir(): void {
     if (!persistencia) return
     try {
-      const estado: EstadoSalvo = { registros: novos, fotos: Object.fromEntries(dataUrls) }
+      const estado: EstadoSalvo = {
+        registros: novos,
+        fotos: Object.fromEntries(dataUrls),
+        pedidos,
+        decisoes,
+      }
       persistencia.setItem(CHAVE_SERVIDOR, JSON.stringify(estado))
     } catch {
       // Sem espaço no localStorage: o "servidor" fica só na memória.
@@ -293,8 +327,8 @@ export function criarRepositorioFixture(
 
     async obterObra(slug): Promise<ObraDetalhe> {
       const obra = obraPorSlug(slug)
-      if (obra.id !== ID_HTO) return { obra, pavimentos: [], ambientes: [] }
-      return { obra, pavimentos: PAVIMENTOS, ambientes: ambientesComContagem(todos()) }
+      if (obra.id !== ID_HTO) return { obra, papel: 'equipe', pavimentos: [], ambientes: [] }
+      return { obra, papel: 'gestor', pavimentos: PAVIMENTOS, ambientes: ambientesComContagem(todos()) }
     },
 
     async obterAmbiente(slug, codigo): Promise<AmbienteDetalhe> {
@@ -358,6 +392,41 @@ export function criarRepositorioFixture(
         dataUrls.set(path, url)
         persistir()
       }
+    },
+
+    async obrasDisponiveis(): Promise<ObraDisponivel[]> {
+      return [{ ...OBRA_DEMONSTRACAO, solicitacao: pedidos[ID_DEMONSTRACAO] ?? null }]
+    },
+
+    async solicitarAcesso(obraId) {
+      exigirRede()
+      if (obraId !== ID_DEMONSTRACAO) {
+        throw new ErroEnvio('permissao', 'Entre no grupo da obra no Telegram para pedir acesso.')
+      }
+      pedidos[obraId] = 'pendente'
+      persistir()
+    },
+
+    async listarSolicitacoes(obraId) {
+      if (obraId !== ID_HTO) {
+        throw new ErroEnvio('permissao', 'Só gestores da obra veem os pedidos de acesso.')
+      }
+      return decisoes[ID_PEDIDO_MARIA] ? [] : [{ ...PEDIDO_MARIA }]
+    },
+
+    async decidirSolicitacao(id, aprovar) {
+      exigirRede()
+      if (id !== ID_PEDIDO_MARIA) throw new ErroEnvio('nao_encontrado', 'Pedido não encontrado.')
+      const nova = aprovar ? 'aprovada' : 'recusada'
+      const atual = decisoes[id]
+      if (atual && atual !== nova) throw new ErroEnvio('conflito', 'Pedido já decidido.')
+      decisoes[id] = nova
+      persistir()
+    },
+
+    async localizarRegistro(id): Promise<RegistroLocalizado | null> {
+      const reg = todos().find((x) => x.id === id)
+      return reg ? { slug: reg.obra.slug, codigo: reg.ambiente.codigo, tipo: reg.tipo } : null
     },
 
     async concluirRegistro(d: NovoRegistro) {

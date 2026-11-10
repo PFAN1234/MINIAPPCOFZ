@@ -70,7 +70,7 @@ async function abrirAmbienteApto101(page: Page) {
 test.describe('fora do Telegram', () => {
   test('Obras → HTO → Apto. 101 pela lista, e Voltar retorna à obra', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Obras', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Obras', level: 2, exact: true })).toBeVisible()
 
     await page.getByRole('link', { name: /^HTO\b/ }).click()
     await expect(page.getByRole('heading', { name: 'HTO', level: 2 })).toBeVisible()
@@ -125,7 +125,7 @@ test.describe('Telegram simulado', () => {
     page,
   }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Obras', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Obras', level: 2, exact: true })).toBeVisible()
     const inicial = await page.evaluate(() => window.__tg)
     expect(inicial.ready).toBeGreaterThan(0)
     expect(inicial.expand).toBeGreaterThan(0)

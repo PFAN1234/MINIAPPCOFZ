@@ -983,3 +983,46 @@ body {
   gap: 8px;
   padding: 0 12px 12px;
 }
+
+/* Acesso às obras */
+.acesso-item {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.acesso-botoes {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.erro-texto {
+  margin: 8px 0 0;
+  color: #b42318;
+  font-size: 0.9rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .erro-texto {
+    color: #fda29b;
+  }
+}
+
+.aviso-fixo {
+  position: fixed;
+  top: 8px;
+  right: 12px;
+  left: 12px;
+  z-index: 50;
+}
+
+.aviso-fixo .aviso {
+  margin-bottom: 0;
+}
+
+.registro-destaque {
+  outline: 2px solid var(--tg-theme-link-color, #2481cc);
+  outline-offset: 2px;
+}

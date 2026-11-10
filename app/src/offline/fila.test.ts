@@ -30,6 +30,17 @@ function criarRepoFalso() {
     async listarObras() {
       return []
     },
+    async obrasDisponiveis() {
+      return []
+    },
+    async solicitarAcesso() {},
+    async listarSolicitacoes() {
+      return []
+    },
+    async decidirSolicitacao() {},
+    async localizarRegistro() {
+      return null
+    },
     async obterObra() {
       throw new Error('n/a')
     },
