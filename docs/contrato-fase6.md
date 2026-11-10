@@ -1,6 +1,6 @@
 # Fase 6 — contrato do bot, do acesso e da publicação no tópico
 
-Especificação para implementar a fase 6 (`tasks/plano-app.md`, seção 6). Projeto Supabase de desenvolvimento: `miniappcofz-dev` (ref `nyfcualazkngqmrxcczh`). Grupo de teste: **TesteDev** (supergrupo com tópicos, tópico **HTO**, bot `@diarioobra_cofz_bot` como administrador). Mini App: `https://t.me/diarioobra_cofz_bot/diario`, apontando para `https://miniappcofz.vercel.app`.
+Especificação para implementar a fase 6 (`tasks/plano-app.md`, seção 6). Projeto Supabase de desenvolvimento: `miniappcofz-dev` (ref `nyfcualazkngqmrxcczh`). Grupo de teste: **TesteDev** (supergrupo com tópicos, tópico **HTO**, bot `@diarioobra_cofz_bot` como administrador). Mini App: `https://t.me/diarioobra_cofz_bot/fiscalcofz` (título "FISCAL COFZ"), apontando para `https://miniappcofz.vercel.app`.
 
 Decisões (2026-11-10):
 - **Acesso "Grupo + aprovação".** Administrador do grupo vinculado à obra entra como **gestor** automaticamente. Membro comum do grupo vê "Solicitar acesso", e um gestor aprova no app. Quem sai do grupo (ou é removido) perde o acesso no próximo login.
@@ -72,7 +72,7 @@ Todas com `verify_jwt = false` em `supabase/config.toml`. Lógica em `handler.ts
 - `telegram.ts`: chamada à Bot API com timeout de 30 s, com o resultado classificado em `ok`, `http` (status, `description`, `retry_after`) ou `rede`. O token nunca aparece em logs nem em erros.
 - `segredo.ts`: obtém o segredo interno pela RPC `segredo_interno`, com cache em memória de 5 min. Também deriva o `secret_token` do webhook: `hex(HMAC_SHA256(key = segredo_interno, msg = "telegram-webhook"))`. Comparações em tempo constante.
 
-Variáveis: `TELEGRAM_BOT_TOKEN` (segredo), `TELEGRAM_BOT_USERNAME=diarioobra_cofz_bot`, `TELEGRAM_APP_NAME=diario`, `ALLOWED_ORIGINS=https://miniappcofz.vercel.app`, além de `SUPABASE_URL` e `SUPABASE_SECRET_KEY`/`SUPABASE_SERVICE_ROLE_KEY`, injetadas pelo Supabase. Link do app: `https://t.me/<BOT_USERNAME>/<APP_NAME>`, mais `?startapp=<param>` quando houver.
+Variáveis: `TELEGRAM_BOT_TOKEN` (segredo), `TELEGRAM_BOT_USERNAME=diarioobra_cofz_bot`, `TELEGRAM_APP_NAME=fiscalcofz`, `ALLOWED_ORIGINS=https://miniappcofz.vercel.app`, além de `SUPABASE_URL` e `SUPABASE_SECRET_KEY`/`SUPABASE_SERVICE_ROLE_KEY`, injetadas pelo Supabase. Link do app: `https://t.me/<BOT_USERNAME>/<APP_NAME>`, mais `?startapp=<param>` quando houver.
 
 ### B.1 `auth-telegram` (alteração)
 Depois do upsert de `usuario` e antes de gerar a sessão, sincroniza o acesso:
