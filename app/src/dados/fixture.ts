@@ -10,17 +10,23 @@ import type { Repositorio } from './repositorio.ts'
 import type {
   Ambiente,
   AmbienteDetalhe,
+  Encerramento,
   DetalhePlanta,
   EstadoPublicacao,
   FiltroRegistros,
   FotoRegistro,
   ImagemPlanta,
+  NovoEncerramento,
   NovoRegistro,
   ObraDetalhe,
   ObraDisponivel,
   ObraResumo,
+  PapelObra,
+  Participante,
   Pavimento,
+  PendenciaDetalhe,
   Planta,
+  PublicacaoProblema,
   RecortePt,
   RegistroLocalizado,
   RegistroResumo,
@@ -47,6 +53,16 @@ const PEDIDO_MARIA: SolicitacaoAcesso = {
   username: 'maria',
   criado_em: '2026-11-09T18:30:00Z',
 }
+
+const ID_USUARIO = 'usuario-teste'
+const ID_MARCOS = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a02'
+const ID_JOAO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a03'
+
+const PARTICIPANTES_BASE: (Participante & { papel_inicial: PapelObra })[] = [
+  { usuario_id: ID_USUARIO, nome: 'Você (teste)', username: 'voce', papel: 'gestor', papel_inicial: 'gestor', desde: '2026-10-20T12:00:00Z' },
+  { usuario_id: ID_MARCOS, nome: 'Marcos Teixeira', username: 'marcos', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-22T14:30:00Z' },
+  { usuario_id: ID_JOAO, nome: 'João Lima', username: 'joao', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-25T09:10:00Z' },
+]
 
 const OBRAS: ObraResumo[] = [
   { id: ID_HTO, slug: 'hto', nome: 'HTO' },
@@ -168,11 +184,74 @@ function r(
   }
 }
 
+/** Foto de exemplo (recorte da planta) para o encerramento da pendência `n`. */
+function encerramentoBase(
+  n: number,
+  amb: string,
+  gestor: string,
+  encerradoEm: string,
+  observacao: string | null,
+  publicacao: EstadoPublicacao,
+): Encerramento & { registro_id: string } {
+  const a = AMBIENTES_BASE.find((x) => x.codigo === amb)!
+  const pav = pavsJson.find((x) => x.id === a.pavimento_codigo)!
+  const modelo =
+    detalhePlanta(a.pavimento_codigo, a.codigo)?.imagem ??
+    imagem(caminho(pav.revisao, pav.id, 'planta.webp'), pav.imagens.planta)
+  return {
+    id: `00000000-0000-4000-8000-00000000030${n}`,
+    registro_id: `00000000-0000-4000-8000-00000000010${n}`,
+    observacao,
+    encerrado_em: encerradoEm,
+    gestor,
+    fotos: [
+      {
+        id: `00000000-0000-4000-8000-0000000004${n}0`,
+        path: modelo.path,
+        largura: modelo.largura,
+        altura: modelo.altura,
+      },
+    ],
+    publicacao,
+  }
+}
+
+const ENCERRAMENTOS_BASE = [
+  encerramentoBase(6, 'terreo-circulacao-sul', 'Juliana Prado', '2026-11-04T10:15:00Z', 'Rejunte refeito e piso limpo.', 'publicado'),
+]
+
+/** Publicações com problema da fixture: id da publicação -> registro. */
+const PUBLICACOES_BASE: Omit<PublicacaoProblema, 'estado'>[] = [
+  {
+    id: 1,
+    erro: 'Telegram respondeu 400: message thread not found',
+    tentativas: 5,
+    atualizado_em: '2026-11-05T09:40:00Z',
+    registro_id: '00000000-0000-4000-8000-000000000105',
+    encerramento_id: null,
+    tipo: 'pendencia',
+    legenda: 'Guarda-corpo com fixação folgada.',
+    ambiente: 'Circulação',
+  },
+  {
+    id: 2,
+    erro: 'Tempo esgotado ao publicar; a mensagem pode ter sido enviada.',
+    tentativas: 1,
+    atualizado_em: '2026-11-07T14:20:00Z',
+    registro_id: '00000000-0000-4000-8000-000000000104',
+    encerramento_id: null,
+    tipo: 'servico',
+    legenda: 'Instalação do forro de gesso finalizada.',
+    ambiente: 'Administração',
+  },
+]
+const ESTADO_INICIAL_PUBLICACOES: Record<string, EstadoPublicacao> = { '1': 'falhou', '2': 'incerto' }
+
 const REGISTROS: RegistroResumo[] = [
   r(1, 'pendencia', 'aberta', 'terreo-apto-101', 'Marcos Teixeira', '2026-11-09T13:20:00Z', 'Tomada da sala sem espelho; refazer o acabamento.', 'publicado', 2),
   r(2, 'servico', null, 'terreo-apto-101', 'Juliana Prado', '2026-11-06T17:05:00Z', 'Contrapiso do quarto concluído e curado.', 'publicado', 1),
   r(3, 'pendencia', 'aberta', 'terreo-apto-102', 'Marcos Teixeira', '2026-11-08T11:40:00Z', 'Mancha de infiltração na parede do banheiro.', 'pendente', 1),
-  r(4, 'servico', null, 'terreo-administracao', 'Juliana Prado', '2026-11-07T14:10:00Z', 'Instalação do forro de gesso finalizada.', 'publicado', 3),
+  r(4, 'servico', null, 'terreo-administracao', 'Juliana Prado', '2026-11-07T14:10:00Z', 'Instalação do forro de gesso finalizada.', 'incerto', 3),
   r(5, 'pendencia', 'aberta', '1pav-circulacao', 'Rafael Nogueira', '2026-11-05T09:30:00Z', 'Guarda-corpo com fixação folgada.', 'falhou', 1),
   r(6, 'pendencia', 'resolvida', 'terreo-circulacao-sul', 'Rafael Nogueira', '2026-11-03T15:45:00Z', 'Rejunte irregular no piso, já refeito.', 'publicado', 1),
 ]
@@ -230,6 +309,14 @@ interface EstadoSalvo {
   pedidos: Record<string, 'pendente' | 'recusada'>
   /** Decisões do gestor sobre os pedidos de outras pessoas, por id do pedido. */
   decisoes: Record<string, 'aprovada' | 'recusada'>
+  /** Encerramentos feitos pelo app (os da base não entram aqui). */
+  encerramentos: (Encerramento & { registro_id: string })[]
+  /** Papel dos participantes que o gestor mudou. */
+  papeis: Record<string, PapelObra>
+  /** Participantes removidos pelo gestor. */
+  removidos: string[]
+  /** Estado atual das publicações com problema, por id da publicação. */
+  publicacoes: Record<string, EstadoPublicacao>
 }
 
 function blobParaDataUrl(blob: Blob): Promise<string> {
@@ -261,12 +348,28 @@ function carregarEstado(persistencia: Storage | null): EstadoSalvo {
         fotos: e.fotos && typeof e.fotos === 'object' ? e.fotos : {},
         pedidos: e.pedidos && typeof e.pedidos === 'object' ? e.pedidos : {},
         decisoes: e.decisoes && typeof e.decisoes === 'object' ? e.decisoes : {},
+        encerramentos: Array.isArray(e.encerramentos) ? e.encerramentos : [],
+        papeis: e.papeis && typeof e.papeis === 'object' ? e.papeis : {},
+        removidos: Array.isArray(e.removidos) ? e.removidos : [],
+        publicacoes:
+          e.publicacoes && typeof e.publicacoes === 'object'
+            ? e.publicacoes
+            : { ...ESTADO_INICIAL_PUBLICACOES },
       }
     }
   } catch {
     // Estado corrompido ou sem acesso: começa vazio.
   }
-  return { registros: [], fotos: {}, pedidos: {}, decisoes: {} }
+  return {
+    registros: [],
+    fotos: {},
+    pedidos: {},
+    decisoes: {},
+    encerramentos: [],
+    papeis: {},
+    removidos: [],
+    publicacoes: { ...ESTADO_INICIAL_PUBLICACOES },
+  }
 }
 
 export function criarRepositorioFixture(
@@ -289,6 +392,10 @@ export function criarRepositorioFixture(
   const urlsDosBlobs = new Map<string, string>()
   const pedidos = salvo.pedidos
   const decisoes = salvo.decisoes
+  const novosEncerramentos = salvo.encerramentos
+  const papeis = salvo.papeis
+  const removidos = salvo.removidos
+  const publicacoes = salvo.publicacoes
 
   function persistir(): void {
     if (!persistencia) return
@@ -298,6 +405,10 @@ export function criarRepositorioFixture(
         fotos: Object.fromEntries(dataUrls),
         pedidos,
         decisoes,
+        encerramentos: novosEncerramentos,
+        papeis,
+        removidos,
+        publicacoes,
       }
       persistencia.setItem(CHAVE_SERVIDOR, JSON.stringify(estado))
     } catch {
@@ -310,10 +421,61 @@ export function criarRepositorioFixture(
       throw new ErroEnvio('rede', MENSAGEM_REDE)
     }
   }
-  const todos = () => [...REGISTROS, ...novos]
+  const todosEncerramentos = () => [...ENCERRAMENTOS_BASE, ...novosEncerramentos]
+  const encerramentoDe = (registroId: string) =>
+    todosEncerramentos().find((e) => e.registro_id === registroId)
+  /** Registros com a situação e a publicação atuais (encerramentos e republicações aplicados). */
+  const todos = (): RegistroResumo[] =>
+    [...REGISTROS, ...novos].map((x) => {
+      const pub = PUBLICACOES_BASE.find((p) => p.registro_id === x.id)
+      const pavimento = PAVIMENTOS.find(
+        (p) => p.codigo === AMBIENTES_BASE.find((a) => a.id === x.ambiente.id)?.pavimento_codigo,
+      )?.nome
+      return {
+        ...x,
+        ambiente: { ...x.ambiente, pavimento },
+        situacao: x.tipo === 'pendencia' && encerramentoDe(x.id) ? 'resolvida' : x.situacao,
+        publicacao: pub ? (publicacoes[String(pub.id)] ?? x.publicacao) : x.publicacao,
+      }
+    })
 
   function vinculada(path: string): boolean {
-    return novos.some((n) => n.fotos.some((f) => f.path === path))
+    return (
+      novos.some((n) => n.fotos.some((f) => f.path === path)) ||
+      novosEncerramentos.some((n) => n.fotos.some((f) => f.path === path))
+    )
+  }
+
+  function papelUsuario(): PapelObra {
+    return papeis[ID_USUARIO] ?? 'gestor'
+  }
+
+  function exigirGestor(obraId: string): void {
+    if (obraId !== ID_HTO || papelUsuario() !== 'gestor') {
+      throw new ErroEnvio('permissao', 'Só gestores da obra podem fazer isto.')
+    }
+  }
+
+  function participantesAtuais(): Participante[] {
+    return PARTICIPANTES_BASE.filter((p) => !removidos.includes(p.usuario_id)).map(
+      ({ papel_inicial, ...p }) => ({ ...p, papel: papeis[p.usuario_id] ?? papel_inicial }),
+    )
+  }
+
+  function exigirOutroGestor(usuarioId: string): void {
+    const outros = participantesAtuais().filter(
+      (p) => p.papel === 'gestor' && p.usuario_id !== usuarioId,
+    )
+    if (outros.length === 0) {
+      throw new ErroEnvio('validacao', 'A obra precisa de pelo menos um gestor.')
+    }
+  }
+
+  function publicacaoProblema(id: number): PublicacaoProblema {
+    const base = PUBLICACOES_BASE.find((p) => p.id === id)
+    if (!base) throw new ErroEnvio('nao_encontrado', 'Publicação não encontrada.')
+    const estado = publicacoes[String(id)] ?? 'falhou'
+    return { ...base, estado }
   }
 
   return {
@@ -328,7 +490,7 @@ export function criarRepositorioFixture(
     async obterObra(slug): Promise<ObraDetalhe> {
       const obra = obraPorSlug(slug)
       if (obra.id !== ID_HTO) return { obra, papel: 'equipe', pavimentos: [], ambientes: [] }
-      return { obra, papel: 'gestor', pavimentos: PAVIMENTOS, ambientes: ambientesComContagem(todos()) }
+      return { obra, papel: papelUsuario(), pavimentos: PAVIMENTOS, ambientes: ambientesComContagem(todos()) }
     },
 
     async obterAmbiente(slug, codigo): Promise<AmbienteDetalhe> {
@@ -350,7 +512,9 @@ export function criarRepositorioFixture(
         .filter(
           (x) =>
             (!filtro.obraId || x.obra.id === filtro.obraId) &&
+            (!filtro.obraSlug || x.obra.slug === filtro.obraSlug) &&
             (!filtro.ambienteId || x.ambiente.id === filtro.ambienteId) &&
+            (!filtro.ambienteCodigo || x.ambiente.codigo === filtro.ambienteCodigo) &&
             (!filtro.tipo || x.tipo === filtro.tipo) &&
             (!filtro.situacao || x.situacao === filtro.situacao),
         )
@@ -421,6 +585,146 @@ export function criarRepositorioFixture(
       const atual = decisoes[id]
       if (atual && atual !== nova) throw new ErroEnvio('conflito', 'Pedido já decidido.')
       decisoes[id] = nova
+      persistir()
+    },
+
+    async obterPendencia(id): Promise<PendenciaDetalhe | null> {
+      const registro = todos().find((x) => x.id === id && x.tipo === 'pendencia')
+      if (!registro) return null
+      const amb = AMBIENTES_BASE.find((a) => a.id === registro.ambiente.id)!
+      const pav = PAVIMENTOS.find((p) => p.codigo === amb.pavimento_codigo)!
+      const enc = encerramentoDe(id)
+      return {
+        registro: { ...registro, fotos: registro.fotos.map((f) => ({ ...f })) },
+        pavimento: { codigo: pav.codigo, nome: pav.nome },
+        papel: papelUsuario(),
+        encerramento: enc
+          ? {
+              id: enc.id,
+              observacao: enc.observacao,
+              encerrado_em: enc.encerrado_em,
+              gestor: enc.gestor,
+              fotos: enc.fotos.map((f) => ({ ...f })),
+              publicacao: enc.publicacao,
+            }
+          : null,
+      }
+    },
+
+    async encerrarPendencia(d: NovoEncerramento) {
+      exigirRede()
+      if (!UUID.test(d.id) || !UUID.test(d.registroId)) falhaValidacao('Identificadores obrigatórios')
+      const registro = todos().find((x) => x.id === d.registroId && x.tipo === 'pendencia')
+      if (!registro) throw new ErroEnvio('nao_encontrado', 'Pendência não encontrada.')
+      exigirGestor(registro.obra.id)
+
+      const existente = todosEncerramentos().find((e) => e.id === d.id)
+      if (existente) {
+        if (existente.registro_id === d.registroId) return { id: existente.id }
+        throw new ErroEnvio('conflito', 'encerramento_id em uso')
+      }
+      if (registro.situacao === 'resolvida') {
+        throw new ErroEnvio('conflito', 'Esta pendência já foi encerrada.')
+      }
+      const observacao = (d.observacao ?? '').replace(/^\s+|\s+$/g, '')
+      if (observacao.length > 1000) falhaValidacao('A observação deve ter até 1000 caracteres')
+      if (!Array.isArray(d.fotos) || d.fotos.length < 1 || d.fotos.length > 10) {
+        falhaValidacao('Envie de 1 a 10 fotos')
+      }
+      const vistos = new Set<string>()
+      d.fotos.forEach((f, i) => {
+        if (typeof f.id !== 'string' || !UUID.test(f.id)) {
+          falhaValidacao(`Foto ${i + 1} com identificador inválido`)
+        }
+        const chave = f.id.toLowerCase()
+        if (vistos.has(chave)) falhaValidacao('Identificador de foto repetido')
+        vistos.add(chave)
+        for (const campo of ['largura', 'altura', 'bytes'] as const) {
+          if (!inteiroPositivo(f[campo])) {
+            falhaValidacao(`Foto ${i + 1}: ${campo} deve ser um inteiro positivo`)
+          }
+        }
+      })
+      const fotos: FotoRegistro[] = d.fotos.map((f) => ({
+        id: f.id,
+        path: `${registro.obra.id}/${d.registroId}/${f.id}.jpg`,
+        largura: f.largura,
+        altura: f.altura,
+      }))
+      for (const f of fotos) {
+        if (!blobs.has(f.path)) {
+          falhaValidacao(`Foto ${f.id} ainda não foi enviada ao armazenamento`)
+        }
+      }
+      novosEncerramentos.push({
+        id: d.id,
+        registro_id: d.registroId,
+        observacao: observacao || null,
+        encerrado_em: new Date().toISOString(),
+        gestor: AUTOR_FIXTURE,
+        fotos,
+        publicacao: 'pendente',
+      })
+      persistir()
+      return { id: d.id }
+    },
+
+    async listarParticipantes(obraId) {
+      exigirGestor(obraId)
+      return participantesAtuais().sort(
+        (a, b) =>
+          Number(b.papel === 'gestor') - Number(a.papel === 'gestor') ||
+          a.nome.localeCompare(b.nome, 'pt-BR'),
+      )
+    },
+
+    async definirPapel(obraId, usuarioId, papel) {
+      exigirRede()
+      exigirGestor(obraId)
+      if (papel !== 'equipe' && papel !== 'gestor') falhaValidacao('Papel inválido')
+      const atual = participantesAtuais().find((p) => p.usuario_id === usuarioId)
+      if (!atual) throw new ErroEnvio('nao_encontrado', 'Participante não encontrado.')
+      if (atual.papel === 'gestor' && papel === 'equipe') exigirOutroGestor(usuarioId)
+      papeis[usuarioId] = papel
+      persistir()
+    },
+
+    async removerParticipante(obraId, usuarioId) {
+      exigirRede()
+      exigirGestor(obraId)
+      const atual = participantesAtuais().find((p) => p.usuario_id === usuarioId)
+      if (!atual) throw new ErroEnvio('nao_encontrado', 'Participante não encontrado.')
+      if (atual.papel === 'gestor') exigirOutroGestor(usuarioId)
+      removidos.push(usuarioId)
+      persistir()
+    },
+
+    async listarPublicacoesProblema(obraId) {
+      exigirGestor(obraId)
+      return PUBLICACOES_BASE.map((p) => publicacaoProblema(p.id))
+        .filter((p) => p.estado === 'incerto' || p.estado === 'falhou')
+        .sort((a, b) => b.atualizado_em.localeCompare(a.atualizado_em))
+    },
+
+    async republicar(id) {
+      exigirRede()
+      const p = publicacaoProblema(id)
+      exigirGestor(ID_HTO)
+      if (p.estado !== 'incerto' && p.estado !== 'falhou') {
+        falhaValidacao('Só publicações incertas ou com falha podem ser reenviadas.')
+      }
+      publicacoes[String(id)] = 'pendente'
+      persistir()
+    },
+
+    async marcarPublicada(id) {
+      exigirRede()
+      const p = publicacaoProblema(id)
+      exigirGestor(ID_HTO)
+      if (p.estado !== 'incerto' && p.estado !== 'falhou') {
+        falhaValidacao('Só publicações incertas ou com falha podem ser marcadas como publicadas.')
+      }
+      publicacoes[String(id)] = 'publicado'
       persistir()
     },
 

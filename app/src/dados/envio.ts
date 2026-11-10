@@ -31,12 +31,15 @@ export function criarRascunho(dados: Omit<Rascunho, 'id'>): Rascunho {
   return { id: crypto.randomUUID(), ...dados }
 }
 
-export async function enviarRegistro(
+/** Sobe as fotos (até `MAXIMO_SIMULTANEOS` por vez) para `<obra>/<registro>/<foto>.jpg`. */
+async function enviarFotos(
   repo: Repositorio,
-  r: Rascunho,
+  obraId: string,
+  registroId: string,
+  fotos: FotoPreparada[],
   aoProgredir?: (p: Progresso) => void,
 ): Promise<void> {
-  const total = r.fotos.length
+  const total = fotos.length
   let enviadas = 0
   let proxima = 0
   let falha: unknown = null
@@ -44,9 +47,9 @@ export async function enviarRegistro(
 
   async function trabalhador(): Promise<void> {
     while (falha === null && proxima < total) {
-      const foto = r.fotos[proxima++]
+      const foto = fotos[proxima++]
       try {
-        await repo.enviarFoto({ obraId: r.obraId, registroId: r.id, fotoId: foto.id }, foto.blob)
+        await repo.enviarFoto({ obraId, registroId, fotoId: foto.id }, foto.blob)
       } catch (e) {
         // Retomada: erro de permissão no reenvio indica foto já vinculada a um
         // registro concluído antes. Segue para a RPC, que devolve o registro
@@ -65,7 +68,14 @@ export async function enviarRegistro(
     Array.from({ length: Math.min(MAXIMO_SIMULTANEOS, total) }, () => trabalhador()),
   )
   if (falha !== null) throw falha
+}
 
+export async function enviarRegistro(
+  repo: Repositorio,
+  r: Rascunho,
+  aoProgredir?: (p: Progresso) => void,
+): Promise<void> {
+  await enviarFotos(repo, r.obraId, r.id, r.fotos, aoProgredir)
   await repo.concluirRegistro({
     id: r.id,
     ambienteId: r.ambienteId,
@@ -73,5 +83,38 @@ export async function enviarRegistro(
     legenda: r.legenda,
     capturadoEm: r.capturadoEm,
     fotos: r.fotos.map((f) => ({ id: f.id, largura: f.largura, altura: f.altura, bytes: f.bytes })),
+  })
+}
+
+export interface RascunhoEncerramento {
+  /** Id do encerramento. */
+  id: string
+  /** Id da pendência encerrada. */
+  registroId: string
+  obraId: string
+  observacao: string
+  fotos: FotoPreparada[]
+}
+
+/** Gera o id do encerramento (uma única vez); reutilize o rascunho ao tentar de novo. */
+export function criarRascunhoEncerramento(
+  dados: Omit<RascunhoEncerramento, 'id'>,
+): RascunhoEncerramento {
+  return { id: crypto.randomUUID(), ...dados }
+}
+
+/** Fotos em `<obra>/<pendência>/<foto>.jpg` e depois `encerrar_pendencia`; idempotente como `enviarRegistro`. */
+export async function enviarEncerramento(
+  repo: Repositorio,
+  e: RascunhoEncerramento,
+  aoProgredir?: (p: Progresso) => void,
+): Promise<void> {
+  await enviarFotos(repo, e.obraId, e.registroId, e.fotos, aoProgredir)
+  await repo.encerrarPendencia({
+    id: e.id,
+    registroId: e.registroId,
+    obraId: e.obraId,
+    observacao: e.observacao,
+    fotos: e.fotos.map((f) => ({ id: f.id, largura: f.largura, altura: f.altura, bytes: f.bytes })),
   })
 }

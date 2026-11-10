@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { EstadoConsulta } from '../components/Estado.tsx'
-import { MAX_FOTOS, SeletorFotos, type ItemFoto } from '../components/SeletorFotos.tsx'
+import { SeletorFotos } from '../components/SeletorFotos.tsx'
+import { useFotosEscolhidas } from '../components/useFotosEscolhidas.ts'
 import { useTelaCheia } from '../components/telaCheia.ts'
 import { useAmbiente } from '../dados/hooks.ts'
 import { criarRascunho } from '../dados/envio.ts'
@@ -9,14 +10,9 @@ import { useFila } from '../offline/contexto.tsx'
 import type { AmbienteDetalhe, TipoRegistro } from '../dados/tipos.ts'
 import { disableClosingConfirmation, enableClosingConfirmation } from '../telegram.ts'
 import { registrarGuardaSaida } from '../util/guardaSaida.ts'
-import { capturadoEm, prepararFoto, type FotoPreparada } from '../util/imagem.ts'
+import { capturadoEm } from '../util/imagem.ts'
 
 const MAX_LEGENDA = 1000
-
-interface FotoEscolhida extends ItemFoto {
-  arquivo: File
-  preparada?: FotoPreparada
-}
 
 export default function NovoRegistro() {
   const { slug = '', codigo = '' } = useParams()
@@ -28,24 +24,16 @@ export default function NovoRegistro() {
   )
 }
 
-function criarPrevia(arquivo: File): string | null {
-  return typeof URL.createObjectURL === 'function' ? URL.createObjectURL(arquivo) : null
-}
-
 function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const { obra, ambiente, pavimento } = detalhe
   const navigate = useNavigate()
   const { estado: estadoFila, adicionar: adicionarNaFila } = useFila()
-  const [fotos, setFotos] = useState<FotoEscolhida[]>([])
+  const { fotos, aviso, adicionar, remover } = useFotosEscolhidas()
   const [tipo, setTipo] = useState<TipoRegistro | null>(null)
   const [legenda, setLegenda] = useState('')
-  const [aviso, setAviso] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const saindo = useRef(false)
-  const contador = useRef(0)
-  const previas = useRef<string[]>([])
-  const fotosRef = useRef<FotoEscolhida[]>([])
 
   const legendaLimpa = legenda.trim()
   const preparando = fotos.some((f) => f.estado === 'preparando')
@@ -81,50 +69,6 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
     enableClosingConfirmation()
     return () => disableClosingConfirmation()
   }, [preenchido])
-
-  useEffect(
-    () => () => {
-      for (const url of previas.current) URL.revokeObjectURL?.(url)
-    },
-    [],
-  )
-
-  const adicionar = useCallback((arquivos: File[]) => {
-    const vagas = MAX_FOTOS - fotosRef.current.length
-    const aceitos = arquivos.slice(0, Math.max(0, vagas))
-    setAviso(
-      aceitos.length < arquivos.length
-        ? `Só cabem ${MAX_FOTOS} fotos; ${arquivos.length - aceitos.length} ficou de fora.`
-        : '',
-    )
-    const novos: FotoEscolhida[] = aceitos.map((arquivo) => {
-      const previa = criarPrevia(arquivo)
-      if (previa) previas.current.push(previa)
-      return { chave: `f${++contador.current}`, arquivo, previa, estado: 'preparando' }
-    })
-    fotosRef.current = [...fotosRef.current, ...novos]
-    setFotos(fotosRef.current)
-    for (const item of novos) {
-      prepararFoto(item.arquivo).then(
-        (preparada) => atualizar(item.chave, { estado: 'pronta', preparada }),
-        (e: unknown) =>
-          atualizar(item.chave, {
-            estado: 'erro',
-            mensagem: e instanceof Error ? e.message : 'Não foi possível ler esta foto.',
-          }),
-      )
-    }
-    function atualizar(chave: string, mudanca: Partial<FotoEscolhida>) {
-      fotosRef.current = fotosRef.current.map((f) => (f.chave === chave ? { ...f, ...mudanca } : f))
-      setFotos(fotosRef.current)
-    }
-  }, [])
-
-  function remover(chave: string) {
-    fotosRef.current = fotosRef.current.filter((f) => f.chave !== chave)
-    setFotos(fotosRef.current)
-    setAviso('')
-  }
 
   async function salvar(e: FormEvent) {
     e.preventDefault()

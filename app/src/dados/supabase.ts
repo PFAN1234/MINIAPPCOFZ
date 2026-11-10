@@ -12,12 +12,17 @@ import type {
   FotoRegistro,
   ImagemPlanta,
   Marcador,
+  NovoEncerramento,
   NovoRegistro,
   ObraDetalhe,
   ObraDisponivel,
   ObraResumo,
+  PapelObra,
+  Participante,
   Pavimento,
+  PendenciaDetalhe,
   Planta,
+  PublicacaoProblema,
   RecortePt,
   RegistroLocalizado,
   RegistroResumo,
@@ -110,6 +115,11 @@ function mapearAmbiente(
   }
 }
 
+const MENSAGEM_JA_ENCERRADA = 'Esta pendência já foi encerrada.'
+
+const COLUNAS_REGISTRO =
+  'id, tipo, situacao, legenda, capturado_em, recebido_em, autor:usuario(nome), '
+
 const COLUNAS_AMBIENTE =
   'id, codigo, pavimento_id, nome_operacional, nome_planta, categoria, area_m2, marcadores'
 
@@ -154,6 +164,65 @@ export function criarRepositorioSupabase(
       }
     }
     return mapa
+  }
+
+  async function fotosDoEncerramento(encerramentoId: string): Promise<FotoRegistro[]> {
+    const linhas = checar(
+      await cliente
+        .from('foto')
+        .select('id, storage_path, largura, altura, ordem')
+        .eq('encerramento_id', encerramentoId)
+        .order('ordem'),
+    ) as Linha[]
+    return linhas.map((f) => ({
+      id: String(f.id),
+      path: String(f.storage_path),
+      largura: Number(f.largura),
+      altura: Number(f.altura),
+    }))
+  }
+
+  /** Converte as linhas de `registro` (com ambiente e obra embutidos) em resumos, com fotos e publicação. */
+  async function resumirRegistros(linhas: Linha[]): Promise<RegistroResumo[]> {
+    const ids = linhas.map((l) => String(l.id))
+    const [fotos, publicacoes] = await Promise.all([
+      fotosDosRegistros(ids),
+      publicacoesDosRegistros(ids),
+    ])
+    return linhas.map((l) => {
+      const amb = l.ambiente as Linha
+      return {
+        id: String(l.id),
+        tipo: l.tipo as RegistroResumo['tipo'],
+        situacao: (l.situacao as RegistroResumo['situacao']) ?? null,
+        legenda: String(l.legenda),
+        autor: String((l.autor as Linha | null)?.nome ?? 'Autor desconhecido'),
+        capturado_em: String(l.capturado_em),
+        recebido_em: String(l.recebido_em),
+        ambiente: {
+          id: String(amb.id),
+          codigo: String(amb.codigo),
+          nome: String(amb.nome_operacional),
+          pavimento: (amb.pavimento as Linha | null)?.nome
+            ? String((amb.pavimento as Linha).nome)
+            : undefined,
+        },
+        obra: l.obra as RegistroResumo['obra'],
+        fotos: fotos.get(String(l.id)) ?? [],
+        publicacao: publicacoes.get(String(l.id)) ?? null,
+      }
+    })
+  }
+
+  /** Chama uma RPC e converte a falha em `ErroEnvio`. */
+  async function chamar(nome: string, args: Record<string, unknown>): Promise<unknown> {
+    try {
+      const { data, error } = await cliente.rpc(nome, args)
+      if (error) throw error
+      return data
+    } catch (e) {
+      throw erroDoSupabase(e)
+    }
   }
 
   async function publicacoesDosRegistros(
@@ -285,44 +354,163 @@ export function criarRepositorioSupabase(
     },
 
     async listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]> {
+      // `!inner` faz o filtro pelo ambiente/obra descartar os registros, e não só o embed.
+      const ambInner = filtro.ambienteCodigo ? '!inner' : ''
+      const obraInner = filtro.obraSlug ? '!inner' : ''
       let q = cliente
         .from('registro')
         .select(
-          'id, tipo, situacao, legenda, capturado_em, recebido_em, ' +
-            'autor:usuario(nome), ambiente(id, codigo, nome_operacional), obra(id, slug, nome)',
+          COLUNAS_REGISTRO +
+            `ambiente${ambInner}(id, codigo, nome_operacional, pavimento(nome)), obra${obraInner}(id, slug, nome)`,
         )
         .order('recebido_em', { ascending: false })
       if (filtro.obraId) q = q.eq('obra_id', filtro.obraId)
+      if (filtro.obraSlug) q = q.eq('obra.slug', filtro.obraSlug)
       if (filtro.ambienteId) q = q.eq('ambiente_id', filtro.ambienteId)
+      if (filtro.ambienteCodigo) q = q.eq('ambiente.codigo', filtro.ambienteCodigo)
       if (filtro.tipo) q = q.eq('tipo', filtro.tipo)
       if (filtro.situacao) q = q.eq('situacao', filtro.situacao)
       if (filtro.limite) q = q.limit(filtro.limite)
-      const linhas = checar(await q) as unknown as Linha[]
-      const ids = linhas.map((l) => String(l.id))
-      const [fotos, publicacoes] = await Promise.all([
-        fotosDosRegistros(ids),
-        publicacoesDosRegistros(ids),
+      return resumirRegistros(checar(await q) as unknown as Linha[])
+    },
+
+    async obterPendencia(id): Promise<PendenciaDetalhe | null> {
+      if (!UUID.test(id)) return null
+      const linha = checar(
+        await cliente
+          .from('registro')
+          .select(
+            COLUNAS_REGISTRO +
+              'ambiente(id, codigo, nome_operacional, pavimento_id, pavimento(nome)), obra(id, slug, nome)',
+          )
+          .eq('id', id)
+          .eq('tipo', 'pendencia')
+          .maybeSingle(),
+      ) as unknown as Linha | null
+      if (!linha) return null
+      const obra = linha.obra as ObraResumo
+      const { data: sessao } = await cliente.auth.getSession()
+      const [resumos, pav, partic, enc] = await Promise.all([
+        resumirRegistros([linha]),
+        cliente
+          .from('pavimento')
+          .select('codigo, nome')
+          .eq('id', (linha.ambiente as Linha).pavimento_id as string)
+          .single(),
+        cliente
+          .from('participacao')
+          .select('papel')
+          .eq('obra_id', obra.id)
+          .eq('usuario_id', sessao.session?.user.id ?? '')
+          .maybeSingle(),
+        cliente
+          .from('encerramento')
+          .select('id, observacao, encerrado_em, gestor:usuario(nome)')
+          .eq('registro_id', id)
+          .maybeSingle(),
       ])
-      return linhas.map((l) => {
-        const amb = l.ambiente as Linha
-        return {
-          id: String(l.id),
-          tipo: l.tipo as RegistroResumo['tipo'],
-          situacao: (l.situacao as RegistroResumo['situacao']) ?? null,
-          legenda: String(l.legenda),
-          autor: String((l.autor as Linha | null)?.nome ?? 'Autor desconhecido'),
-          capturado_em: String(l.capturado_em),
-          recebido_em: String(l.recebido_em),
-          ambiente: {
-            id: String(amb.id),
-            codigo: String(amb.codigo),
-            nome: String(amb.nome_operacional),
-          },
-          obra: l.obra as RegistroResumo['obra'],
-          fotos: fotos.get(String(l.id)) ?? [],
-          publicacao: publicacoes.get(String(l.id)) ?? null,
+      const pavLinha = checar(pav) as Linha
+      const encLinha = checar(enc) as unknown as Linha | null
+      let encerramento: PendenciaDetalhe['encerramento'] = null
+      if (encLinha) {
+        const encId = String(encLinha.id)
+        const [fotos, pub] = await Promise.all([
+          fotosDoEncerramento(encId),
+          cliente
+            .from('publicacao_telegram')
+            .select('estado')
+            .eq('encerramento_id', encId)
+            .maybeSingle(),
+        ])
+        encerramento = {
+          id: encId,
+          observacao: encLinha.observacao ? String(encLinha.observacao) : null,
+          encerrado_em: String(encLinha.encerrado_em),
+          gestor: String((encLinha.gestor as Linha | null)?.nome ?? 'Gestor desconhecido'),
+          fotos,
+          publicacao: ((checar(pub) as Linha | null)?.estado as EstadoPublicacao) ?? null,
         }
+      }
+      return {
+        registro: resumos[0],
+        pavimento: { codigo: String(pavLinha.codigo), nome: String(pavLinha.nome) },
+        papel: (checar(partic) as Linha | null)?.papel === 'gestor' ? 'gestor' : 'equipe',
+        encerramento,
+      }
+    },
+
+    async encerrarPendencia(d: NovoEncerramento) {
+      try {
+        await chamar('encerrar_pendencia', {
+          p_id: exigirUuid(d.id, 'encerramento'),
+          p_registro_id: exigirUuid(d.registroId, 'registro'),
+          p_observacao: d.observacao,
+          p_fotos: d.fotos,
+        })
+        return { id: d.id }
+      } catch (e) {
+        const erro = erroDoSupabase(e)
+        if (erro.tipo === 'conflito' && /encerrada/i.test(erro.message)) {
+          throw new ErroEnvio('conflito', MENSAGEM_JA_ENCERRADA, { cause: e })
+        }
+        throw erro
+      }
+    },
+
+    async listarParticipantes(obraId) {
+      const dados = await chamar('listar_participantes', { p_obra: exigirUuid(obraId, 'obra') })
+      return ((dados ?? []) as Linha[]).map(
+        (l): Participante => ({
+          usuario_id: String(l.usuario_id),
+          nome: String(l.nome),
+          username: l.username ? String(l.username) : null,
+          papel: l.papel === 'gestor' ? 'gestor' : 'equipe',
+          desde: String(l.desde),
+        }),
+      )
+    },
+
+    async definirPapel(obraId, usuarioId, papel: PapelObra) {
+      await chamar('definir_papel', {
+        p_obra: exigirUuid(obraId, 'obra'),
+        p_usuario: exigirUuid(usuarioId, 'usuário'),
+        p_papel: papel,
       })
+    },
+
+    async removerParticipante(obraId, usuarioId) {
+      await chamar('remover_participante', {
+        p_obra: exigirUuid(obraId, 'obra'),
+        p_usuario: exigirUuid(usuarioId, 'usuário'),
+      })
+    },
+
+    async listarPublicacoesProblema(obraId) {
+      const dados = await chamar('listar_publicacoes_problema', {
+        p_obra: exigirUuid(obraId, 'obra'),
+      })
+      return ((dados ?? []) as Linha[]).map(
+        (l): PublicacaoProblema => ({
+          id: Number(l.id),
+          estado: l.estado as EstadoPublicacao,
+          erro: l.erro ? String(l.erro) : null,
+          tentativas: Number(l.tentativas),
+          atualizado_em: String(l.atualizado_em),
+          registro_id: String(l.registro_id),
+          encerramento_id: l.encerramento_id ? String(l.encerramento_id) : null,
+          tipo: l.tipo as PublicacaoProblema['tipo'],
+          legenda: String(l.legenda ?? ''),
+          ambiente: String(l.ambiente ?? ''),
+        }),
+      )
+    },
+
+    async republicar(id) {
+      await chamar('republicar', { p_id: id })
+    },
+
+    async marcarPublicada(id) {
+      await chamar('marcar_publicada', { p_id: id })
     },
 
     async urlsImagens(paths, bucket = 'plantas') {

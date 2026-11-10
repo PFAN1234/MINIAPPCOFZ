@@ -5,9 +5,12 @@ import { Layout } from './components/Layout.tsx'
 import { OfflineProvider } from './offline/contexto.tsx'
 import Acessos from './telas/Acessos.tsx'
 import Ambiente from './telas/Ambiente.tsx'
+import Gestao from './telas/Gestao.tsx'
+import Modelo from './telas/Modelo.tsx'
 import NovoRegistro from './telas/NovoRegistro.tsx'
 import Obra from './telas/Obra.tsx'
 import Obras from './telas/Obras.tsx'
+import PendenciaDetalhe from './telas/PendenciaDetalhe.tsx'
 import Pendencias from './telas/Pendencias.tsx'
 import Registros from './telas/Registros.tsx'
 
@@ -24,6 +27,10 @@ export default function App() {
             <Route path="pendencias" element={<Pendencias />} />
             <Route path="obras/:slug" element={<Obra />} />
             <Route path="obras/:slug/acessos" element={<Acessos />} />
+            <Route path="obras/:slug/modelo" element={<Modelo />} />
+            <Route path="obras/:slug/pendencias" element={<Pendencias />} />
+            <Route path="obras/:slug/pendencias/:id" element={<PendenciaDetalhe />} />
+            <Route path="obras/:slug/gestao" element={<Gestao />} />
             <Route path="obras/:slug/ambientes/:codigo" element={<Ambiente />} />
             <Route path="obras/:slug/ambientes/:codigo/novo" element={<NovoRegistro />} />
             <Route

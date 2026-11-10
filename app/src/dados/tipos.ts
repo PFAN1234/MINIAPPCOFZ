@@ -97,7 +97,8 @@ export interface RegistroResumo {
   autor: string
   capturado_em: string
   recebido_em: string
-  ambiente: { id: string; codigo: string; nome: string }
+  /** `pavimento` (nome) vem preenchido nas consultas do app; opcional para quem monta resumos à mão. */
+  ambiente: { id: string; codigo: string; nome: string; pavimento?: string }
   obra: { id: string; slug: string; nome: string }
   /** Ordenadas por `ordem`. */
   fotos: FotoRegistro[]
@@ -124,7 +125,11 @@ export interface CaminhoFoto {
 
 export interface FiltroRegistros {
   obraId?: string
+  /** Slug da obra (usado pelas filtragens vindas da URL). */
+  obraSlug?: string
   ambienteId?: string
+  /** Código do ambiente; só faz sentido junto com a obra. */
+  ambienteCodigo?: string
   tipo?: TipoRegistro
   situacao?: SituacaoRegistro
   limite?: number
@@ -153,4 +158,60 @@ export interface RegistroLocalizado {
   /** Código do ambiente do registro. */
   codigo: string
   tipo: TipoRegistro
+}
+
+/** Encerramento de uma pendência: fotos de comprovação e observação do gestor. */
+export interface Encerramento {
+  id: string
+  observacao: string | null
+  encerrado_em: string
+  /** Nome do gestor que encerrou. */
+  gestor: string
+  /** Ordenadas por `ordem`. */
+  fotos: FotoRegistro[]
+  publicacao: EstadoPublicacao | null
+}
+
+/** Pendência com o contexto da tela de detalhe. */
+export interface PendenciaDetalhe {
+  registro: RegistroResumo
+  pavimento: { codigo: string; nome: string }
+  /** Papel do usuário na obra da pendência. */
+  papel: PapelObra
+  /** `null` enquanto a pendência está aberta. */
+  encerramento: Encerramento | null
+}
+
+export interface NovoEncerramento {
+  /** Id do encerramento (gerado no cliente, chave de idempotência). */
+  id: string
+  /** Id da pendência. */
+  registroId: string
+  obraId: string
+  observacao: string
+  /** Na ordem escolhida. */
+  fotos: { id: string; largura: number; altura: number; bytes: number }[]
+}
+
+export interface Participante {
+  usuario_id: string
+  nome: string
+  username: string | null
+  papel: PapelObra
+  desde: string
+}
+
+/** Publicação no Telegram que precisa de atenção do gestor. */
+export interface PublicacaoProblema {
+  id: number
+  estado: EstadoPublicacao
+  erro: string | null
+  tentativas: number
+  atualizado_em: string
+  registro_id: string
+  encerramento_id: string | null
+  /** `encerramento` quando a publicação é a de um encerramento. */
+  tipo: TipoRegistro | 'encerramento'
+  legenda: string
+  ambiente: string
 }

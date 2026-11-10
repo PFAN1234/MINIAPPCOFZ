@@ -38,8 +38,9 @@ test('pedir acesso à Obra Demonstração mostra "Aguardando aprovação"', asyn
 
 test('o gestor aprova o pedido da Maria', async ({ page }) => {
   await page.goto('/obras/hto')
-  await page.getByRole('link', { name: '1 pedido de acesso' }).tap()
-  await expect(page).toHaveURL(/\/obras\/hto\/acessos$/)
+  await page.getByRole('link', { name: /^Gestão/ }).tap()
+  await expect(page).toHaveURL(/\/obras\/hto\/gestao$/)
+  await expect(page.getByRole('heading', { name: 'Pedidos de acesso', level: 3 })).toBeVisible()
   await expect(page.getByText('Maria Souza')).toBeVisible()
   await expect(page.getByText('@maria')).toBeVisible()
   await page.getByRole('button', { name: /Aprovar/ }).tap()

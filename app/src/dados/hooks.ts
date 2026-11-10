@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorio } from './contexto.tsx'
-import type { FiltroRegistros } from './tipos.ts'
+import type { FiltroRegistros, PapelObra } from './tipos.ts'
 
 export function useObras() {
   const repo = useRepositorio()
@@ -91,5 +91,63 @@ export function useDecidirSolicitacao() {
     mutationFn: ({ id, aprovar }: { id: string; aprovar: boolean }) =>
       repo.decidirSolicitacao(id, aprovar),
     onSettled: () => qc.invalidateQueries({ queryKey: ['solicitacoes'] }),
+  })
+}
+
+export function usePendencia(id: string) {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['pendencia', id], queryFn: () => repo.obterPendencia(id) })
+}
+
+export function useParticipantes(obraId: string | undefined, habilitado = true) {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['participantes', obraId],
+    queryFn: () => repo.listarParticipantes(obraId!),
+    enabled: habilitado && !!obraId,
+  })
+}
+
+export function useDefinirPapel(obraId: string) {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ usuarioId, papel }: { usuarioId: string; papel: PapelObra }) =>
+      repo.definirPapel(obraId, usuarioId, papel),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['participantes', obraId] }),
+  })
+}
+
+export function useRemoverParticipante(obraId: string) {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (usuarioId: string) => repo.removerParticipante(obraId, usuarioId),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['participantes', obraId] }),
+  })
+}
+
+export function usePublicacoesProblema(obraId: string | undefined, habilitado = true) {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['publicacoes-problema', obraId],
+    queryFn: () => repo.listarPublicacoesProblema(obraId!),
+    enabled: habilitado && !!obraId,
+  })
+}
+
+/** Reenviar ou marcar como publicada; ambas atualizam a lista e os registros. */
+export function useResolverPublicacao() {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, acao }: { id: number; acao: 'republicar' | 'marcar' }) =>
+      acao === 'republicar' ? repo.republicar(id) : repo.marcarPublicada(id),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ['publicacoes-problema'] }),
+        qc.invalidateQueries({ queryKey: ['registros'] }),
+        qc.invalidateQueries({ queryKey: ['pendencia'] }),
+      ]),
   })
 }

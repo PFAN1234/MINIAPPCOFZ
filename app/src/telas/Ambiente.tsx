@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { Aviso } from '../components/Aviso.tsx'
 import { Abas } from '../components/Abas.tsx'
 import { EstadoConsulta } from '../components/Estado.tsx'
 import { ListaRegistros } from '../components/ListaRegistros.tsx'
 import { OndeFica } from '../components/OndeFica.tsx'
+import { useAvisoDaRota } from '../components/useAvisoDaRota.ts'
 import { useAmbiente, useRegistros } from '../dados/hooks.ts'
 import type { AmbienteDetalhe } from '../dados/tipos.ts'
 import { useRegistrosLocais } from '../offline/contexto.tsx'
@@ -30,17 +30,7 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const { obra, ambiente, pavimento } = detalhe
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
-  const location = useLocation()
-  const [aviso, setAviso] = useState<string | null>(
-    (location.state as { aviso?: string } | null)?.aviso ?? null,
-  )
-  const fecharAviso = useCallback(() => setAviso(null), [])
-  // Consome o aviso do estado da rota, para que não reapareça ao voltar.
-  useEffect(() => {
-    if ((location.state as { aviso?: string } | null)?.aviso) {
-      navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
-    }
-  }, [location, navigate])
+  const { aviso, fecharAviso } = useAvisoDaRota()
   const aba = params.get('aba') === 'pendencias' ? 'pendencias' : 'historico'
   const area = formatarArea(ambiente.area_m2)
   const destaque = params.get('registro')

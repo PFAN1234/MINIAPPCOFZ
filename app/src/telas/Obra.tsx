@@ -5,9 +5,9 @@ import { AbaPlanta } from '../components/AbaPlanta.tsx'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { useTelaCheia } from '../components/telaCheia.ts'
-import { useObra, useSolicitacoes } from '../dados/hooks.ts'
+import { IconeChevron, IconeCubo } from '../components/Icones.tsx'
+import { useObra, usePublicacoesProblema, useSolicitacoes } from '../dados/hooks.ts'
 import type { ObraDetalhe } from '../dados/tipos.ts'
-import { recursos } from '../recursos.ts'
 import { filtrarAmbientes } from '../util/busca.ts'
 import { formatarArea, textoPendencias } from '../util/formato.ts'
 import { ordenarNatural } from '../util/ordenacao.ts'
@@ -34,15 +34,11 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   const pav = pavimentos.find((p) => p.codigo === pavParam) ?? pavimentos[0]
   const foco = params.get('foco')
   const [busca, setBusca] = useState(params.get('q') ?? '')
-  const pedidos = useSolicitacoes(obra.id, detalhe.papel === 'gestor')
-  const nPedidos = pedidos.data?.length ?? 0
-  const linkPedidos = nPedidos > 0 && (
-    <p className="cartao">
-      <Link to={`/obras/${obra.slug}/acessos`}>
-        {nPedidos === 1 ? '1 pedido de acesso' : `${nPedidos} pedidos de acesso`}
-      </Link>
-    </p>
-  )
+  const gestor = detalhe.papel === 'gestor'
+  const pedidos = useSolicitacoes(obra.id, gestor)
+  const problemas = usePublicacoesProblema(obra.id, gestor)
+  const nGestao = (pedidos.data?.length ?? 0) + (problemas.data?.length ?? 0)
+  const nPendencias = ambientes.reduce((soma, a) => soma + a.pendencias_abertas, 0)
 
   useTelaCheia(modo === 'planta' && !!pav)
 
@@ -56,16 +52,45 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   }
 
   const cabecalho = (
-    <h2 id="titulo-obra" className="titulo-tela">
-      {obra.nome}
-    </h2>
+    <>
+      <p className="voltar-linha">
+        <Link to="/">← Obras</Link>
+      </p>
+      <h2 id="titulo-obra" className="titulo-tela">
+        {obra.nome}
+      </h2>
+      <Link className="cartao-modelo" to={`/obras/${obra.slug}/modelo`}>
+        <span className="cartao-modelo-icone">
+          <IconeCubo tamanho={32} />
+        </span>
+        <span className="cartao-modelo-texto">Visualizar modelo federado</span>
+        <IconeChevron />
+      </Link>
+      <div className="atalhos">
+        <Link className="atalho" to={`/obras/${obra.slug}/pendencias`}>
+          Pendências{' '}
+          <span className="atalho-selo">
+            {nPendencias}
+          </span>
+        </Link>
+        {gestor && (
+          <Link className="atalho" to={`/obras/${obra.slug}/gestao`}>
+            Gestão{' '}
+            {nGestao > 0 && (
+              <span className="atalho-selo atalho-selo-alerta">
+                {nGestao}
+              </span>
+            )}
+          </Link>
+        )}
+      </div>
+    </>
   )
 
   if (!pav) {
     return (
       <section aria-labelledby="titulo-obra">
         {cabecalho}
-        {linkPedidos}
         <EstadoVazio
           titulo="Nenhum ambiente cadastrado"
           texto="Esta obra ainda não tem pavimentos nem ambientes."
@@ -80,13 +105,7 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   return (
     <section aria-labelledby="titulo-obra" className={modo === 'planta' ? 'obra-planta' : undefined}>
       {cabecalho}
-      {linkPedidos}
-      {recursos.modeloFederado && (
-        <div className="cartao">
-          <p className="lista-titulo">Modelo federado</p>
-          <p className="lista-sub">Visualize o modelo 3D da obra.</p>
-        </div>
-      )}
+      <h3 className="secao-titulo">Ambientes</h3>
       <Abas
         rotulo="Pavimento"
         itens={pavimentos.map((p) => ({ id: p.codigo, rotulo: p.nome }))}
