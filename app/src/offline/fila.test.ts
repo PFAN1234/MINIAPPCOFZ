@@ -1,14 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { criarRascunho } from '../dados/envio.ts'
+import { criarRascunho, criarRascunhoEncerramento } from '../dados/envio.ts'
 import { ErroEnvio, MENSAGEM_REDE } from '../dados/erros.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import {
   abrirArmazenamento,
   criarArmazenamentoMemoria,
   type Armazenamento,
+  type EncerramentoLocal,
   type RegistroLocal,
 } from './armazenamento.ts'
-import { criarFila, type Fila, type NovoLocal } from './fila.ts'
+import { criarFila, type Fila, type NovoEncerramentoLocal, type NovoLocal } from './fila.ts'
 
 const OBRA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 const AMB = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e99'
@@ -16,12 +17,15 @@ const AMB = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e99'
 /** Repositório falso idempotente: conta registros por id. */
 function criarRepoFalso() {
   const registros = new Map<string, number>()
+  const encerramentos = new Map<string, number>()
   const fotosEnviadas: string[] = []
   const estado = {
     rede: true,
     definitivas: new Set<string>(),
     perderRespostaDe: new Set<string>(),
     tentativas: [] as string[],
+    tentativasEncerramento: [] as string[],
+    jaEncerradas: new Set<string>(),
   }
   const repo: Repositorio = {
     async idUsuario() {
@@ -58,6 +62,29 @@ function criarRepoFalso() {
       if (!estado.rede) throw new ErroEnvio('rede', MENSAGEM_REDE)
       fotosEnviadas.push(`${registroId}/${fotoId}`)
     },
+    async obterPendencia() {
+      return null
+    },
+    async encerrarPendencia(d) {
+      estado.tentativasEncerramento.push(d.id)
+      if (!estado.rede) throw new ErroEnvio('rede', MENSAGEM_REDE)
+      if (estado.jaEncerradas.has(d.registroId)) {
+        throw new ErroEnvio('conflito', 'Esta pendência já foi encerrada.')
+      }
+      if (!encerramentos.has(d.id)) encerramentos.set(d.id, 0)
+      encerramentos.set(d.id, encerramentos.get(d.id)! + 1)
+      return { id: d.id }
+    },
+    async listarParticipantes() {
+      return []
+    },
+    async definirPapel() {},
+    async removerParticipante() {},
+    async listarPublicacoesProblema() {
+      return []
+    },
+    async republicar() {},
+    async marcarPublicada() {},
     async concluirRegistro(d) {
       if (!estado.rede) throw new ErroEnvio('rede', MENSAGEM_REDE)
       if (estado.definitivas.has(d.id)) throw new ErroEnvio('validacao', 'Legenda inválida')
@@ -67,7 +94,7 @@ function criarRepoFalso() {
       return { id: d.id }
     },
   }
-  return { repo, registros, fotosEnviadas, estado }
+  return { repo, registros, encerramentos, fotosEnviadas, estado }
 }
 
 function novo(legenda = 'x', nFotos = 2): NovoLocal {
@@ -88,6 +115,29 @@ function novo(legenda = 'x', nFotos = 2): NovoLocal {
   return { rascunho, obra: { slug: 'hto', nome: 'HTO' }, ambiente: { codigo: 'apto-101', nome: 'Apto. 101' } }
 }
 
+const PENDENCIA = '00000000-0000-4000-8000-000000000101'
+
+function novoEncerramento(observacao = 'Refeito', nFotos = 2): NovoEncerramentoLocal {
+  const rascunho = criarRascunhoEncerramento({
+    registroId: PENDENCIA,
+    obraId: OBRA,
+    observacao,
+    fotos: Array.from({ length: nFotos }, () => ({
+      id: crypto.randomUUID(),
+      blob: new Blob(['jpeg'], { type: 'image/jpeg' }),
+      largura: 10,
+      altura: 8,
+      bytes: 4,
+    })),
+  })
+  return {
+    rascunho,
+    obra: { slug: 'hto', nome: 'HTO' },
+    ambiente: { id: AMB, codigo: 'apto-101', nome: 'Apto. 101' },
+    legenda: 'Tomada sem espelho',
+  }
+}
+
 const drenar = async () => {
   for (let i = 0; i < 5; i++) await vi.advanceTimersByTimeAsync(0)
 }
@@ -97,9 +147,19 @@ let parar: (() => void)[] = []
 function montar(
   repo: Repositorio,
   armazenamento: Armazenamento,
-  extra: { usuarioId?: string; aoEnviar?: (r: RegistroLocal) => Promise<void> } = {},
+  extra: {
+    usuarioId?: string
+    aoEnviar?: (r: RegistroLocal) => Promise<void>
+    aoEncerrar?: (e: EncerramentoLocal) => Promise<void>
+  } = {},
 ): Fila {
-  const fila = criarFila({ repo, armazenamento, usuarioId: extra.usuarioId ?? 'u1', aoEnviar: extra.aoEnviar })
+  const fila = criarFila({
+    repo,
+    armazenamento,
+    usuarioId: extra.usuarioId ?? 'u1',
+    aoEnviar: extra.aoEnviar,
+    aoEncerrar: extra.aoEncerrar,
+  })
   parar.push(fila.iniciar())
   return fila
 }
@@ -561,5 +621,138 @@ describe('fila de envio', () => {
     await vi.advanceTimersByTimeAsync(600_000)
     await drenar()
     expect(estado.tentativas.length).toBe(antes)
+  })
+})
+
+
+describe('fila de envio: encerramento de pendência', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+  })
+  afterEach(() => {
+    parar.forEach((p) => p())
+    parar = []
+    vi.useRealTimers()
+  })
+
+  it('sucesso: grava no aparelho, sobe as fotos na pasta da pendência, encerra e chama aoEncerrar', async () => {
+    const { repo, encerramentos, fotosEnviadas } = criarRepoFalso()
+    const a = criarArmazenamentoMemoria()
+    const avisados: string[] = []
+    const fila = montar(repo, a, { aoEncerrar: async (e) => void avisados.push(e.pendenciaId) })
+    await drenar()
+
+    const n = novoEncerramento('Refeito e limpo')
+    await fila.adicionarEncerramento(n)
+    expect((await a.listarEncerramentos('u1')).map((e) => e.id)).toEqual([n.rascunho.id])
+    expect(await a.lerFoto(n.rascunho.id, n.rascunho.fotos[0].id)).toBeDefined()
+    expect(fila.obterEstado().encerramentos).toHaveLength(1)
+    expect(fila.obterEstado().itens).toEqual([])
+
+    await drenar()
+    expect(encerramentos.get(n.rascunho.id)).toBe(1)
+    // As fotos usam o id da pendência (e não o do encerramento) no caminho.
+    expect(fotosEnviadas).toEqual(n.rascunho.fotos.map((f) => `${PENDENCIA}/${f.id}`))
+    expect(avisados).toEqual([PENDENCIA])
+    expect(await a.listarEncerramentos('u1')).toEqual([])
+    expect(await a.lerFoto(n.rascunho.id, n.rascunho.fotos[0].id)).toBeUndefined()
+    expect(fila.obterEstado().encerramentos).toEqual([])
+  })
+
+  it('falha transitória: volta a aguardar, repete depois e não duplica o encerramento', async () => {
+    const { repo, estado, encerramentos } = criarRepoFalso()
+    estado.rede = false
+    const a = criarArmazenamentoMemoria()
+    const fila = montar(repo, a)
+    await drenar()
+    const n = novoEncerramento()
+    await fila.adicionarEncerramento(n)
+    await drenar()
+    const [item] = fila.obterEstado().encerramentos
+    expect(item.estado).toBe('aguardando')
+    expect(item.encerramento.erro).toBeNull()
+    expect(fila.obterEstado().semConexao).toBe(true)
+
+    estado.rede = true
+    await vi.advanceTimersByTimeAsync(15_000)
+    await drenar()
+    expect(encerramentos.get(n.rascunho.id)).toBe(1)
+    expect(fila.obterEstado().encerramentos).toEqual([])
+    expect(fila.obterEstado().semConexao).toBe(false)
+  })
+
+  it('conflito (já encerrada) é definitivo: fica com erro, não tenta sozinho e tentarDeNovo limpa o erro', async () => {
+    const { repo, estado } = criarRepoFalso()
+    estado.jaEncerradas.add(PENDENCIA)
+    const a = criarArmazenamentoMemoria()
+    const fila = montar(repo, a)
+    await drenar()
+    const n = novoEncerramento()
+    await fila.adicionarEncerramento(n)
+    await drenar()
+    const [item] = fila.obterEstado().encerramentos
+    expect(item.estado).toBe('erro')
+    expect(item.encerramento.erro).toEqual({
+      tipo: 'conflito',
+      mensagem: 'Esta pendência já foi encerrada.',
+    })
+    expect((await a.listarEncerramentos('u1'))[0].erro?.tipo).toBe('conflito')
+
+    const tentativas = estado.tentativasEncerramento.length
+    await vi.advanceTimersByTimeAsync(10 * 60_000)
+    expect(estado.tentativasEncerramento).toHaveLength(tentativas)
+
+    await fila.tentarDeNovo(n.rascunho.id)
+    await drenar()
+    expect(estado.tentativasEncerramento.length).toBe(tentativas + 1)
+    expect(fila.obterEstado().encerramentos[0].estado).toBe('erro')
+
+    await fila.descartar(n.rascunho.id)
+    expect(fila.obterEstado().encerramentos).toEqual([])
+    expect(await a.listarEncerramentos('u1')).toEqual([])
+  })
+
+  it('registros e encerramentos saem na ordem de criação e a carga restaura o encerramento do aparelho', async () => {
+    const { repo, estado, registros, encerramentos } = criarRepoFalso()
+    estado.rede = false
+    const a = criarArmazenamentoMemoria()
+    const fila = montar(repo, a)
+    await drenar()
+    const reg = novo('antes')
+    await fila.adicionar(reg)
+    vi.setSystemTime(Date.now() + 1000)
+    const enc = novoEncerramento()
+    await fila.adicionarEncerramento(enc)
+    await drenar()
+    parar.forEach((p) => p())
+    parar = []
+
+    // Novo "app": a fila é recriada a partir do armazenamento.
+    estado.rede = true
+    const ordem: string[] = []
+    const original = repo.concluirRegistro
+    repo.concluirRegistro = async (d) => (ordem.push('registro'), original(d))
+    const original2 = repo.encerrarPendencia
+    repo.encerrarPendencia = async (d) => (ordem.push('encerramento'), original2(d))
+    const fila2 = montar(repo, a)
+    await drenar()
+    expect(ordem).toEqual(['registro', 'encerramento'])
+    expect(registros.get(reg.rascunho.id)).toBe(1)
+    expect(encerramentos.get(enc.rascunho.id)).toBe(1)
+    expect(fila2.obterEstado().itens).toEqual([])
+    expect(fila2.obterEstado().encerramentos).toEqual([])
+  })
+
+  it('isola o encerramento por usuário', async () => {
+    const { repo, estado } = criarRepoFalso()
+    estado.rede = false
+    const a = criarArmazenamentoMemoria()
+    const fila1 = montar(repo, a, { usuarioId: 'u1' })
+    await drenar()
+    await fila1.adicionarEncerramento(novoEncerramento())
+    const fila2 = montar(repo, a, { usuarioId: 'u2' })
+    await drenar()
+    expect(fila2.obterEstado().encerramentos).toEqual([])
+    expect(fila1.obterEstado().encerramentos).toHaveLength(1)
   })
 })

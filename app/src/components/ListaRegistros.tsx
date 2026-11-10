@@ -24,7 +24,7 @@ const TEXTO_PUBLICACAO: Record<NonNullable<RegistroResumo['publicacao']>, string
   falhou: 'Publicação com problema',
 }
 
-function Publicacao({ estado }: { estado: RegistroResumo['publicacao'] }) {
+export function Publicacao({ estado }: { estado: RegistroResumo['publicacao'] }) {
   if (!estado) return null
   const classe =
     estado === 'publicado'
@@ -93,7 +93,14 @@ export function ListaRegistros({
             className={r.id === destaque ? 'registro-item registro-destaque' : 'registro-item'}
           >
             <MiniaturaRegistro registro={r} abrirInicial={r.id === destaque} />
-            {local ? (
+            {r.tipo === 'pendencia' ? (
+              <Link
+                className="lista-item registro-corpo"
+                to={`/obras/${r.obra.slug}/pendencias/${r.id}`}
+              >
+                {conteudo}
+              </Link>
+            ) : local ? (
               <div className="lista-item registro-corpo">{conteudo}</div>
             ) : (
               <Link

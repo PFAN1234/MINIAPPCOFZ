@@ -16,8 +16,19 @@ const estaOnline = () => navigator.onLine
 export function BarraSincronizacao() {
   const { estado, sincronizar } = useFila()
   const online = useSyncExternalStore(assinarConexao, estaOnline)
-  const aguardando = estado.itens.filter((i) => i.estado !== 'erro').length
-  const comErro = estado.itens.filter((i) => i.estado === 'erro').length
+  const regsAguardando = estado.itens.filter((i) => i.estado !== 'erro').length
+  const regsComErro = estado.itens.filter((i) => i.estado === 'erro').length
+  const encsAguardando = estado.encerramentos.filter((i) => i.estado !== 'erro').length
+  const encsComErro = estado.encerramentos.filter((i) => i.estado === 'erro')
+  const aguardando = regsAguardando + encsAguardando
+  const comErro = regsComErro + encsComErro.length
+  // Só registros: o texto de sempre; com encerramentos na fila, fala em "itens".
+  const soRegistros = encsAguardando === 0 && encsComErro.length === 0
+  // Um único encerramento com erro leva direto à pendência dele.
+  const destinoErro =
+    regsComErro === 0 && encsComErro.length === 1
+      ? `/obras/${encsComErro[0].encerramento.obra.slug}/pendencias/${encsComErro[0].encerramento.pendenciaId}`
+      : '/registros'
 
   if (aguardando === 0 && comErro === 0 && online) return null
 
@@ -26,9 +37,13 @@ export function BarraSincronizacao() {
       {aguardando > 0 && (
         <div className="barra-sinc-linha">
           <p role="status">
-            {aguardando === 1
-              ? '1 registro aguardando envio'
-              : `${aguardando} registros aguardando envio`}
+            {soRegistros
+              ? aguardando === 1
+                ? '1 registro aguardando envio'
+                : `${aguardando} registros aguardando envio`
+              : aguardando === 1
+                ? '1 item aguardando envio'
+                : `${aguardando} itens aguardando envio`}
           </p>
           <button
             type="button"
@@ -43,11 +58,15 @@ export function BarraSincronizacao() {
       {comErro > 0 && (
         <div className="barra-sinc-linha barra-sinc-erro">
           <p role="status">
-            {comErro === 1
-              ? '1 registro com erro no envio'
-              : `${comErro} registros com erro no envio`}
+            {soRegistros
+              ? comErro === 1
+                ? '1 registro com erro no envio'
+                : `${comErro} registros com erro no envio`
+              : comErro === 1
+                ? '1 item com erro no envio'
+                : `${comErro} itens com erro no envio`}
           </p>
-          <Link className="barra-sinc-link" to="/registros">
+          <Link className="barra-sinc-link" to={destinoErro}>
             Ver
           </Link>
         </div>

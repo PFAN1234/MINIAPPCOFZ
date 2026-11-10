@@ -1,22 +1,33 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { useFila, useFotosLocais } from '../offline/contexto.tsx'
-import type { ItemFila } from '../offline/fila.ts'
+import type { Progresso } from '../dados/envio.ts'
+import type { ItemEncerramento, ItemFila } from '../offline/fila.ts'
 import { Horario } from './Horario.tsx'
 import { VisualizadorFotos } from './VisualizadorFotos.tsx'
+
+function textoProgresso(progresso: Progresso | null): string {
+  if (!progresso) return 'Enviando…'
+  if (progresso.enviadas >= progresso.total) return 'Concluindo…'
+  return `Enviando fotos ${Math.min(progresso.enviadas + 1, progresso.total)} de ${progresso.total}…`
+}
 
 /** Texto de estado de um registro que ainda está no aparelho. */
 export function textoEstadoLocal(item: ItemFila): string {
   if (item.estado === 'erro') {
     return `Não foi possível enviar: ${item.registro.erro?.mensagem ?? 'erro desconhecido.'}`
   }
-  if (item.estado === 'enviando') {
-    const p = item.progresso
-    if (!p) return 'Enviando…'
-    if (p.enviadas >= p.total) return 'Concluindo…'
-    return `Enviando fotos ${Math.min(p.enviadas + 1, p.total)} de ${p.total}…`
-  }
+  if (item.estado === 'enviando') return textoProgresso(item.progresso)
   return 'Salvo no aparelho · aguardando envio'
+}
+
+/** Idem, para o encerramento de uma pendência guardado no aparelho. */
+export function textoEstadoEncerramento(item: ItemEncerramento): string {
+  if (item.estado === 'erro') {
+    return `Não foi possível enviar: ${item.encerramento.erro?.mensagem ?? 'erro desconhecido.'}`
+  }
+  if (item.estado === 'enviando') return textoProgresso(item.progresso)
+  return 'Encerramento salvo no aparelho · aguardando envio'
 }
 
 function MiniaturaLocal({ item }: { item: ItemFila }) {

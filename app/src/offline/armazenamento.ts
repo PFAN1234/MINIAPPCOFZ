@@ -21,6 +21,27 @@ export interface RegistroLocal {
   erro: { tipo: TipoErroEnvio; mensagem: string } | null
 }
 
+/**
+ * Encerramento de pendência ainda não enviado. As fotos ficam no mesmo store
+ * `fotos`, com `registroId = id do encerramento` (o caminho no Storage usa o
+ * id da pendência, `pendenciaId`, e é montado só no envio).
+ */
+export interface EncerramentoLocal {
+  id: string // id do encerramento (gerado no cliente)
+  usuarioId: string
+  obra: { id: string; slug: string; nome: string }
+  ambiente: { id: string; codigo: string; nome: string }
+  /** Id da pendência encerrada. */
+  pendenciaId: string
+  /** Legenda da pendência, para mostrar na lista. */
+  legenda: string
+  observacao: string
+  criadoEm: string // ISO; ordem da fila
+  fotos: { id: string; largura: number; altura: number; bytes: number }[]
+  /** Falha definitiva; enquanto não for nula, a fila não tenta sozinha. */
+  erro: { tipo: TipoErroEnvio; mensagem: string } | null
+}
+
 export interface CacheSalvo {
   versao: number
   salvoEm: number
@@ -50,15 +71,19 @@ export interface Armazenamento {
   atualizar(r: RegistroLocal): Promise<void>
   listar(usuarioId: string): Promise<RegistroLocal[]> // por criadoEm crescente
   lerFoto(registroId: string, fotoId: string): Promise<ArrayBuffer | undefined>
-  remover(id: string): Promise<void> // registro e fotos numa transação
+  remover(id: string): Promise<void> // registro (ou encerramento) e fotos numa transação
   lerCache(usuarioId: string): Promise<CacheSalvo | undefined>
   salvarCache(usuarioId: string, c: CacheSalvo): Promise<void>
+  /** Grava o encerramento e as fotos numa transação só. Lança ErroArmazenamento. */
+  salvarEncerramento(e: EncerramentoLocal, fotos: { id: string; dados: ArrayBuffer }[]): Promise<void>
+  atualizarEncerramento(e: EncerramentoLocal): Promise<void>
+  listarEncerramentos(usuarioId: string): Promise<EncerramentoLocal[]> // por criadoEm crescente
   /** Apaga o cache de consultas dos outros usuários; os registros deles ficam. */
   limparCachesExceto(usuarioId: string): Promise<void>
   fechar(): void
 }
 
-function porCriadoEm(a: RegistroLocal, b: RegistroLocal): number {
+function porCriadoEm(a: { criadoEm: string }, b: { criadoEm: string }): number {
   return a.criadoEm.localeCompare(b.criadoEm)
 }
 
@@ -69,6 +94,7 @@ function bytesDasFotos(fotos: { dados: ArrayBuffer }[]): number {
 export function criarArmazenamentoMemoria(): Armazenamento {
   const registros = new Map<string, RegistroLocal>()
   const fotos = new Map<string, ArrayBuffer>()
+  const encerramentos = new Map<string, EncerramentoLocal>()
   const caches = new Map<string, CacheSalvo>()
   const chave = (r: string, f: string) => `${r}/${f}`
 
@@ -81,6 +107,19 @@ export function criarArmazenamentoMemoria(): Armazenamento {
     async atualizar(r) {
       registros.set(r.id, structuredClone(r))
     },
+    async salvarEncerramento(e, novas) {
+      encerramentos.set(e.id, structuredClone(e))
+      for (const f of novas) fotos.set(chave(e.id, f.id), f.dados)
+    },
+    async atualizarEncerramento(e) {
+      encerramentos.set(e.id, structuredClone(e))
+    },
+    async listarEncerramentos(usuarioId) {
+      return [...encerramentos.values()]
+        .filter((e) => e.usuarioId === usuarioId)
+        .sort(porCriadoEm)
+        .map((e) => structuredClone(e))
+    },
     async listar(usuarioId) {
       return [...registros.values()]
         .filter((r) => r.usuarioId === usuarioId)
@@ -92,6 +131,7 @@ export function criarArmazenamentoMemoria(): Armazenamento {
     },
     async remover(id) {
       registros.delete(id)
+      encerramentos.delete(id)
       for (const k of [...fotos.keys()]) if (k.startsWith(`${id}/`)) fotos.delete(k)
     },
     async lerCache(usuarioId) {
@@ -109,6 +149,7 @@ export function criarArmazenamentoMemoria(): Armazenamento {
 
 interface EsquemaDb extends DBSchema {
   registros: { key: string; value: RegistroLocal; indexes: { usuarioId: string } }
+  encerramentos: { key: string; value: EncerramentoLocal; indexes: { usuarioId: string } }
   fotos: {
     key: [string, string]
     value: { registroId: string; fotoId: string; dados: ArrayBuffer }
@@ -154,34 +195,57 @@ function criarArmazenamentoIdb(db: IDBPDatabase<EsquemaDb>): Armazenamento {
     }
   }
 
+  /** Grava o item (registro ou encerramento) e as fotos, que usam o id do item como `registroId`. */
+  async function gravar(
+    loja: 'registros' | 'encerramentos',
+    item: RegistroLocal | EncerramentoLocal,
+    fotos: { id: string; dados: ArrayBuffer }[],
+  ): Promise<void> {
+    if (!(await espacoSuficiente(bytesDasFotos(fotos)))) {
+      throw new ErroArmazenamento('cota', MENSAGEM_COTA)
+    }
+    pedirPersistencia()
+    let tx: IDBPTransaction<EsquemaDb, ['registros', 'encerramentos', 'fotos'], 'readwrite'> | undefined
+    try {
+      tx = db.transaction(['registros', 'encerramentos', 'fotos'], 'readwrite')
+      void tx.done.catch(() => {}) // evita rejeição sem tratador quando abortamos
+      const pedidos: Promise<unknown>[] = [
+        loja === 'registros'
+          ? tx.objectStore('registros').put(item as RegistroLocal)
+          : tx.objectStore('encerramentos').put(item as EncerramentoLocal),
+      ]
+      for (const f of fotos) {
+        pedidos.push(
+          tx.objectStore('fotos').put({ registroId: item.id, fotoId: f.id, dados: f.dados }),
+        )
+      }
+      // `tx.done` rejeita no abort (inclusive por QuotaExceededError).
+      await Promise.all([...pedidos, tx.done])
+    } catch (e) {
+      try {
+        tx?.abort()
+      } catch {
+        // Já concluída ou abortada.
+      }
+      throw erroDeGravacao(e)
+    }
+  }
+
   return {
     persistente: true,
 
-    async salvar(r, fotos) {
-      if (!(await espacoSuficiente(bytesDasFotos(fotos)))) {
-        throw new ErroArmazenamento('cota', MENSAGEM_COTA)
-      }
-      pedirPersistencia()
-      let tx: IDBPTransaction<EsquemaDb, ['registros', 'fotos'], 'readwrite'> | undefined
+    salvar: (r, fotos) => gravar('registros', r, fotos),
+    salvarEncerramento: (e, fotos) => gravar('encerramentos', e, fotos),
+    async atualizarEncerramento(e) {
       try {
-        tx = db.transaction(['registros', 'fotos'], 'readwrite')
-        void tx.done.catch(() => {}) // evita rejeição sem tratador quando abortamos
-        const pedidos: Promise<unknown>[] = [tx.objectStore('registros').put(r)]
-        for (const f of fotos) {
-          pedidos.push(
-            tx.objectStore('fotos').put({ registroId: r.id, fotoId: f.id, dados: f.dados }),
-          )
-        }
-        // `tx.done` rejeita no abort (inclusive por QuotaExceededError).
-        await Promise.all([...pedidos, tx.done])
-      } catch (e) {
-        try {
-          tx?.abort()
-        } catch {
-          // Já concluída ou abortada.
-        }
-        throw erroDeGravacao(e)
+        await db.put('encerramentos', e)
+      } catch (erro) {
+        throw erroDeGravacao(erro)
       }
+    },
+    async listarEncerramentos(usuarioId) {
+      const lista = await db.getAllFromIndex('encerramentos', 'usuarioId', usuarioId)
+      return lista.sort(porCriadoEm)
     },
     async atualizar(r) {
       try {
@@ -201,9 +265,10 @@ function criarArmazenamentoIdb(db: IDBPDatabase<EsquemaDb>): Armazenamento {
     },
 
     async remover(id) {
-      const tx = db.transaction(['registros', 'fotos'], 'readwrite')
+      const tx = db.transaction(['registros', 'encerramentos', 'fotos'], 'readwrite')
       const concluida = tx.done
       await tx.objectStore('registros').delete(id)
+      await tx.objectStore('encerramentos').delete(id)
       const indice = tx.objectStore('fotos').index('registroId')
       let cursor = await indice.openCursor(IDBKeyRange.only(id))
       while (cursor) {
@@ -242,13 +307,20 @@ function criarArmazenamentoIdb(db: IDBPDatabase<EsquemaDb>): Armazenamento {
 export async function abrirArmazenamento(): Promise<Armazenamento> {
   if (typeof indexedDB === 'undefined') return criarArmazenamentoMemoria()
   try {
-    const db = await openDB<EsquemaDb>('diario-obra', 1, {
-      upgrade(banco) {
-        const registros = banco.createObjectStore('registros', { keyPath: 'id' })
-        registros.createIndex('usuarioId', 'usuarioId')
-        const fotos = banco.createObjectStore('fotos', { keyPath: ['registroId', 'fotoId'] })
-        fotos.createIndex('registroId', 'registroId')
-        banco.createObjectStore('cache', { keyPath: 'usuarioId' })
+    const db = await openDB<EsquemaDb>('diario-obra', 2, {
+      upgrade(banco, versaoAnterior) {
+        if (versaoAnterior < 1) {
+          const registros = banco.createObjectStore('registros', { keyPath: 'id' })
+          registros.createIndex('usuarioId', 'usuarioId')
+          const fotos = banco.createObjectStore('fotos', { keyPath: ['registroId', 'fotoId'] })
+          fotos.createIndex('registroId', 'registroId')
+          banco.createObjectStore('cache', { keyPath: 'usuarioId' })
+        }
+        // Versão 2 (fase 7): encerramentos de pendência, sem mexer nos dados da versão 1.
+        if (versaoAnterior < 2) {
+          const encerramentos = banco.createObjectStore('encerramentos', { keyPath: 'id' })
+          encerramentos.createIndex('usuarioId', 'usuarioId')
+        }
       },
     })
     return criarArmazenamentoIdb(db)

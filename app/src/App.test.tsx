@@ -54,14 +54,13 @@ describe('navegação com a fixture', () => {
     expect(screen.getByText(/Térreo/)).toBeInTheDocument()
   })
 
-  it('a barra inferior leva às Pendências abertas', async () => {
+  it('a barra inferior leva às Pendências (abertas, de todas as obras)', async () => {
     const usuario = userEvent.setup()
     renderizar()
     await usuario.click(await screen.findByRole('link', { name: 'Pendências' }))
-    expect(
-      await screen.findByRole('heading', { level: 2, name: 'Pendências abertas' }),
-    ).toBeInTheDocument()
-    expect(await screen.findAllByRole('link', { name: /Pendência aberta/ })).toHaveLength(3)
+    expect(await screen.findByRole('heading', { level: 2, name: 'Pendências' })).toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: 'Abertas (3)' })).toHaveAttribute('aria-selected', 'true')
+    expect(await screen.findAllByRole('link', { name: /Aberta/ })).toHaveLength(3)
   })
 
   it('mostra erro com "Tentar de novo"', async () => {
@@ -129,31 +128,18 @@ describe('telas', () => {
     expect(await screen.findByTestId('aba-planta')).toHaveTextContent('foco terreo-apto-101')
   })
 
-  it('flag desligada oculta o modelo federado e o Novo registro; ligada os mostra', async () => {
+  it('flag desligada oculta o Novo registro; ligada o mostra', async () => {
     recursos.novoRegistro = false
     try {
-      renderizar('/obras/hto')
-      await screen.findByRole('link', { name: /Apto\. 101/ })
-      expect(screen.queryByText('Modelo federado')).not.toBeInTheDocument()
-      cleanup()
       renderizar('/obras/hto/ambientes/terreo-apto-101')
       await screen.findByRole('tab', { name: 'Histórico' })
       expect(screen.queryByRole('button', { name: 'Novo registro' })).not.toBeInTheDocument()
-      cleanup()
     } finally {
       recursos.novoRegistro = true
     }
-
-    recursos.modeloFederado = true
-    try {
-      renderizar('/obras/hto')
-      expect(await screen.findByText('Modelo federado')).toBeInTheDocument()
-      cleanup()
-      renderizar('/obras/hto/ambientes/terreo-apto-101')
-      expect(await screen.findByRole('button', { name: 'Novo registro' })).toBeInTheDocument()
-    } finally {
-      recursos.modeloFederado = false
-    }
+    cleanup()
+    renderizar('/obras/hto/ambientes/terreo-apto-101')
+    expect(await screen.findByRole('button', { name: 'Novo registro' })).toBeInTheDocument()
   })
 })
 
@@ -165,8 +151,7 @@ describe('sessão e recursos', () => {
     ).toBeInTheDocument()
   })
 
-  it('flags: só o modelo federado (fase 9) segue desligado', () => {
-    expect(recursos.modeloFederado).toBe(false)
+  it('flags: o Novo registro está ligado', () => {
     expect(recursos.novoRegistro).toBe(true)
   })
 })
@@ -210,10 +195,13 @@ describe('acesso às obras', () => {
     ).toBeInTheDocument()
   })
 
-  it('Obra (gestor) mostra o link de pedidos e a tela Acessos aprova', async () => {
+  it('Obra (gestor) mostra o atalho da Gestão com o selo e a rota de Acessos aprova', async () => {
     const usuario = userEvent.setup()
     renderizar('/obras/hto')
-    await usuario.click(await screen.findByRole('link', { name: '1 pedido de acesso' }))
+    // 1 pedido de acesso + 2 publicações com problema.
+    expect(await screen.findByRole('link', { name: 'Gestão 3' })).toHaveAttribute('href', '/obras/hto/gestao')
+    cleanup()
+    renderizar('/obras/hto/acessos')
     expect(await screen.findByRole('heading', { level: 2, name: 'Pedidos de acesso' })).toBeInTheDocument()
     expect(await screen.findByText('Maria Souza')).toBeInTheDocument()
     expect(screen.getByText('@maria')).toBeInTheDocument()

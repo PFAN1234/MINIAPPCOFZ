@@ -1026,3 +1026,365 @@ body {
   outline: 2px solid var(--tg-theme-link-color, #2481cc);
   outline-offset: 2px;
 }
+
+/* Fase 7: obra, modelo, pendências, detalhe e gestão */
+:root {
+  --destaque: var(--tg-theme-button-color, #2481cc);
+  --destaque-suave: color-mix(in srgb, var(--destaque) 12%, var(--bg));
+  --destaque-borda: color-mix(in srgb, var(--destaque) 35%, transparent);
+}
+
+.voltar-linha {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+}
+
+.voltar-linha a {
+  color: var(--tg-theme-link-color, #2481cc);
+  text-decoration: none;
+}
+
+.secao-titulo {
+  margin: 16px 0 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--texto);
+}
+
+.cartao-modelo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 14px;
+  margin: 0 0 12px;
+  color: var(--texto);
+  text-decoration: none;
+  background: var(--destaque-suave);
+  border: 1px solid var(--destaque-borda);
+  border-radius: 12px;
+}
+
+.cartao-modelo-icone {
+  display: flex;
+  color: var(--destaque);
+}
+
+.cartao-modelo-texto {
+  flex: 1;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.cartao-modelo .icone {
+  flex: none;
+}
+
+.atalhos {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 4px;
+}
+
+.atalho {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  color: var(--texto);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: var(--bg-secundario);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+}
+
+.atalho-selo {
+  min-width: 22px;
+  padding: 1px 7px;
+  color: #fff;
+  font-size: 0.75rem;
+  text-align: center;
+  background: var(--destaque);
+  border-radius: 999px;
+}
+
+.atalho-selo-alerta {
+  background: #d9480f;
+}
+
+.cartao-info {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  margin: 0 0 8px;
+  background: var(--destaque-suave);
+  border: 1px solid var(--destaque-borda);
+  border-radius: 12px;
+}
+
+.cartao-info p {
+  margin: 0;
+}
+
+.cartao-info-icone {
+  display: flex;
+  color: var(--destaque);
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  width: 100%;
+  min-height: 44px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--texto-suave);
+  background: var(--bg-secundario);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.filtro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  margin: 0 0 12px;
+  color: var(--texto-suave);
+  background: var(--bg-secundario);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.filtro select,
+.filtro-select,
+.participante-acoes select {
+  flex: 1;
+  min-height: 40px;
+  font: inherit;
+  color: var(--texto);
+  background: transparent;
+  border: 0;
+}
+
+.filtro-select {
+  width: 100%;
+  padding: 0 12px;
+  margin: 0 0 8px;
+  background: var(--bg-secundario);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.filtros-registros .filtro-tipo {
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+}
+
+.lista-cartoes {
+  margin: 0;
+}
+
+.cartao-pendencia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  color: inherit;
+  text-decoration: none;
+  background: var(--bg-secundario);
+  border-radius: 12px;
+}
+
+.cartao-pendencia-foto {
+  flex: none;
+  width: 88px;
+  height: 88px;
+  overflow: hidden;
+  background: var(--borda);
+  border-radius: 8px;
+}
+
+.cartao-pendencia-foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cartao-pendencia-corpo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cartao-pendencia-legenda {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.cartao-pendencia-rodape {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cartao-pendencia-seta {
+  display: flex;
+  flex: none;
+  color: var(--texto-suave);
+}
+
+.pendencia-cabeca {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.pendencia-legenda {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.pendencia-meta {
+  margin: 8px 0 4px;
+}
+
+.galeria {
+  margin: 0 0 8px;
+}
+
+.galeria-principal {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  overflow: hidden;
+  background: var(--borda);
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.galeria-principal img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.galeria-miniaturas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.galeria-miniatura {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--borda);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.galeria-miniatura img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.resolucao {
+  margin-top: 16px;
+  padding-top: 4px;
+  border-top: 1px solid var(--borda);
+}
+
+.resolucao-obs {
+  margin: 8px 0;
+  white-space: pre-wrap;
+}
+
+.nota-acesso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 12px;
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+}
+
+.form-encerramento .secao-titulo {
+  margin-top: 16px;
+}
+
+.gestao-secao + .gestao-secao {
+  margin-top: 8px;
+}
+
+.participante-item {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.participante-acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.participante-acoes select {
+  flex: none;
+  padding: 0 8px;
+  background: var(--bg);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+
+.participante-erro {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.publicacao-problema-item {
+  gap: 4px;
+}
+
+.publicacao-erro {
+  word-break: break-word;
+}

@@ -19,7 +19,13 @@ import { useRepositorio } from '../dados/contexto.tsx'
 import type { TipoRegistro } from '../dados/tipos.ts'
 import { abrirArmazenamento, type Armazenamento } from './armazenamento.ts'
 import { persistirCache, restaurarCache } from './cacheConsultas.ts'
-import { criarFila, type EstadoFila, type Fila, type ItemFila } from './fila.ts'
+import {
+  criarFila,
+  type EstadoFila,
+  type Fila,
+  type ItemEncerramento,
+  type ItemFila,
+} from './fila.ts'
 
 interface Pronto {
   usuarioId: string
@@ -69,6 +75,16 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
             qc.invalidateQueries({ queryKey: ['ambiente', r.obra.slug, r.ambiente.codigo] }),
           ])
         },
+        aoEncerrar: async (e) => {
+          await Promise.all([
+            qc.invalidateQueries({ queryKey: ['registros'] }),
+            qc.invalidateQueries({ queryKey: ['pendencia'] }),
+            qc.invalidateQueries({ queryKey: ['obras'] }),
+            qc.invalidateQueries({ queryKey: ['obra', e.obra.slug] }),
+            qc.invalidateQueries({ queryKey: ['ambiente', e.obra.slug, e.ambiente.codigo] }),
+            qc.invalidateQueries({ queryKey: ['publicacoes-problema'] }),
+          ])
+        },
       })
       const parar = fila.iniciar()
       desligar = () => {
@@ -106,6 +122,7 @@ function usePronto(): Pronto {
 export interface UsoFila {
   estado: EstadoFila
   adicionar: Fila['adicionar']
+  adicionarEncerramento: Fila['adicionarEncerramento']
   sincronizar: Fila['sincronizar']
   tentarDeNovo: Fila['tentarDeNovo']
   descartar: Fila['descartar']
@@ -118,6 +135,7 @@ export function useFila(): UsoFila {
     () => ({
       estado,
       adicionar: fila.adicionar,
+      adicionarEncerramento: fila.adicionarEncerramento,
       sincronizar: fila.sincronizar,
       tentarDeNovo: fila.tentarDeNovo,
       descartar: fila.descartar,
@@ -128,24 +146,34 @@ export function useFila(): UsoFila {
 
 export interface FiltroLocais {
   obraId?: string
+  obraSlug?: string
   ambienteId?: string
+  ambienteCodigo?: string
   tipo?: TipoRegistro
 }
 
 /** Registros guardados no aparelho que ainda não foram enviados, do mais recente ao mais antigo. */
 export function useRegistrosLocais(filtro: FiltroLocais = {}): ItemFila[] {
   const { estado } = useFila()
-  const { obraId, ambienteId, tipo } = filtro
+  const { obraId, obraSlug, ambienteId, ambienteCodigo, tipo } = filtro
   return useMemo(
     () =>
       estado.itens.filter(
         (i) =>
           (!obraId || i.registro.obra.id === obraId) &&
+          (!obraSlug || i.registro.obra.slug === obraSlug) &&
           (!ambienteId || i.registro.ambiente.id === ambienteId) &&
+          (!ambienteCodigo || i.registro.ambiente.codigo === ambienteCodigo) &&
           (!tipo || i.registro.tipo === tipo),
       ),
-    [estado.itens, obraId, ambienteId, tipo],
+    [estado.itens, obraId, obraSlug, ambienteId, ambienteCodigo, tipo],
   )
+}
+
+/** Encerramento guardado no aparelho de uma pendência (ainda não enviado), se houver. */
+export function useEncerramentoLocal(pendenciaId: string): ItemEncerramento | undefined {
+  const { estado } = useFila()
+  return estado.encerramentos.find((i) => i.encerramento.pendenciaId === pendenciaId)
 }
 
 /** URLs de objeto das fotos guardadas no aparelho (na ordem de `fotoIds`); revogadas ao desmontar. */

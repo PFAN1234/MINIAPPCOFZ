@@ -1,6 +1,11 @@
 import type {
   AmbienteDetalhe,
   CaminhoFoto,
+  NovoEncerramento,
+  Participante,
+  PendenciaDetalhe,
+  PublicacaoProblema,
+  PapelObra,
   NovoRegistro,
   FiltroRegistros,
   ObraDetalhe,
@@ -39,6 +44,20 @@ export interface Repositorio {
   listarSolicitacoes(obraId: string): Promise<SolicitacaoAcesso[]>
   /** Gestor aprova ou recusa um pedido. Falhas sobem como `ErroEnvio`. */
   decidirSolicitacao(id: string, aprovar: boolean): Promise<void>
+  /** Pendência com fotos, ambiente, pavimento, papel do usuário e encerramento; null se não houver acesso. */
+  obterPendencia(id: string): Promise<PendenciaDetalhe | null>
+  /** Idempotente pelo `id`. Falhas sobem como `ErroEnvio` (`conflito` se já encerrada). */
+  encerrarPendencia(dados: NovoEncerramento): Promise<{ id: string }>
+  /** Participantes da obra (só gestor), gestores primeiro. */
+  listarParticipantes(obraId: string): Promise<Participante[]>
+  definirPapel(obraId: string, usuarioId: string, papel: PapelObra): Promise<void>
+  removerParticipante(obraId: string, usuarioId: string): Promise<void>
+  /** Publicações `incerto`/`falhou` (e pendentes com muitas tentativas), mais recentes primeiro. */
+  listarPublicacoesProblema(obraId: string): Promise<PublicacaoProblema[]>
+  /** Volta a publicação para a fila de envio. */
+  republicar(id: number): Promise<void>
+  /** Gestor confirma que a mensagem já está no tópico. */
+  marcarPublicada(id: number): Promise<void>
   /** Localiza um registro visível ao usuário (para o link `startapp`); null se não houver. */
   localizarRegistro(id: string): Promise<RegistroLocalizado | null>
   /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */

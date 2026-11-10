@@ -114,10 +114,15 @@ Verificação: registro publicado no tópico certo do grupo de teste; falha simu
 
 ## 7. Pendências e gestão
 
-- [ ] Lista de pendências da obra com abas Abertas/Resolvidas e filtro por ambiente.
-- [ ] Encerrar pendência (gestor) com foto de comprovação e observação, publicada como resposta à mensagem original.
-- [ ] Gestão: aprovar solicitações de acesso, definir papel, reconciliar publicações com falha ou incertas.
-- [ ] Aba global Registros com filtros.
+Contrato: `docs/contrato-fase7.md`. Pedido de 2026-11-10: completar todas as telas do mockup, com o botão do modelo federado já no lugar (o visualizador fica para a fase 9).
+
+- [x] Imagens das plantas no bucket `plantas` (91 arquivos, via `assinar-envio-plantas`).
+- [x] Lista de pendências da obra com abas Abertas/Resolvidas e filtro por ambiente (e por obra na aba global).
+- [x] Encerrar pendência (gestor) com foto de comprovação e observação, pela fila offline, publicada como resposta à mensagem original.
+- [x] Gestão: aprovar solicitações de acesso, definir papel, remover participante, reenviar ou marcar como publicada.
+- [x] Aba global Registros com filtros por obra e tipo.
+- [x] Cartão "Visualizar modelo federado" na tela da obra, com tela de espera.
+- [ ] Teste real no grupo TesteDev: planta, encerramento publicado como resposta, gestão.
 
 Verificação: pendência aberta e resolvida aparece no histórico e no grupo de teste; equipe não consegue encerrar; encerramento concorrente tem um só vencedor. Dependência: 6.
 

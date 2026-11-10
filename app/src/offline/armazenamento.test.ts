@@ -1,3 +1,4 @@
+import { openDB } from 'idb'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   abrirArmazenamento,
@@ -5,6 +6,7 @@ import {
   ErroArmazenamento,
   MENSAGEM_COTA,
   type Armazenamento,
+  type EncerramentoLocal,
   type RegistroLocal,
 } from './armazenamento.ts'
 
@@ -193,5 +195,95 @@ describe('armazenamento IndexedDB: cota e falhas', () => {
       throw new Error('bloqueado')
     })
     expect((await abrirArmazenamento()).persistente).toBe(false)
+  })
+})
+
+
+function encerramento(id: string, usuarioId = 'u1', criadoEm = '2026-11-10T10:00:00.000Z'): EncerramentoLocal {
+  return {
+    id,
+    usuarioId,
+    obra: { id: 'o1', slug: 'hto', nome: 'HTO' },
+    ambiente: { id: 'a1', codigo: 'apto-101', nome: 'Apto. 101' },
+    pendenciaId: 'p1',
+    legenda: 'Tomada sem espelho',
+    observacao: 'Refeito',
+    criadoEm,
+    fotos: [{ id: 'f1', largura: 10, altura: 10, bytes: 4 }],
+    erro: null,
+  }
+}
+
+describe.each([
+  ['IndexedDB', () => abrirArmazenamento()],
+  ['memória', () => Promise.resolve(criarArmazenamentoMemoria())],
+])('armazenamento de encerramentos (%s)', (_nome, abrir) => {
+  async function com(fn: (a: Armazenamento) => Promise<void>) {
+    const a = await abrir()
+    try {
+      await fn(a)
+    } finally {
+      a.fechar()
+    }
+  }
+
+  it('salva com as fotos, lista por usuário em ordem de criação e atualiza o erro', () =>
+    com(async (a) => {
+      await a.salvarEncerramento(encerramento('e2', 'u1', '2026-11-10T11:00:00.000Z'), [
+        { id: 'f1', dados: buffer(1, 2) },
+      ])
+      await a.salvarEncerramento(encerramento('e1'), [{ id: 'f1', dados: buffer(3, 4) }])
+      await a.salvarEncerramento(encerramento('e3', 'u2'), [])
+      expect((await a.listarEncerramentos('u1')).map((e) => e.id)).toEqual(['e1', 'e2'])
+      expect(await a.lerFoto('e1', 'f1')).toEqual(buffer(3, 4))
+      // Encerramentos não aparecem na lista de registros.
+      expect(await a.listar('u1')).toEqual([])
+
+      await a.atualizarEncerramento({
+        ...encerramento('e1'),
+        erro: { tipo: 'conflito', mensagem: 'Esta pendência já foi encerrada.' },
+      })
+      expect((await a.listarEncerramentos('u1'))[0].erro?.tipo).toBe('conflito')
+    }))
+
+  it('remover apaga o encerramento e as fotos, sem mexer nos registros', () =>
+    com(async (a) => {
+      await a.salvar(registro('r1'), fotos())
+      await a.salvarEncerramento(encerramento('e1'), [{ id: 'f1', dados: buffer(3, 4) }])
+      await a.remover('e1')
+      expect(await a.listarEncerramentos('u1')).toEqual([])
+      expect(await a.lerFoto('e1', 'f1')).toBeUndefined()
+      expect(await a.listar('u1')).toHaveLength(1)
+      expect(await a.lerFoto('r1', 'f1')).toBeDefined()
+    }))
+})
+
+describe('IndexedDB: migração da versão 1 para a 2', () => {
+  it('preserva registros, fotos e cache e cria o store de encerramentos', async () => {
+    const v1 = await openDB('diario-obra', 1, {
+      upgrade(banco) {
+        const registros = banco.createObjectStore('registros', { keyPath: 'id' })
+        registros.createIndex('usuarioId', 'usuarioId')
+        const fotosStore = banco.createObjectStore('fotos', { keyPath: ['registroId', 'fotoId'] })
+        fotosStore.createIndex('registroId', 'registroId')
+        banco.createObjectStore('cache', { keyPath: 'usuarioId' })
+      },
+    })
+    await v1.put('registros', registro('antigo'))
+    await v1.put('fotos', { registroId: 'antigo', fotoId: 'f1', dados: buffer(9, 9) })
+    await v1.put('cache', { usuarioId: 'u1', versao: 1, salvoEm: 5, estado: { x: 1 } })
+    v1.close()
+
+    const a = await abrirArmazenamento()
+    try {
+      expect((await a.listar('u1')).map((r) => r.id)).toEqual(['antigo'])
+      expect(await a.lerFoto('antigo', 'f1')).toEqual(buffer(9, 9))
+      expect(await a.lerCache('u1')).toEqual({ versao: 1, salvoEm: 5, estado: { x: 1 } })
+      expect(await a.listarEncerramentos('u1')).toEqual([])
+      await a.salvarEncerramento(encerramento('novo'), [{ id: 'f1', dados: buffer(1) }])
+      expect(await a.listarEncerramentos('u1')).toHaveLength(1)
+    } finally {
+      a.fechar()
+    }
   })
 })
