@@ -17,7 +17,9 @@ const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN") ?? "";
 const handler = criarHandler({
   botToken,
   telegram: criarClienteTelegram(botToken),
-  origensPermitidas: listarOrigens(Deno.env.get("ALLOWED_ORIGINS")),
+  origensPermitidas: listarOrigens(
+    Deno.env.get("ALLOWED_ORIGINS") ?? "https://miniappcofz.vercel.app",
+  ),
   admin: criarCliente(),
   criarClienteSessao: criarCliente,
 });
