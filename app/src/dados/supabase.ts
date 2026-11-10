@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
+import { entrarComTelegram } from './login.ts'
 import type { Repositorio } from './repositorio.ts'
+import { dentroDoTelegram, idUsuarioTelegram, initData } from '../telegram.ts'
 import type {
   Ambiente,
   AmbienteDetalhe,
@@ -12,11 +14,14 @@ import type {
   Marcador,
   NovoRegistro,
   ObraDetalhe,
+  ObraDisponivel,
   ObraResumo,
   Pavimento,
   Planta,
   RecortePt,
+  RegistroLocalizado,
   RegistroResumo,
+  SolicitacaoAcesso,
 } from './tipos.ts'
 
 const SEGUNDOS_URL_ASSINADA = 3600
@@ -170,8 +175,15 @@ export function criarRepositorioSupabase(
 
   return {
     async temSessao() {
-      const { data } = await cliente.auth.getSession()
-      return data.session !== null
+      return entrarComTelegram({
+        cliente,
+        urlSupabase: String(import.meta.env.VITE_SUPABASE_URL).replace(/\/+$/, ''),
+        chave: String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY),
+        initData: dentroDoTelegram() ? initData() : '',
+        idTelegram: idUsuarioTelegram(),
+        online: navigator.onLine,
+        fetch: (...args) => fetch(...args),
+      })
     },
 
     async idUsuario() {
@@ -187,7 +199,8 @@ export function criarRepositorioSupabase(
 
     async obterObra(slug): Promise<ObraDetalhe> {
       const obra = await obraPorSlug(slug)
-      const [pavs, plantas, ambs, abertas] = await Promise.all([
+      const { data: sessao } = await cliente.auth.getSession()
+      const [pavs, plantas, ambs, abertas, partic] = await Promise.all([
         cliente.from('pavimento').select('*').eq('obra_id', obra.id).order('ordem'),
         plantasAtivas(obra.id),
         cliente.from('ambiente').select(COLUNAS_AMBIENTE).eq('obra_id', obra.id).order('ordem'),
@@ -197,7 +210,14 @@ export function criarRepositorioSupabase(
           .eq('obra_id', obra.id)
           .eq('tipo', 'pendencia')
           .eq('situacao', 'aberta'),
+        cliente
+          .from('participacao')
+          .select('papel')
+          .eq('obra_id', obra.id)
+          .eq('usuario_id', sessao.session?.user.id ?? '')
+          .maybeSingle(),
       ])
+      const papel = (checar(partic) as Linha | null)?.papel === 'gestor' ? 'gestor' : 'equipe'
       const pavimentos = mapearPavimentos(checar(pavs) as Linha[], plantas)
       const codigos = new Map(pavimentos.map((p) => [p.id, p.codigo]))
       const contagem = new Map<string, number>()
@@ -208,7 +228,7 @@ export function criarRepositorioSupabase(
       const ambientes = (checar(ambs) as Linha[]).map((a) =>
         mapearAmbiente(a, codigos, contagem),
       )
-      return { obra, pavimentos, ambientes }
+      return { obra, papel, pavimentos, ambientes }
     },
 
     async obterAmbiente(slug, codigo): Promise<AmbienteDetalhe> {
@@ -328,6 +348,77 @@ export function criarRepositorioSupabase(
       } catch (e) {
         throw erroDoSupabase(e)
       }
+    },
+
+    async obrasDisponiveis() {
+      try {
+        const { data, error } = await cliente.rpc('obras_disponiveis')
+        if (error) throw error
+        return ((data ?? []) as Linha[]).map(
+          (l): ObraDisponivel => ({
+            id: String(l.id),
+            slug: String(l.slug),
+            nome: String(l.nome),
+            solicitacao: l.solicitacao === 'pendente' || l.solicitacao === 'recusada' ? l.solicitacao : null,
+          }),
+        )
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async solicitarAcesso(obraId) {
+      try {
+        const { error } = await cliente.rpc('solicitar_acesso', { p_obra: exigirUuid(obraId, 'obra') })
+        if (error) throw error
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async listarSolicitacoes(obraId) {
+      try {
+        const { data, error } = await cliente.rpc('listar_solicitacoes', {
+          p_obra: exigirUuid(obraId, 'obra'),
+        })
+        if (error) throw error
+        return ((data ?? []) as Linha[]).map(
+          (l): SolicitacaoAcesso => ({
+            id: String(l.id),
+            usuario_id: String(l.usuario_id),
+            nome: String(l.nome),
+            username: l.username ? String(l.username) : null,
+            criado_em: String(l.criado_em),
+          }),
+        )
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async decidirSolicitacao(id, aprovar) {
+      try {
+        const { error } = await cliente.rpc('decidir_solicitacao', {
+          p_id: exigirUuid(id, 'solicitação'),
+          p_aprovar: aprovar,
+        })
+        if (error) throw error
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async localizarRegistro(id): Promise<RegistroLocalizado | null> {
+      if (!UUID.test(id)) return null
+      const linha = checar(
+        await cliente
+          .from('registro')
+          .select('tipo, ambiente(codigo), obra(slug)')
+          .eq('id', id)
+          .maybeSingle(),
+      ) as unknown as { tipo: RegistroLocalizado['tipo']; ambiente: { codigo: string }; obra: { slug: string } } | null
+      if (!linha) return null
+      return { slug: linha.obra.slug, codigo: linha.ambiente.codigo, tipo: linha.tipo }
     },
 
     async concluirRegistro(d: NovoRegistro) {

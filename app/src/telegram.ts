@@ -24,6 +24,8 @@ export interface TelegramThemeParams {
 
 export interface TelegramWebApp {
   initData: string
+  /** Dados já decodificados (não confiáveis; a validação é feita no servidor). */
+  initDataUnsafe?: { user?: { id?: number }; start_param?: string }
   colorScheme: 'light' | 'dark'
   themeParams: TelegramThemeParams
   BackButton: TelegramBackButton
@@ -66,6 +68,18 @@ export function expand(): void {
 /** `initData` bruto a ser validado no servidor; string vazia fora do Telegram. */
 export function initData(): string {
   return webApp()?.initData ?? ''
+}
+
+/** Id do usuário no Telegram; null fora dele. */
+export function idUsuarioTelegram(): number | null {
+  const id = webApp()?.initDataUnsafe?.user?.id
+  return typeof id === 'number' ? id : null
+}
+
+/** Parâmetro do link `startapp` com que o Mini App foi aberto; null se não houver. */
+export function parametroInicial(): string | null {
+  const p = webApp()?.initDataUnsafe?.start_param
+  return typeof p === 'string' && p !== '' ? p : null
 }
 
 /** Esquema de cores do Telegram; fora dele, segue o do sistema. */

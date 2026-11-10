@@ -4,8 +4,15 @@ import type { RegistroResumo } from '../dados/tipos.ts'
 import { VisualizadorFotos } from './VisualizadorFotos.tsx'
 
 /** Miniatura da primeira foto do registro, com "+N" quando houver mais; toca para abrir o visualizador. */
-export function MiniaturaRegistro({ registro }: { registro: RegistroResumo }) {
-  const [aberto, setAberto] = useState(false)
+export function MiniaturaRegistro({
+  registro,
+  abrirInicial = false,
+}: {
+  registro: RegistroResumo
+  /** Abre o visualizador assim que a miniatura aparece (link `startapp`). */
+  abrirInicial?: boolean
+}) {
+  const [aberto, setAberto] = useState(abrirInicial)
   const fotos = registro.fotos
   const primeira = fotos[0]
   const miniatura = useUrlsImagens(primeira ? [primeira.path] : [], 'fotos')

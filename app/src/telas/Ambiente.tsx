@@ -43,6 +43,7 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
   }, [location, navigate])
   const aba = params.get('aba') === 'pendencias' ? 'pendencias' : 'historico'
   const area = formatarArea(ambiente.area_m2)
+  const destaque = params.get('registro')
 
   return (
     <section aria-labelledby="titulo-ambiente">
@@ -77,21 +78,22 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
         ativa={aba}
         onMudar={(id) => {
           const prox = new URLSearchParams(params)
+          prox.delete('registro')
           if (id === 'pendencias') prox.set('aba', id)
           else prox.delete('aba')
           setParams(prox)
         }}
       />
       {aba === 'historico' ? (
-        <Historico ambienteId={ambiente.id} />
+        <Historico ambienteId={ambiente.id} destaque={destaque} />
       ) : (
-        <Pendencias ambienteId={ambiente.id} />
+        <Pendencias ambienteId={ambiente.id} destaque={destaque} />
       )}
     </section>
   )
 }
 
-function Historico({ ambienteId }: { ambienteId: string }) {
+function Historico({ ambienteId, destaque }: { ambienteId: string; destaque: string | null }) {
   const registros = useRegistros({ ambienteId })
   const locais = useRegistrosLocais({ ambienteId })
   return (
@@ -99,6 +101,7 @@ function Historico({ ambienteId }: { ambienteId: string }) {
       {(lista) => (
         <ListaRegistros
           local
+          destaque={destaque}
           registros={lista}
           locais={locais}
           vazio="Nenhum registro neste ambiente"
@@ -108,7 +111,7 @@ function Historico({ ambienteId }: { ambienteId: string }) {
   )
 }
 
-function Pendencias({ ambienteId }: { ambienteId: string }) {
+function Pendencias({ ambienteId, destaque }: { ambienteId: string; destaque: string | null }) {
   const registros = useRegistros({ ambienteId, tipo: 'pendencia' })
   const locais = useRegistrosLocais({ ambienteId, tipo: 'pendencia' })
   return (
@@ -119,6 +122,7 @@ function Pendencias({ ambienteId }: { ambienteId: string }) {
         return (
           <ListaRegistros
             local
+            destaque={destaque}
             registros={[...abertas, ...resolvidas]}
             locais={locais}
             vazio="Nenhuma pendência neste ambiente"

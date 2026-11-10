@@ -5,7 +5,7 @@ import { AbaPlanta } from '../components/AbaPlanta.tsx'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { useTelaCheia } from '../components/telaCheia.ts'
-import { useObra } from '../dados/hooks.ts'
+import { useObra, useSolicitacoes } from '../dados/hooks.ts'
 import type { ObraDetalhe } from '../dados/tipos.ts'
 import { recursos } from '../recursos.ts'
 import { filtrarAmbientes } from '../util/busca.ts'
@@ -34,6 +34,15 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   const pav = pavimentos.find((p) => p.codigo === pavParam) ?? pavimentos[0]
   const foco = params.get('foco')
   const [busca, setBusca] = useState(params.get('q') ?? '')
+  const pedidos = useSolicitacoes(obra.id, detalhe.papel === 'gestor')
+  const nPedidos = pedidos.data?.length ?? 0
+  const linkPedidos = nPedidos > 0 && (
+    <p className="cartao">
+      <Link to={`/obras/${obra.slug}/acessos`}>
+        {nPedidos === 1 ? '1 pedido de acesso' : `${nPedidos} pedidos de acesso`}
+      </Link>
+    </p>
+  )
 
   useTelaCheia(modo === 'planta' && !!pav)
 
@@ -56,6 +65,7 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
     return (
       <section aria-labelledby="titulo-obra">
         {cabecalho}
+        {linkPedidos}
         <EstadoVazio
           titulo="Nenhum ambiente cadastrado"
           texto="Esta obra ainda não tem pavimentos nem ambientes."
@@ -70,6 +80,7 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   return (
     <section aria-labelledby="titulo-obra" className={modo === 'planta' ? 'obra-planta' : undefined}>
       {cabecalho}
+      {linkPedidos}
       {recursos.modeloFederado && (
         <div className="cartao">
           <p className="lista-titulo">Modelo federado</p>

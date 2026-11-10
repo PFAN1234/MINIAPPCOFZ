@@ -6,7 +6,9 @@ import {
   enableClosingConfirmation,
   dentroDoTelegram,
   expand,
+  idUsuarioTelegram,
   initData,
+  parametroInicial,
   ready,
   themeParams,
   type TelegramWebApp,
@@ -90,5 +92,28 @@ describe('telegram com window.Telegram', () => {
     expect(app.BackButton.hide).toHaveBeenCalledOnce()
     expect(app.BackButton.onClick).toHaveBeenCalledWith(cb)
     expect(app.BackButton.offClick).toHaveBeenCalledWith(cb)
+  })
+})
+
+describe('parâmetro inicial e usuário', () => {
+  it('sem Telegram, ambos são null', () => {
+    expect(parametroInicial()).toBeNull()
+    expect(idUsuarioTelegram()).toBeNull()
+  })
+
+  it('lê start_param e user.id de initDataUnsafe', () => {
+    window.Telegram = {
+      WebApp: { ...criarWebApp(), initDataUnsafe: { user: { id: 42 }, start_param: 'acessos_hto' } },
+    }
+    expect(parametroInicial()).toBe('acessos_hto')
+    expect(idUsuarioTelegram()).toBe(42)
+  })
+
+  it('start_param vazio ou ausente vira null', () => {
+    window.Telegram = { WebApp: { ...criarWebApp(), initDataUnsafe: { start_param: '' } } }
+    expect(parametroInicial()).toBeNull()
+    window.Telegram = { WebApp: criarWebApp() }
+    expect(parametroInicial()).toBeNull()
+    expect(idUsuarioTelegram()).toBeNull()
   })
 })

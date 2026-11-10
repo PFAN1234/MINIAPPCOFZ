@@ -44,3 +44,35 @@ describe('repositório fixture', () => {
     expect(await repo.urlsImagens([path])).toEqual({ [path]: '/__plantas/R05/terreo/planta.webp' })
   })
 })
+
+describe('fixture: acesso', () => {
+  it('há uma obra disponível e um pedido pendente da Maria na HTO', async () => {
+    const r = criarRepositorioFixture()
+    const [demo] = await r.obrasDisponiveis()
+    expect(demo).toMatchObject({ nome: 'Obra Demonstração', solicitacao: null })
+    expect((await r.obterObra('hto')).papel).toBe('gestor')
+    const pedidos = await r.listarSolicitacoes((await r.obterObra('hto')).obra.id)
+    expect(pedidos.map((p) => p.username)).toEqual(['maria'])
+  })
+
+  it('solicitar, decidir e localizar registro; decisão contrária conflita', async () => {
+    const r = criarRepositorioFixture()
+    const [demo] = await r.obrasDisponiveis()
+    await r.solicitarAcesso(demo.id)
+    expect((await r.obrasDisponiveis())[0].solicitacao).toBe('pendente')
+
+    const hto = (await r.obterObra('hto')).obra.id
+    const [pedido] = await r.listarSolicitacoes(hto)
+    await r.decidirSolicitacao(pedido.id, true)
+    await r.decidirSolicitacao(pedido.id, true)
+    await expect(r.decidirSolicitacao(pedido.id, false)).rejects.toThrow('Pedido já decidido.')
+    expect(await r.listarSolicitacoes(hto)).toEqual([])
+
+    expect(await r.localizarRegistro('00000000-0000-4000-8000-000000000101')).toEqual({
+      slug: 'hto',
+      codigo: 'terreo-apto-101',
+      tipo: 'pendencia',
+    })
+    expect(await r.localizarRegistro('inexistente')).toBeNull()
+  })
+})

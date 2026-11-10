@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import type { RegistroResumo } from '../dados/tipos.ts'
 import type { ItemFila } from '../offline/fila.ts'
@@ -41,6 +42,7 @@ export function ListaRegistros({
   local = false,
   locais = [],
   limite,
+  destaque,
 }: {
   registros: RegistroResumo[]
   vazio: string
@@ -49,7 +51,14 @@ export function ListaRegistros({
   locais?: ItemFila[]
   /** Máximo de itens na soma de locais e servidor. */
   limite?: number
+  /** Id de um registro a destacar: rola até ele e abre suas fotos. */
+  destaque?: string | null
 }) {
+  const itemDestaque = useRef<HTMLLIElement>(null)
+  const temDestaque = !!destaque && registros.some((r) => r.id === destaque)
+  useEffect(() => {
+    if (temDestaque) itemDestaque.current?.scrollIntoView?.({ block: 'center' })
+  }, [temDestaque])
   const ids = new Set(registros.map((r) => r.id))
   const proprios = locais.filter((i) => !ids.has(i.registro.id))
   const total = limite ?? Infinity
@@ -78,8 +87,12 @@ export function ListaRegistros({
           </>
         )
         return (
-          <li key={r.id} className="registro-item">
-            <MiniaturaRegistro registro={r} />
+          <li
+            key={r.id}
+            ref={r.id === destaque ? itemDestaque : undefined}
+            className={r.id === destaque ? 'registro-item registro-destaque' : 'registro-item'}
+          >
+            <MiniaturaRegistro registro={r} abrirInicial={r.id === destaque} />
             {local ? (
               <div className="lista-item registro-corpo">{conteudo}</div>
             ) : (

@@ -53,8 +53,12 @@ export interface Ambiente {
   pendencias_abertas: number
 }
 
+export type PapelObra = 'equipe' | 'gestor'
+
 export interface ObraDetalhe {
   obra: ObraResumo
+  /** Papel do usuário na obra (da própria participação). */
+  papel: PapelObra
   pavimentos: Pavimento[]
   ambientes: Ambiente[]
 }
@@ -124,4 +128,29 @@ export interface FiltroRegistros {
   tipo?: TipoRegistro
   situacao?: SituacaoRegistro
   limite?: number
+}
+
+/** Obra em que o usuário está no grupo do Telegram mas ainda não tem acesso. */
+export interface ObraDisponivel {
+  id: string
+  slug: string
+  nome: string
+  /** Estado do pedido mais recente; `null` se nunca pediu. */
+  solicitacao: 'pendente' | 'recusada' | null
+}
+
+/** Pedido de acesso pendente, visto pelo gestor da obra. */
+export interface SolicitacaoAcesso {
+  id: string
+  usuario_id: string
+  nome: string
+  username: string | null
+  criado_em: string
+}
+
+export interface RegistroLocalizado {
+  slug: string
+  /** Código do ambiente do registro. */
+  codigo: string
+  tipo: TipoRegistro
 }

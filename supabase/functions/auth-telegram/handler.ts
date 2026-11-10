@@ -1,5 +1,6 @@
 // Lógica da Edge Function auth-telegram, com dependências injetadas (testável sem rede).
 import { validarInitData } from "../_shared/init_data.ts";
+import type { ClienteTelegram } from "../_shared/telegram.ts";
 
 // Contratos mínimos do cliente Supabase usados aqui.
 // deno-lint-ignore no-explicit-any
@@ -8,6 +9,10 @@ type Resp<T = any> = Promise<{ data: T; error: { message: string } | null }>;
 export interface ClienteAdmin {
   // deno-lint-ignore no-explicit-any
   from(tabela: string): any;
+  rpc(
+    nome: string,
+    args?: Record<string, unknown>,
+  ): PromiseLike<{ error: { message: string } | null }>;
   auth: {
     admin: {
       // deno-lint-ignore no-explicit-any
@@ -30,6 +35,8 @@ export interface Deps {
   origensPermitidas: string[];
   admin: ClienteAdmin;
   criarClienteSessao: () => ClienteSessao;
+  /** Cliente da Bot API, para sincronizar o acesso pelos grupos das obras. */
+  telegram?: ClienteTelegram;
   agora?: () => Date;
 }
 
@@ -160,6 +167,8 @@ async function abrirSessao(
   }, { onConflict: "id" });
   if (eUp) throw new Error(`upsert usuario: ${eUp.message}`);
 
+  await sincronizarAcesso(deps, id, tg.id);
+
   const { data: link, error: eLink } = await admin.auth.admin.generateLink({
     type: "magiclink",
     email,
@@ -182,4 +191,77 @@ async function abrirSessao(
     expires_at: s.session.expires_at as number,
     usuario: { id, nome, username: tg.username ?? null },
   };
+}
+
+export type Situacao = "admin" | "membro" | "fora";
+
+/** Converte o `ChatMember` do Telegram na situação do usuário no grupo (ou `null` se desconhecida). */
+export function situacaoDoMembro(
+  m: { status?: string; is_member?: boolean } | null | undefined,
+): Situacao | null {
+  switch (m?.status) {
+    case "creator":
+    case "administrator":
+      return "admin";
+    case "member":
+      return "membro";
+    case "restricted":
+      return m?.is_member ? "membro" : "fora";
+    case "left":
+    case "kicked":
+      return "fora";
+    default:
+      return null;
+  }
+}
+
+const TIMEOUT_CHAT_MEMBER_MS = 5000;
+
+/**
+ * Confere a situação do usuário em cada grupo vinculado e grava pela RPC `sincronizar_acesso`.
+ * Nunca lança: falhas só vão para o log (sem dados pessoais) e não impedem o login.
+ */
+async function sincronizarAcesso(
+  deps: Deps,
+  usuarioId: string,
+  telegramId: number,
+): Promise<void> {
+  const { telegram, admin } = deps;
+  if (!telegram) return;
+  try {
+    const { data: obras, error } = await admin.from("obra")
+      .select("id, telegram_chat_id")
+      .not("telegram_chat_id", "is", null);
+    if (error) throw new Error(`consulta obra: ${error.message}`);
+    if (!obras || obras.length === 0) return;
+
+    const itens = (await Promise.all(
+      // deno-lint-ignore no-explicit-any
+      obras.map(async (o: any) => {
+        const r = await telegram.chamar<
+          { status?: string; is_member?: boolean }
+        >(
+          "getChatMember",
+          { chat_id: o.telegram_chat_id, user_id: telegramId },
+          { timeoutMs: TIMEOUT_CHAT_MEMBER_MS },
+        );
+        // Erro de API (ou de rede): pula a obra, sem mudar nada.
+        if (r.tipo !== "ok") return null;
+        const situacao = situacaoDoMembro(r.resultado);
+        return situacao ? { obra_id: o.id as string, situacao } : null;
+      }),
+    )).filter((i) => i !== null);
+    if (itens.length === 0) return;
+
+    const { error: eRpc } = await admin.rpc("sincronizar_acesso", {
+      p_usuario: usuarioId,
+      p_itens: itens,
+    });
+    if (eRpc) throw new Error(`sincronizar_acesso: ${eRpc.message}`);
+  } catch (e) {
+    console.warn(
+      "auth-telegram: falha ao sincronizar acesso:",
+      e instanceof Error ? e.message : "erro desconhecido",
+    );
+  }
 }

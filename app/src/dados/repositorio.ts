@@ -4,8 +4,11 @@ import type {
   NovoRegistro,
   FiltroRegistros,
   ObraDetalhe,
+  ObraDisponivel,
   ObraResumo,
+  RegistroLocalizado,
   RegistroResumo,
+  SolicitacaoAcesso,
 } from './tipos.ts'
 
 export interface Repositorio {
@@ -28,6 +31,16 @@ export interface Repositorio {
    * dispensa login. Sem sessão o app pede para abrir pelo Telegram.
    */
   temSessao?(): Promise<boolean>
+  /** Obras do grupo do Telegram do usuário em que ele ainda não tem acesso. */
+  obrasDisponiveis(): Promise<ObraDisponivel[]>
+  /** Pede acesso à obra (idempotente se já há pedido pendente). Falhas sobem como `ErroEnvio`. */
+  solicitarAcesso(obraId: string): Promise<void>
+  /** Pedidos pendentes da obra, do mais antigo ao mais novo; só o gestor pode ver. */
+  listarSolicitacoes(obraId: string): Promise<SolicitacaoAcesso[]>
+  /** Gestor aprova ou recusa um pedido. Falhas sobem como `ErroEnvio`. */
+  decidirSolicitacao(id: string, aprovar: boolean): Promise<void>
+  /** Localiza um registro visível ao usuário (para o link `startapp`); null se não houver. */
+  localizarRegistro(id: string): Promise<RegistroLocalizado | null>
   /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */
   idUsuario(): Promise<string | null>
 }

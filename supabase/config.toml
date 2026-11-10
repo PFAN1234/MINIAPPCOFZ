@@ -424,3 +424,11 @@ enabled = true
 # Valida o initData do Telegram por conta própria; não recebe JWT do Supabase.
 [functions.auth-telegram]
 verify_jwt = false
+
+# Recebe os updates do bot; valida o secret_token do webhook por conta própria.
+[functions.bot-webhook]
+verify_jwt = false
+
+# Acionada pelo cron e pelos gatilhos do banco; valida o x-segredo-interno por conta própria.
+[functions.publish-outbox]
+verify_jwt = false
