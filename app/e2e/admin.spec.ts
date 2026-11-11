@@ -48,4 +48,6 @@ test('o precache do Mini App não inclui o site de administração', async ({ pa
   )
   expect(manifesto.arquivos).toContain('/index.html')
   expect(manifesto.arquivos.filter((a) => a.includes('admin'))).toEqual([])
+  // pdf.js, worker, fontes, WASM e o editor de planta são só do site de administração.
+  expect(manifesto.arquivos.filter((a) => /pdf|webp_enc|wasm|Foxit|Liberation|servicoNavegador/i.test(a))).toEqual([])
 })

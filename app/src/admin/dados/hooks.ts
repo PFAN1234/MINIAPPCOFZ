@@ -78,3 +78,26 @@ export function useRemoverAdmin() {
   const invalidar = useInvalidarAdmins()
   return useMutation({ mutationFn: (id: string) => repo.removerAdmin(id), onSuccess: invalidar })
 }
+
+// --- Planta (fase 2) ---------------------------------------------------------------------------
+
+export function useEditorPlanta(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({
+    queryKey: ['admin', 'planta', slug],
+    queryFn: () => repo.obterEditorPlanta(slug),
+    // O editor guarda edições locais: não reler sozinho por trás delas.
+    staleTime: Infinity,
+  })
+}
+
+export function usePublicacoes(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'publicacoes', slug], queryFn: () => repo.listarPublicacoes(slug) })
+}
+
+/** Depois de publicar: relê obra, lista, planta e histórico. */
+export function useInvalidarPlanta() {
+  const qc = useQueryClient()
+  return () => qc.invalidateQueries({ queryKey: ['admin'], predicate: (q) => q.queryKey[1] !== 'sessao' })
+}

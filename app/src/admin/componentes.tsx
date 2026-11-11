@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { CATEGORIAS, ROTULO_CATEGORIA } from './dados/tipos.ts'
 
 export function mensagemDe(e: unknown, padrao = 'Não foi possível concluir a operação.'): string {
   return e instanceof Error && e.message ? e.message : padrao
@@ -56,4 +57,27 @@ export function Resultado({ sucesso, erro }: { sucesso: string | null; erro: unk
     )
   }
   return null
+}
+
+/** Select das categorias do extrator (mantém um valor fora da lista, se já existir). */
+export function SelectCategoria({
+  valor,
+  rotulo,
+  onMudar,
+}: {
+  valor: string
+  rotulo: string
+  onMudar: (v: string) => void
+}) {
+  const opcoes: string[] = CATEGORIAS.includes(valor as (typeof CATEGORIAS)[number]) || !valor ? [...CATEGORIAS] : [...CATEGORIAS, valor]
+  return (
+    <select aria-label={rotulo} value={valor} onChange={(e) => onMudar(e.target.value)}>
+      {!valor && <option value="">Escolha…</option>}
+      {opcoes.map((c) => (
+        <option key={c} value={c}>
+          {ROTULO_CATEGORIA[c] ?? c}
+        </option>
+      ))}
+    </select>
+  )
 }

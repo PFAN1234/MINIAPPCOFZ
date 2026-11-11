@@ -62,11 +62,29 @@ Decisões da implementação (2026-11-11):
 | Precache do Mini App | O manifesto exclui `admin.html` e o que só a entrada `admin` alcança (grafo do bundle); o service worker ignora `/admin` e os pedidos feitos por páginas de `/admin`. |
 | Fixture | Usuário de teste é admin por padrão (botão visível no Mini App em modo fixture e site já logado); `localStorage['fixture-admin'] = 'nao'` simula quem não é. Nos testes unitários do Mini App, `criarRepositorioFixture()` continua sem admin. |
 
-### Fase 2: planta (PDF)
-1. Porta para TypeScript de `extrair_ambientes.py` (pareamento nome ↔ `A=xx m²`, nomes fixos, numeração de repetidos, rótulos duplos, ambientes manuais, base anterior, `manter_codigo`, `diferencas`) e de `gerar_plantas.py` (recorte, máscaras, visão geral, HD, recortes por ambiente, prova).
-2. Testes de paridade: HTO e COFZ devem dar os mesmos ambientes, códigos e pinos (tolerância pequena) que os JSON gerados pelo Python.
-3. Editor: desenhar recorte e máscaras sobre a prancha, arrastar pinos, renomear e categorizar, incluir ambiente sem rótulo, revisar repetidos; tela de nova revisão com novos, removidos, renomeados sugeridos (confirmar = `manter_codigo`).
-4. Publicar: upload das imagens e `admin_publicar_revisao`; status da obra (`aguardando_revisao_humana` → `revisado`).
+### Fase 2: planta (PDF) (código pronto em 2026-11-12; falta aplicar no `miniappcofz-dev`)
+
+Documentação: `docs/admin.md`, "Planta (fase 2)".
+
+1. [x] Porta para TypeScript (`app/src/admin/planta/`) de `extrair_ambientes.py` (pareamento nome ↔ `A=xx m²`, nomes fixos, numeração de repetidos, rótulos duplos, ambientes manuais, base anterior, `manter_codigo`, `diferencas`) e de `gerar_plantas.py` (recorte, máscaras, visão geral, HD, recortes por ambiente, prova).
+2. [x] Testes de paridade: HTO e COFZ dão os mesmos ambientes, códigos e pinos (desvio de 1·10⁻⁶) e os mesmos recortes e tamanhos (0,002 pt, 0 px) que os JSON gerados pelo Python.
+3. [x] Editor: desenhar recorte e máscaras sobre a prancha, arrastar pinos, renomear e categorizar, incluir ambiente sem rótulo, revisar repetidos; tela de nova revisão com novos, removidos, renomeados sugeridos (confirmar = `manter_codigo`).
+4. [x] Publicar: PDF em `originais`, imagens em `plantas` e `admin_publicar_revisao`; histórico em `publicacao_planta`; status da obra (`aguardando_revisao_humana` → `revisado`).
+5. [ ] Aplicar a migration `20261112090000_admin_planta.sql` no `miniappcofz-dev` e conferir com a COFZ (`tasks/todo.md`).
+
+Decisões da implementação (2026-11-12):
+
+| Tema | Decisão |
+|---|---|
+| Spans iguais aos do PyMuPDF | Itens do pdf.js reagrupados com as regras do MuPDF (linha, espaço, fonte, negrito falso, fora da página) e altura com o Ascent/Descent do `FontDescriptor`, lido dos bytes do PDF (o pdf.js usa o da tabela `hhea`, que difere). Paridade dos rótulos: exata; diferença conhecida só em espaços de outros textos. |
+| Base da extração no site | O estado do banco no pavimento (ativos = lista, inativos = removidos), sem as `diferencas` gravadas: as diferenças mostradas e guardadas são sempre contra o que está publicado. |
+| Publicação por pavimento | O payload aceita vários pavimentos, mas o editor publica um por vez. A RPC só inativa ambientes fora da lista nos pavimentos publicados e renumera a ordem global (pavimento, depois a ordem interna), como o seed da obra inteira. |
+| Edições → configuração | No formato do `obra.json` (`renomear`, `categorias`, `ambientes_manuais`, `manter_codigo`). Renomear um ambiente já publicado grava `manter_codigo` automaticamente (o código não muda). Pinos arrastados/removidos: campo novo `marcadores_ajustados`, válido só na revisão em que foi feito. Recorte/máscaras: para todos os pavimentos (`prancha`) ou só para um (`pavimentos[i].prancha`). Entradas que não batem mais com a planta são ignoradas e listadas, em vez de travar como no script. |
+| Integridade | A RPC confere no `storage.objects` que o PDF e todas as imagens já foram enviados; o editor envia tudo antes de chamá-la. Trava otimista na configuração (`config_atualizada_em`, 40001). Publicar volta o status para `aguardando_revisao_humana`; "Marcar como revisado" grava `revisao_humana` da revisão publicada. |
+| PDF guardado | Bucket privado `originais`, `<obra_id>/<revisao>/<pavimento>/<sha256>.pdf`, só admin (select/insert/update). O editor reabre o da última publicação do pavimento. |
+| Storage `plantas` | Admin ganha select/insert/update nas pastas de obras existentes (o upsert exige os três); a leitura dos participantes não muda. |
+| pdf.js no navegador | `pdfjs-dist` 6.4.299 (versão exata); worker, fontes padrão e WASM emitidos pelo Vite e servidos pelo site; carregado sob demanda pelo editor. WebP pelo canvas, com `@jsquash/webp` 1.5.0 (WASM) quando o navegador não gera WebP. Nada disso entra no precache do Mini App. |
+| Testes | Paridade e renderização em Node (`*.node.test.ts`, pdf.js legacy + `@napi-rs/canvas` 1.1.0, tsconfig próprio); telas com um serviço de PDF falso; e2e com o PDF real da COFZ no Chromium. |
 
 ### Fase 3: modelo (IFC)
 1. Conversão no navegador em Web Worker, com barra de progresso e aviso de memória; opção de enviar um `.frag` já convertido (pelo script Node) quando o IFC for grande demais.

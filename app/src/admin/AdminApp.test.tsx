@@ -120,7 +120,8 @@ describe('obras', () => {
     await usuario.type(screen.getByLabelText(/Slug/), 'obra-nova')
     await usuario.click(screen.getByRole('button', { name: 'Criar obra' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Obra Nova' })).toBeInTheDocument()
-    expect(screen.getByText(/PDF\) e do modelo \(IFC\) chega nas próximas fases/)).toBeInTheDocument()
+    expect(screen.getByText(/envio do modelo \(IFC\) chega na próxima fase/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Planta (PDF)' })).toBeInTheDocument()
     expect(screen.getByText('Nenhum pavimento.')).toBeInTheDocument()
 
     await usuario.click(screen.getByRole('button', { name: 'Incluir pavimento' }))
@@ -183,7 +184,9 @@ describe('obras', () => {
     await usuario.type(valor, 'Sala do DA')
     await usuario.click(screen.getByRole('button', { name: 'Incluir em categorias' }))
     await usuario.type(screen.getByLabelText('Padrão na planta 16'), 'HALL')
-    await usuario.type(screen.getByLabelText('Categoria 16'), 'circulacao')
+    // Categoria é escolhida no mesmo select do editor de planta.
+    expect(screen.getByLabelText('Categoria 1')).toHaveValue('banheiro')
+    await usuario.selectOptions(screen.getByLabelText('Categoria 16'), 'circulacao')
     await usuario.selectOptions(screen.getByLabelText('Status da revisão humana'), 'revisado')
     expect(screen.getByText(/Outros campos mantidos como estão: .*prancha/)).toBeInTheDocument()
     await usuario.click(screen.getByRole('button', { name: 'Salvar configuração' }))

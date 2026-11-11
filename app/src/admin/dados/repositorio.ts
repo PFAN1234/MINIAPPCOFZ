@@ -1,6 +1,8 @@
 import type {
   Admin,
+  Bucket,
   ConfigObra,
+  DadosEditorPlanta,
   DadosObra,
   DadosWidget,
   EstadoSessao,
@@ -8,6 +10,8 @@ import type {
   ObraLista,
   ObraSalva,
   PavimentoResumo,
+  Publicacao,
+  ResultadoPublicacao,
   UsuarioApp,
 } from './tipos.ts'
 
@@ -29,6 +33,16 @@ export interface RepositorioAdmin {
   salvarPavimentos(slug: string, lista: PavimentoResumo[]): Promise<PavimentoResumo[]>
   salvarConfig(slug: string, config: ConfigObra): Promise<void>
   exportarObra(slug: string): Promise<unknown>
+
+  /** Planta (fase 2): ambientes, planta ativa e último PDF guardado de cada pavimento. */
+  obterEditorPlanta(slug: string): Promise<DadosEditorPlanta>
+  listarPublicacoes(slug: string): Promise<Publicacao[]>
+  /** Envia um arquivo ao Storage (upsert). */
+  enviarArquivo(bucket: Bucket, caminho: string, arquivo: Blob, tipo: string): Promise<void>
+  /** Baixa um PDF guardado no bucket `originais`. */
+  baixarOriginal(caminho: string): Promise<Uint8Array>
+  /** RPC `admin_publicar_revisao` (payload montado em planta/publicar.ts). */
+  publicarRevisao(slug: string, payload: unknown): Promise<ResultadoPublicacao>
 
   listarAdmins(): Promise<Admin[]>
   incluirAdmin(usuarioId: string): Promise<void>
