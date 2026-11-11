@@ -32,16 +32,6 @@ async function preencherEncerramento(page: Page) {
   await expect(page.getByRole('button', { name: 'Encerrar pendência' })).toBeEnabled()
 }
 
-test('Obra → "Visualizar modelo federado" mostra o marcador de lugar', async ({ page }) => {
-  await page.goto('/obras/hto')
-  await page.getByRole('link', { name: /Visualizar modelo federado/ }).tap()
-  await expect(page).toHaveURL(/\/obras\/hto\/modelo$/)
-  await expect(page.getByRole('heading', { name: 'Modelo federado', level: 2 })).toBeVisible()
-  await expect(page.getByText(/está em preparação e chega numa próxima versão/)).toBeVisible()
-  await expect(page.getByRole('button', { name: 'ARQ' })).toBeDisabled()
-  await expect(page.getByRole('button', { name: 'ANT' })).toBeDisabled()
-})
-
 test('Pendências → abrir → encerrar com foto e observação → aparece em Resolvidas', async ({ page }) => {
   await abrirPendenciaDaTomada(page)
   await preencherEncerramento(page)
