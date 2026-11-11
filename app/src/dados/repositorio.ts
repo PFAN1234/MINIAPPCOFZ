@@ -8,6 +8,7 @@ import type {
   PapelObra,
   NovoRegistro,
   FiltroRegistros,
+  LinkAdmin,
   ObraDetalhe,
   ObraDisponivel,
   ObraResumo,
@@ -67,6 +68,10 @@ export interface Repositorio {
   baixarModelo(slug: string, modelo: ModeloFrag): Promise<ArrayBuffer>
   /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */
   idUsuario(): Promise<string | null>
+  /** O usuário é admin do Mini App (site de administração)? */
+  souAdmin(): Promise<boolean>
+  /** Link de uso único (2 min) para abrir o site de administração já com a sessão. */
+  criarLinkAdmin(): Promise<LinkAdmin>
 }
 
 /**
@@ -77,7 +82,11 @@ export interface Repositorio {
 export async function criarRepositorio(): Promise<Repositorio> {
   if (import.meta.env.VITE_DADOS === 'fixture') {
     const { criarRepositorioFixture } = await import('./fixture.ts')
-    return criarRepositorioFixture({ persistencia: localStorage })
+    // `localStorage['fixture-admin'] = 'nao'` esconde o botão Administração.
+    return criarRepositorioFixture({
+      persistencia: localStorage,
+      admin: localStorage.getItem('fixture-admin') !== 'nao',
+    })
   }
   const { criarRepositorioSupabase } = await import('./supabase.ts')
   return criarRepositorioSupabase()

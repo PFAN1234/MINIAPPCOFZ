@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import { entrarComTelegram } from './login.ts'
 import type { Repositorio } from './repositorio.ts'
@@ -10,6 +10,7 @@ import type {
   DetalhePlanta,
   EstadoPublicacao,
   FiltroRegistros,
+  LinkAdmin,
   FotoRegistro,
   ImagemPlanta,
   Marcador,
@@ -40,7 +41,7 @@ function exigirUuid(valor: string, nome: string): string {
 }
 
 /** Cliente só com a URL e a chave publicável; o acesso é protegido por RLS. */
-export function criarClienteSupabase(): SupabaseClient {
+export function criarClienteSupabase(opcoes?: SupabaseClientOptions<'public'>): SupabaseClient {
   const url = import.meta.env.VITE_SUPABASE_URL
   const chave = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
   if (!url || !chave) {
@@ -48,7 +49,7 @@ export function criarClienteSupabase(): SupabaseClient {
       'Configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY (ou use VITE_DADOS=fixture).',
     )
   }
-  return createClient(url, chave)
+  return createClient(url, chave, opcoes)
 }
 
 function checar<T>(resposta: { data: T | null; error: { message: string } | null }): T {
@@ -260,6 +261,45 @@ export function criarRepositorioSupabase(
     async idUsuario() {
       const { data } = await cliente.auth.getSession()
       return data.session?.user.id ?? null
+    },
+
+    async souAdmin() {
+      try {
+        const { data, error } = await cliente.rpc('sou_admin')
+        if (error) throw error
+        return data === true
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async criarLinkAdmin(): Promise<LinkAdmin> {
+      const { data } = await cliente.auth.getSession()
+      const jwt = data.session?.access_token
+      if (!jwt) throw new ErroEnvio('sessao', 'Sua sessão expirou. Abra o app novamente pelo Telegram.')
+      const base = String(import.meta.env.VITE_SUPABASE_URL).replace(/\/+$/, '')
+      let resposta: Response
+      try {
+        resposta = await fetch(`${base}/functions/v1/admin-sessao`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY),
+            Authorization: `Bearer ${jwt}`,
+          },
+          body: JSON.stringify({ acao: 'criar' }),
+        })
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+      if (resposta.status === 403) {
+        throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem abrir a administração.')
+      }
+      const corpo = (await resposta.json().catch(() => null)) as Partial<LinkAdmin> | null
+      if (!resposta.ok || typeof corpo?.url !== 'string' || !/^https?:\/\//.test(corpo.url)) {
+        throw new ErroEnvio('desconhecido', 'Não foi possível abrir a administração. Tente de novo.')
+      }
+      return { url: corpo.url, expira_em: String(corpo.expira_em ?? '') }
     },
 
     async listarObras() {

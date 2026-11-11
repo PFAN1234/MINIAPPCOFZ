@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
-import type { Connect, Plugin } from 'vite'
+import type { Connect, Plugin, Rollup } from 'vite'
 import { configDefaults, defineConfig } from 'vitest/config'
 
 const PASTA_PLANTAS = fileURLToPath(new URL('../data/hto/plantas', import.meta.url))
@@ -81,6 +81,35 @@ export function montarManifesto(nomes: string[]): ManifestoPrecache {
 }
 
 /**
+ * Arquivos do bundle que só o site de administração usa (`admin.html` e o que só a entrada
+ * `admin` alcança): ficam fora do precache do Mini App. Os compartilhados (React, supabase-js…)
+ * continuam, porque o app também os usa.
+ */
+export function arquivosSoDoAdmin(bundle: Rollup.OutputBundle): Set<string> {
+  const alcancaveis = (entradas: string[]) => {
+    const vistos = new Set<string>()
+    const pilha = [...entradas]
+    while (pilha.length > 0) {
+      const nome = pilha.pop()!
+      if (vistos.has(nome)) continue
+      vistos.add(nome)
+      const item = bundle[nome]
+      if (item?.type !== 'chunk') continue
+      const meta = (item as { viteMetadata?: { importedCss?: Set<string>; importedAssets?: Set<string> } })
+        .viteMetadata
+      pilha.push(...item.imports, ...item.dynamicImports, ...(meta?.importedCss ?? []), ...(meta?.importedAssets ?? []))
+    }
+    return vistos
+  }
+  const entradas = Object.values(bundle).filter((i): i is Rollup.OutputChunk => i.type === 'chunk' && i.isEntry)
+  const doAdmin = alcancaveis(entradas.filter((c) => c.name === 'admin').map((c) => c.fileName))
+  const doApp = alcancaveis(entradas.filter((c) => c.name !== 'admin').map((c) => c.fileName))
+  const so = new Set([...doAdmin].filter((n) => !doApp.has(n)))
+  so.add('admin.html')
+  return so
+}
+
+/**
  * Emite `precache-manifest.json` só no build. Arquivos de `public/` (o `sw.js`)
  * não entram: não são referenciados pelo index.html e o SW não se auto-armazena.
  */
@@ -89,12 +118,34 @@ export function manifestoPrecache(): Plugin {
     name: 'manifesto-precache',
     apply: 'build',
     generateBundle(_opcoes, bundle) {
-      const manifesto = montarManifesto(Object.keys(bundle))
+      const fora = arquivosSoDoAdmin(bundle)
+      const manifesto = montarManifesto(Object.keys(bundle).filter((n) => !fora.has(n)))
       this.emitFile({
         type: 'asset',
         fileName: 'precache-manifest.json',
         source: JSON.stringify(manifesto, null, 2) + '\n',
       })
+    },
+  }
+}
+
+/** `/admin` e `/admin/...` servem `admin.html` em dev e preview (na Vercel, `vercel.json`). */
+export function rotaAdmin(): Connect.NextHandleFunction {
+  return (req: IncomingMessage, _res: ServerResponse, next: Connect.NextFunction) => {
+    const [caminho, consulta] = (req.url ?? '').split('?')
+    if (/^\/admin(\/[^.]*)?$/.test(caminho)) req.url = '/admin.html' + (consulta ? `?${consulta}` : '')
+    next()
+  }
+}
+
+function siteAdmin(): Plugin {
+  return {
+    name: 'site-admin',
+    configureServer(server) {
+      server.middlewares.use(rotaAdmin())
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(rotaAdmin())
     },
   }
 }
@@ -113,9 +164,18 @@ function semModelosNoBuild(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), plantasFixture(), manifestoPrecache(), semModelosNoBuild()],
-  // A fixture importa os JSON de ../data/hto (fora da pasta do app); nada além disso.
-  server: { fs: { allow: ['.', '../data/hto'] } },
+  plugins: [react(), plantasFixture(), siteAdmin(), manifestoPrecache(), semModelosNoBuild()],
+  // As fixtures importam os JSON de ../data/hto e ../data/cofz (fora da pasta do app); nada além disso.
+  server: { fs: { allow: ['.', '../data/hto', '../data/cofz'] } },
+  // Duas entradas: o Mini App (index.html) e o site de administração (admin.html, em /admin/).
+  build: {
+    rollupOptions: {
+      input: {
+        index: fileURLToPath(new URL('./index.html', import.meta.url)),
+        admin: fileURLToPath(new URL('./admin.html', import.meta.url)),
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

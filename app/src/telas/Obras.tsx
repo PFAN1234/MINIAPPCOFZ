@@ -4,7 +4,15 @@ import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { ListaRegistros } from '../components/ListaRegistros.tsx'
 import type { ObraDisponivel } from '../dados/tipos.ts'
-import { useObras, useObrasDisponiveis, useRegistros, useSolicitarAcesso } from '../dados/hooks.ts'
+import {
+  useCriarLinkAdmin,
+  useObras,
+  useObrasDisponiveis,
+  useRegistros,
+  useSolicitarAcesso,
+  useSouAdmin,
+} from '../dados/hooks.ts'
+import { abrirLink } from '../telegram.ts'
 import { useRegistrosLocais } from '../offline/contexto.tsx'
 import { useOnline } from '../util/online.ts'
 import { normalizarTexto } from '../util/busca.ts'
@@ -84,7 +92,33 @@ export default function Obras() {
           {(lista) => <ListaRegistros registros={lista} locais={locais} limite={5} vazio="Nenhum registro ainda" />}
         </EstadoConsulta>
       </section>
+      <Administracao />
     </>
+  )
+}
+
+/** Só para admins do Mini App: abre o site de administração no navegador, já com a sessão. */
+function Administracao() {
+  const admin = useSouAdmin()
+  const criar = useCriarLinkAdmin()
+  if (admin.data !== true) return null
+  return (
+    <section className="administracao">
+      <button
+        type="button"
+        className="botao"
+        disabled={criar.isPending}
+        onClick={() => criar.mutate(undefined, { onSuccess: (link) => abrirLink(link.url) })}
+      >
+        {criar.isPending ? 'Abrindo…' : 'Administração'}
+      </button>
+      <p className="lista-sub">Abre o site de administração no navegador (o link vale por 2 minutos).</p>
+      {criar.isError && (
+        <p className="erro-texto" role="alert">
+          {criar.error instanceof Error ? criar.error.message : 'Não foi possível abrir a administração.'}
+        </p>
+      )}
+    </section>
   )
 }
 

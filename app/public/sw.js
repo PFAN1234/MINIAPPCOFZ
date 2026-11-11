@@ -179,10 +179,22 @@ async function imagem(req, nomeCache, limite) {
   return r
 }
 
+/** O site de administração (/admin/) não é do Mini App: nada dele passa pelo SW. */
+function ehDoAdmin(req, url) {
+  if (url.origin === self.location.origin && /^\/admin(\/|\.html$|$)/.test(url.pathname)) return true
+  try {
+    const ref = new URL(req.referrer)
+    return ref.origin === self.location.origin && /^\/admin(\/|\.html$|$)/.test(ref.pathname)
+  } catch {
+    return false
+  }
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request
   if (req.method !== 'GET') return
   const url = new URL(req.url)
+  if (ehDoAdmin(req, url)) return
   if (/\/(storage\/v1\/object\/upload|rest|auth|functions)\//.test(url.pathname)) return
 
   if (ehPlanta(req.url)) return void event.respondWith(imagem(req, CACHE_PLANTAS, false))
