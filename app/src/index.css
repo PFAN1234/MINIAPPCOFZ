@@ -1388,3 +1388,46 @@ body {
 .publicacao-erro {
   word-break: break-word;
 }
+
+.visualizador {
+  position: relative;
+  margin: 0 0 12px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-secundario);
+}
+
+.visualizador-tela {
+  width: 100%;
+  height: min(60vh, 520px);
+  /* O canvas trata o toque; sem isso o navegador rola a página no meio do gesto. */
+  touch-action: none;
+}
+
+.visualizador-aviso {
+  position: absolute;
+  inset: auto 8px 8px 8px;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  text-align: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+}
+
+.visualizador-erro {
+  color: #c0392b;
+}
+
+.visualizador-enquadrar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.chip[aria-pressed='true'] {
+  color: var(--tg-theme-button-text-color, #fff);
+  background: var(--destaque);
+  border-color: var(--destaque);
+}

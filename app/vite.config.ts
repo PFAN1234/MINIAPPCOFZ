@@ -1,4 +1,4 @@
-import { createReadStream, statSync } from 'node:fs'
+import { createReadStream, rmSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
@@ -64,14 +64,15 @@ export interface ManifestoPrecache {
 
 /**
  * Monta o manifesto de precache a partir dos nomes de arquivo do bundle.
- * Fora: mapas `.map` e o próprio manifesto. `/index.html` sempre entra.
+ * Fora: mapas `.map`, o próprio manifesto e o visualizador 3D (chunk e worker: ~3,7 MB,
+ * só úteis com os `.frag`, que exigem rede). `/index.html` sempre entra.
  * A `versao` é o hash dos nomes ordenados: não depende da ordem de entrada.
  */
 export function montarManifesto(nomes: string[]): ManifestoPrecache {
   const unicos = new Set(
     nomes
       .map((n) => n.replace(/^\/+/, ''))
-      .filter((n) => n !== 'precache-manifest.json' && !n.endsWith('.map')),
+      .filter((n) => n !== 'precache-manifest.json' && !n.endsWith('.map') && !/^assets\/(VisualizadorModelo|worker)-/.test(n)),
   )
   unicos.add('index.html')
   const arquivos = [...unicos].sort().map((n) => `/${n}`)
@@ -98,9 +99,21 @@ export function manifestoPrecache(): Plugin {
   }
 }
 
+/** `public/modelos/` guarda os `.frag` do teste local; não vão para o deploy (virão do Supabase Storage). */
+function semModelosNoBuild(): Plugin {
+  return {
+    name: 'sem-modelos-no-build',
+    apply: 'build',
+    closeBundle() {
+      rmSync(fileURLToPath(new URL('./dist/modelos', import.meta.url)), { recursive: true, force: true })
+      rmSync(fileURLToPath(new URL('./dist-fixture/modelos', import.meta.url)), { recursive: true, force: true })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), plantasFixture(), manifestoPrecache()],
+  plugins: [react(), plantasFixture(), manifestoPrecache(), semModelosNoBuild()],
   // A fixture importa os JSON de ../data/hto (fora da pasta do app); nada além disso.
   server: { fs: { allow: ['.', '../data/hto'] } },
   test: {

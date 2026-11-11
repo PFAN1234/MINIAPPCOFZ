@@ -1,8 +1,17 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
+import { listarModelos } from '../modelo/modelos.ts'
 import { renderizarApp } from '../test/renderApp.tsx'
+
+vi.mock('../modelo/modelos.ts', () => ({ listarModelos: vi.fn(), urlModelo: vi.fn() }))
+// jsdom não tem WebGL: o visualizador real é testado no navegador (e2e).
+vi.mock('../modelo/VisualizadorModelo.tsx', () => ({
+  default: ({ ativos }: { ativos: ReadonlySet<string> }) => (
+    <div data-testid="visualizador">ativos: {[...ativos].join(',')}</div>
+  ),
+}))
 
 describe('Obra: cartão do modelo e atalhos', () => {
   it('mostra "← Obras", o cartão do modelo federado e os atalhos (gestor)', async () => {
@@ -30,17 +39,38 @@ describe('Obra: cartão do modelo e atalhos', () => {
     expect(screen.queryByRole('link', { name: /Gestão/ })).not.toBeInTheDocument()
   })
 
-  it('o cartão leva ao marcador de lugar do modelo federado', async () => {
+  it('o cartão leva à tela do modelo; sem .frag publicado, avisa e deixa os chips desabilitados', async () => {
+    vi.mocked(listarModelos).mockResolvedValue([])
     const usuario = userEvent.setup()
     renderizarApp('/obras/hto')
     await usuario.click(await screen.findByRole('link', { name: /Visualizar modelo federado/ }))
     expect(await screen.findByRole('heading', { level: 2, name: 'Modelo federado' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '← HTO' })).toHaveAttribute('href', '/obras/hto')
-    expect(
-      screen.getByText('O visualizador 3D do modelo federado está em preparação e chega numa próxima versão.'),
-    ).toBeInTheDocument()
-    const chips = within(screen.getByRole('list', { name: 'Modelos previstos' })).getAllByRole('button')
+    expect(await screen.findByText('Esta obra ainda não tem modelos 3D publicados.')).toBeInTheDocument()
+    const chips = within(screen.getByRole('list', { name: 'Modelos' })).getAllByRole('button')
     expect(chips.map((c) => c.textContent)).toEqual(['ARQ', 'ELT', 'HID', 'ESG', 'DRE', 'PCI', 'VES', 'TLD', 'ANT'])
     for (const chip of chips) expect(chip).toBeDisabled()
+  })
+
+  it('com .frag publicado, abre o visualizador e o chip liga e desliga a disciplina', async () => {
+    vi.mocked(listarModelos).mockResolvedValue([
+      { sigla: 'ARQ', revisao: 'R06', arquivo: 'ARQ.frag', bytes: 1, hash: 'abc' },
+    ])
+    const usuario = userEvent.setup()
+    renderizarApp('/obras/hto/modelo')
+    expect(await screen.findByTestId('visualizador')).toHaveTextContent('ativos: ARQ')
+    const arq = screen.getByRole('button', { name: 'ARQ' })
+    expect(arq).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'ELT' })).toBeDisabled()
+    await usuario.click(arq)
+    expect(arq).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByTestId('visualizador')).toHaveTextContent('ativos:')
+    expect(screen.getByTestId('visualizador')).not.toHaveTextContent('ARQ')
+  })
+
+  it('erro ao listar os modelos mostra mensagem', async () => {
+    vi.mocked(listarModelos).mockRejectedValue(new Error('x'))
+    renderizarApp('/obras/hto/modelo')
+    expect(await screen.findByText('Não foi possível carregar os modelos desta obra.')).toBeInTheDocument()
   })
 })
