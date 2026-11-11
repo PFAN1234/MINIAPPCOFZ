@@ -174,3 +174,12 @@ Diagnóstico existente preservado em `docs/validacao-hto.md` e `artifacts/valida
 - [ ] Visualizador Three.js e ativação do cartão “Visualizar modelo federado”.
 
 Verificação: sobreposição visual e controle independente de coordenadas; recorte não contém ambientes vizinhos inteiros; carregamento sob demanda sem enviar o IFC completo ao celular. Dependência: 8.
+
+## Site de administração
+
+Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
+
+- [ ] Fase 1: perfil admin do Mini App, `admin-sessao` (link de uso único e Telegram Login Widget), botão no Mini App, site `/admin/` com obras, pavimentos, configuração, admins e exportação; importar HTO e COFZ; primeiros admins Patrício e Eduardo.
+- [ ] Fase 2: planta no navegador (porta do extrator e das imagens, paridade com o Python, editor de recorte/máscaras/pinos/nomes, nova revisão, publicar).
+- [ ] Fase 3: modelo no navegador (IFC → .frag em Web Worker, envio de .frag pronto, limite de 50 MB).
+- [ ] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget).
