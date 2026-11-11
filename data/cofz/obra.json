@@ -1,0 +1,66 @@
+{
+  "slug": "cofz",
+  "nome": "COFZ",
+  "status": "aguardando_revisao_humana",
+  "revisao": "R06",
+  "pasta_pdf": "DOCS COFZ/PDF",
+  "pavimentos": [
+    {
+      "codigo": "terreo",
+      "nome": "Térreo",
+      "ordem": 1,
+      "pdf": "CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pagina": 1
+    }
+  ],
+  "prancha": {
+    "observacao": "Prancha DE009 (PL. BAIXA - LEIAUTE, 1:75). O recorte vai da linha tracejada da esquerda até o piso externo da direita (x=0,887), sem a rosa dos ventos (x>0,892), e da Sala imersiva (topo) até a linha tracejada de baixo (y=0,674), acima do título (y>0,685). A tabela de mobiliário (y>0,73) fica fora do recorte. O quadro 'APROVADO - SOP/COFZ', as notas e o carimbo começam em x=0,819, y=0,609, dentro do recorte, e são cobertos de branco.",
+    "recorte_edificio": [0.035, 0.03, 0.89, 0.679],
+    "mascaras": [
+      {"retangulo": [0.815, 0.6, 1.0, 1.0], "descricao": "quadros de aprovação SOP/COFZ, notas e carimbo"}
+    ]
+  },
+  "nomes_fixos": {
+    "WC PCD": "WC PCD",
+    "WC FEM": "WC feminino",
+    "WC MASC": "WC masculino",
+    "CPD": "CPD",
+    "DML": "DML",
+    "DA": "Sala DA"
+  },
+  "categorias": {
+    "WC PCD": "banheiro",
+    "WC FEM": "banheiro",
+    "WC MASC": "banheiro",
+    "CIRCULAÇÃO": "circulacao",
+    "CPD": "servico",
+    "DML": "servico",
+    "COPA": "servico",
+    "RECEPÇÃO": "servico",
+    "SALA DA CHEFIA": "area_comum",
+    "DA": "area_comum",
+    "SALA DE CONTROLE": "area_comum",
+    "SALÃO DE ACESSO": "area_comum",
+    "COMISSÃO DE OBRAS": "area_comum",
+    "SALA IMERSIVA": "area_comum",
+    "SALA DE REUNIÕES": "area_comum"
+  },
+  "renomear": [],
+  "ambientes_manuais": [
+    {
+      "pavimento": "terreo",
+      "nome_operacional": "WC da chefia",
+      "categoria": "banheiro",
+      "marcador": {"x": 0.2745, "y": 0.4395},
+      "observacao": "Banheiro com pia e vaso dentro da Sala da chefia (x 0,2545–0,294; y 0,4175–0,4445), sem rótulo na planta. Pino no piso livre abaixo do vaso."
+    },
+    {
+      "pavimento": "terreo",
+      "nome_operacional": "Sala de apoio",
+      "categoria": "area_comum",
+      "marcador": {"x": 0.711, "y": 0.49},
+      "observacao": "Sala com a mesa MO13 entre a Comissão de obras e a Sala de reuniões (x 0,7045–0,7285; y 0,4265–0,50), sem rótulo na planta. Pino no piso livre abaixo das cadeiras MO5, à esquerda da porta."
+    }
+  ],
+  "revisao_humana": null
+}

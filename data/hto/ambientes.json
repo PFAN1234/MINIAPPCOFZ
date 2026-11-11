@@ -1,6 +1,6 @@
 {
   "obra": "hto",
-  "fonte": "artifacts/validation/pdf/inventory.json",
+  "fonte": "DOCS HTO/PDF/ (configuração em data/hto/obra.json)",
   "status": "revisado",
   "revisao_humana": {
     "data": "2026-11-09",

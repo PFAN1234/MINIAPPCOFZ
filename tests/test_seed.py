@@ -38,7 +38,7 @@ def test_contagem_por_pavimento():
 
 def test_arquivo_commitado_esta_atualizado():
     commitado = (ROOT / "supabase/seed/hto.sql").read_text(encoding="utf-8")
-    assert commitado == SQL, "supabase/seed/hto.sql desatualizado: rode python3 scripts/gerar_seed.py"
+    assert commitado == SQL, "supabase/seed/hto.sql desatualizado: rode python3 scripts/gerar_seed.py --obra hto"
 
 
 def test_saida_envolvida_em_transacao_e_com_newline():
@@ -113,3 +113,20 @@ def test_mapeamento_de_caminhos_da_publicacao(tmp_path):
 
 def test_geracao_deterministica():
     assert seed_mod.gerar(DADOS) == SQL
+
+
+@pytest.mark.parametrize("script", ["extrair_ambientes", "gerar_plantas", "gerar_seed", "publicar_plantas"])
+def test_scripts_exigem_obra(script, capsys):
+    mod = _carregar(script, f"scripts/{script}.py")
+    with pytest.raises(SystemExit) as erro:
+        mod.main([])
+    assert erro.value.code == 2
+    assert "--obra" in capsys.readouterr().err
+
+
+def test_seed_usa_nome_da_configuracao():
+    obra = {"slug": "hto", "nome": "Hotel de Trânsito d'Oficiais"}
+    sql = seed_mod.gerar(DADOS, obra=obra)
+    assert "values ('hto', 'Hotel de Trânsito d''Oficiais')" in sql
+    with pytest.raises(ValueError, match="cofz"):
+        seed_mod.gerar(DADOS, obra={"slug": "cofz", "nome": "COFZ"})

@@ -81,6 +81,29 @@ Tabelas (migrations): `obra` (slug, nome, ordem, `telegram_chat_id`, `telegram_t
 ### 8. Piloto assistido HTO
 - Grupo de teste → grupo real; cadastrar equipe e gestores; testes em aparelho Android e iOS reais (câmera, permissões, WebView, rascunho após fechar, desempenho); backup do Postgres/Storage; registrar aceite da equipe.
 
+### Novas obras (decisões de 2026-11-11)
+
+Decisões: as novas obras chegam com PDFs de arquitetura no padrão da HTO (texto selecionável, nome do ambiente com `A=xx m²` logo abaixo); entram com planta e pinos quando o PDF permitir e, quando não permitir, só com a lista (a planta vem depois, com os mesmos códigos de ambiente); ficam no supergrupo CO-FZ, um tópico por obra, sem mudar a regra de acesso da fase 6 (administrador do supergrupo vira gestor de todas as obras ligadas a ele e qualquer membro pode pedir acesso a qualquer obra); os scripts são adaptados agora e a primeira obra nova entra no `miniappcofz-dev` e no grupo de teste; o supergrupo real só depois do teste real da HTO no Telegram (fases 6 e 7).
+
+O app, o banco (RLS por obra, caminhos `<obra_id>/...` no Storage), as Edge Functions e o bot (`/vincular_obra <slug>`) já tratam várias obras. O que está preso à HTO são os scripts de dados: slug `hto` fixo em `gerar_seed.py` e `publicar_plantas.py`, pastas `data/hto` e `DOCS HTO/PDF`, pavimentos fixos e dependência do `inventory.json` de diagnóstico em `extrair_ambientes.py`, recorte e máscaras da prancha medidos na HTO em `gerar_plantas.py`. Não há tela de cadastro de obra: a obra entra pelo seed.
+
+**A. Adaptar os scripts (uma vez)**
+- Configuração por obra em `data/<slug>/obra.json`: slug, nome, ordem, pasta dos PDFs (`DOCS <SIGLA>/PDF/`, somente leitura), pavimentos (PDF, código, nome, ordem), revisão, recorte do edifício e máscaras da prancha, abreviações (`NOMES_FIXOS`) e decisões da revisão humana. A HTO ganha a sua com os valores que hoje estão fixos nos scripts.
+- `extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py` e `publicar_plantas.py` recebem `--obra <slug>`; saídas em `data/<slug>/` e `supabase/seed/<slug>.sql` (os caminhos da HTO não mudam).
+- O extrator lê os PDFs direto (PyMuPDF), sem o `inventory.json` de diagnóstico; o pavimento vem da configuração, não do nome da prancha.
+- Pronto quando: o pipeline rodado para a HTO reproduz `data/hto/ambientes.json`, `data/hto/plantas.json`, as imagens e `supabase/seed/hto.sql` sem diferença de conteúdo, e o pytest passa.
+
+**B. Roteiro para cada obra nova**
+1. Receber os PDFs de arquitetura (um por pavimento, revisão vigente) em `DOCS <SIGLA>/PDF/`, o nome e o slug da obra e quem serão os gestores.
+2. Triagem: o PDF tem texto selecionável e `A=xx m²` abaixo do nome? Se não, os ambientes são digitados em `data/<slug>/ambientes.json` sem marcadores e a obra entra sem planta.
+3. Criar `data/<slug>/obra.json`, extrair os ambientes e gerar as plantas com `prova.png`.
+4. Revisão humana com o mesmo roteiro da HTO (nomes, repetidos, rótulos duplos, pinos) → `status: revisado`.
+5. Gerar o seed, aplicar no `miniappcofz-dev`, publicar as imagens e conferir no app.
+6. Telegram: criar o tópico da obra no grupo de teste e enviar `/vincular_obra <slug>` dentro dele; testar abertura pelo botão do Geral e registro publicado no tópico certo.
+7. Depois do teste real da HTO: repetir o passo 6 no supergrupo CO-FZ.
+
+Regras: o código do ambiente não muda depois do primeiro registro (`registro` referencia `ambiente` e impede apagá-lo); nova revisão de planta entra como nova linha em `planta` (a tabela já guarda `revisao` e `ativa`), mantendo os códigos.
+
 ### 9. (Último) Modelo federado e planta clicável
 Retomar `tasks/todo.md` §1–3 e `docs/validacao-hto.md`: validar federação (pontos de controle TLD, Z), recortes GLB por ambiente, viewer Three.js, planta 2D usando as `bbox_normalizada` já guardadas na fase 1, e ligar o cartão "Visualizar modelo federado".
 

@@ -1,0 +1,298 @@
+{
+  "obra": "cofz",
+  "pavimentos": [
+    {
+      "id": "terreo",
+      "nome": "Térreo",
+      "revisao": "R06",
+      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pagina": 1,
+      "sha256": "7e6e7961f2e7d8bcee9f7c31d9aebb447404e2200090ebd23e02fefb27412be9",
+      "pagina_pt": [
+        2908.320068359375,
+        1683.719970703125
+      ],
+      "recorte_pt": [
+        101.791,
+        50.512,
+        2588.405,
+        1143.246
+      ],
+      "mascaras_normalizadas": [
+        [
+          0.815,
+          0.6,
+          1.0,
+          1.0
+        ]
+      ],
+      "imagens": {
+        "planta": {
+          "arquivo": "data/cofz/plantas/R06/terreo/planta.webp",
+          "largura": 2401,
+          "altura": 1056,
+          "escala_px_por_pt": 0.965168,
+          "bytes": 123462
+        },
+        "planta-hd": {
+          "arquivo": "data/cofz/plantas/R06/terreo/planta-hd.webp",
+          "largura": 4097,
+          "altura": 1801,
+          "escala_px_por_pt": 1.64722,
+          "bytes": 402952
+        }
+      },
+      "prova": "data/cofz/plantas/R06/terreo/prova.png",
+      "detalhes": {
+        "terreo-circulacao-1": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-circulacao-1.webp",
+          "recorte_pt": [
+            890.011,
+            622.818,
+            1110.011,
+            747.818
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 40138
+        },
+        "terreo-circulacao-2": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-circulacao-2.webp",
+          "recorte_pt": [
+            1981.289,
+            633.531,
+            2201.289,
+            758.531
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 42384
+        },
+        "terreo-circulacao-3": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-circulacao-3.webp",
+          "recorte_pt": [
+            442.533,
+            622.818,
+            662.533,
+            747.818
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 43142
+        },
+        "terreo-comissao-de-obras": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-comissao-de-obras.webp",
+          "recorte_pt": [
+            1585.561,
+            824.318,
+            1805.561,
+            949.318
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 31696
+        },
+        "terreo-copa": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-copa.webp",
+          "recorte_pt": [
+            444.054,
+            714.546,
+            664.054,
+            839.546
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 39098
+        },
+        "terreo-cpd": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-cpd.webp",
+          "recorte_pt": [
+            319.544,
+            672.822,
+            539.544,
+            797.822
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 33480
+        },
+        "terreo-dml": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-dml.webp",
+          "recorte_pt": [
+            409.747,
+            662.651,
+            629.747,
+            787.651
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 38034
+        },
+        "terreo-recepcao": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-recepcao.webp",
+          "recorte_pt": [
+            2096.358,
+            493.896,
+            2316.358,
+            618.896
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 15126
+        },
+        "terreo-sala-da": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-sala-da.webp",
+          "recorte_pt": [
+            828.368,
+            808.304,
+            1048.368,
+            933.304
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 41260
+        },
+        "terreo-sala-da-chefia": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-sala-da-chefia.webp",
+          "recorte_pt": [
+            639.852,
+            781.462,
+            859.852,
+            906.462
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 30466
+        },
+        "terreo-sala-de-apoio": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-sala-de-apoio.webp",
+          "recorte_pt": [
+            1957.816,
+            768.773,
+            2177.816,
+            893.773
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 23902
+        },
+        "terreo-sala-de-controle": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-sala-de-controle.webp",
+          "recorte_pt": [
+            966.244,
+            808.304,
+            1186.244,
+            933.304
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 31770
+        },
+        "terreo-sala-de-reunioes": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-sala-de-reunioes.webp",
+          "recorte_pt": [
+            2130.927,
+            666.813,
+            2350.927,
+            791.813
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 40278
+        },
+        "terreo-sala-imersiva": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-sala-imersiva.webp",
+          "recorte_pt": [
+            2094.389,
+            286.615,
+            2314.389,
+            411.615
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 12818
+        },
+        "terreo-salao-de-acesso": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-salao-de-acesso.webp",
+          "recorte_pt": [
+            1147.726,
+            659.322,
+            1367.726,
+            784.322
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 7876
+        },
+        "terreo-wc-da-chefia": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-wc-da-chefia.webp",
+          "recorte_pt": [
+            688.334,
+            683.745,
+            908.334,
+            808.745
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 41952
+        },
+        "terreo-wc-feminino": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-wc-feminino.webp",
+          "recorte_pt": [
+            167.525,
+            730.641,
+            387.525,
+            855.641
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 45506
+        },
+        "terreo-wc-masculino": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-wc-masculino.webp",
+          "recorte_pt": [
+            276.058,
+            730.641,
+            496.058,
+            855.641
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 35164
+        },
+        "terreo-wc-pcd": {
+          "arquivo": "data/cofz/plantas/R06/terreo/ambientes/terreo-wc-pcd.webp",
+          "recorte_pt": [
+            134.008,
+            639.519,
+            354.008,
+            764.519
+          ],
+          "largura": 881,
+          "altura": 501,
+          "escala_px_por_pt": 4.0,
+          "bytes": 56424
+        }
+      },
+      "aviso": "Planta de arquitetura R06 · posição indicativa"
+    }
+  ]
+}

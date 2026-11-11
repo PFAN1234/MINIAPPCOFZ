@@ -107,7 +107,7 @@ function mapearAmbiente(
     codigo: String(l.codigo),
     pavimento_codigo: codigoPavimento.get(String(l.pavimento_id)) ?? '',
     nome_operacional: String(l.nome_operacional),
-    nome_planta: String(l.nome_planta),
+    nome_planta: l.nome_planta == null ? null : String(l.nome_planta),
     categoria: String(l.categoria),
     area_m2: l.area_m2 == null ? null : Number(l.area_m2),
     marcadores: (l.marcadores as Marcador[] | null) ?? [],

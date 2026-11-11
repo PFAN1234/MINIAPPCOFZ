@@ -9,13 +9,13 @@ export function normalizarTexto(texto: string): string {
 
 /** Ambientes cujo nome operacional ou nome na planta contém a busca (sem acento, sem caixa). */
 export function filtrarAmbientes<
-  T extends { nome_operacional: string; nome_planta: string },
+  T extends { nome_operacional: string; nome_planta: string | null },
 >(ambientes: readonly T[], busca: string): T[] {
   const termo = normalizarTexto(busca)
   if (!termo) return [...ambientes]
   return ambientes.filter(
     (a) =>
       normalizarTexto(a.nome_operacional).includes(termo) ||
-      normalizarTexto(a.nome_planta).includes(termo),
+      (a.nome_planta != null && normalizarTexto(a.nome_planta).includes(termo)),
   )
 }
