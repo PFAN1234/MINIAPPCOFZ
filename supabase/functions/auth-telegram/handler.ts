@@ -1,6 +1,11 @@
 // Lógica da Edge Function auth-telegram, com dependências injetadas (testável sem rede).
 import { validarInitData } from "../_shared/init_data.ts";
 import type { ClienteTelegram } from "../_shared/telegram.ts";
+import { type ClienteSessao, emitirSessao } from "../_shared/sessao.ts";
+import { cabecalhosCors, json, listarOrigens } from "../_shared/http.ts";
+
+export type { ClienteSessao };
+export { listarOrigens };
 
 // Contratos mínimos do cliente Supabase usados aqui.
 // deno-lint-ignore no-explicit-any
@@ -23,13 +28,6 @@ export interface ClienteAdmin {
   };
 }
 
-export interface ClienteSessao {
-  auth: {
-    // deno-lint-ignore no-explicit-any
-    verifyOtp(params: any): Resp;
-  };
-}
-
 export interface Deps {
   botToken: string;
   origensPermitidas: string[];
@@ -38,33 +36,6 @@ export interface Deps {
   /** Cliente da Bot API, para sincronizar o acesso pelos grupos das obras. */
   telegram?: ClienteTelegram;
   agora?: () => Date;
-}
-
-export function listarOrigens(valor: string | undefined): string[] {
-  return (valor ?? "").split(",").map((s) => s.trim()).filter((s) => s !== "");
-}
-
-function cabecalhosCors(origem: string | null, permitidas: string[]) {
-  const h: Record<string, string> = { Vary: "Origin" };
-  if (origem && permitidas.includes(origem)) {
-    h["Access-Control-Allow-Origin"] = origem;
-    h["Access-Control-Allow-Methods"] = "POST, OPTIONS";
-    h["Access-Control-Allow-Headers"] =
-      "authorization, apikey, content-type, x-client-info";
-    h["Access-Control-Max-Age"] = "86400";
-  }
-  return h;
-}
-
-function json(corpo: unknown, status: number, cors: Record<string, string>) {
-  return new Response(JSON.stringify(corpo), {
-    status,
-    headers: {
-      ...cors,
-      "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "no-store",
-    },
-  });
 }
 
 export function criarHandler(deps: Deps) {
@@ -169,28 +140,9 @@ async function abrirSessao(
 
   await sincronizarAcesso(deps, id, tg.id);
 
-  const { data: link, error: eLink } = await admin.auth.admin.generateLink({
-    type: "magiclink",
-    email,
-  });
-  const tokenHash = link?.properties?.hashed_token;
-  if (eLink || !tokenHash) {
-    throw new Error(`generateLink: ${eLink?.message ?? "sem hashed_token"}`);
-  }
+  const sessao = await emitirSessao(admin, deps.criarClienteSessao, email);
 
-  // 'email' é o type documentado para verifyOtp com token_hash ('magiclink' está obsoleto).
-  const { data: s, error: eOtp } = await deps.criarClienteSessao().auth
-    .verifyOtp({ token_hash: tokenHash, type: "email" });
-  if (eOtp || !s?.session) {
-    throw new Error(`verifyOtp: ${eOtp?.message ?? "sem sessão"}`);
-  }
-
-  return {
-    access_token: s.session.access_token as string,
-    refresh_token: s.session.refresh_token as string,
-    expires_at: s.session.expires_at as number,
-    usuario: { id, nome, username: tg.username ?? null },
-  };
+  return { ...sessao, usuario: { id, nome, username: tg.username ?? null } };
 }
 
 export type Situacao = "admin" | "membro" | "fora";
