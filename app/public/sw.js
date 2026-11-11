@@ -9,6 +9,7 @@
 const PREFIXO_APP = 'app-'
 const CACHE_PLANTAS = 'plantas-v1'
 const CACHE_FOTOS = 'fotos-v1'
+const CACHE_MODELOS = 'modelos-v1' // .frag guardados pelo app (src/modelo/cacheModelo.ts), por hash
 const LIMITE_FOTOS = 300
 const TIMEOUT_NAVEGACAO_MS = 4000
 const MSG_VERIFICAR = 'verificar-atualizacao'
@@ -86,7 +87,7 @@ self.addEventListener('activate', (event) => {
       await Promise.all(
         nomes
           .filter((n) => n.startsWith(PREFIXO_APP) && n !== atual)
-          .concat(nomes.filter((n) => !n.startsWith(PREFIXO_APP) && ![CACHE_PLANTAS, CACHE_FOTOS, CACHE_EXTERNOS].includes(n)))
+          .concat(nomes.filter((n) => !n.startsWith(PREFIXO_APP) && ![CACHE_PLANTAS, CACHE_FOTOS, CACHE_MODELOS, CACHE_EXTERNOS].includes(n)))
           .map((n) => caches.delete(n)),
       )
       await self.clients.claim()

@@ -2,10 +2,19 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
-import { listarModelos } from '../modelo/modelos.ts'
+import type { ModeloFrag } from '../modelo/modelos.ts'
 import { renderizarApp } from '../test/renderApp.tsx'
 
-vi.mock('../modelo/modelos.ts', () => ({ listarModelos: vi.fn(), urlModelo: vi.fn() }))
+function repoComModelos(modelos: ModeloFrag[] | Error) {
+  return {
+    ...criarRepositorioFixture(),
+    listarModelos: async () => {
+      if (modelos instanceof Error) throw modelos
+      return modelos
+    },
+  }
+}
+
 // jsdom não tem WebGL: o visualizador real é testado no navegador (e2e).
 vi.mock('../modelo/VisualizadorModelo.tsx', () => ({
   default: ({ ativos }: { ativos: ReadonlySet<string> }) => (
@@ -40,9 +49,8 @@ describe('Obra: cartão do modelo e atalhos', () => {
   })
 
   it('o cartão leva à tela do modelo; sem .frag publicado, avisa e deixa os chips desabilitados', async () => {
-    vi.mocked(listarModelos).mockResolvedValue([])
     const usuario = userEvent.setup()
-    renderizarApp('/obras/hto')
+    renderizarApp('/obras/hto', repoComModelos([]))
     await usuario.click(await screen.findByRole('link', { name: /Visualizar modelo federado/ }))
     expect(await screen.findByRole('heading', { level: 2, name: 'Modelo federado' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '← HTO' })).toHaveAttribute('href', '/obras/hto')
@@ -53,11 +61,11 @@ describe('Obra: cartão do modelo e atalhos', () => {
   })
 
   it('com .frag publicado, abre o visualizador e o chip liga e desliga a disciplina', async () => {
-    vi.mocked(listarModelos).mockResolvedValue([
-      { sigla: 'ARQ', revisao: 'R06', arquivo: 'ARQ.frag', bytes: 1, hash: 'abc' },
-    ])
     const usuario = userEvent.setup()
-    renderizarApp('/obras/hto/modelo')
+    renderizarApp(
+      '/obras/hto/modelo',
+      repoComModelos([{ sigla: 'ARQ', revisao: 'R06', arquivo: 'ARQ.frag', bytes: 1, hash: 'abc' }]),
+    )
     expect(await screen.findByTestId('visualizador')).toHaveTextContent('ativos: ARQ')
     const arq = screen.getByRole('button', { name: 'ARQ' })
     expect(arq).toHaveAttribute('aria-pressed', 'true')
@@ -69,8 +77,7 @@ describe('Obra: cartão do modelo e atalhos', () => {
   })
 
   it('erro ao listar os modelos mostra mensagem', async () => {
-    vi.mocked(listarModelos).mockRejectedValue(new Error('x'))
-    renderizarApp('/obras/hto/modelo')
+    renderizarApp('/obras/hto/modelo', repoComModelos(new Error('x')))
     expect(await screen.findByText('Não foi possível carregar os modelos desta obra.')).toBeInTheDocument()
   })
 })

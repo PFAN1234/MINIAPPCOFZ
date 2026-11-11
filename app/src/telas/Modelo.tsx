@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { EstadoCarregando, EstadoConsulta } from '../components/Estado.tsx'
 import { IconeCubo } from '../components/Icones.tsx'
+import { useRepositorio } from '../dados/contexto.tsx'
 import { useObra } from '../dados/hooks.ts'
-import { listarModelos } from '../modelo/modelos.ts'
+import { modeloComCache } from '../modelo/cacheModelo.ts'
+import type { ModeloFrag } from '../modelo/modelos.ts'
 
 // Three.js e That Open ficam fora do pacote inicial.
 const VisualizadorModelo = lazy(() => import('../modelo/VisualizadorModelo.tsx'))
@@ -14,8 +16,13 @@ const DISCIPLINAS = ['ARQ', 'ELT', 'HID', 'ESG', 'DRE', 'PCI', 'VES', 'TLD', 'AN
 
 export default function Modelo() {
   const { slug = '' } = useParams()
+  const repo = useRepositorio()
   const obra = useObra(slug)
-  const modelos = useQuery({ queryKey: ['modelos', slug], queryFn: () => listarModelos(slug) })
+  const modelos = useQuery({ queryKey: ['modelos', slug], queryFn: () => repo.listarModelos(slug) })
+  const baixar = useCallback(
+    (m: ModeloFrag) => modeloComCache(`${slug}/${m.sigla}@${m.hash}`, () => repo.baixarModelo(slug, m)),
+    [repo, slug],
+  )
   const [desligados, setDesligados] = useState<ReadonlySet<string>>(new Set())
 
   const disponiveis = modelos.data ?? []
@@ -43,7 +50,7 @@ export default function Modelo() {
             <EstadoCarregando />
           ) : disponiveis.length > 0 ? (
             <Suspense fallback={<EstadoCarregando />}>
-              <VisualizadorModelo slug={o.slug} modelos={disponiveis} ativos={ativos} />
+              <VisualizadorModelo modelos={disponiveis} baixar={baixar} ativos={ativos} />
             </Suspense>
           ) : (
             <div className="cartao-info">

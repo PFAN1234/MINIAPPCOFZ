@@ -34,6 +34,12 @@ function criarRepoFalso() {
     async listarObras() {
       return []
     },
+    async listarModelos() {
+      return []
+    },
+    async baixarModelo() {
+      throw new Error('n/a')
+    },
     async obrasDisponiveis() {
       return []
     },

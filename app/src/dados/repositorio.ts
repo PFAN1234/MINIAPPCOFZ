@@ -15,6 +15,7 @@ import type {
   RegistroResumo,
   SolicitacaoAcesso,
 } from './tipos.ts'
+import type { ModeloFrag } from '../modelo/modelos.ts'
 
 export interface Repositorio {
   listarObras(): Promise<ObraResumo[]>
@@ -60,6 +61,10 @@ export interface Repositorio {
   marcarPublicada(id: number): Promise<void>
   /** Localiza um registro visível ao usuário (para o link `startapp`); null se não houver. */
   localizarRegistro(id: string): Promise<RegistroLocalizado | null>
+  /** `.frag` publicados da obra (um por disciplina), por sigla. Lista vazia se não há nenhum. */
+  listarModelos(slug: string): Promise<ModeloFrag[]>
+  /** Baixa o `.frag`. O cache por hash fica a cargo de quem chama (`modeloComCache`). */
+  baixarModelo(slug: string, modelo: ModeloFrag): Promise<ArrayBuffer>
   /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */
   idUsuario(): Promise<string | null>
 }

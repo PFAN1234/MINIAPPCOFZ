@@ -2,13 +2,14 @@ import * as OBC from '@thatopen/components'
 import workerUrl from '@thatopen/fragments/worker?url'
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { urlModelo, type ModeloFrag } from './modelos.ts'
+import type { ModeloFrag } from './modelos.ts'
 
 type Estado = { tipo: 'carregando'; texto: string } | { tipo: 'pronto' } | { tipo: 'erro'; texto: string }
 
 interface Props {
-  slug: string
   modelos: ModeloFrag[]
+  /** Entrega o conteúdo do `.frag` (do cache do aparelho ou da rede). */
+  baixar: (modelo: ModeloFrag) => Promise<ArrayBuffer>
   /** Siglas visíveis. */
   ativos: ReadonlySet<string>
 }
@@ -32,7 +33,7 @@ function mostrar(objeto: THREE.Object3D, visivel: boolean) {
 }
 
 /** Visualizador 3D do modelo federado (That Open Engine). Carregado sob demanda pela tela Modelo. */
-export default function VisualizadorModelo({ slug, modelos, ativos }: Props) {
+export default function VisualizadorModelo({ modelos, baixar, ativos }: Props) {
   const contenedor = useRef<HTMLDivElement>(null)
   const motor = useRef<Motor | null>(null)
   const [estado, setEstado] = useState<Estado>(() =>
@@ -83,9 +84,7 @@ export default function VisualizadorModelo({ slug, modelos, ativos }: Props) {
       try {
         for (const [i, m] of modelos.entries()) {
           setEstado({ tipo: 'carregando', texto: `Carregando ${m.sigla} (${i + 1} de ${modelos.length})…` })
-          const r = await fetch(urlModelo(slug, m))
-          if (!r.ok) throw new Error(`Falha ao baixar ${m.sigla}.`)
-          const buffer = await r.arrayBuffer()
+          const buffer = await baixar(m)
           if (cancelado) return
           const modelo = await fragments.core.load(buffer, { modelId: m.sigla })
           if (cancelado) return
@@ -106,7 +105,7 @@ export default function VisualizadorModelo({ slug, modelos, ativos }: Props) {
       components.dispose()
     }
     // enquadrar só lê refs; o motor é recriado apenas se a obra ou a lista mudarem.
-  }, [slug, modelos])
+  }, [modelos, baixar])
 
   useEffect(() => {
     ativosRef.current = ativos

@@ -76,5 +76,16 @@ Seleção e propriedades; focar no ambiente (IfcSpace ↔ `ambientes.json`); cor
 - [x] A.2 `.gitignore`; precache sem chunk/worker 3D; build não copia `app/public/modelos/`.
 - [x] A.3 `app/scripts/ifc_para_frag.mjs` (`npm run modelos -- --obra hto`; ficou em `app/scripts/` para achar os `node_modules`). ARQ-R06: 206 MB IFC → 12,4 MB `.frag` em 14 s. Risco de tamanho do ARQ resolvido.
 - [x] A.4–A.6 `Modelo.tsx` + `modelo/VisualizadorModelo.tsx` (lazy), `modelo/modelos.ts`; toggle por disciplina e botão Enquadrar. Verificado no Chromium com WebGL.
-- [ ] A.7 e2e Playwright e validação no Telegram (Desktop/Android).
+- [x] A.7 e2e Playwright (`app/e2e/modelo.spec.ts`). Falta a validação no Telegram (Desktop/Android).
 - Chunk do visualizador ~2,4 MB + worker ~1,3 MB (carregados só nesta tela). A marca "That Open Company" aparece no canto do canvas (vem da biblioteca).
+
+### Fase B — Supabase (2026-11-11, testada no Supabase local)
+
+- [x] Migration `20261111150000_fase9_modelos.sql`: tabela `modelo` (`obra_id`, `sigla`, `revisao`, `caminho`, `bytes`, `hash`; única por obra+sigla), RLS de leitura para participantes, bucket privado `modelos` (200 MB, `application/octet-stream`) com política de leitura por participante. Sem RPC: o app lê a tabela direto, como faz com `planta`.
+- [x] Grants mínimos ao `service_role` (só `select` em `obra` e CRUD em `modelo`): o papel não tem grants nas tabelas do app, então o publicador não funcionava sem eles.
+- [x] `Repositorio.listarModelos`/`baixarModelo` (fixture lê `/modelos/`, Supabase lê a tabela e baixa do bucket com a sessão do usuário; sem URL assinada, a RLS do Storage já protege).
+- [x] Cache no aparelho por hash (`modelo/cacheModelo.ts`, Cache API `modelos-v1`); `sw.js` não apaga esse cache.
+- [x] `npm run publicar:modelos -- --obra <slug>` (`SUPABASE_URL` e `SUPABASE_SECRET_KEY`); upsert idempotente.
+- [x] `npm run testar:modelos -- --obra <slug>`: publica no Supabase local e confere RLS (participante lê e baixa; estranho e anônimo não; ninguém do cliente grava). Exige `supabase start` e Docker.
+- Não coberto: abrir o app inteiro contra o Supabase local (o login passa pela Edge Function do Telegram). O caminho do app é coberto por testes com cliente simulado e o do banco pelo script acima.
+- Para a nuvem: aplicar a migration (`supabase db push`) e rodar `publicar:modelos` de uma máquina de confiança com a chave secreta. Alternativa futura: Edge Function de URL assinada, como `assinar-envio-plantas`.
