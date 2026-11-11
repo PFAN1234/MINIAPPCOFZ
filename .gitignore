@@ -24,3 +24,10 @@ dist/
 # Incomplete exports
 *.staged.glb
 *.staged.json
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+
+# Modelos 3D: IFC de teste local e fragments gerados (vão para o Supabase Storage)
+/public/ifc/
+/app/public/modelos/

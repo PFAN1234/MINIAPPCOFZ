@@ -24,6 +24,11 @@ describe('montarManifesto', () => {
     expect(arquivos.some((a) => a.endsWith('.map') || a.includes('precache-manifest'))).toBe(false)
   })
 
+  it('exclui o visualizador 3D (chunk e worker)', () => {
+    const { arquivos } = montarManifesto([...nomes, 'assets/VisualizadorModelo-x1.js', 'assets/worker-y2.mjs'])
+    expect(arquivos).toEqual(montarManifesto(nomes).arquivos)
+  })
+
   it('versão é estável e independe da ordem', () => {
     const a = montarManifesto(nomes)
     const b = montarManifesto([...nomes].reverse())

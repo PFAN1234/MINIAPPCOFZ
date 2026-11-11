@@ -6,6 +6,7 @@
 import ambientesJson from '../../../data/hto/ambientes.json'
 import plantasJson from '../../../data/hto/plantas.json'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
+import { baixarModeloLocal, listarModelosLocais } from '../modelo/modelos.ts'
 import type { Repositorio } from './repositorio.ts'
 import type {
   Ambiente,
@@ -503,6 +504,8 @@ export function criarRepositorioFixture(
   }
 
   return {
+    listarModelos: listarModelosLocais,
+    baixarModelo: baixarModeloLocal,
     async idUsuario() {
       return 'usuario-teste'
     },

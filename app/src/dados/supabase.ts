@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import { entrarComTelegram } from './login.ts'
 import type { Repositorio } from './repositorio.ts'
+import type { ModeloFrag } from '../modelo/modelos.ts'
 import { dentroDoTelegram, idUsuarioTelegram, initData } from '../telegram.ts'
 import type {
   Ambiente,
@@ -512,6 +513,36 @@ export function criarRepositorioSupabase(
 
     async marcarPublicada(id) {
       await chamar('marcar_publicada', { p_id: id })
+    },
+
+    async listarModelos(slug) {
+      const obra = await obraPorSlug(slug)
+      const linhas = checar(
+        await cliente
+          .from('modelo')
+          .select('sigla, revisao, caminho, bytes, hash')
+          .eq('obra_id', obra.id)
+          .order('sigla'),
+      ) as Linha[]
+      return linhas.map(
+        (l): ModeloFrag => ({
+          sigla: String(l.sigla),
+          revisao: l.revisao == null ? null : String(l.revisao),
+          arquivo: String(l.caminho),
+          bytes: Number(l.bytes),
+          hash: String(l.hash),
+        }),
+      )
+    },
+
+    async baixarModelo(_slug, modelo) {
+      try {
+        const { data, error } = await cliente.storage.from('modelos').download(modelo.arquivo)
+        if (error) throw error
+        return await data.arrayBuffer()
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
     },
 
     async urlsImagens(paths, bucket = 'plantas') {
