@@ -6,8 +6,9 @@
  * - renomear um ambiente rotulado → `renomear` (pavimento + nome na planta + área); se o
  *   ambiente já existe no banco, o código antigo fica em `manter_codigo`;
  * - categoria de um ambiente rotulado → `categorias` (vale para o nome na planta);
- * - ambiente sem rótulo → `ambientes_manuais`;
- * - pino arrastado ou removido → `marcadores_ajustados` (só na revisão em que foi feito);
+ * - ambiente sem rótulo → `ambientes_manuais` (com `marcadores` quando tiver mais de um pino);
+ * - pino arrastado, acrescentado ou removido num ambiente rotulado → `marcadores_ajustados`
+ *   (só na revisão em que foi feito); num ambiente sem rótulo, na entrada de `ambientes_manuais`;
  * - "é o mesmo ambiente" na nova revisão → `manter_codigo`.
  */
 import { extrair, REVISAO_DO_PDF, slug } from './extrair.ts'
@@ -264,26 +265,52 @@ function limitar(v: number): number {
   return Math.min(1, Math.max(0, Math.round(v * 1e6) / 1e6))
 }
 
-export function moverPino(e0: EstadoEdicao, a: Ambiente, indice: number, x: number, y: number): EstadoEdicao {
-  const e = copia(e0)
+type Ponto = { x: number; y: number }
+
+/** Grava os pinos de um ambiente: na entrada manual ou em `marcadores_ajustados`. */
+function gravarPinos(e: EstadoEdicao, a: Ambiente, pinos: Ponto[]): void {
+  if (pinos.length === 0) throw new ErroPlanta('Todo ambiente precisa de ao menos um pino.')
+  const limpos = pinos.map((p) => ({ x: limitar(p.x), y: limitar(p.y) }))
   if (ehManual(a)) {
     const i = indiceManual(e, a)
-    if (i >= 0) e.ambientes_manuais[i].marcador = { x: limitar(x), y: limitar(y) }
-    return e
+    if (i < 0) throw new ErroPlanta(`Ambiente manual não encontrado: ${a.nome_operacional}`)
+    const m = e.ambientes_manuais[i]
+    m.marcador = limpos[0]
+    if (limpos.length > 1) m.marcadores = limpos
+    else delete m.marcadores
+    return
   }
-  const pinos = a.marcadores.map((m) => ({ x: m.x, y: m.y }))
-  pinos[indice] = { x: limitar(x), y: limitar(y) }
-  e.marcadores_ajustados[a.id] = { revisao: e.revisao, marcadores: pinos }
+  e.marcadores_ajustados[a.id] = { revisao: e.revisao, marcadores: limpos }
+}
+
+function pinosAtuais(a: Ambiente): Ponto[] {
+  return a.marcadores.map((m) => ({ x: m.x, y: m.y }))
+}
+
+export function moverPino(e0: EstadoEdicao, a: Ambiente, indice: number, x: number, y: number): EstadoEdicao {
+  const e = copia(e0)
+  const pinos = pinosAtuais(a)
+  if (!pinos[indice]) throw new ErroPlanta(`Pino ${indice + 1} não encontrado em ${a.nome_operacional}.`)
+  pinos[indice] = { x, y }
+  gravarPinos(e, a, pinos)
+  return e
+}
+
+/** Pino a mais no ambiente (cômodo grande ou dividido, com mais de um ponto de acesso na planta). */
+export function adicionarPino(e0: EstadoEdicao, a: Ambiente, x: number, y: number): EstadoEdicao {
+  const e = copia(e0)
+  gravarPinos(e, a, [...pinosAtuais(a), { x, y }])
   return e
 }
 
 export function removerPino(e0: EstadoEdicao, a: Ambiente, indice: number): EstadoEdicao {
   if (a.marcadores.length <= 1) throw new ErroPlanta('Todo ambiente precisa de ao menos um pino.')
   const e = copia(e0)
-  e.marcadores_ajustados[a.id] = {
-    revisao: e.revisao,
-    marcadores: a.marcadores.filter((_, i) => i !== indice).map((m) => ({ x: m.x, y: m.y })),
-  }
+  gravarPinos(
+    e,
+    a,
+    pinosAtuais(a).filter((_, i) => i !== indice),
+  )
   return e
 }
 

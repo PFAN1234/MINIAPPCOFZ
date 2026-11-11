@@ -235,3 +235,17 @@ def test_ambiente_manual_invalido_falha():
     manuais = [{"pavimento": "terreo", "nome_operacional": "X", "categoria": "servico", "marcador": {"x": 1.5, "y": 0.5}}]
     with pytest.raises(SystemExit, match="0–1"):
         _obra_sintetica(ambientes_manuais=manuais)
+
+
+def test_ambiente_manual_com_varios_pinos():
+    manuais = [{"pavimento": "terreo", "nome_operacional": "Pátio", "categoria": "area_comum",
+                "marcador": {"x": 0.2, "y": 0.3},
+                "marcadores": [{"x": 0.2, "y": 0.3}, {"x": 0.7, "y": 0.8}]}]
+    res = extrair_mod.extrair(_obra_sintetica(ambientes_manuais=manuais), _paginas(_rotulo("COPA", "15.16", 240, 300)))
+    patio = next(a for a in res["ambientes"] if a["nome_operacional"] == "Pátio")
+    assert patio["marcadores"] == [{"x": 0.2, "y": 0.3, "rotulo_bbox": [0.2, 0.3, 0.2, 0.3]},
+                                   {"x": 0.7, "y": 0.8, "rotulo_bbox": [0.7, 0.8, 0.7, 0.8]}]
+    for ruim in ([], [{"x": 0.5, "y": 1.2}]):
+        manuais[0]["marcadores"] = ruim
+        with pytest.raises(SystemExit, match="marcadores|0–1"):
+            _obra_sintetica(ambientes_manuais=manuais)

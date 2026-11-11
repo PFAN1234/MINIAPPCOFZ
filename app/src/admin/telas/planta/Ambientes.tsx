@@ -1,7 +1,7 @@
 /**
  * Etapa 3: ambientes extraídos, em tabela e sobre a planta recortada. Renomear, mudar a
- * categoria, arrastar pinos, remover pino extra, incluir ambiente sem rótulo clicando na
- * planta. Os casos de "revisar" do extrator ficam destacados.
+ * categoria, arrastar pinos, acrescentar ou remover pinos, incluir ambiente sem rótulo clicando
+ * na planta. Os casos de "revisar" do extrator ficam destacados.
  */
 import { useMemo, useState, type PointerEvent as EventoPonteiro } from 'react'
 import { SelectCategoria } from '../../componentes.tsx'
@@ -17,6 +17,7 @@ export interface AcoesAmbientes {
   moverPino(a: Ambiente, indice: number, x: number, y: number): void
   removerPino(a: Ambiente, indice: number): void
   restaurarPinos(a: Ambiente): void
+  adicionarPino(a: Ambiente, x: number, y: number): void
   incluir(nome: string, cat: string, x: number, y: number): void
   removerManual(a: Ambiente): void
 }
@@ -55,6 +56,9 @@ function motivosPorNome(revisar: ItemRevisar[]): Map<string, string[]> {
 
 const ZOOMS = [1, 1.5, 2, 3]
 
+/** O que um clique na planta faz: nada (só arrastar pinos), incluir ambiente ou pôr pino num ambiente. */
+type Modo = null | { tipo: 'incluir' } | { tipo: 'pino'; id: string }
+
 export default function Ambientes({
   pagina,
   imagem: img,
@@ -79,7 +83,7 @@ export default function Ambientes({
   const { imagem, erro } = usePrevia(() => pagina.recorte(img, mascaras), chaveImagem)
   const [selecionado, setSelecionado] = useState<string | null>(null)
   const [arrasto, setArrasto] = useState<{ id: string; indice: number; x: number; y: number } | null>(null)
-  const [incluindo, setIncluindo] = useState(false)
+  const [modo, setModo] = useState<Modo>(null)
   const [novo, setNovo] = useState<{ x: number; y: number; nome: string; categoria: string } | null>(null)
   const [zoom, setZoom] = useState(1)
   const motivos = useMemo(() => motivosPorNome(revisar), [revisar])
@@ -120,11 +124,18 @@ export default function Ambientes({
   }
 
   function clicarPlanta(e: EventoPonteiro<SVGSVGElement>) {
-    if (!incluindo) return
+    if (!modo) return
     const [x, y] = paraPagina(e, e.currentTarget)
-    setNovo({ x, y, nome: '', categoria: 'area_comum' })
-    setIncluindo(false)
+    if (modo.tipo === 'incluir') {
+      setNovo({ x, y, nome: '', categoria: 'area_comum' })
+    } else {
+      const a = ambientes.find((amb) => amb.id === modo.id)
+      if (a) acoes.adicionarPino(a, x, y)
+    }
+    setModo(null)
   }
+
+  const alvoPino = modo?.tipo === 'pino' ? ambientes.find((a) => a.id === modo.id) : undefined
 
   function pino(a: Ambiente, indice: number) {
     const emArrasto = arrasto && arrasto.id === a.id && arrasto.indice === indice
@@ -221,6 +232,19 @@ export default function Ambientes({
                     <td className="adm-num">{a.area_m2 === null ? '—' : a.area_m2.toLocaleString('pt-BR')}</td>
                     <td>
                       {a.marcadores.length}
+                      <button
+                        type="button"
+                        className={`adm-botao adm-botao-discreto adm-botao-mini${alvoPino?.id === a.id ? ' adm-botao-principal' : ''}`}
+                        aria-pressed={alvoPino?.id === a.id}
+                        onClick={(ev) => {
+                          ev.stopPropagation()
+                          setSelecionado(a.id)
+                          setNovo(null)
+                          setModo(alvoPino?.id === a.id ? null : { tipo: 'pino', id: a.id })
+                        }}
+                      >
+                        Adicionar pino
+                      </button>
                       {a.marcadores.length > 1 &&
                         a.marcadores.map((_, i) => (
                           <button
@@ -258,21 +282,22 @@ export default function Ambientes({
           </table>
           <p className="adm-dica">
             A categoria de um ambiente rotulado vale para todos os rótulos com o mesmo nome na planta. Renomear um ambiente
-            já publicado mantém o código dele (e os registros).
+            já publicado mantém o código dele (e os registros). Num ambiente rotulado, os pinos acrescentados, arrastados ou
+            removidos valem para esta revisão; num ambiente sem rótulo, ficam para as próximas também.
           </p>
         </div>
         <div className="adm-editor-planta">
           <div className="adm-acoes">
             <button
               type="button"
-              className={`adm-botao${incluindo ? ' adm-botao-principal' : ''}`}
-              aria-pressed={incluindo}
+              className={`adm-botao${modo?.tipo === 'incluir' ? ' adm-botao-principal' : ''}`}
+              aria-pressed={modo?.tipo === 'incluir'}
               onClick={() => {
-                setIncluindo(!incluindo)
+                setModo(modo?.tipo === 'incluir' ? null : { tipo: 'incluir' })
                 setNovo(null)
               }}
             >
-              {incluindo ? 'Clique na planta onde fica o ambiente…' : 'Incluir ambiente sem rótulo'}
+              {modo?.tipo === 'incluir' ? 'Clique na planta onde fica o ambiente…' : 'Incluir ambiente sem rótulo'}
             </button>
             <label className="adm-opcao">
               Zoom
@@ -285,6 +310,14 @@ export default function Ambientes({
               </select>
             </label>
           </div>
+          {alvoPino && (
+            <p className="adm-alerta adm-alerta-info" role="status">
+              Clique na planta onde fica o novo pino de <strong>{alvoPino.nome_operacional}</strong>.{' '}
+              <button type="button" className="adm-botao adm-botao-discreto adm-botao-mini" onClick={() => setModo(null)}>
+                Cancelar
+              </button>
+            </p>
+          )}
           {novo && (
             <form
               className="adm-novo-ambiente"
@@ -327,7 +360,7 @@ export default function Ambientes({
               <svg
                 viewBox={`0 0 ${img.largura} ${img.altura}`}
                 preserveAspectRatio="none"
-                className={`adm-sobreposicao${incluindo ? ' adm-cursor-mira' : ''}`}
+                className={`adm-sobreposicao${modo ? ' adm-cursor-mira' : ''}`}
                 aria-label="Pinos dos ambientes"
                 onPointerMove={mover}
                 onPointerUp={soltar}

@@ -264,6 +264,32 @@ describe('regras do extrator (tests/test_ambientes.py)', () => {
     expect(() => validarObra(obraSintetica('R01', { ambientes_manuais: longe }))).toThrow('0–1')
   })
 
+  it('ambiente manual com vários pinos (`marcadores`) e lista inválida falha', () => {
+    const manuais = [
+      {
+        pavimento: 'terreo',
+        nome_operacional: 'Pátio',
+        categoria: 'area_comum',
+        marcador: { x: 0.2, y: 0.3 },
+        marcadores: [
+          { x: 0.2, y: 0.3 },
+          { x: 0.7, y: 0.8 },
+        ],
+      },
+    ]
+    const res = rodar(obraSintetica('R01', { ambientes_manuais: manuais }), paginaDeSpans(rotulo('COPA', '15.16', 240, 300)))
+    expect(res.ambientes.find((a) => a.nome_operacional === 'Pátio')!.marcadores).toEqual([
+      { x: 0.2, y: 0.3, rotulo_bbox: [0.2, 0.3, 0.2, 0.3] },
+      { x: 0.7, y: 0.8, rotulo_bbox: [0.7, 0.8, 0.7, 0.8] },
+    ])
+    expect(() => validarObra(obraSintetica('R01', { ambientes_manuais: [{ ...manuais[0], marcadores: [] }] }))).toThrow(
+      'lista não vazia',
+    )
+    expect(() =>
+      validarObra(obraSintetica('R01', { ambientes_manuais: [{ ...manuais[0], marcadores: [{ x: 0.5, y: 1.2 }] }] })),
+    ).toThrow('0–1')
+  })
+
   it('rótulo duplo vira um ambiente com dois pinos; "Não incluso" sem área; área órfã', () => {
     const spans = [
       ...rotulo('CIRC. SUL', '30.00', 100, 100),

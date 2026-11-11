@@ -195,5 +195,7 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
   - [ ] Deploy do app na Vercel (o merge na main publica o editor em `/admin/`).
   - [ ] Teste de fumaça: como admin, enviar o PDF da COFZ no térreo, conferir que a etapa "Nova revisão" não mostra diferenças, publicar (mesma revisão R06: substitui as imagens) e conferir no Mini App a planta e um "Onde fica"; ver a linha nova em "Publicações da planta".
   - [ ] Produção: repetir a migration antes de publicar esta versão do app.
+- [x] Pinos e ambientes manuais depois de publicar (código, 2026-11-12): "Adicionar pino" em qualquer ambiente (rotulado → `marcadores_ajustados`; sem rótulo → `marcadores` em `ambientes_manuais`, lido também pelo `extrair_ambientes.py`) e atalho "Ajustar ambientes e pinos" na lista de pavimentos, que reabre o PDF guardado direto na etapa 3. Sem migration.
+- [ ] Teste de fumaça do ajuste: publicar um pavimento pelo site, voltar em "Ajustar ambientes e pinos", acrescentar um pino e um ambiente, publicar e conferir no Mini App.
 - [ ] Fase 3: modelo no navegador (IFC → .frag em Web Worker, envio de .frag pronto, limite de 50 MB).
 - [ ] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget).
