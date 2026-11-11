@@ -56,4 +56,4 @@ python3 -m venv .venv
 
 Os testes usam exemplos geométricos e inventários incluídos. A inspeção PDF pode ser reproduzida com os originais incluídos e as dependências em `artifacts/validation/pdf/reproduce/requirements.txt`. Para executar novamente a conversão IFC, forneça os modelos nos caminhos documentados. O [painel de desenvolvimento](dashboard/README.md) funciona localmente com `python3 dashboard/serve.py`; ele não é o Mini App.
 
-Próximas entregas e requisitos estão em [tasks/plan.md](tasks/plan.md) e [tasks/todo.md](tasks/todo.md).
+Próximas entregas, roadmap e requisitos estão em [docs/ROADMAP.md](docs/ROADMAP.md), [tasks/plan.md](tasks/plan.md) e [tasks/todo.md](tasks/todo.md).

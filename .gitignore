@@ -1,4 +1,4 @@
-# Local environments and caches
+# Ambientes virtuais, pacotes e caches
 .venv/
 venv/
 __pycache__/
@@ -6,8 +6,45 @@ __pycache__/
 .pytest_cache/
 node_modules/
 dist/
+dist-fixture/
+test-results/
+playwright-report/
 
-# Credentials and local runtime data
+# Setup local de assistentes de IA, agentes e enxames (swarms)
+.claude/
+.claude-flow/
+.swarm/
+.gemini/
+.antigravity/
+.cursor/
+.codex/
+.cline/
+.roo/
+.opencode/
+
+# Bancos de dados locais, índices vetoriais e memórias de agentes
+ruvector.db*
+agentdb*
+*.rvf
+*.rvf.*
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+/graft/
+.ignore
+.rgignore
+
+# Editores e sistemas operacionais
+.vscode/
+.idea/
+*.sw?
+*~
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+
+# Credenciais, segredos e logs locais
 .env
 .env.*
 !.env.example
@@ -15,18 +52,13 @@ dist/
 *.key
 .state/
 *.log
-.DS_Store
-*:Zone.Identifier
 
-# Original IFC models are supplied separately (see DOCS HTO/README.md)
-/DOCS HTO/IFC/*.ifc
+# Modelos IFC originais (fornecidos separadamente; ver DOCS HTO/README.md)
+/DOCS */IFC/*.ifc
 
-# Incomplete exports
+# Exportações parciais / intermediárias
 *.staged.glb
 *.staged.json
-
-# graft's local graph cache — regenerable, not committed (run `graft build`).
-/graft/
 
 # Modelos 3D: o IFC original fica fora do Git; os .frag gerados (app/public/modelos/) são versionados
 /public/ifc/
