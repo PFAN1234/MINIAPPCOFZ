@@ -1,0 +1,62 @@
+{
+  "slug": "hto",
+  "nome": "HTO",
+  "status": "revisado",
+  "revisao": "R05",
+  "pasta_pdf": "DOCS HTO/PDF",
+  "pavimentos": [
+    {
+      "codigo": "terreo",
+      "nome": "Térreo",
+      "ordem": 1,
+      "pdf": "CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pagina": 1
+    },
+    {
+      "codigo": "1pav",
+      "nome": "1º pavimento",
+      "ordem": 2,
+      "pdf": "CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pagina": 1
+    }
+  ],
+  "prancha": {
+    "observacao": "Folha padrão das pranchas DE017/DE018. O edifício avança sobre a coluna de legendas na faixa da ala leste, então o recorte vai até x=0,85 e as legendas, quadros e carimbo são cobertos de branco.",
+    "recorte_edificio": [0.035, 0.018, 0.85, 0.952],
+    "mascaras": [
+      {"retangulo": [0.776, 0.0, 1.0, 0.395], "descricao": "legendas de coberta e de piso"},
+      {"retangulo": [0.776, 0.556, 1.0, 1.0], "descricao": "especificação de piso, notas e carimbo"},
+      {"retangulo": [0.634, 0.828, 0.776, 1.0], "descricao": "tabela de soleiras"}
+    ]
+  },
+  "nomes_fixos": {
+    "ADMIN.": "Administração",
+    "BHO ADM": "Banheiro Adm.",
+    "COPA ADM.": "Copa Adm.",
+    "CPD": "CPD",
+    "DML": "DML",
+    "DML / ROUPARIA": "DML / Rouparia",
+    "LAVAND. HÓSPEDES": "Lavanderia hóspedes",
+    "VEST. FEM.": "Vestiário feminino",
+    "VEST. MASC.": "Vestiário masculino",
+    "VEST. MASC. (CHUVEIROS)": "Vestiário masculino (chuveiros)",
+    "VEST. MASC. (MICTÓRIOS)": "Vestiário masculino (mictórios)",
+    "CIRC. SUL": "Circulação sul",
+    "CIRC. NORTE": "Circulação norte"
+  },
+  "categorias": {},
+  "renomear": [],
+  "revisao_humana": {
+    "data": "2026-11-09",
+    "revisao_planta": "R05",
+    "decisoes": [
+      "Nomes operacionais aprovados como gerados.",
+      "Os dois 'Jardim' do térreo ficam como 'Jardim 1' e 'Jardim 2'.",
+      "Pinos dos banheiros empilhados ficam como estão (tamanho fixo na tela separa com zoom).",
+      "Banheiros são ambientes separados dos apartamentos, inclusive na lista.",
+      "Ambiente rotulado duas vezes (circulações) é um único ambiente com dois pinos.",
+      "Todos os ambientes entram na lista, inclusive áreas externas e circulações.",
+      "Lista sem grupos: ordem alfabética natural com busca; 'categoria' fica só como metadado."
+    ]
+  }
+}

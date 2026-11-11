@@ -139,10 +139,12 @@ Dependência: 7. Tokens do bot, grupo real, hospedagem e aparelho de teste ainda
 
 Procedimento em `tasks/plano-app.md` (seção "Novas obras"). Decisões de 2026-11-11: PDFs no padrão da HTO; planta e pinos quando o PDF permitir, senão só a lista; supergrupo CO-FZ com um tópico por obra, sem mudar a regra de acesso; adaptar os scripts já, supergrupo real só depois do teste real da HTO.
 
-- [ ] Configuração por obra (`data/<slug>/obra.json`), começando pela HTO com os valores hoje fixos nos scripts.
-- [ ] Scripts com `--obra <slug>` e extrator lendo os PDFs direto, sem o `inventory.json` de diagnóstico.
-- [ ] Pipeline da HTO reproduz os JSON, as imagens e `supabase/seed/hto.sql` sem diferença de conteúdo; pytest passa.
-- [ ] Primeira obra nova: PDFs em `DOCS <SIGLA>/PDF/` (usuário), triagem, extração, revisão humana, seed e imagens no `miniappcofz-dev`.
+- [x] Configuração por obra (`data/<slug>/obra.json`), começando pela HTO com os valores hoje fixos nos scripts; inclui `renomear`, `categorias` e `ambientes_manuais` (cômodo sem rótulo, pino colocado à mão).
+- [x] Scripts com `--obra <slug>` e extrator lendo os PDFs direto, sem o `inventory.json` de diagnóstico.
+- [x] Pipeline da HTO reproduz os JSON, as imagens e `supabase/seed/hto.sql` sem diferença de conteúdo (só o campo `fonte` e a ordem das chaves de `plantas.json`, mantido como estava); pytest passa.
+- [x] COFZ: PDF em `DOCS COFZ/PDF/` (DE009 R06, pavimento único), triagem, extração e imagens; 19 ambientes (17 rotulados + WC da chefia e Sala de apoio à mão), `supabase/seed/cofz.sql`. Decisões de 2026-11-11: nome "COFZ", circulações numeradas por área, "DA" → "Sala DA".
+- [ ] COFZ: revisão humana da `data/cofz/plantas/R06/terreo/prova.png` e dos nomes → `status: revisado`.
+- [ ] COFZ: aplicar o seed e publicar as imagens no `miniappcofz-dev`.
 - [ ] Tópico no grupo de teste, `/vincular_obra <slug>` e registro publicado no tópico certo.
 - [ ] Depois do teste real da HTO: vincular a obra no supergrupo CO-FZ.
 

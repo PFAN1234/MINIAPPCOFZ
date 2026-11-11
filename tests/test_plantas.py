@@ -6,10 +6,18 @@ import pytest
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFESTO = json.loads((ROOT / "data/hto/plantas.json").read_text(encoding="utf-8"))
-AMBIENTES = json.loads((ROOT / "data/hto/ambientes.json").read_text(encoding="utf-8"))
-PAVIMENTOS = MANIFESTO["pavimentos"]
-IDS = [p["id"] for p in PAVIMENTOS]
+OBRAS = ["hto", "cofz"]
+
+
+def _ler(slug, arquivo):
+    return json.loads((ROOT / "data" / slug / arquivo).read_text(encoding="utf-8"))
+
+
+AMBIENTES = {slug: _ler(slug, "ambientes.json") for slug in OBRAS}
+CONFIG = {slug: _ler(slug, "obra.json") for slug in OBRAS}
+# Cada pavimento leva junto o slug da obra; os limites de tamanho valem para todas as obras.
+PAVIMENTOS = [dict(p, obra=slug) for slug in OBRAS for p in _ler(slug, "plantas.json")["pavimentos"]]
+IDS = [f"{p['obra']}-{p['id']}" for p in PAVIMENTOS]
 
 
 def _imagens(pav):
@@ -35,7 +43,7 @@ def test_limites_de_tamanho(pav):
 
 @pytest.mark.parametrize("pav", PAVIMENTOS, ids=IDS)
 def test_detalhe_para_cada_ambiente(pav):
-    esperados = {a["id"] for a in AMBIENTES["ambientes"] if a["pavimento"] == pav["id"]}
+    esperados = {a["id"] for a in AMBIENTES[pav["obra"]]["ambientes"] if a["pavimento"] == pav["id"]}
     assert esperados
     assert set(pav["detalhes"]) == esperados
 
@@ -53,3 +61,21 @@ def test_dimensoes_das_imagens(pav):
     for img in amostra:
         with Image.open(ROOT / img["arquivo"]) as im:
             assert im.size == (img["largura"], img["altura"]), img["arquivo"]
+
+
+@pytest.mark.parametrize("pav", PAVIMENTOS, ids=IDS)
+def test_caminhos_dentro_da_pasta_da_obra(pav):
+    base = f"data/{pav['obra']}/plantas/{pav['revisao']}/{pav['id']}/"
+    for img in _imagens(pav):
+        assert img["arquivo"].startswith(base), img["arquivo"]
+    assert pav["prova"] == base + "prova.png"
+
+
+@pytest.mark.parametrize("pav", PAVIMENTOS, ids=IDS)
+def test_recorte_e_mascaras_da_configuracao(pav):
+    prancha = CONFIG[pav["obra"]]["prancha"]
+    w, h = pav["pagina_pt"]
+    x0, y0, x1, y1 = prancha["recorte_edificio"]
+    assert pav["recorte_pt"] == [round(v, 3) for v in (x0 * w, y0 * h, x1 * w, y1 * h)]
+    assert pav["mascaras_normalizadas"] == [m["retangulo"] for m in prancha["mascaras"]]
+    assert pav["revisao"] == CONFIG[pav["obra"]]["revisao"]

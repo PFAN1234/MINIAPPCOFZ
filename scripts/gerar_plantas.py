@@ -1,9 +1,11 @@
 """Gera as imagens de planta usadas para localizar os ambientes no Mini App.
 
-Entradas: os PDFs originais em ``DOCS HTO/PDF/`` e ``data/hto/ambientes.json``
-(gerado por ``scripts/extrair_ambientes.py``). Os PDFs são apenas lidos.
+Entradas: a configuração ``data/<slug>/obra.json`` (recorte do edifício e
+máscaras da prancha), os PDFs originais em ``DOCS <SIGLA>/PDF/`` e
+``data/<slug>/ambientes.json`` (gerado por ``scripts/extrair_ambientes.py``).
+Os PDFs são apenas lidos.
 
-Saídas em ``data/hto/plantas/<revisao>/<pavimento>/``:
+Saídas em ``data/<slug>/plantas/<revisao>/<pavimento>/``:
 
 - ``planta.webp``: visão geral do pavimento recortada no edifício (~2400 px).
 - ``planta-hd.webp``: a mesma área com mais resolução, para zoom (~4096 px).
@@ -11,7 +13,7 @@ Saídas em ``data/hto/plantas/<revisao>/<pavimento>/``:
 - ``prova.png``: visão geral com todos os pinos, para a revisão humana.
 
 As imagens do app não levam o pino gravado: o frontend desenha os pinos por cima
-a partir de ``data/hto/plantas.json``, que registra recorte e escala de cada
+a partir de ``data/<slug>/plantas.json``, que registra recorte e escala de cada
 imagem. Conversão de um ponto normalizado da página (x, y) para pixels::
 
     px = (x * largura_pt - recorte_pt[0]) * escala_px_por_pt
@@ -20,13 +22,15 @@ imagem. Conversão de um ponto normalizado da página (x, y) para pixels::
 Uso (na raiz do repositório)::
 
     pip install -r scripts/requirements.txt
-    python3 scripts/gerar_plantas.py
+    python3 scripts/gerar_plantas.py --obra hto
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import io
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -34,19 +38,11 @@ import pymupdf
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-AMBIENTES = ROOT / "data/hto/ambientes.json"
-SAIDA = ROOT / "data/hto/plantas"
-MANIFESTO = ROOT / "data/hto/plantas.json"
+SLUG_RE = re.compile(r"^[a-z0-9-]+$")
 
-# Folha padrão das pranchas DE017/DE018 (coordenadas normalizadas da página).
-# O edifício avança sobre a coluna de legendas na faixa da ala leste, então o
-# recorte vai até x=0,85 e as legendas, quadros e carimbo são cobertos de branco.
-RECORTE_EDIFICIO = (0.035, 0.018, 0.85, 0.952)
-MASCARAS = [
-    (0.776, 0.0, 1.0, 0.395),    # legendas de coberta e de piso
-    (0.776, 0.556, 1.0, 1.0),    # especificação de piso, notas e carimbo
-    (0.634, 0.828, 0.776, 1.0),  # tabela de soleiras
-]
+# O recorte do edifício e as máscaras (legendas, tabelas, carimbo cobertos de
+# branco) dependem da prancha e ficam em ``prancha`` de ``data/<slug>/obra.json``,
+# em coordenadas normalizadas da página (0–1, origem no canto superior esquerdo).
 
 LADO_VISAO_GERAL = 2400
 LADO_HD = 4096
@@ -66,10 +62,34 @@ def renderizar(page: pymupdf.Page, clip: pymupdf.Rect, escala: float) -> Image.I
     return Image.frombytes("RGB", (pm.width, pm.height), pm.samples)
 
 
-def mascarar(img: Image.Image, page: pymupdf.Page, clip: pymupdf.Rect, escala: float) -> None:
+def carregar_obra(slug: str) -> dict:
+    if not SLUG_RE.match(slug):
+        raise SystemExit(f"slug inválido: {slug!r}")
+    arquivo = ROOT / "data" / slug / "obra.json"
+    if not arquivo.is_file():
+        raise SystemExit(f"configuração não encontrada: {arquivo.relative_to(ROOT)}")
+    obra = json.loads(arquivo.read_text(encoding="utf-8"))
+    if obra.get("slug") != slug:
+        raise SystemExit(f"obra.json com slug '{obra.get('slug')}', esperado '{slug}'")
+    return obra
+
+
+def prancha(obra: dict) -> tuple[list[float], list[list[float]]]:
+    """(recorte do edifício, máscaras) normalizados, lidos da configuração da obra."""
+    cfg = obra["prancha"]
+    recorte = list(cfg["recorte_edificio"])
+    mascaras = [list(m["retangulo"]) for m in cfg.get("mascaras", [])]
+    for r in [recorte, *mascaras]:
+        if len(r) != 4 or not (0 <= r[0] < r[2] <= 1 and 0 <= r[1] < r[3] <= 1):
+            raise SystemExit(f"retângulo normalizado inválido em obra.json: {r}")
+    return recorte, mascaras
+
+
+def mascarar(img: Image.Image, page: pymupdf.Page, clip: pymupdf.Rect, escala: float,
+             mascaras: list[list[float]]) -> None:
     w, h = page.rect.width, page.rect.height
     dr = ImageDraw.Draw(img)
-    for x0, y0, x1, y1 in MASCARAS:
+    for x0, y0, x1, y1 in mascaras:
         dr.rectangle([(x0 * w - clip.x0) * escala, (y0 * h - clip.y0) * escala,
                       (x1 * w - clip.x0) * escala, (y1 * h - clip.y0) * escala], fill="white")
 
@@ -95,8 +115,13 @@ def rel(path: Path) -> str:
     return str(path.relative_to(ROOT))
 
 
-def gerar() -> dict:
-    dados = json.loads(AMBIENTES.read_text())
+def gerar(obra: dict) -> dict:
+    slug = obra["slug"]
+    dados = json.loads((ROOT / "data" / slug / "ambientes.json").read_text(encoding="utf-8"))
+    if dados["obra"] != slug:
+        raise SystemExit(f"ambientes.json é da obra '{dados['obra']}', esperado '{slug}'")
+    recorte_edificio, mascaras = prancha(obra)
+    saida = ROOT / "data" / slug / "plantas"
     por_pav: dict[str, list[dict]] = {}
     for a in dados["ambientes"]:
         por_pav.setdefault(a["pavimento"], []).append(a)
@@ -108,15 +133,15 @@ def gerar() -> dict:
         pdf = ROOT / pdf_rel
         page = pymupdf.open(pdf)[pagina - 1]
         w, h = page.rect.width, page.rect.height
-        base = SAIDA / revisao / pav["id"]
-        clip = pymupdf.Rect(RECORTE_EDIFICIO[0] * w, RECORTE_EDIFICIO[1] * h,
-                            RECORTE_EDIFICIO[2] * w, RECORTE_EDIFICIO[3] * h)
+        base = saida / revisao / pav["id"]
+        clip = pymupdf.Rect(recorte_edificio[0] * w, recorte_edificio[1] * h,
+                            recorte_edificio[2] * w, recorte_edificio[3] * h)
 
         imagens = {}
         for nome, lado in (("planta", LADO_VISAO_GERAL), ("planta-hd", LADO_HD)):
             escala = lado / max(clip.width, clip.height)
             img = renderizar(page, clip, escala)
-            mascarar(img, page, clip, escala)
+            mascarar(img, page, clip, escala, mascaras)
             destino = base / f"{nome}.webp"
             tamanho = salvar_webp(img, destino)
             imagens[nome] = {"arquivo": rel(destino), "largura": img.width, "altura": img.height,
@@ -142,19 +167,26 @@ def gerar() -> dict:
             # Janela centrada no rótulo, um pouco abaixo para mostrar o pino acima do nome.
             janela = pymupdf.Rect(cx - jw / 2, cy - jh * 0.45, cx + jw / 2, cy + jh * 0.55) & page.rect
             img = renderizar(page, janela, ESCALA_DETALHE)
-            mascarar(img, page, janela, ESCALA_DETALHE)
+            mascarar(img, page, janela, ESCALA_DETALHE, mascaras)
             destino = base / "ambientes" / f"{a['id']}.webp"
             tamanho = salvar_webp(img, destino)
             detalhes[a["id"]] = {"arquivo": rel(destino), "recorte_pt": [round(v, 3) for v in janela],
                                  "largura": img.width, "altura": img.height,
                                  "escala_px_por_pt": ESCALA_DETALHE, "bytes": tamanho}
 
+        # Recortes de ambientes que saíram da lista (id renomeado, por exemplo) não
+        # podem ficar na pasta: o publicar_plantas.py envia todo .webp que encontrar.
+        for antigo in (base / "ambientes").glob("*.webp"):
+            if antigo.stem not in detalhes:
+                antigo.unlink()
+                print(f"Removido recorte sem ambiente: {rel(antigo)}")
+
         manifesto["pavimentos"].append({
             "id": pav["id"], "nome": pav["nome"], "revisao": revisao,
             "pdf": pdf_rel, "pagina": pagina, "sha256": sha256(pdf),
             "pagina_pt": [w, h],
             "recorte_pt": [round(v, 3) for v in clip],
-            "mascaras_normalizadas": MASCARAS,
+            "mascaras_normalizadas": mascaras,
             "imagens": imagens, "prova": rel(destino_prova),
             "detalhes": detalhes,
             "aviso": f"Planta de arquitetura {revisao} · posição indicativa",
@@ -162,15 +194,21 @@ def gerar() -> dict:
     return manifesto
 
 
-def main() -> int:
-    manifesto = gerar()
-    MANIFESTO.write_text(json.dumps(manifesto, ensure_ascii=False, indent=2) + "\n")
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description="Gera as imagens de planta e o manifesto de uma obra.")
+    ap.add_argument("--obra", required=True, help="slug da obra (pasta data/<slug>/ com obra.json)")
+    args = ap.parse_args(argv)
+
+    obra = carregar_obra(args.obra)
+    manifesto = gerar(obra)
+    destino = ROOT / "data" / obra["slug"] / "plantas.json"
+    destino.write_text(json.dumps(manifesto, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     for p in manifesto["pavimentos"]:
         tamanhos = [d["bytes"] for d in p["detalhes"].values()]
         print(f"{p['nome']}: visão geral {p['imagens']['planta']['bytes'] / 1e6:.2f} MB, "
               f"HD {p['imagens']['planta-hd']['bytes'] / 1e6:.2f} MB, "
               f"{len(tamanhos)} recortes (máx. {max(tamanhos) / 1e3:.0f} KB)")
-    print(f"Gerado: {MANIFESTO.relative_to(ROOT)}")
+    print(f"Gerado: {destino.relative_to(ROOT)}")
     return 0
 
 

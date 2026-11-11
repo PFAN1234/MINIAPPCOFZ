@@ -46,7 +46,7 @@ export interface Ambiente {
   codigo: string
   pavimento_codigo: string
   nome_operacional: string
-  nome_planta: string
+  nome_planta: string | null
   categoria: string
   area_m2: number | null
   marcadores: Marcador[]

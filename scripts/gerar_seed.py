@@ -1,25 +1,39 @@
-"""Gera o seed SQL da HTO a partir de ``data/hto/ambientes.json`` e ``data/hto/plantas.json``.
+"""Gera o seed SQL de uma obra a partir de ``data/<slug>/ambientes.json`` e ``data/<slug>/plantas.json``.
 
-Saída: ``supabase/seed/hto.sql``. O arquivo é idempotente (``on conflict ... do
+O nome da obra vem de ``data/<slug>/obra.json``. Saída: ``supabase/seed/<slug>.sql``. O arquivo é idempotente (``on conflict ... do
 update``) e envolvido em ``begin; ... commit;``. Não editar o SQL à mão: rode
 este script de novo depois de mudar a lista de ambientes.
 
 Uso (na raiz do repositório)::
 
-    python3 scripts/gerar_seed.py
+    python3 scripts/gerar_seed.py --obra hto
 """
 from __future__ import annotations
 
+import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ENTRADA = ROOT / "data/hto/ambientes.json"
-ENTRADA_PLANTAS = ROOT / "data/hto/plantas.json"
-SAIDA = ROOT / "supabase/seed/hto.sql"
+SLUG_RE = re.compile(r"^[a-z0-9-]+$")
 
-CABECALHO = "-- Gerado por scripts/gerar_seed.py a partir de data/hto/ambientes.json e data/hto/plantas.json — não editar à mão"
+
+def cabecalho(slug: str) -> str:
+    return (f"-- Gerado por scripts/gerar_seed.py a partir de data/{slug}/ambientes.json "
+            f"e data/{slug}/plantas.json — não editar à mão")
+
+
+def carregar_obra(slug: str) -> dict:
+    """Lê ``data/<slug>/obra.json`` (só ``slug`` e ``nome`` são usados aqui)."""
+    if not SLUG_RE.match(slug):
+        raise ValueError(f"slug inválido: {slug!r}")
+    arquivo = ROOT / "data" / slug / "obra.json"
+    obra = json.loads(arquivo.read_text(encoding="utf-8"))
+    if obra.get("slug") != slug:
+        raise ValueError(f"{arquivo.relative_to(ROOT)} com slug '{obra.get('slug')}', esperado '{slug}'")
+    return obra
 
 
 def literal(valor) -> str:
@@ -42,23 +56,23 @@ def literal(valor) -> str:
     raise TypeError(f"tipo sem literal SQL: {type(valor).__name__}")
 
 
-def _insert_obra() -> str:
+def _insert_obra(slug: str, nome: str) -> str:
     return (
-        "insert into public.obra (slug, nome) values ('hto', 'HTO') "
+        f"insert into public.obra (slug, nome) values ({literal(slug)}, {literal(nome)}) "
         "on conflict (slug) do update set nome = excluded.nome;"
     )
 
 
-def _insert_pavimento(codigo: str, nome: str, ordem: int) -> str:
+def _insert_pavimento(slug: str, codigo: str, nome: str, ordem: int) -> str:
     return (
         "insert into public.pavimento (obra_id, codigo, nome, ordem) "
         f"select o.id, {literal(codigo)}, {literal(nome)}, {literal(ordem)} "
-        "from public.obra o where o.slug = 'hto' "
+        f"from public.obra o where o.slug = {literal(slug)} "
         "on conflict (obra_id, codigo) do update set nome = excluded.nome, ordem = excluded.ordem;"
     )
 
 
-def _insert_ambiente(amb: dict, ordem: int) -> str:
+def _insert_ambiente(slug: str, amb: dict, ordem: int) -> str:
     colunas = ("obra_id, pavimento_id, codigo, nome_operacional, nome_planta, categoria, "
                "area_m2, revisao_planta, marcadores, ordem")
     valores = ", ".join([
@@ -83,7 +97,7 @@ def _insert_ambiente(amb: dict, ordem: int) -> str:
         f"select {valores} "
         "from public.obra o join public.pavimento p on p.obra_id = o.id "
         f"and p.codigo = {literal(amb['pavimento'])} "
-        "where o.slug = 'hto' "
+        f"where o.slug = {literal(slug)} "
         f"on conflict (obra_id, codigo) do update set {atualizar};"
     )
 
@@ -97,7 +111,7 @@ def _caminho(obra_id: str, *partes: str) -> str:
     return f"{obra_id}::text || {literal('/' + '/'.join(partes))}"
 
 
-def _insert_planta(pav: dict) -> str:
+def _insert_planta(slug: str, pav: dict) -> str:
     base = (pav["revisao"], pav["id"])
     planta, hd = pav["imagens"]["planta"], pav["imagens"]["planta-hd"]
     largura_pt, altura_pt = pav["pagina_pt"]
@@ -125,12 +139,12 @@ def _insert_planta(pav: dict) -> str:
         f"select {valores} "
         "from public.obra o join public.pavimento p on p.obra_id = o.id "
         f"and p.codigo = {literal(pav['id'])} "
-        "where o.slug = 'hto' "
+        f"where o.slug = {literal(slug)} "
         f"on conflict (pavimento_id, revisao) do update set {atualizar};"
     )
 
 
-def _insert_detalhe(pav: dict, codigo: str, det: dict) -> str:
+def _insert_detalhe(slug: str, pav: dict, codigo: str, det: dict) -> str:
     colunas = "planta_id, obra_id, ambiente_id, imagem_path, recorte_pt, largura, altura"
     valores = ", ".join([
         "pl.id", "o.id", "a.id",
@@ -147,7 +161,7 @@ def _insert_detalhe(pav: dict, codigo: str, det: dict) -> str:
         f"and p.codigo = {literal(pav['id'])} "
         f"join public.planta pl on pl.pavimento_id = p.id and pl.revisao = {literal(pav['revisao'])} "
         f"join public.ambiente a on a.obra_id = o.id and a.codigo = {literal(codigo)} "
-        "where o.slug = 'hto' "
+        f"where o.slug = {literal(slug)} "
         f"on conflict (planta_id, ambiente_id) do update set {atualizar};"
     )
 
@@ -164,45 +178,66 @@ def validar_plantas(dados: dict, plantas: dict) -> None:
         raise ValueError("plantas.json sem detalhe para os ambientes: " + ", ".join(faltando))
 
 
-def gerar(dados: dict, plantas: dict | None = None) -> str:
-    """Monta o conteúdo do seed a partir dos JSONs já lidos. Não toca em disco.
+def gerar(dados: dict, plantas: dict | None = None, obra: dict | None = None) -> str:
+    """Monta o conteúdo do seed a partir dos JSONs já lidos.
 
-    ``plantas`` é o conteúdo de ``data/hto/plantas.json``; se omitido, é lido do disco.
+    A obra é a de ``dados["obra"]``. ``plantas`` é o conteúdo de
+    ``data/<slug>/plantas.json`` e ``obra`` o de ``data/<slug>/obra.json``; se
+    omitidos, são lidos do disco. Não grava nada.
     """
+    slug = dados["obra"]
+    if obra is None:
+        obra = carregar_obra(slug)
+    if obra["slug"] != slug:
+        raise ValueError(f"obra.json é da obra '{obra['slug']}', mas ambientes.json é de '{slug}'")
     if plantas is None:
-        plantas = json.loads(ENTRADA_PLANTAS.read_text(encoding="utf-8"))
+        plantas = json.loads((ROOT / "data" / slug / "plantas.json").read_text(encoding="utf-8"))
+    if plantas.get("obra", slug) != slug:
+        raise ValueError(f"plantas.json é da obra '{plantas['obra']}', esperado '{slug}'")
     validar_plantas(dados, plantas)
-    linhas = [CABECALHO, "", "begin;", "", _insert_obra(), ""]
+    linhas = [cabecalho(slug), "", "begin;", "", _insert_obra(slug, obra["nome"]), ""]
     for ordem, pav in enumerate(dados["pavimentos"], start=1):
-        linhas.append(_insert_pavimento(pav["id"], pav["nome"], ordem))
+        linhas.append(_insert_pavimento(slug, pav["id"], pav["nome"], ordem))
     linhas.append("")
     for ordem, amb in enumerate(dados["ambientes"], start=1):
-        linhas.append(_insert_ambiente(amb, ordem))
+        linhas.append(_insert_ambiente(slug, amb, ordem))
     linhas.append("")
     por_id = {p["id"]: p for p in plantas["pavimentos"]}
     pavs = [por_id[p["id"]] for p in dados["pavimentos"]]
     for pav in pavs:
-        linhas.append(_insert_planta(pav))
+        linhas.append(_insert_planta(slug, pav))
     linhas.append("")
     ambientes_por_pav: dict[str, list[str]] = {}
     for amb in dados["ambientes"]:
         ambientes_por_pav.setdefault(amb["pavimento"], []).append(amb["id"])
     for pav in pavs:
         for codigo in ambientes_por_pav.get(pav["id"], []):
-            linhas.append(_insert_detalhe(pav, codigo, pav["detalhes"][codigo]))
+            linhas.append(_insert_detalhe(slug, pav, codigo, pav["detalhes"][codigo]))
     linhas += ["", "commit;", ""]
     return "\n".join(linhas)
 
 
-def main() -> int:
-    dados = json.loads(ENTRADA.read_text(encoding="utf-8"))
-    plantas = json.loads(ENTRADA_PLANTAS.read_text(encoding="utf-8"))
-    SAIDA.parent.mkdir(parents=True, exist_ok=True)
-    SAIDA.write_text(gerar(dados, plantas), encoding="utf-8")
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description="Gera o seed SQL de uma obra.")
+    ap.add_argument("--obra", required=True, help="slug da obra (pasta data/<slug>/ com obra.json)")
+    args = ap.parse_args(argv)
+
+    try:
+        obra = carregar_obra(args.obra)
+    except (ValueError, FileNotFoundError) as e:
+        raise SystemExit(str(e))
+    base = ROOT / "data" / obra["slug"]
+    dados = json.loads((base / "ambientes.json").read_text(encoding="utf-8"))
+    plantas = json.loads((base / "plantas.json").read_text(encoding="utf-8"))
+    saida = ROOT / "supabase" / "seed" / f"{obra['slug']}.sql"
+    saida.parent.mkdir(parents=True, exist_ok=True)
+    saida.write_text(gerar(dados, plantas, obra), encoding="utf-8")
+    if dados.get("status") != "revisado":
+        print(f"Atenção: ambientes.json com status '{dados.get('status')}' (lista ainda sem revisão humana).")
     print(f"Pavimentos: {len(dados['pavimentos'])}")
     print(f"Ambientes: {len(dados['ambientes'])}")
     print(f"Plantas: {len(plantas['pavimentos'])}")
-    print(f"Gerado: {SAIDA.relative_to(ROOT)}")
+    print(f"Gerado: {saida.relative_to(ROOT)}")
     return 0
 
 
