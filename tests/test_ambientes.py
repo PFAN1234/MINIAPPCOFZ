@@ -89,7 +89,10 @@ def _marcadores(resultado):
 def test_arquivo_commitado_esta_atualizado(obra_e_resultado):
     obra, resultado = obra_e_resultado
     commitado = json.loads((ROOT / "data" / obra["slug"] / "ambientes.json").read_text(encoding="utf-8"))
-    assert commitado == resultado, f"rode python3 scripts/extrair_ambientes.py --obra {obra['slug']}"
+    # Como o main: a lista no Git é a base (códigos, removidos e diferenças).
+    com_base = extrair_mod.extrair(obra, extrair_mod.ler_paginas(obra), commitado)
+    assert commitado == com_base, f"rode python3 scripts/extrair_ambientes.py --obra {obra['slug']}"
+    assert com_base["ambientes"] == resultado["ambientes"]
 
 
 def test_cabecalho_vem_da_configuracao(obra_e_resultado):

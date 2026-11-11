@@ -150,6 +150,17 @@ Procedimento em `tasks/plano-app.md` (seção "Novas obras"). Decisões de 2026-
 
 Verificação: obra nova aparece em Obras com seus pavimentos, lista e planta; outra obra não lê os dados dela; registro publicado no tópico dela. Dependência: o supergrupo real depende das fases 6 e 7.
 
+## Revisões de planta
+
+Decisões de 2026-11-11 em `tasks/plano-app.md` (seção "Novas obras") e roteiro em `scripts/README.md` ("Alterar a planta de uma obra").
+
+- [x] Nova revisão, ambiente renomeado e ambiente removido: o extrator usa o `ambientes.json` anterior como base (códigos mantidos, `manter_codigo` para renomeação confirmada, `ambientes_removidos` acumulativa e relatório `diferencas`); o seed desativa a planta de outra revisão antes de gravar a nova e marca os removidos com `ativo = false`; migração `20261111130000_ambiente_ativo.sql`; o app tira os inativos da lista, da busca e da planta e mostra um aviso na tela do ambiente inativo. HTO e COFZ regeneradas sem mudança além dos campos novos.
+- [x] Seed inativa também qualquer ambiente da obra fora da lista atual (cobre id provisório aplicado antes do `manter_codigo`).
+- [x] Migração `ambiente_ativo` aplicada no `miniappcofz-dev` (2026-11-11). Os seeds regenerados não mudam nada no banco (mesma revisão; todos os 87 ambientes da HTO e 19 da COFZ estão na lista e ativos), então não precisaram ser reaplicados.
+- [ ] Produção: aplicar a migração `ambiente_ativo` antes de publicar esta versão do app.
+
+Verificação: pytest (`tests/test_revisoes.py` e `tests/db/test_revisoes_banco.py`: R01 → R02 com planta anterior inativa, removidos inativos e registros preservados) e Vitest (aviso e filtro dos inativos).
+
 ## 9. Modelo federado e planta clicável (última fase)
 
 Diagnóstico existente preservado em `docs/validacao-hto.md` e `artifacts/validation/`.
