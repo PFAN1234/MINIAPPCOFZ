@@ -51,6 +51,11 @@ export interface Ambiente {
   area_m2: number | null
   marcadores: Marcador[]
   pendencias_abertas: number
+  /**
+   * `false` quando o ambiente não existe na planta vigente (saiu numa revisão).
+   * Fica fora da lista, da busca e da planta, mas a tela dele abre (histórico).
+   */
+  ativo: boolean
 }
 
 export type PapelObra = 'equipe' | 'gestor'
@@ -60,6 +65,7 @@ export interface ObraDetalhe {
   /** Papel do usuário na obra (da própria participação). */
   papel: PapelObra
   pavimentos: Pavimento[]
+  /** Todos os ambientes, inclusive os inativos (as telas filtram por `ativo`). */
   ambientes: Ambiente[]
 }
 

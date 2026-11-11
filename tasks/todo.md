@@ -150,6 +150,15 @@ Procedimento em `tasks/plano-app.md` (seção "Novas obras"). Decisões de 2026-
 
 Verificação: obra nova aparece em Obras com seus pavimentos, lista e planta; outra obra não lê os dados dela; registro publicado no tópico dela. Dependência: o supergrupo real depende das fases 6 e 7.
 
+## Revisões de planta
+
+Decisões de 2026-11-11 em `tasks/plano-app.md` (seção "Novas obras") e roteiro em `scripts/README.md` ("Alterar a planta de uma obra").
+
+- [x] Nova revisão, ambiente renomeado e ambiente removido: o extrator usa o `ambientes.json` anterior como base (códigos mantidos, `manter_codigo` para renomeação confirmada, `ambientes_removidos` acumulativa e relatório `diferencas`); o seed desativa a planta de outra revisão antes de gravar a nova e marca os removidos com `ativo = false`; migração `20261111130000_ambiente_ativo.sql`; o app tira os inativos da lista, da busca e da planta e mostra um aviso na tela do ambiente inativo. HTO e COFZ regeneradas sem mudança além dos campos novos.
+- [ ] Aplicar a migração `ambiente_ativo` e os seeds (`hto.sql`, `cofz.sql`) no `miniappcofz-dev`, antes de publicar o app (o app passa a ler a coluna `ativo`).
+
+Verificação: pytest (`tests/test_revisoes.py` e `tests/db/test_revisoes_banco.py`: R01 → R02 com planta anterior inativa, removidos inativos e registros preservados) e Vitest (aviso e filtro dos inativos).
+
 ## 9. Modelo federado e planta clicável (última fase)
 
 Diagnóstico existente preservado em `docs/validacao-hto.md` e `artifacts/validation/`.

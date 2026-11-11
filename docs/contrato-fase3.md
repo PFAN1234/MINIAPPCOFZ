@@ -144,3 +144,30 @@ O estado de aba, pavimento, busca e foco fica na URL, para o BackButton e o reca
   - "Onde fica" abre a planta centrada;
   - o BackButton volta.
 - O build de produção não contém a fixture.
+
+## F. Revisões da planta (2026-11-11)
+
+Migration `supabase/migrations/20261111130000_ambiente_ativo.sql`.
+
+### Coluna nova
+
+| Tabela | Coluna | Uso |
+| --- | --- | --- |
+| `ambiente` | `ativo boolean not null default true` | `false` quando o ambiente não existe na planta vigente. Sem índice novo: as consultas filtram por `obra_id`, já coberto por `ambiente_codigo_unico (obra_id, codigo)`. O `grant select` da tabela cobre a coluna. |
+
+### Regras
+
+- O código do ambiente não muda depois do primeiro registro, e nenhum ambiente é apagado (`registro` e `planta_detalhe` o referenciam).
+- Nova revisão da planta entra como nova linha em `planta`, mantendo os códigos. O seed, antes de gravar a planta de cada pavimento, desativa a planta ativa de outra revisão (`update public.planta set ativa = false where pavimento_id = ... and revisao <> <nova> and ativa`), por causa do índice único `planta_ativa_unica`. A planta antiga e os seus `planta_detalhe` ficam como histórico; as imagens antigas ficam no bucket, na pasta da revisão.
+- O seed grava `ativo = true` em todos os ambientes da lista e `ativo = false` nos de `ambientes_removidos` do `data/<slug>/ambientes.json` (`update` por `obra` e `codigo`, sem erro se a linha não existir).
+- `concluir_registro` **não** verifica `ativo`: um registro feito em campo antes da troca, ainda na fila offline, tem de ser aceito.
+
+### App
+
+- `Ambiente.ativo: boolean`. `obterObra` traz todos os ambientes (a contagem de pendências da obra inclui os inativos); a lista, a busca e os pinos da planta mostram só os ativos.
+- `obterAmbiente(slug, codigo)` continua carregando o ambiente inativo (histórico e links antigos). A tela mostra "Este ambiente não existe na planta atual; registros mantidos como histórico." e o cartão "Onde fica" só aparece se houver `planta_detalhe` do ambiente na planta ativa.
+- A fixture (`VITE_DADOS=fixture`) acrescenta como inativos os `ambientes_removidos` do `ambientes.json`.
+
+### Fluxo de uma revisão
+
+Roteiro completo em `scripts/README.md` ("Alterar a planta de uma obra"): PDF novo em `DOCS <SIGLA>/PDF/`, revisão no `obra.json`, os três scripts, leitura do relatório `diferencas`, confirmação das renomeações em `manter_codigo`, conferência do `prova.png`, migration (uma vez) e seed, publicação das imagens.

@@ -35,6 +35,29 @@ describe('AbaPlanta', () => {
     expect(onFocoChange).toHaveBeenCalledWith('terreo-apto-101')
   })
 
+  it('ambiente inativo fica fora dos pinos e da busca', async () => {
+    const obra = await repo.obterObra('hto')
+    const comInativo = {
+      ...obra,
+      ambientes: obra.ambientes.map((a) =>
+        a.codigo === 'terreo-apto-101' ? { ...a, ativo: false } : a,
+      ),
+    }
+    montar(
+      <AbaPlanta
+        obra={comInativo}
+        pavimentoCodigo="terreo"
+        focoCodigo={null}
+        onFocoChange={() => {}}
+        onSelecionarAmbiente={() => {}}
+      />,
+    )
+    expect(await screen.findByRole('button', { name: 'Apto. 102' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Apto. 101' })).not.toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Buscar ambiente na planta'), { target: { value: 'apto. 101' } })
+    expect(screen.getByText('Nenhum ambiente encontrado')).toBeInTheDocument()
+  })
+
   it('pavimento sem planta mostra estado vazio', async () => {
     const obra = await repo.obterObra('hto')
     const semPlanta = {

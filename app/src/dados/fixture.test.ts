@@ -15,6 +15,8 @@ describe('repositório fixture', () => {
     const { pavimentos, ambientes } = await repo.obterObra('hto')
     expect(pavimentos.map((p) => p.planta?.revisao)).toEqual(['R05', 'R05'])
     expect(ambientes).toHaveLength(87)
+    // A HTO não tem ambientes removidos (data/hto/ambientes.json): todos ativos.
+    expect(ambientes.every((a) => a.ativo)).toBe(true)
     const abertas = ambientes.reduce((s, a) => s + a.pendencias_abertas, 0)
     expect(abertas).toBe(3)
   })

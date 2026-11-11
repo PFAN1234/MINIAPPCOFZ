@@ -4,6 +4,11 @@ O nome da obra vem de ``data/<slug>/obra.json``. Saída: ``supabase/seed/<slug>.
 update``) e envolvido em ``begin; ... commit;``. Não editar o SQL à mão: rode
 este script de novo depois de mudar a lista de ambientes.
 
+Revisões da planta: os ambientes da lista ficam com ``ativo = true`` e os de
+``ambientes_removidos`` passam a ``ativo = false`` (nada é apagado, porque
+``registro`` referencia ``ambiente``). Antes de gravar a planta de um pavimento, a
+planta ativa de outra revisão é desativada; ela e os seus detalhes ficam como histórico.
+
 Uso (na raiz do repositório)::
 
     python3 scripts/gerar_seed.py --obra hto
@@ -74,7 +79,7 @@ def _insert_pavimento(slug: str, codigo: str, nome: str, ordem: int) -> str:
 
 def _insert_ambiente(slug: str, amb: dict, ordem: int) -> str:
     colunas = ("obra_id, pavimento_id, codigo, nome_operacional, nome_planta, categoria, "
-               "area_m2, revisao_planta, marcadores, ordem")
+               "area_m2, revisao_planta, marcadores, ordem, ativo")
     valores = ", ".join([
         "o.id",
         "p.id",
@@ -86,11 +91,12 @@ def _insert_ambiente(slug: str, amb: dict, ordem: int) -> str:
         literal(amb["revisao"]),
         literal(amb["marcadores"]),
         literal(ordem),
+        "true",
     ])
     atualizar = ", ".join(
         f"{c} = excluded.{c}"
         for c in ("pavimento_id", "nome_operacional", "nome_planta", "categoria",
-                  "area_m2", "revisao_planta", "marcadores", "ordem")
+                  "area_m2", "revisao_planta", "marcadores", "ordem", "ativo")
     )
     return (
         f"insert into public.ambiente ({colunas}) "
@@ -99,6 +105,26 @@ def _insert_ambiente(slug: str, amb: dict, ordem: int) -> str:
         f"and p.codigo = {literal(amb['pavimento'])} "
         f"where o.slug = {literal(slug)} "
         f"on conflict (obra_id, codigo) do update set {atualizar};"
+    )
+
+
+def _inativar_ambiente(slug: str, codigo: str) -> str:
+    """Marca como inativo um ambiente que saiu da planta (sem erro se ele não existir no banco)."""
+    return (
+        "update public.ambiente a set ativo = false from public.obra o "
+        f"where a.obra_id = o.id and o.slug = {literal(slug)} and a.codigo = {literal(codigo)} "
+        "and a.ativo;"
+    )
+
+
+def _desativar_plantas_anteriores(slug: str, pav: dict) -> str:
+    """Desativa a planta ativa de outra revisão do pavimento (índice único ``planta_ativa_unica``)."""
+    return (
+        "update public.planta pl set ativa = false "
+        "from public.obra o join public.pavimento p on p.obra_id = o.id "
+        f"and p.codigo = {literal(pav['id'])} "
+        f"where o.slug = {literal(slug)} and pl.pavimento_id = p.id "
+        f"and pl.revisao <> {literal(pav['revisao'])} and pl.ativa;"
     )
 
 
@@ -178,6 +204,14 @@ def validar_plantas(dados: dict, plantas: dict) -> None:
         raise ValueError("plantas.json sem detalhe para os ambientes: " + ", ".join(faltando))
 
 
+def validar_removidos(dados: dict) -> None:
+    """Um id não pode estar ao mesmo tempo na lista e em ``ambientes_removidos``."""
+    ativos = {a["id"] for a in dados["ambientes"]}
+    conflito = sorted(r["id"] for r in dados.get("ambientes_removidos", []) if r["id"] in ativos)
+    if conflito:
+        raise ValueError("ids em 'ambientes' e em 'ambientes_removidos' ao mesmo tempo: " + ", ".join(conflito))
+
+
 def gerar(dados: dict, plantas: dict | None = None, obra: dict | None = None) -> str:
     """Monta o conteúdo do seed a partir dos JSONs já lidos.
 
@@ -195,6 +229,7 @@ def gerar(dados: dict, plantas: dict | None = None, obra: dict | None = None) ->
     if plantas.get("obra", slug) != slug:
         raise ValueError(f"plantas.json é da obra '{plantas['obra']}', esperado '{slug}'")
     validar_plantas(dados, plantas)
+    validar_removidos(dados)
     linhas = [cabecalho(slug), "", "begin;", "", _insert_obra(slug, obra["nome"]), ""]
     for ordem, pav in enumerate(dados["pavimentos"], start=1):
         linhas.append(_insert_pavimento(slug, pav["id"], pav["nome"], ordem))
@@ -202,9 +237,15 @@ def gerar(dados: dict, plantas: dict | None = None, obra: dict | None = None) ->
     for ordem, amb in enumerate(dados["ambientes"], start=1):
         linhas.append(_insert_ambiente(slug, amb, ordem))
     linhas.append("")
+    removidos = dados.get("ambientes_removidos", [])
+    if removidos:
+        for r in removidos:
+            linhas.append(_inativar_ambiente(slug, r["id"]))
+        linhas.append("")
     por_id = {p["id"]: p for p in plantas["pavimentos"]}
     pavs = [por_id[p["id"]] for p in dados["pavimentos"]]
     for pav in pavs:
+        linhas.append(_desativar_plantas_anteriores(slug, pav))
         linhas.append(_insert_planta(slug, pav))
     linhas.append("")
     ambientes_por_pav: dict[str, list[str]] = {}
@@ -236,6 +277,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Atenção: ambientes.json com status '{dados.get('status')}' (lista ainda sem revisão humana).")
     print(f"Pavimentos: {len(dados['pavimentos'])}")
     print(f"Ambientes: {len(dados['ambientes'])}")
+    if dados.get("ambientes_removidos"):
+        print(f"Ambientes removidos (ficam inativos): {len(dados['ambientes_removidos'])}")
     print(f"Plantas: {len(plantas['pavimentos'])}")
     print(f"Gerado: {saida.relative_to(ROOT)}")
     return 0
