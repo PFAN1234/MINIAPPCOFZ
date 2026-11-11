@@ -135,6 +135,19 @@ Verificação: pendência aberta e resolvida aparece no histórico e no grupo de
 
 Dependência: 7. Tokens do bot, grupo real, hospedagem e aparelho de teste ainda não foram fornecidos/configurados.
 
+## Novas obras
+
+Procedimento em `tasks/plano-app.md` (seção "Novas obras"). Decisões de 2026-11-11: PDFs no padrão da HTO; planta e pinos quando o PDF permitir, senão só a lista; supergrupo CO-FZ com um tópico por obra, sem mudar a regra de acesso; adaptar os scripts já, supergrupo real só depois do teste real da HTO.
+
+- [ ] Configuração por obra (`data/<slug>/obra.json`), começando pela HTO com os valores hoje fixos nos scripts.
+- [ ] Scripts com `--obra <slug>` e extrator lendo os PDFs direto, sem o `inventory.json` de diagnóstico.
+- [ ] Pipeline da HTO reproduz os JSON, as imagens e `supabase/seed/hto.sql` sem diferença de conteúdo; pytest passa.
+- [ ] Primeira obra nova: PDFs em `DOCS <SIGLA>/PDF/` (usuário), triagem, extração, revisão humana, seed e imagens no `miniappcofz-dev`.
+- [ ] Tópico no grupo de teste, `/vincular_obra <slug>` e registro publicado no tópico certo.
+- [ ] Depois do teste real da HTO: vincular a obra no supergrupo CO-FZ.
+
+Verificação: obra nova aparece em Obras com seus pavimentos, lista e planta; outra obra não lê os dados dela; registro publicado no tópico dela. Dependência: o supergrupo real depende das fases 6 e 7.
+
 ## 9. Modelo federado e planta clicável (última fase)
 
 Diagnóstico existente preservado em `docs/validacao-hto.md` e `artifacts/validation/`.
