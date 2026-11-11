@@ -83,6 +83,8 @@ Tabelas (migrations): `obra` (slug, nome, ordem, `telegram_chat_id`, `telegram_t
 
 ### Novas obras (decisões de 2026-11-11)
 
+O cadastro pelos scripts abaixo passa a ter um site de administração (navegador, só admins do Mini App): ver `tasks/plano-admin.md`.
+
 Decisões: as novas obras chegam com PDFs de arquitetura no padrão da HTO (texto selecionável, nome do ambiente com `A=xx m²` logo abaixo); entram com planta e pinos quando o PDF permitir e, quando não permitir, só com a lista (a planta vem depois, com os mesmos códigos de ambiente); ficam no supergrupo CO-FZ, um tópico por obra, sem mudar a regra de acesso da fase 6 (administrador do supergrupo vira gestor de todas as obras ligadas a ele e qualquer membro pode pedir acesso a qualquer obra); os scripts são adaptados agora e a primeira obra nova entra no `miniappcofz-dev` e no grupo de teste; o supergrupo real só depois do teste real da HTO no Telegram (fases 6 e 7).
 
 O app, o banco (RLS por obra, caminhos `<obra_id>/...` no Storage), as Edge Functions e o bot (`/vincular_obra <slug>`) já tratam várias obras. O que está preso à HTO são os scripts de dados: slug `hto` fixo em `gerar_seed.py` e `publicar_plantas.py`, pastas `data/hto` e `DOCS HTO/PDF`, pavimentos fixos e dependência do `inventory.json` de diagnóstico em `extrair_ambientes.py`, recorte e máscaras da prancha medidos na HTO em `gerar_plantas.py`. Não há tela de cadastro de obra: a obra entra pelo seed.

@@ -15,6 +15,7 @@ import type {
   DetalhePlanta,
   EstadoPublicacao,
   FiltroRegistros,
+  LinkAdmin,
   FotoRegistro,
   ImagemPlanta,
   NovoEncerramento,
@@ -398,7 +399,11 @@ function carregarEstado(persistencia: Storage | null): EstadoSalvo {
 }
 
 export function criarRepositorioFixture(
-  opcoes: { persistencia?: Storage | null } = {},
+  opcoes: {
+    persistencia?: Storage | null
+    /** O usuário de teste é admin do Mini App (mostra o botão Administração)? Padrão: não. */
+    admin?: boolean
+  } = {},
 ): Repositorio {
   const persistencia = opcoes.persistencia ?? null
   const salvo = carregarEstado(persistencia)
@@ -508,6 +513,22 @@ export function criarRepositorioFixture(
     baixarModelo: baixarModeloLocal,
     async idUsuario() {
       return 'usuario-teste'
+    },
+
+    async souAdmin() {
+      return opcoes.admin === true
+    },
+
+    async criarLinkAdmin(): Promise<LinkAdmin> {
+      exigirRede()
+      if (opcoes.admin !== true) {
+        throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem abrir a administração.')
+      }
+      const base = typeof location === 'undefined' ? 'http://localhost' : location.origin
+      return {
+        url: `${base}/admin/#entrar=fixture`,
+        expira_em: new Date(Date.now() + 120_000).toISOString(),
+      }
     },
 
     async listarObras() {

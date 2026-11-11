@@ -61,6 +61,17 @@ export function useSessao() {
   })
 }
 
+/** Admin do Mini App? Em caso de erro (ou sem sinal), o botão simplesmente não aparece. */
+export function useSouAdmin() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['sou-admin'], queryFn: () => repo.souAdmin(), staleTime: 5 * 60_000 })
+}
+
+export function useCriarLinkAdmin() {
+  const repo = useRepositorio()
+  return useMutation({ mutationFn: () => repo.criarLinkAdmin() })
+}
+
 export function useObrasDisponiveis() {
   const repo = useRepositorio()
   return useQuery({ queryKey: ['obras-disponiveis'], queryFn: () => repo.obrasDisponiveis() })

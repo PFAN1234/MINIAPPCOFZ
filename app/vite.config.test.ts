@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
-import { montarManifesto } from './vite.config.ts'
+import type { Rollup } from 'vite'
+import { arquivosSoDoAdmin, montarManifesto, rotaAdmin } from './vite.config.ts'
 
 describe('montarManifesto', () => {
   const nomes = ['assets/index-abc.js', 'assets/index-abc.css', 'index.html', 'assets/logo-1.svg']
@@ -38,5 +39,71 @@ describe('montarManifesto', () => {
 
   it('versão muda quando um arquivo muda', () => {
     expect(montarManifesto([...nomes, 'assets/novo-9.js']).versao).not.toBe(montarManifesto(nomes).versao)
+  })
+})
+
+describe('arquivosSoDoAdmin', () => {
+  function chunk(fileName: string, name: string, isEntry: boolean, imports: string[] = [], css: string[] = []) {
+    return {
+      type: 'chunk',
+      fileName,
+      name,
+      isEntry,
+      imports,
+      dynamicImports: [],
+      viteMetadata: { importedCss: new Set(css), importedAssets: new Set() },
+    }
+  }
+  const bundle = {
+    'index.html': { type: 'asset', fileName: 'index.html' },
+    'admin.html': { type: 'asset', fileName: 'admin.html' },
+    'assets/index-a.js': chunk('assets/index-a.js', 'index', true, ['assets/comum-c.js'], ['assets/index-a.css']),
+    'assets/admin-b.js': chunk('assets/admin-b.js', 'admin', true, ['assets/comum-c.js', 'assets/so-admin-d.js'], [
+      'assets/admin-b.css',
+    ]),
+    'assets/comum-c.js': chunk('assets/comum-c.js', 'comum', false),
+    'assets/so-admin-d.js': chunk('assets/so-admin-d.js', 'so-admin', false),
+    'assets/index-a.css': { type: 'asset', fileName: 'assets/index-a.css' },
+    'assets/admin-b.css': { type: 'asset', fileName: 'assets/admin-b.css' },
+  } as unknown as Rollup.OutputBundle
+
+  it('separa o que só a entrada admin alcança (e o admin.html)', () => {
+    expect([...arquivosSoDoAdmin(bundle)].sort()).toEqual([
+      'admin.html',
+      'assets/admin-b.css',
+      'assets/admin-b.js',
+      'assets/so-admin-d.js',
+    ])
+  })
+
+  it('o manifesto do Mini App fica sem o admin e com o compartilhado', () => {
+    const fora = arquivosSoDoAdmin(bundle)
+    const { arquivos } = montarManifesto(Object.keys(bundle).filter((n) => !fora.has(n)))
+    expect(arquivos).toEqual(['/assets/comum-c.js', '/assets/index-a.css', '/assets/index-a.js', '/index.html'])
+  })
+})
+
+describe('rotaAdmin', () => {
+  function reescrever(url: string) {
+    const req = { url } as { url: string }
+    let chamou = false
+    rotaAdmin()(req as never, {} as never, () => {
+      chamou = true
+    })
+    expect(chamou).toBe(true)
+    return req.url
+  }
+
+  it('serve admin.html em /admin e /admin/...', () => {
+    expect(reescrever('/admin')).toBe('/admin.html')
+    expect(reescrever('/admin/')).toBe('/admin.html')
+    expect(reescrever('/admin/obras/hto?x=1')).toBe('/admin.html?x=1')
+  })
+
+  it('não mexe no resto', () => {
+    expect(reescrever('/')).toBe('/')
+    expect(reescrever('/obras/hto')).toBe('/obras/hto')
+    expect(reescrever('/assets/admin-b.js')).toBe('/assets/admin-b.js')
+    expect(reescrever('/administracao')).toBe('/administracao')
   })
 })

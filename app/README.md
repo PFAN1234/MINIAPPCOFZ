@@ -28,11 +28,23 @@ Funciona em navegador comum (sem Telegram): `src/telegram.ts` devolve valores ne
 | `VITE_SUPABASE_URL` | URL do projeto Supabase |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Chave publicável (pública; o acesso é protegido por RLS) |
 | `VITE_DADOS` | Opcional. `fixture` usa dados de teste em vez do Supabase |
+| `VITE_TELEGRAM_BOT` | Site de administração: nome do bot (sem `@`) para o Telegram Login Widget |
 
 Em modo Supabase, sem sessão (o login pelo Telegram chega na fase 6), o app mostra "Abra o Diário da obra pelo Telegram".
 
+## Site de administração (`/admin/`)
+
+Segunda entrada do Vite (`admin.html` + `src/admin/`), servida em `/admin/` pelo mesmo projeto da Vercel (`vercel.json` reescreve `/admin` e `/admin/...` para `/admin.html` antes da regra geral; em dev e preview, o plugin `siteAdmin` do `vite.config.ts` faz o mesmo). Layout para computador, sem o SDK do Telegram, com sessão Supabase própria (`persistSession`, chave `miniappcofz-admin-auth`). O service worker do Mini App não intercepta `/admin` e o precache não inclui os arquivos que só o site usa (`arquivosSoDoAdmin`). Fluxo de entrada, RPCs e configuração em `docs/admin.md`.
+
+```bash
+VITE_DADOS=fixture npm run dev     # abre http://localhost:5173/admin/ (HTO e COFZ em memória)
+```
+
+Na fixture o usuário de teste é admin; `localStorage['fixture-admin'] = 'nao'` simula quem não é (no site, "Acesso negado"; no Mini App, o botão Administração some). O teste `e2e/admin.spec.ts` roda o site em modo fixture num viewport de computador.
+
 ## Estrutura
 
+- `src/admin/`: site de administração (telas, `dados/` com repositório Supabase e fixture próprios).
 - `src/dados/`: tipos, interface `Repositorio`, implementações `supabase.ts` e `fixture.ts`, contexto e hooks (react-query).
 - `src/telas/`: telas das rotas; `src/components/`: layout, barra inferior, estados de carregamento/erro/vazio.
 - `src/util/`: ordenação natural, busca sem acento e conversão de coordenadas dos marcadores.

@@ -37,6 +37,12 @@ function criarRepoFalso() {
     async listarModelos() {
       return []
     },
+    async souAdmin() {
+      return false
+    },
+    async criarLinkAdmin() {
+      throw new Error('n/a')
+    },
     async baixarModelo() {
       throw new Error('n/a')
     },

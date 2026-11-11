@@ -33,6 +33,8 @@ export interface TelegramWebApp {
   expand(): void
   enableClosingConfirmation(): void
   disableClosingConfirmation(): void
+  /** Abre o link no navegador externo (Bot API 6.1+). */
+  openLink?(url: string): void
 }
 
 declare global {
@@ -113,4 +115,17 @@ export function enableClosingConfirmation(): void {
 
 export function disableClosingConfirmation(): void {
   webApp()?.disableClosingConfirmation()
+}
+
+/**
+ * Abre um link no navegador: dentro do Telegram, pelo `openLink` (sai do Mini App);
+ * fora dele, numa nova aba.
+ */
+export function abrirLink(url: string): void {
+  const app = webApp()
+  if (dentroDoTelegram() && typeof app?.openLink === 'function') {
+    app.openLink(url)
+    return
+  }
+  window.open(url, '_blank', 'noopener')
 }

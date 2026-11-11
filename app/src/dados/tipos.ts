@@ -221,3 +221,9 @@ export interface PublicacaoProblema {
   legenda: string
   ambiente: string
 }
+
+/** Link de uso único para abrir o site de administração (vale 2 min). */
+export interface LinkAdmin {
+  url: string
+  expira_em: string
+}
