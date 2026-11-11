@@ -186,8 +186,14 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
   - [x] Aplicar `supabase/seed/admin_config.sql` (configuração de HTO e COFZ).
   - [x] Aplicar `supabase/seed/admins.sql` depois de Patrício e Eduardo terem aberto o Mini App; conferir a consulta do fim do arquivo.
   - [x] Vercel: `VITE_TELEGRAM_BOT` = `diarioobra_cofz_bot` (o deploy novo vem com o merge na main).
-  - [ ] Conferir: botão "Administração" só para admins, link abre o site logado e não vale de novo; Login Widget entra com admin e recusa outra conta.
+  - [x] Conferir: botão "Administração" e link abrem o site logado (Patrício, 2026-11-11). Falta: link não vale de novo; Login Widget entra com admin e recusa outra conta.
   - [ ] Produção: repetir a migration, a função e os seeds antes de publicar esta versão do app.
-- [ ] Fase 2: planta no navegador (porta do extrator e das imagens, paridade com o Python, editor de recorte/máscaras/pinos/nomes, nova revisão, publicar).
+- [x] Fase 2 (código, 2026-11-12): planta no navegador. Migration `20261112090000_admin_planta.sql` (bucket `originais`, gravação do admin em `plantas`, `publicacao_planta`, RPCs `admin_publicar_revisao`, `admin_editor_planta`, `admin_listar_publicacoes`); port do extrator e das imagens em `app/src/admin/planta/` com paridade (HTO e COFZ); editor em `/admin/obras/<slug>/planta/<pavimento>`; histórico na página da obra. Documentação em `docs/admin.md` ("Planta (fase 2)").
+- [ ] Fase 2 no `miniappcofz-dev` (migration aplicada em 2026-11-12; falta o teste de fumaça; passo a passo em `docs/admin.md`, "Planta (fase 2)" → "Aplicar num projeto"):
+  - [x] Aplicar a migration `20261112090000_admin_planta.sql` (cria o bucket `originais` e as políticas de Storage).
+  - [x] Conferir: bucket `originais` privado, 50 MB, só `application/pdf`; políticas `originais_admin_*` e `plantas_admin_*` em `storage.objects`.
+  - [ ] Deploy do app na Vercel (o merge na main publica o editor em `/admin/`).
+  - [ ] Teste de fumaça: como admin, enviar o PDF da COFZ no térreo, conferir que a etapa "Nova revisão" não mostra diferenças, publicar (mesma revisão R06: substitui as imagens) e conferir no Mini App a planta e um "Onde fica"; ver a linha nova em "Publicações da planta".
+  - [ ] Produção: repetir a migration antes de publicar esta versão do app.
 - [ ] Fase 3: modelo no navegador (IFC → .frag em Web Worker, envio de .frag pronto, limite de 50 MB).
 - [ ] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget).

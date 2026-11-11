@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { ComDados, mensagemDe, Resultado } from '../componentes.tsx'
+import { ComDados, mensagemDe, Resultado, SelectCategoria } from '../componentes.tsx'
+import { Historico } from './planta/PlantaObra.tsx'
 import { useExportarObra, useObraAdmin, useSalvarConfig, useSalvarObra, useSalvarPavimentos } from '../dados/hooks.ts'
 import {
-  CATEGORIAS,
   ROTULO_STATUS,
   type ConfigObra,
   type ObraAdmin as DadosObraAdmin,
@@ -32,8 +32,7 @@ export default function ObraAdmin() {
           </p>
           <h1 id="titulo-obra">{d.obra.nome}</h1>
           <p className="adm-alerta adm-alerta-info">
-            O envio da planta (PDF) e do modelo (IFC) chega nas próximas fases do site. Por enquanto, plantas e
-            ambientes continuam sendo publicados pelos scripts (scripts/README.md).
+            O envio do modelo (IFC) chega na próxima fase do site; por enquanto, pelos scripts (scripts/README.md).
           </p>
           <DadosDaObra
             key={`${d.obra.nome}|${d.obra.ordem}`}
@@ -54,6 +53,8 @@ export default function ObraAdmin() {
             sucesso={sucesso('config')}
             onSalvo={() => setSalvo({ secao: 'config', texto: 'Configuração salva.' })}
           />
+          <Planta slug={d.obra.slug} pavimentos={d.pavimentos} />
+          <Historico slug={d.obra.slug} />
           <Exportar slug={d.obra.slug} />
         </article>
       )}
@@ -343,7 +344,7 @@ function Pares({
   rotuloPara,
   pares,
   onMudar,
-  sugestoes,
+  categorias,
 }: {
   titulo: string
   descricao: string
@@ -351,9 +352,9 @@ function Pares({
   rotuloPara: string
   pares: Par[]
   onMudar: (p: Par[]) => void
-  sugestoes?: readonly string[]
+  /** O valor é uma categoria: o mesmo select do editor de planta. */
+  categorias?: boolean
 }) {
-  const idLista = sugestoes ? `sugestoes-${titulo.replace(/\W+/g, '-').toLowerCase()}` : undefined
   const mudar = (chave: number, campo: 'de' | 'para', valor: string) =>
     onMudar(pares.map((p) => (p.chave === chave ? { ...p, [campo]: valor } : p)))
   return (
@@ -377,12 +378,19 @@ function Pares({
                 <input aria-label={`${rotuloDe} ${i + 1}`} value={p.de} onChange={(e) => mudar(p.chave, 'de', e.target.value)} />
               </td>
               <td>
-                <input
-                  aria-label={`${rotuloPara} ${i + 1}`}
-                  value={p.para}
-                  list={idLista}
-                  onChange={(e) => mudar(p.chave, 'para', e.target.value)}
-                />
+                {categorias ? (
+                  <SelectCategoria
+                    valor={p.para}
+                    rotulo={`${rotuloPara} ${i + 1}`}
+                    onMudar={(v) => mudar(p.chave, 'para', v)}
+                  />
+                ) : (
+                  <input
+                    aria-label={`${rotuloPara} ${i + 1}`}
+                    value={p.para}
+                    onChange={(e) => mudar(p.chave, 'para', e.target.value)}
+                  />
+                )}
               </td>
               <td>
                 <button
@@ -398,13 +406,6 @@ function Pares({
           ))}
         </tbody>
       </table>
-      {sugestoes && (
-        <datalist id={idLista}>
-          {sugestoes.map((s) => (
-            <option key={s} value={s} />
-          ))}
-        </datalist>
-      )}
       <button
         type="button"
         className="adm-botao"
@@ -472,7 +473,7 @@ function Configuracao({ dados, sucesso, onSalvo }: PropsSecao & { dados: DadosOb
         rotuloPara="Categoria"
         pares={categorias}
         onMudar={setCategorias}
-        sugestoes={CATEGORIAS}
+        categorias
       />
       {outros.length > 0 && (
         <p className="adm-dica">Outros campos mantidos como estão: {outros.join(', ')}.</p>
@@ -483,6 +484,33 @@ function Configuracao({ dados, sucesso, onSalvo }: PropsSecao & { dados: DadosOb
           Salvar configuração
         </button>
       </div>
+    </section>
+  )
+}
+
+// --- Planta ----------------------------------------------------------------------------------
+
+function Planta({ slug, pavimentos }: { slug: string; pavimentos: PavimentoAdmin[] }) {
+  return (
+    <section className="adm-secao" aria-labelledby="titulo-planta">
+      <h2 id="titulo-planta">Planta (PDF)</h2>
+      <p className="adm-dica">
+        Envie o PDF de arquitetura de cada pavimento, ajuste recorte, nomes e pinos e publique. O processamento é feito
+        neste navegador.
+      </p>
+      {pavimentos.length === 0 ? (
+        <p className="adm-dica">Cadastre os pavimentos acima antes de enviar a planta.</p>
+      ) : (
+        <ul className="adm-lista-limpa adm-acoes">
+          {pavimentos.map((p) => (
+            <li key={p.codigo}>
+              <Link className="adm-botao" to={`/obras/${slug}/planta/${p.codigo}`}>
+                Planta de {p.nome}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

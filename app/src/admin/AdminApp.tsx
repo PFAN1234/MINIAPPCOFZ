@@ -9,6 +9,8 @@ import Admins from './telas/Admins.tsx'
 import { AcessoNegado, Entrar } from './telas/Entrar.tsx'
 import ObraAdmin, { NovaObra } from './telas/ObraAdmin.tsx'
 import ObrasAdmin from './telas/ObrasAdmin.tsx'
+import EditorPlanta from './telas/planta/EditorPlanta.tsx'
+import PlantaObra from './telas/planta/PlantaObra.tsx'
 
 
 interface Sessao {
@@ -64,6 +66,8 @@ export default function AdminApp({ entrada }: { entrada: Entrada }) {
         <Route index element={<ObrasAdmin />} />
         <Route path="nova-obra" element={<NovaObra />} />
         <Route path="obras/:slug" element={<ObraAdmin />} />
+        <Route path="obras/:slug/planta" element={<PlantaObra />} />
+        <Route path="obras/:slug/planta/:pavimento" element={<EditorPlanta />} />
         <Route path="admins" element={<Admins />} />
         <Route path="*" element={<p>Página não encontrada.</p>} />
       </Routes>

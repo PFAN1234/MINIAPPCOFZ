@@ -32,7 +32,7 @@ O ponto é o centro do rótulo no topo do nome. O pino é desenhado **acima** de
   - `<obra_id>/<revisao>/<pavimento_codigo>/planta.webp`;
   - `.../planta-hd.webp`;
   - `.../ambientes/<ambiente_codigo>.webp`.
-- Política `plantas_select` para `authenticated`: `bucket_id = 'plantas' and privado.eh_participante(privado.uuid_ou_nulo((storage.foldername(name))[1]))`. Sem `insert`, `update` nem `delete` pelo cliente.
+- Política `plantas_select` para `authenticated`: `bucket_id = 'plantas' and privado.eh_participante(privado.uuid_ou_nulo((storage.foldername(name))[1]))`. Sem `delete`. Desde a migration `20261112090000_admin_planta.sql`, admins do Mini App (`privado.eh_admin()`) também leem e gravam (`insert`/`update`) nas pastas de obras existentes, para o site de administração publicar a planta (`docs/admin.md`, "Planta (fase 2)").
 
 ### Seed e publicação
 
@@ -170,4 +170,4 @@ Migration `supabase/migrations/20261111130000_ambiente_ativo.sql`.
 
 ### Fluxo de uma revisão
 
-Roteiro completo em `scripts/README.md` ("Alterar a planta de uma obra"): PDF novo em `DOCS <SIGLA>/PDF/`, revisão no `obra.json`, os três scripts, leitura do relatório `diferencas`, confirmação das renomeações em `manter_codigo`, conferência do `prova.png`, migration (uma vez) e seed, publicação das imagens.
+Pelo site de administração (caminho principal): `docs/admin.md`, "Planta (fase 2)" — a RPC `admin_publicar_revisao` aplica as mesmas regras desta seção. Pelos scripts (reserva): roteiro completo em `scripts/README.md` ("Alterar a planta de uma obra"): PDF novo em `DOCS <SIGLA>/PDF/`, revisão no `obra.json`, os três scripts, leitura do relatório `diferencas`, confirmação das renomeações em `manter_codigo`, conferência do `prova.png`, migration (uma vez) e seed, publicação das imagens.

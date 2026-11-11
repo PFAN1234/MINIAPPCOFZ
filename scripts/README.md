@@ -2,6 +2,8 @@
 
 Geram os dados e as imagens que o Mini App usa para localizar ambientes nas plantas de arquitetura. Servem para qualquer obra: tudo o que é próprio de uma obra fica em `data/<slug>/obra.json`, e todos os scripts recebem `--obra <slug>` (obrigatório).
 
+> **Caminho principal desde a fase 2 do site de administração:** a planta é enviada e publicada pelo site `/admin/` (Obra → "Planta de <pavimento>"), que faz no navegador o mesmo que `extrair_ambientes.py` + `gerar_plantas.py` + `gerar_seed.py` + `publicar_plantas.py`, com a configuração no banco (`obra_config`). Ver `docs/admin.md`, "Planta (fase 2)". Estes scripts ficam como **reserva** (sem o site, com a chave secreta) e como **referência de paridade**: os testes `app/src/admin/planta/paridade.node.test.ts` conferem que o port em TypeScript dá o mesmo `ambientes.json` e as mesmas contas do `plantas.json` que eles. Depois que uma obra for publicada pelo site, o banco passa a ser a fonte: antes de usar os scripts de novo, exporte a configuração no site e atualize o `obra.json` (campos que só o site usa, como `marcadores_ajustados` e `prancha`/`revisao` por pavimento, são ignorados aqui).
+
 Obras cadastradas: `hto` (R05, térreo e 1º pavimento, revisada) e `cofz` (R06, pavimento único, aguardando revisão humana).
 
 ## Configuração da obra: `data/<slug>/obra.json`

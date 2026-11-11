@@ -10,6 +10,9 @@ import {
   ErroAdmin,
   type Admin,
   type ConfigObra,
+  type DadosEditorPlanta,
+  type Publicacao,
+  type ResultadoPublicacao,
   type DadosWidget,
   type EstadoSessao,
   type ObraAdmin,
@@ -46,6 +49,7 @@ function erroDaRpc(e: unknown): ErroAdmin {
   const b = (typeof e === 'object' && e !== null ? e : {}) as ErroBruto
   const msg = typeof b.message === 'string' ? b.message : ''
   if (b.code === '42501') return new ErroAdmin('Acesso negado: apenas admins do Mini App.', { cause: e })
+  if (b.code === '40001') return new ErroAdmin(msg || 'Os dados mudaram. Recarregue a página.', { cause: e })
   if (b.code === '28000' || /jwt/i.test(msg)) {
     return new ErroAdmin('Sua sessão expirou. Entre de novo.', { cause: e })
   }
@@ -167,6 +171,47 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
 
     exportarObra(slug) {
       return rpc<unknown>('admin_exportar_obra', { p_slug: slug })
+    },
+
+    obterEditorPlanta(slug) {
+      return rpc<DadosEditorPlanta>('admin_editor_planta', { p_slug: slug })
+    },
+
+    async listarPublicacoes(slug) {
+      return ((await rpc<Publicacao[]>('admin_listar_publicacoes', { p_slug: slug })) ?? []).map((l) => ({
+        ...l,
+        resumo: (l.resumo ?? {}) as Record<string, unknown>,
+      }))
+    },
+
+    async enviarArquivo(bucket, caminho, arquivo, tipo) {
+      let erro: unknown
+      try {
+        const { error } = await cliente.storage.from(bucket).upload(caminho, arquivo, { upsert: true, contentType: tipo })
+        erro = error
+      } catch (e) {
+        throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
+      }
+      if (erro) {
+        const msg = (erro as { message?: string }).message ?? ''
+        if (/row-level security|unauthorized|403/i.test(msg)) {
+          throw new ErroAdmin(`Sem permissão para gravar ${caminho} no Storage (${bucket}).`, { cause: erro })
+        }
+        if (/payload too large|413|exceeded/i.test(msg)) {
+          throw new ErroAdmin(`Arquivo grande demais para o bucket ${bucket}: ${caminho}.`, { cause: erro })
+        }
+        throw new ErroAdmin(`Falha ao enviar ${caminho}: ${msg || 'erro do Storage'}`, { cause: erro })
+      }
+    },
+
+    async baixarOriginal(caminho) {
+      const { data, error } = await cliente.storage.from('originais').download(caminho)
+      if (error || !data) throw new ErroAdmin('Não foi possível baixar o PDF guardado.', { cause: error })
+      return new Uint8Array(await data.arrayBuffer())
+    },
+
+    publicarRevisao(slug, payload) {
+      return rpc<ResultadoPublicacao>('admin_publicar_revisao', { p_slug: slug, p: payload })
     },
 
     async listarAdmins() {

@@ -324,3 +324,265 @@ td.adm-acoes {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Select ao lado do botão (ex.: Incluir admin): sem a margem de baixo do campo. */
+.adm-acoes .adm-campo {
+  margin-bottom: 0;
+}
+
+.adm-opcao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+}
+
+.adm-opcao input,
+.adm-opcao select {
+  width: auto;
+}
+
+.adm-acoes-fim {
+  justify-content: flex-end;
+}
+
+.adm-lista-limpa {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.adm-alerta-aviso {
+  background: #fffaeb;
+  color: #7a2e0e;
+}
+
+@media (prefers-color-scheme: dark) {
+  .adm-alerta-aviso {
+    background: #3a2a10;
+    color: #fedf89;
+  }
+}
+
+.adm-alerta ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
+/* --- Editor de planta --------------------------------------------------------------------- */
+
+.adm-conteudo:has(.adm-editor) {
+  max-width: 1680px;
+}
+
+.adm-etapas ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+
+.adm-etapa {
+  font: inherit;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--adm-borda);
+  background: var(--adm-superficie);
+  color: var(--adm-texto);
+  cursor: pointer;
+}
+
+.adm-etapa:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.adm-etapa-atual {
+  background: var(--adm-destaque);
+  border-color: var(--adm-destaque);
+  color: var(--adm-destaque-texto);
+}
+
+.adm-editor section {
+  margin-bottom: 16px;
+}
+
+.adm-prancha {
+  position: relative;
+  border: 1px solid var(--adm-borda);
+  background: #ffffff;
+  min-height: 120px;
+  margin: 12px 0;
+}
+
+.adm-prancha img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.adm-sobreposicao {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.adm-ret-recorte {
+  fill: rgba(37, 99, 235, 0.06);
+  stroke: #2563eb;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+  cursor: move;
+}
+
+.adm-ret-mascara {
+  fill: rgba(255, 255, 255, 0.75);
+  stroke: #dc2626;
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  cursor: move;
+}
+
+.adm-ret-sel {
+  stroke-width: 4;
+}
+
+.adm-alca {
+  fill: #ffffff;
+  stroke: #1a1d21;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  cursor: nwse-resize;
+}
+
+.adm-tabela-compacta th,
+.adm-tabela-compacta td {
+  padding: 4px 6px;
+}
+
+.adm-linha-sel {
+  background: var(--adm-info-bg);
+}
+
+.adm-linha-revisar td:first-child {
+  box-shadow: inset 3px 0 0 #f79009;
+}
+
+.adm-selo-revisar {
+  color: #b54708;
+  border-color: currentColor;
+  margin-left: 6px;
+}
+
+.adm-codigo {
+  display: block;
+  color: var(--adm-suave);
+  font-size: 0.75rem;
+}
+
+.adm-botao-mini {
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  margin-left: 4px;
+}
+
+.adm-editor-ambientes {
+  display: grid;
+  grid-template-columns: minmax(560px, 6fr) 6fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.adm-editor-tabela {
+  max-height: 78vh;
+  overflow: auto;
+}
+
+.adm-editor-planta {
+  position: sticky;
+  top: 8px;
+}
+
+.adm-rolagem {
+  overflow: auto;
+  max-height: 72vh;
+  border: 1px solid var(--adm-borda);
+}
+
+.adm-rolagem .adm-prancha {
+  margin: 0;
+  border: 0;
+}
+
+.adm-cursor-mira {
+  cursor: crosshair;
+}
+
+.adm-pino {
+  fill: #dc2626;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  cursor: grab;
+}
+
+.adm-pino-miolo {
+  fill: #ffffff;
+  stroke: none;
+}
+
+.adm-pino-sel {
+  fill: #2563eb;
+}
+
+.adm-pino-novo {
+  fill: #16a34a;
+}
+
+.adm-novo-ambiente {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid var(--adm-borda);
+  border-radius: 8px;
+  background: var(--adm-superficie);
+}
+
+.adm-removido {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--adm-borda);
+}
+
+.adm-prova img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.adm-progresso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.adm-progresso progress {
+  width: 320px;
+}
+
+.adm-editor-tabela select {
+  width: auto;
+  min-width: 9.5em;
+}
+
+.adm-editor-tabela input {
+  min-width: 11em;
+}
