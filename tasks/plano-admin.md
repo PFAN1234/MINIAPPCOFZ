@@ -36,13 +36,31 @@ Site /admin/ ── troca o token por sessão (admin-sessao {acao:"trocar"}) ou 
 
 ## Fases
 
-### Fase 1: acesso e cadastro básico
-1. Migration: `admin_app (usuario_id, criado_em, criado_por)`, `privado.eh_admin()`, RPC `sou_admin()`; `obra_config`; RPCs `admin_listar_obras`, `admin_salvar_obra` (slug, nome, ordem, status), `admin_salvar_pavimentos` (código, nome, ordem), `admin_salvar_config` (nomes fixos, categorias…), `admin_exportar_obra`, `admin_listar_admins`, `admin_incluir_admin`, `admin_remover_admin` (não remove o último). Tabela `privado.admin_entrada` (hash do token, usuário, expira_em) para os links de uso único.
-2. Edge Function `admin-sessao`: `criar` (JWT de admin → token aleatório, guarda só o hash, 2 min), `trocar` (token → sessão, apaga o token), `widget` (valida o hash do Telegram Login Widget com SHA-256 do token do bot e `auth_date` recente; só admin). Reaproveita `abrirSessao` do `auth-telegram`.
-3. Mini App: botão "Administração" na tela de obras quando `sou_admin()`; abre o link com `Telegram.WebApp.openLink`.
-4. Site `/admin/`: entrar (token ou widget), lista de obras, criar/editar obra e pavimentos, abreviações e categorias, admins, exportar JSON. Layout para computador.
-5. Seed dos primeiros admins (Patrício e Eduardo) no `miniappcofz-dev`.
-6. Importar a configuração atual de HTO e COFZ (`data/<slug>/obra.json`) para `obra_config`.
+### Fase 1: acesso e cadastro básico (código pronto em 2026-11-11; falta aplicar no `miniappcofz-dev`)
+
+Documentação: `docs/admin.md`.
+
+1. [x] Migration `20261111170000_admin.sql`: `admin_app (usuario_id, criado_em, criado_por)`, `privado.eh_admin()`, RPC `sou_admin()`; `obra_config`; RPCs `admin_listar_obras`, `admin_obter_obra`, `admin_salvar_obra` (slug, nome, ordem), `admin_salvar_pavimentos` (código, nome, ordem), `admin_salvar_config` (nomes fixos, categorias, status…), `admin_exportar_obra`, `admin_listar_admins`, `admin_incluir_admin`, `admin_remover_admin` (não remove o último), `admin_listar_usuarios`. Tabela `privado.admin_entrada` (hash do token, usuário, expira_em) e, só para `service_role`, `admin_entrada_criar`, `admin_entrada_consumir` e `admin_por_telegram`.
+2. [x] Edge Function `admin-sessao`: `criar` (JWT de admin → token aleatório, guarda só o hash, 2 min), `trocar` (token → sessão, apaga o token), `widget` (valida o hash do Telegram Login Widget com SHA-256 do token do bot e `auth_date` recente; só admin). A emissão de sessão do `auth-telegram` foi para `_shared/sessao.ts` (e o CORS para `_shared/http.ts`) sem mudar o comportamento dele.
+3. [x] Mini App: botão "Administração" na tela de obras quando `sou_admin()`; abre o link com `Telegram.WebApp.openLink` (fora do Telegram, `window.open`).
+4. [x] Site `/admin/`: entrar (token ou widget), lista de obras, criar/editar obra e pavimentos, abreviações e categorias, status, admins, exportar JSON. Layout para computador.
+5. [ ] Seed dos primeiros admins (Patrício e Eduardo) no `miniappcofz-dev`: `supabase/seed/admins.sql` pronto, falta aplicar.
+6. [x] Importar a configuração atual de HTO e COFZ (`data/<slug>/obra.json`) para `obra_config`: `scripts/importar_config_obras.py` gera `supabase/seed/admin_config.sql` (falta aplicar).
+
+Decisões da implementação (2026-11-11):
+
+| Tema | Decisão |
+|---|---|
+| Status da obra | Fica em `obra_config.config.status` (como no `obra.json`), não numa coluna de `obra`; `admin_salvar_obra` trata só slug, nome e ordem. |
+| Conteúdo de `obra_config` | O `obra.json` sem `slug` e `nome` e com os pavimentos reduzidos a `codigo`, `pdf` e `pagina`: nome e ordem do pavimento têm uma fonte só, a tabela `pavimento`. Campos que o site ainda não edita (`prancha`, `renomear`, `ambientes_manuais`…) são preservados. |
+| Criar ou editar obra | Sem `id` cria (slug novo; repetido dá 23505); com `id` edita nome e ordem. Assim um slug existente nunca é sobrescrito por engano. |
+| Pavimentos | `admin_salvar_pavimentos` recebe a lista completa; o que ficar fora é apagado só se não tiver ambientes nem plantas (23503 com os códigos). O código identifica o pavimento e não muda; no site, o código só é editável em linha nova. |
+| Funções do service_role | Em vez de grants nas tabelas, três RPCs `security definer` só para `service_role`, que já conferem admin, expiração e uso único no banco. `admin_entrada_consumir` e `admin_por_telegram` devolvem o e-mail do Auth, usado no `generateLink`. |
+| Respostas da `admin-sessao` | `401` para token/widget inválido, expirado ou reutilizado; `403` para sem JWT, não admin e usuário inexistente (sem distinguir os dois). |
+| Sessão do site | supabase-js com `persistSession` e chave própria (`miniappcofz-admin-auth`), `detectSessionInUrl: false`; o token do hash é lido e apagado da URL antes de o React montar e usado uma única vez. |
+| Rotas do site | `/admin/`, `/admin/nova-obra`, `/admin/obras/<slug>`, `/admin/admins` (a criação não usa `/obras/nova` para não colidir com uma obra de slug `nova`). |
+| Precache do Mini App | O manifesto exclui `admin.html` e o que só a entrada `admin` alcança (grafo do bundle); o service worker ignora `/admin` e os pedidos feitos por páginas de `/admin`. |
+| Fixture | Usuário de teste é admin por padrão (botão visível no Mini App em modo fixture e site já logado); `localStorage['fixture-admin'] = 'nao'` simula quem não é. Nos testes unitários do Mini App, `criarRepositorioFixture()` continua sem admin. |
 
 ### Fase 2: planta (PDF)
 1. Porta para TypeScript de `extrair_ambientes.py` (pareamento nome ↔ `A=xx m²`, nomes fixos, numeração de repetidos, rótulos duplos, ambientes manuais, base anterior, `manter_codigo`, `diferencas`) e de `gerar_plantas.py` (recorte, máscaras, visão geral, HD, recortes por ambiente, prova).

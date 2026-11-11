@@ -179,7 +179,15 @@ Verificação: sobreposição visual e controle independente de coordenadas; rec
 
 Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
 
-- [ ] Fase 1: perfil admin do Mini App, `admin-sessao` (link de uso único e Telegram Login Widget), botão no Mini App, site `/admin/` com obras, pavimentos, configuração, admins e exportação; importar HTO e COFZ; primeiros admins Patrício e Eduardo.
+- [x] Fase 1 (código, 2026-11-11): perfil admin do Mini App (migration `20261111170000_admin.sql`), `admin-sessao` (link de uso único e Telegram Login Widget), botão no Mini App, site `/admin/` com obras, pavimentos, configuração, admins e exportação; `scripts/importar_config_obras.py` → `supabase/seed/admin_config.sql` (HTO e COFZ); `supabase/seed/admins.sql` (Patrício e Eduardo). Documentação em `docs/admin.md`.
+- [ ] Fase 1 no `miniappcofz-dev` (pendente; passo a passo em `docs/admin.md`, "Aplicar num projeto"):
+  - [ ] Aplicar a migration `20261111170000_admin.sql`.
+  - [ ] Deploy da Edge Function `admin-sessao` (`verify_jwt = false`) com `TELEGRAM_BOT_TOKEN`, `SUPABASE_SECRET_KEY`, `ALLOWED_ORIGINS` (com o domínio do site) e, se diferente do padrão, `ADMIN_URL`.
+  - [ ] Aplicar `supabase/seed/admin_config.sql` (configuração de HTO e COFZ).
+  - [ ] Aplicar `supabase/seed/admins.sql` depois de Patrício e Eduardo terem aberto o Mini App; conferir a consulta do fim do arquivo.
+  - [ ] Vercel: `VITE_TELEGRAM_BOT` (nome do bot, sem `@`) e novo deploy do app.
+  - [ ] Conferir: botão "Administração" só para admins, link abre o site logado e não vale de novo; Login Widget entra com admin e recusa outra conta.
+  - [ ] Produção: repetir a migration, a função e os seeds antes de publicar esta versão do app.
 - [ ] Fase 2: planta no navegador (porta do extrator e das imagens, paridade com o Python, editor de recorte/máscaras/pinos/nomes, nova revisão, publicar).
 - [ ] Fase 3: modelo no navegador (IFC → .frag em Web Worker, envio de .frag pronto, limite de 50 MB).
 - [ ] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget).
