@@ -11,7 +11,10 @@ import {
   type Admin,
   type ConfigObra,
   type DadosEditorPlanta,
+  type DadosModelos,
+  type ModeloAdmin,
   type Publicacao,
+  type RegistroModelo,
   type ResultadoPublicacao,
   type DadosWidget,
   type EstadoSessao,
@@ -212,6 +215,24 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
 
     publicarRevisao(slug, payload) {
       return rpc<ResultadoPublicacao>('admin_publicar_revisao', { p_slug: slug, p: payload })
+    },
+
+    async listarModelosAdmin(slug) {
+      const d = await rpc<DadosModelos | null>('admin_listar_modelos', { p_slug: slug })
+      const numero = (v: unknown) => (v == null ? null : Number(v))
+      return {
+        modelos: (d?.modelos ?? []).map((m) => ({ ...m, bytes: Number(m.bytes) })),
+        historico: (d?.historico ?? []).map((h) => ({ ...h, bytes: numero(h.bytes), ifc_bytes: numero(h.ifc_bytes) })),
+      }
+    },
+
+    async registrarModelo(slug, registro: RegistroModelo) {
+      const m = await rpc<ModeloAdmin>('admin_registrar_modelo', { p_slug: slug, p: registro })
+      return { ...m, bytes: Number(m.bytes) }
+    },
+
+    async retirarModelo(slug, sigla) {
+      await rpc('admin_retirar_modelo', { p_slug: slug, p_sigla: sigla })
     },
 
     async listarAdmins() {

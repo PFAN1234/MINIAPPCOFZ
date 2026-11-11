@@ -197,5 +197,9 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
   - [ ] Produção: repetir a migration antes de publicar esta versão do app.
 - [x] Pinos e ambientes manuais depois de publicar (código, 2026-11-12): "Adicionar pino" em qualquer ambiente (rotulado → `marcadores_ajustados`; sem rótulo → `marcadores` em `ambientes_manuais`, lido também pelo `extrair_ambientes.py`) e atalho "Ajustar ambientes e pinos" na lista de pavimentos, que reabre o PDF guardado direto na etapa 3. Sem migration.
 - [ ] Teste de fumaça do ajuste: publicar um pavimento pelo site, voltar em "Ajustar ambientes e pinos", acrescentar um pino e um ambiente, publicar e conferir no Mini App.
-- [ ] Fase 3: modelo no navegador (IFC → .frag em Web Worker, envio de .frag pronto, limite de 50 MB).
+- [x] Fase 3 (código, 2026-11-12): modelo 3D pelo site. Migration `20261112120000_admin_modelo.sql` (políticas de admin no bucket `modelos`, caminho `<obra_id>/<SIGLA>/<hash>.frag`, `publicacao_modelo`, RPCs `admin_registrar_modelo`, `admin_listar_modelos`, `admin_retirar_modelo`); IFC → .frag num Web Worker ou .frag pronto, limite de 50 MB; página `/admin/obras/<slug>/modelos` com histórico. Documentação em `docs/admin.md` ("Modelo 3D (fase 3)").
+- [ ] Fase 3 no `miniappcofz-dev` (passo a passo em `docs/admin.md`, "Modelo 3D (fase 3)" → "Aplicar num projeto"):
+  - [ ] Aplicar a migration `20261112120000_admin_modelo.sql`.
+  - [ ] Teste de fumaça: em HTO → "Modelos 3D", enviar `app/public/modelos/hto/ARQ.frag` (ARQ, R06), publicar e abrir o modelo no Mini App; converter um IFC pequeno pelo site.
+  - [ ] Produção: repetir a migration antes de publicar esta versão do app.
 - [ ] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget).

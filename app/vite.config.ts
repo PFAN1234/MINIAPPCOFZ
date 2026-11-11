@@ -1,4 +1,4 @@
-import { createReadStream, rmSync, statSync } from 'node:fs'
+import { createReadStream, readFileSync, rmSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
@@ -65,14 +65,22 @@ export interface ManifestoPrecache {
 /**
  * Monta o manifesto de precache a partir dos nomes de arquivo do bundle.
  * Fora: mapas `.map`, o próprio manifesto e o visualizador 3D (chunk e worker: ~3,7 MB,
- * só úteis com os `.frag`, que exigem rede). `/index.html` sempre entra.
+ * só úteis com os `.frag`, que exigem rede). Também fora o conversor de IFC do site de
+ * administração (worker e `web-ifc.wasm`), que o grafo de imports não alcança.
+ * `/index.html` sempre entra.
  * A `versao` é o hash dos nomes ordenados: não depende da ordem de entrada.
  */
 export function montarManifesto(nomes: string[]): ManifestoPrecache {
   const unicos = new Set(
     nomes
       .map((n) => n.replace(/^\/+/, ''))
-      .filter((n) => n !== 'precache-manifest.json' && !n.endsWith('.map') && !/^assets\/(VisualizadorModelo|worker)-/.test(n)),
+      .filter(
+        (n) =>
+          n !== 'precache-manifest.json' &&
+          !n.endsWith('.map') &&
+          !/^assets\/(VisualizadorModelo|worker|conversor\.worker)-/.test(n) &&
+          !n.startsWith('web-ifc/'),
+      ),
   )
   unicos.add('index.html')
   const arquivos = [...unicos].sort().map((n) => `/${n}`)
@@ -150,6 +158,39 @@ function siteAdmin(): Plugin {
   }
 }
 
+/** Versão do web-ifc instalada: o `.wasm` fica em `/web-ifc/<versão>/` (cache por versão). */
+export const VERSAO_WEB_IFC: string = JSON.parse(
+  readFileSync(fileURLToPath(new URL('./node_modules/web-ifc/package.json', import.meta.url)), 'utf8'),
+).version
+const WASM_WEB_IFC = fileURLToPath(new URL('./node_modules/web-ifc/web-ifc.wasm', import.meta.url))
+
+/**
+ * O conversor de IFC (site de administração) carrega `web-ifc.wasm` por caminho fixo
+ * (`SetWasmPath`), sem o hash do Vite no nome: no build o arquivo é emitido em
+ * `web-ifc/<versão>/web-ifc.wasm`; em dev e preview, servido de node_modules.
+ */
+function wasmWebIfc(): Plugin {
+  const rota = `/web-ifc/${VERSAO_WEB_IFC}/web-ifc.wasm`
+  const servir: Connect.NextHandleFunction = (req, res, next) => {
+    if ((req.url ?? '').split('?')[0] !== rota) return next()
+    res.setHeader('Content-Type', 'application/wasm')
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+    createReadStream(WASM_WEB_IFC).pipe(res)
+  }
+  return {
+    name: 'wasm-web-ifc',
+    configureServer(server) {
+      server.middlewares.use(servir)
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(servir)
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: rota.slice(1), source: readFileSync(WASM_WEB_IFC) })
+    },
+  }
+}
+
 /** `public/modelos/` guarda os `.frag` do teste local; não vão para o deploy (virão do Supabase Storage). */
 function semModelosNoBuild(): Plugin {
   return {
@@ -164,7 +205,11 @@ function semModelosNoBuild(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), plantasFixture(), siteAdmin(), manifestoPrecache(), semModelosNoBuild()],
+  plugins: [react(), plantasFixture(), siteAdmin(), manifestoPrecache(), semModelosNoBuild(), wasmWebIfc()],
+  define: { __VERSAO_WEB_IFC__: JSON.stringify(VERSAO_WEB_IFC) },
+  // O conversor de IFC (worker do site de administração) importa a biblioteca como módulo.
+  // `THREE.TSL` da That Open fica em código que o worker não usa (descartado no build): sem aviso.
+  worker: { format: 'es', rolldownOptions: { checks: { importIsUndefined: false } } },
   // As fixtures importam os JSON de ../data/hto e ../data/cofz (fora da pasta do app); nada além disso.
   server: { fs: { allow: ['.', '../data/hto', '../data/cofz'] } },
   // Duas entradas: o Mini App (index.html) e o site de administração (admin.html, em /admin/).

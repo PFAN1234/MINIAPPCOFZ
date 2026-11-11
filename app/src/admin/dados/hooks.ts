@@ -101,3 +101,14 @@ export function useInvalidarPlanta() {
   const qc = useQueryClient()
   return () => qc.invalidateQueries({ queryKey: ['admin'], predicate: (q) => q.queryKey[1] !== 'sessao' })
 }
+
+export function useModelosAdmin(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'modelos', slug], queryFn: () => repo.listarModelosAdmin(slug) })
+}
+
+export function useRetirarModelo(slug: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (sigla: string) => repo.retirarModelo(slug, sigla), onSuccess: invalidar })
+}

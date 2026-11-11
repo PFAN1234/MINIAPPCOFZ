@@ -17,6 +17,8 @@ import {
   type AmbienteBanco,
   type ConfigObra,
   type EstadoSessao,
+  type EventoModelo,
+  type ModeloAdmin,
   type ObraAdmin,
   type ObraLista,
   type PavimentoAdmin,
@@ -170,6 +172,8 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
   ])
   const publicacoes: (Publicacao & { obra_id: string })[] = []
   const arquivos = new Map<string, Blob>()
+  const modelosPorObra = new Map<string, ModeloAdmin[]>()
+  const historicoModelos: (EventoModelo & { obra_id: string })[] = []
   const plantaDe = (o: ObraMemoria): PlantaMemoria => {
     let p = plantaPorObra.get(o.id)
     if (!p) {
@@ -390,11 +394,85 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       const obraId = caminho.split('/')[0]
       if (!obras.some((o) => o.id === obraId)) throw new ErroAdmin(`Sem permissão para gravar ${caminho} no Storage (${bucket}).`)
       if (bucket === 'originais' && !/\.pdf$/.test(caminho)) throw new ErroAdmin('O bucket originais só aceita PDF.')
+      // Como as políticas `modelos_admin_*`: <obra_id>/<SIGLA>/<hash16>.frag.
+      if (bucket === 'modelos' && !/^[^/]+\/[A-Z]{2,4}\/[0-9a-f]{16}\.frag$/.test(caminho)) {
+        throw new ErroAdmin(`Sem permissão para gravar ${caminho} no Storage (${bucket}).`)
+      }
       // Como o Storage (allowed_mime_types): o bucket plantas só aceita WebP, e aqui conferimos os bytes.
       if (bucket === 'plantas' && !ehWebp(new Uint8Array(await arquivo.slice(0, 12).arrayBuffer()))) {
         throw new ErroAdmin(`O arquivo ${caminho} não é WebP.`)
       }
       arquivos.set(`${bucket}/${caminho}`, arquivo)
+    },
+
+    async listarModelosAdmin(slug) {
+      exigirAdmin()
+      const o = obraPorSlug(slug)
+      return copia({
+        modelos: [...(modelosPorObra.get(o.id) ?? [])].sort((a, b) => a.sigla.localeCompare(b.sigla)),
+        historico: historicoModelos.filter((h) => h.obra_id === o.id).map((h) => ({ ...h, obra_id: undefined })),
+      })
+    },
+
+    async registrarModelo(slug, r) {
+      exigirAdmin()
+      const o = obraPorSlug(slug)
+      if (!/^[A-Z]{2,4}$/.test(r.sigla)) throw new ErroAdmin('Sigla inválida: use de 2 a 4 letras maiúsculas (ex.: ARQ).')
+      if (r.caminho !== `${o.id}/${r.sigla}/${r.hash}.frag`) throw new ErroAdmin('Caminho do modelo não confere.')
+      const arq = arquivos.get(`modelos/${r.caminho}`)
+      if (!arq) throw new ErroAdmin(`Modelo não encontrado no Storage (modelos/${r.caminho}): envie o arquivo antes de registrar.`)
+      if (arq.size !== r.bytes) throw new ErroAdmin(`O arquivo no Storage tem ${arq.size} bytes, e não ${r.bytes}.`)
+      const agora = new Date().toISOString()
+      const modelo: ModeloAdmin = {
+        sigla: r.sigla,
+        revisao: r.revisao,
+        caminho: r.caminho,
+        bytes: r.bytes,
+        hash: r.hash,
+        atualizado_em: agora,
+      }
+      modelosPorObra.set(o.id, [...(modelosPorObra.get(o.id) ?? []).filter((m) => m.sigla !== r.sigla), modelo])
+      historicoModelos.unshift({
+        obra_id: o.id,
+        id: `pubmod-${++sequencia}`,
+        acao: 'publicado',
+        sigla: r.sigla,
+        revisao: r.revisao,
+        bytes: r.bytes,
+        hash: r.hash,
+        origem: r.origem,
+        arquivo_nome: r.arquivo_nome ?? null,
+        ifc_bytes: r.ifc_bytes ?? null,
+        publicado_em: agora,
+        publicado_por_nome: VOCE.nome,
+      })
+      return copia(modelo)
+    },
+
+    async retirarModelo(slug, sigla) {
+      exigirAdmin()
+      const o = obraPorSlug(slug)
+      const lista = modelosPorObra.get(o.id) ?? []
+      const m = lista.find((x) => x.sigla === sigla)
+      if (!m) throw new ErroAdmin(`Não há modelo publicado com a sigla ${sigla} nesta obra.`)
+      modelosPorObra.set(
+        o.id,
+        lista.filter((x) => x.sigla !== sigla),
+      )
+      historicoModelos.unshift({
+        obra_id: o.id,
+        id: `pubmod-${++sequencia}`,
+        acao: 'retirado',
+        sigla,
+        revisao: m.revisao,
+        bytes: m.bytes,
+        hash: m.hash,
+        origem: null,
+        arquivo_nome: null,
+        ifc_bytes: null,
+        publicado_em: new Date().toISOString(),
+        publicado_por_nome: VOCE.nome,
+      })
     },
 
     async baixarOriginal(caminho) {
