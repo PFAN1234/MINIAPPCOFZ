@@ -521,6 +521,25 @@ td.adm-acoes {
   border: 0;
 }
 
+.adm-area-planta {
+  position: relative;
+}
+
+.adm-aviso-flutuante {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 10px;
+  max-width: calc(100% - 16px);
+  border: 1px solid var(--adm-borda);
+  border-radius: 6px;
+  background: var(--adm-superficie);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+}
+
 .adm-cursor-mira {
   cursor: crosshair;
 }

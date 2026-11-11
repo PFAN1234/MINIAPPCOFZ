@@ -50,14 +50,19 @@ test('envia o PDF da COFZ, confere os ambientes, arrasta e acrescenta pinos e pu
   expect(depois.x - caixa.x).toBeGreaterThan(30)
 
   // Acrescenta um pino à Sala DA clicando 60 px à direita do pino dela: a ponta fica no clique.
-  const pinoDa = (await page.getByTestId('pino-terreo-sala-da-0').boundingBox())!
+  // (Medido em relação à planta: a lista de casos para conferir cresce e empurra a planta.)
   await page.getByTestId('linha-terreo-sala-da').getByRole('button', { name: 'Adicionar pino' }).click()
   await expect(page.getByText(/Clique na planta onde fica o novo pino de/)).toBeVisible()
+  const sobreposicao = page.getByLabel('Pinos dos ambientes')
+  const pinoDa = (await page.getByTestId('pino-terreo-sala-da-0').boundingBox())!
+  const svgAntes = (await sobreposicao.boundingBox())!
   const alvo = { x: pinoDa.x + pinoDa.width / 2 + 60, y: pinoDa.y + pinoDa.height }
   await page.mouse.click(alvo.x, alvo.y)
+  await expect(page.getByTestId('pino-terreo-sala-da-1')).toBeVisible()
   const novoPino = (await page.getByTestId('pino-terreo-sala-da-1').boundingBox())!
-  expect(Math.abs(novoPino.x + novoPino.width / 2 - alvo.x)).toBeLessThan(3)
-  expect(Math.abs(novoPino.y + novoPino.height - alvo.y)).toBeLessThan(3)
+  const svgDepois = (await sobreposicao.boundingBox())!
+  expect(Math.abs(novoPino.x + novoPino.width / 2 - svgDepois.x - (alvo.x - svgAntes.x))).toBeLessThan(3)
+  expect(Math.abs(novoPino.y + novoPino.height - svgDepois.y - (alvo.y - svgAntes.y))).toBeLessThan(3)
   await expect(page.getByTestId('linha-terreo-sala-da').getByRole('button', { name: 'Remover pino 2' })).toBeVisible()
   await page.getByRole('button', { name: 'Continuar' }).click()
 
