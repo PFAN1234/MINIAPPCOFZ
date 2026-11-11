@@ -11,16 +11,22 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "modelos": "node --max-old-space-size=8192 scripts/ifc_para_frag.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.119.0",
     "@tanstack/react-query": "5.107.1",
+    "@thatopen/components": "3.6.0",
+    "@thatopen/fragments": "3.6.1",
+    "camera-controls": "3.1.2",
     "idb": "8.0.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router": "7.18.5",
-    "react-zoom-pan-pinch": "4.2.0"
+    "react-zoom-pan-pinch": "4.2.0",
+    "three": "0.187.0",
+    "web-ifc": "0.0.79"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -32,6 +38,7 @@
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/three": "0.187.0",
     "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
