@@ -194,3 +194,23 @@ def test_manter_codigo_mantem_ambiente_e_registros(dsn):
         cur.execute("select count(*) from public.planta_detalhe d join public.planta pl on pl.id = d.planta_id "
                     "where d.ambiente_id = %s and pl.revisao = 'R02' and pl.ativa", (copa,))
         assert cur.fetchone()[0] == 1
+
+
+def test_id_aplicado_antes_de_confirmar_renomeacao_fica_inativo(dsn):
+    """Seed aplicado antes do ``manter_codigo``: o id novo provisório sai da lista e fica inativo."""
+    slug = 'rev-' + uuid.uuid4().hex[:8]
+    obra1 = _obra(slug, 'R01')
+    dados1 = extrair_mod.extrair(obra1, R01)
+    _aplicar(dsn, _seed(obra1, dados1))
+
+    obra2 = _obra(slug, 'R02')
+    provisorio = extrair_mod.extrair(obra2, R02, copy.deepcopy(dados1))
+    _aplicar(dsn, _seed(obra2, provisorio))  # cedo demais: 'terreo-cozinha' chega ao banco
+    assert _ambientes(dsn, slug)['terreo-cozinha'] == ('Cozinha', True)
+
+    obra2 = _obra(slug, 'R02', manter_codigo={'terreo-cozinha': 'terreo-copa'})
+    dados2 = extrair_mod.extrair(obra2, R02, copy.deepcopy(provisorio))
+    _aplicar(dsn, _seed(obra2, dados2))
+    ambientes = _ambientes(dsn, slug)
+    assert ambientes['terreo-copa'] == ('Cozinha', True)
+    assert ambientes['terreo-cozinha'] == ('Cozinha', False)

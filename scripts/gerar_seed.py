@@ -117,6 +117,20 @@ def _inativar_ambiente(slug: str, codigo: str) -> str:
     )
 
 
+def _inativar_fora_da_lista(slug: str, codigos: list[str]) -> str:
+    """Inativa qualquer ambiente da obra que não esteja na lista atual.
+
+    Cobre ids que chegaram ao banco e depois sumiram da lista sem passar por
+    ``ambientes_removidos`` (ex.: seed aplicado antes de confirmar um ``manter_codigo``).
+    """
+    lista = ", ".join(literal(c) for c in codigos)
+    return (
+        "update public.ambiente a set ativo = false from public.obra o "
+        f"where a.obra_id = o.id and o.slug = {literal(slug)} and a.ativo "
+        f"and a.codigo <> all (array[{lista}]::text[]);"
+    )
+
+
 def _desativar_plantas_anteriores(slug: str, pav: dict) -> str:
     """Desativa a planta ativa de outra revisão do pavimento (índice único ``planta_ativa_unica``)."""
     return (
@@ -237,11 +251,10 @@ def gerar(dados: dict, plantas: dict | None = None, obra: dict | None = None) ->
     for ordem, amb in enumerate(dados["ambientes"], start=1):
         linhas.append(_insert_ambiente(slug, amb, ordem))
     linhas.append("")
-    removidos = dados.get("ambientes_removidos", [])
-    if removidos:
-        for r in removidos:
-            linhas.append(_inativar_ambiente(slug, r["id"]))
-        linhas.append("")
+    for r in dados.get("ambientes_removidos", []):
+        linhas.append(_inativar_ambiente(slug, r["id"]))
+    linhas.append(_inativar_fora_da_lista(slug, [a["id"] for a in dados["ambientes"]]))
+    linhas.append("")
     por_id = {p["id"]: p for p in plantas["pavimentos"]}
     pavs = [por_id[p["id"]] for p in dados["pavimentos"]]
     for pav in pavs:

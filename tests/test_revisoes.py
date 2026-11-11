@@ -249,10 +249,12 @@ def test_seed_inativa_removidos_e_grava_ativo(r02):
     sql = _seed(r02, "R02")
     linhas = sql.splitlines()
     inativar = [linha for linha in linhas if linha.startswith("update public.ambiente ")]
-    assert len(inativar) == 2
+    assert len(inativar) == 3
     assert all("set ativo = false" in linha for linha in inativar)
     assert any("a.codigo = 'terreo-copa'" in linha for linha in inativar)
     assert any("a.codigo = 'terreo-dml'" in linha for linha in inativar)
+    # Rede de segurança: qualquer outro ambiente da obra fora da lista atual também fica inativo.
+    assert any("a.codigo <> all (array[" in linha for linha in inativar)
     inserts = [linha for linha in linhas if linha.startswith("insert into public.ambiente ")]
     assert len(inserts) == 3
     assert all(", ativo)" in linha and "ativo = excluded.ativo" in linha for linha in inserts)
@@ -261,8 +263,10 @@ def test_seed_inativa_removidos_e_grava_ativo(r02):
     assert "delete " not in sql
 
 
-def test_seed_sem_removidos_nao_inativa_nada(r01):
-    assert "update public.ambiente " not in _seed(r01, "R01")
+def test_seed_sem_removidos_so_inativa_fora_da_lista(r01):
+    inativar = [linha for linha in _seed(r01, "R01").splitlines() if linha.startswith("update public.ambiente ")]
+    assert len(inativar) == 1
+    assert "a.codigo <> all (array['terreo-copa', 'terreo-dml', 'terreo-recepcao']::text[])" in inativar[0]
 
 
 def test_seed_recusa_id_ativo_e_removido(r02):

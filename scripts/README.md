@@ -27,7 +27,7 @@ Ambientes com o mesmo nome e áreas diferentes, sem entrada em `renomear`, são 
 
 - `extrair_ambientes.py`: lê os PDFs da configuração com o PyMuPDF, pareia cada `A=xx m²` com o nome logo acima e gera `data/<slug>/ambientes.json`, com nome, categoria, área e marcadores (pinos) de cada ambiente. Se o arquivo já existir, ele é lido antes de ser sobrescrito e serve de base: os códigos iguais são mantidos, `manter_codigo` é aplicado, os ids que sumiram vão para `ambientes_removidos` e as diferenças vão para `diferencas` (e para o terminal). A função `extrair(obra, paginas, base)` é pura e testável com spans sintéticos.
 - `gerar_plantas.py`: renderiza os PDFs e gera, em `data/<slug>/plantas/<revisao>/<pavimento>/`, a visão geral (`planta.webp`), a versão HD (`planta-hd.webp`), um recorte por ambiente (`ambientes/<id>.webp`) e `prova.png`. Também escreve o manifesto `data/<slug>/plantas.json`. Apaga de `ambientes/` os recortes de ids que saíram da lista, para o `publicar_plantas.py` não enviá-los.
-- `gerar_seed.py`: gera `supabase/seed/<slug>.sql` (obra, pavimentos, ambientes, plantas e detalhes) a partir de `ambientes.json` e `plantas.json`. Rode de novo depois de mudar qualquer um dos dois. Grava `ativo = true` nos ambientes da lista e `ativo = false` nos de `ambientes_removidos`, e desativa a planta de outra revisão do pavimento antes de gravar a nova (exige a migration `20261111130000_ambiente_ativo.sql`).
+- `gerar_seed.py`: gera `supabase/seed/<slug>.sql` (obra, pavimentos, ambientes, plantas e detalhes) a partir de `ambientes.json` e `plantas.json`. Rode de novo depois de mudar qualquer um dos dois. Grava `ativo = true` nos ambientes da lista e `ativo = false` nos de `ambientes_removidos` e em qualquer outro da obra que esteja fora da lista, e desativa a planta de outra revisão do pavimento antes de gravar a nova (exige a migration `20261111130000_ambiente_ativo.sql`).
 - `publicar_plantas.py`: envia os `.webp` de `data/<slug>/plantas/` ao bucket privado `plantas` (não envia `prova.png`). Usa só a biblioteca padrão e lê o `obra.id` pela API REST, então o seed precisa ter sido aplicado antes.
 
 ## Ordem de execução
@@ -89,7 +89,7 @@ O código (id) de um ambiente não muda depois de publicado: `registro` referenc
 8. Aplicar a migration `20261111130000_ambiente_ativo.sql` (uma vez por banco) e depois o seed. O seed desativa a planta anterior de cada pavimento e grava a nova como ativa; a planta antiga e os detalhes dela ficam no banco como histórico.
 9. Publicar as imagens com `publicar_plantas.py --obra <slug>`. As da revisão anterior ficam no bucket, na pasta dela.
 
-Atenção: só aplique o seed depois de confirmar as renomeações. Um id novo que chegue ao banco e depois seja trocado por `manter_codigo` continua ativo lá.
+Aplique o seed de preferência depois de confirmar as renomeações. Se ele for aplicado antes, o id novo provisório chega ao banco; quando o `manter_codigo` o troca pelo antigo, o seed seguinte o deixa inativo (todo ambiente da obra fora da lista atual fica com `ativo = false`), mas registros feitos nesse intervalo ficam presos ao id provisório.
 
 ## Instalação
 
