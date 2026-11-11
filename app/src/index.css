@@ -777,6 +777,15 @@ body {
   border-radius: 10px;
 }
 
+.aviso-inativo {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  color: #713f12;
+  font-size: 0.9rem;
+  background: #fdf0c4;
+  border-radius: 10px;
+}
+
 .aviso-fechar {
   min-width: 32px;
   min-height: 32px;
@@ -791,6 +800,11 @@ body {
   .aviso {
     color: #b9efcd;
     background: #17432a;
+  }
+
+  .aviso-inativo {
+    color: #f6dfa0;
+    background: #4a3a10;
   }
 }
 

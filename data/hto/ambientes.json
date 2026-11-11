@@ -2073,5 +2073,15 @@
       "motivo": "ambiente rotulado mais de uma vez; mantidos todos os pinos",
       "nome": "Circulação"
     }
-  ]
+  ],
+  "ambientes_removidos": [],
+  "diferencas": {
+    "revisao_base": "R05",
+    "novos": [],
+    "removidos": [],
+    "herdados": [],
+    "nome_alterado": [],
+    "area_alterada": [],
+    "marcador_deslocado": []
+  }
 }

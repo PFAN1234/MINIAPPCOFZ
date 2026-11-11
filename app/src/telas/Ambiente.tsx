@@ -11,6 +11,9 @@ import { useRegistrosLocais } from '../offline/contexto.tsx'
 import { recursos } from '../recursos.ts'
 import { formatarArea } from '../util/formato.ts'
 
+const AVISO_INATIVO =
+  'Este ambiente não existe na planta atual; registros mantidos como histórico.'
+
 const ABAS = [
   { id: 'historico', rotulo: 'Histórico' },
   { id: 'pendencias', rotulo: 'Pendências' },
@@ -45,6 +48,11 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
         <Link to={`/obras/${obra.slug}?pav=${pavimento.codigo}`}>{obra.nome}</Link> · {pavimento.nome}
         {area && ` · ${area}`}
       </p>
+      {!ambiente.ativo && (
+        <p className="aviso-inativo" role="note">
+          {AVISO_INATIVO}
+        </p>
+      )}
       <OndeFica
         detalhe={detalhe}
         onAbrirPlanta={() =>

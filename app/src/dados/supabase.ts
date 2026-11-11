@@ -113,6 +113,7 @@ function mapearAmbiente(
     area_m2: l.area_m2 == null ? null : Number(l.area_m2),
     marcadores: (l.marcadores as Marcador[] | null) ?? [],
     pendencias_abertas: pendencias.get(String(l.id)) ?? 0,
+    ativo: l.ativo !== false,
   }
 }
 
@@ -122,7 +123,7 @@ const COLUNAS_REGISTRO =
   'id, tipo, situacao, legenda, capturado_em, recebido_em, autor:usuario(nome), '
 
 const COLUNAS_AMBIENTE =
-  'id, codigo, pavimento_id, nome_operacional, nome_planta, categoria, area_m2, marcadores'
+  'id, codigo, pavimento_id, nome_operacional, nome_planta, categoria, area_m2, marcadores, ativo'
 
 export function criarRepositorioSupabase(
   cliente: SupabaseClient = criarClienteSupabase(),

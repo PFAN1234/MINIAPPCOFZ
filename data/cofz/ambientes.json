@@ -469,5 +469,15 @@
       "motivo": "ambiente sem rótulo na planta; pino colocado à mão",
       "nome": "Sala de apoio"
     }
-  ]
+  ],
+  "ambientes_removidos": [],
+  "diferencas": {
+    "revisao_base": "R06",
+    "novos": [],
+    "removidos": [],
+    "herdados": [],
+    "nome_alterado": [],
+    "area_alterada": [],
+    "marcador_deslocado": []
+  }
 }

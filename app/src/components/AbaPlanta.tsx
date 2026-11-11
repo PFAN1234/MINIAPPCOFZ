@@ -31,7 +31,7 @@ export function AbaPlanta({
   const urls = useUrlsImagens(paths)
 
   const doPavimento = useMemo(
-    () => obra.ambientes.filter((a) => a.pavimento_codigo === pavimentoCodigo),
+    () => obra.ambientes.filter((a) => a.ativo && a.pavimento_codigo === pavimentoCodigo),
     [obra.ambientes, pavimentoCodigo],
   )
   const marcadores = useMemo<MarcadorPlanta[]>(

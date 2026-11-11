@@ -122,16 +122,40 @@ const PAVIMENTOS: Pavimento[] = ambientesJson.pavimentos.map((p, i) => ({
   planta: plantasPorPavimento.get(p.id) ?? null,
 }))
 
-const AMBIENTES_BASE = ambientesJson.ambientes.map((a) => ({
-  id: a.id,
-  codigo: a.id,
-  pavimento_codigo: a.pavimento,
-  nome_operacional: a.nome_operacional,
-  nome_planta: a.nome_planta,
-  categoria: a.categoria,
-  area_m2: a.area_m2 ?? null,
-  marcadores: a.marcadores.map((m) => ({ x: m.x, y: m.y })),
-}))
+interface RemovidoJson {
+  id: string
+  pavimento: string
+  nome_operacional: string
+}
+
+/** Como no banco: os ambientes que saíram da planta entram inativos, sem pino nem detalhe. */
+const REMOVIDOS_JSON = (ambientesJson as unknown as { ambientes_removidos?: RemovidoJson[] })
+  .ambientes_removidos ?? []
+
+const AMBIENTES_BASE: Omit<Ambiente, 'pendencias_abertas'>[] = [
+  ...ambientesJson.ambientes.map((a) => ({
+    id: a.id,
+    codigo: a.id,
+    pavimento_codigo: a.pavimento,
+    nome_operacional: a.nome_operacional,
+    nome_planta: a.nome_planta as string | null,
+    categoria: a.categoria,
+    area_m2: a.area_m2 ?? null,
+    marcadores: a.marcadores.map((m) => ({ x: m.x, y: m.y })),
+    ativo: true,
+  })),
+  ...REMOVIDOS_JSON.map((r) => ({
+    id: r.id,
+    codigo: r.id,
+    pavimento_codigo: r.pavimento,
+    nome_operacional: r.nome_operacional,
+    nome_planta: null,
+    categoria: '',
+    area_m2: null,
+    marcadores: [],
+    ativo: false,
+  })),
+]
 
 function detalhePlanta(pav: string, codigo: string): DetalhePlanta | null {
   const p = pavsJson.find((x) => x.id === pav)

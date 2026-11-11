@@ -99,7 +99,7 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
     )
   }
 
-  const doPavimento = ambientes.filter((a) => a.pavimento_codigo === pav.codigo)
+  const doPavimento = ambientes.filter((a) => a.ativo && a.pavimento_codigo === pav.codigo)
   const lista = ordenarNatural(filtrarAmbientes(doPavimento, busca), (a) => a.nome_operacional)
 
   return (
