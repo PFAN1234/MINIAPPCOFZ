@@ -89,9 +89,14 @@ export function validarObra(obra: ObraConfig, slug?: string): void {
       if (!(campo in manual)) falhar(`ambiente manual sem o campo '${campo}': ${JSON.stringify(manual)}`)
     }
     if (!codigos.includes(manual.pavimento)) falhar(`ambiente manual em pavimento desconhecido: '${manual.pavimento}'`)
-    const { x, y } = manual.marcador
-    if (![x, y].every((v) => typeof v === 'number' && v >= 0 && v <= 1)) {
-      falhar(`marcador do ambiente manual fora de 0–1: '${manual.nome_operacional}'`)
+    const extras = (manual as { marcadores?: unknown }).marcadores
+    if (extras !== undefined && extras !== null && (!Array.isArray(extras) || extras.length === 0)) {
+      falhar(`'marcadores' do ambiente manual deve ser uma lista não vazia: '${manual.nome_operacional}'`)
+    }
+    for (const { x, y } of pinosManuais(manual)) {
+      if (![x, y].every((v) => typeof v === 'number' && v >= 0 && v <= 1)) {
+        falhar(`marcador do ambiente manual fora de 0–1: '${manual.nome_operacional}'`)
+      }
     }
   }
   const manter = obra.manter_codigo ?? {}
@@ -249,10 +254,14 @@ function chaveRenomear(pav: string, nome: string, area: number | null | undefine
   return JSON.stringify([pav, nome, areaArred(area)])
 }
 
-/** Ambiente sem rótulo na planta, com o pino definido à mão na configuração. */
+/** Pinos de um ambiente manual: `marcadores` (lista) quando houver, senão `[marcador]`. */
+export function pinosManuais(manual: AmbienteManual): { x: number; y: number }[] {
+  return Array.isArray(manual.marcadores) && manual.marcadores.length > 0 ? manual.marcadores : [manual.marcador]
+}
+
+/** Ambiente sem rótulo na planta, com os pinos definidos à mão na configuração. */
 export function ambienteManual(obra: ObraConfig, pavCfg: PavimentoConfig, manual: AmbienteManual): Omit<Ambiente, 'id'> {
-  const x = arredondar(Number(manual.marcador.x), 6)
-  const y = arredondar(Number(manual.marcador.y), 6)
+  const pinos = pinosManuais(manual).map((p) => [arredondar(Number(p.x), 6), arredondar(Number(p.y), 6)] as const)
   return {
     pavimento: pavCfg.codigo,
     nome_planta: null,
@@ -262,7 +271,7 @@ export function ambienteManual(obra: ObraConfig, pavCfg: PavimentoConfig, manual
     pdf: `${obra.pasta_pdf}/${pavCfg.pdf}`,
     pagina: pavCfg.pagina ?? 1,
     revisao: obra.revisao,
-    marcadores: [{ x, y, rotulo_bbox: [x, y, x, y] }],
+    marcadores: pinos.map(([x, y]): Marcador => ({ x, y, rotulo_bbox: [x, y, x, y] })),
   }
 }
 

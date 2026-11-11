@@ -2,15 +2,18 @@
  * Editor da planta de um pavimento (`/admin/obras/<slug>/planta/<pavimento>`), em etapas:
  * 1. PDF e revisão; 2. recorte e máscaras; 3. ambientes; 4. nova revisão; 5. prova e publicar.
  * O processamento (pdf.js, imagens) roda no navegador; nada é gravado até "Publicar".
+ * Com `?ajustar=1`, o PDF guardado da última publicação é reaberto e o editor vai direto para
+ * os ambientes (acrescentar pinos e ambientes sem enviar o arquivo de novo).
  */
 import { useMutation } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { ComDados, mensagemDe } from '../../componentes.tsx'
 import { useRepositorioAdmin } from '../../dados/contexto.tsx'
 import { useEditorPlanta, useInvalidarPlanta } from '../../dados/hooks.ts'
 import type { DadosEditorPlanta, PavimentoEditor } from '../../dados/tipos.ts'
 import {
+  adicionarPino,
   confirmarMesmo,
   desfazerMesmo,
   edicaoInicial,
@@ -60,6 +63,19 @@ export default function EditorPlanta() {
   )
 }
 
+/** Confere e abre um PDF (limite, assinatura `%PDF-`), calculando o SHA-256. */
+async function lerPdf(
+  nome: string,
+  bytes: Uint8Array,
+  carregarServico: ReturnType<typeof useServicoPdf>,
+): Promise<{ arquivo: ArquivoPdf; doc: DocumentoPdf }> {
+  if (bytes.length > LIMITE_PDF) throw new Error('O PDF passa de 50 MB, o limite do armazenamento.')
+  if (String.fromCharCode(...bytes.subarray(0, 5)) !== '%PDF-') throw new Error('O arquivo escolhido não é um PDF.')
+  const servico = await carregarServico()
+  const [sha256, doc] = await Promise.all([sha256Hex(bytes), servico.abrir(bytes)])
+  return { arquivo: { nome, bytes, sha256 }, doc }
+}
+
 type ResultadoExtracaoTela = { ok: Extracao; erro?: undefined } | { ok?: undefined; erro: string }
 
 function Editor({ dados, pav }: { dados: DadosEditorPlanta; pav: PavimentoEditor }) {
@@ -71,6 +87,12 @@ function Editor({ dados, pav }: { dados: DadosEditorPlanta; pav: PavimentoEditor
   const [edicao, setEdicao] = useState<EstadoEdicao>(() => edicaoInicial(dados, pav.codigo))
   const [erroAcao, setErroAcao] = useState<string | null>(null)
   const [publicado, setPublicado] = useState<string | null>(null)
+  const [busca] = useSearchParams()
+  const repo = useRepositorioAdmin()
+  const guardado = pav.ultimo_pdf
+  const atalho = busca.get('ajustar') === '1' && !!guardado
+  const [estadoAtalho, setEstadoAtalho] = useState<'abrindo' | 'pronto' | 'erro'>(atalho ? 'abrindo' : 'pronto')
+  const atalhoIniciado = useRef(false)
 
   useEffect(
     () => () => {
@@ -78,6 +100,43 @@ function Editor({ dados, pav }: { dados: DadosEditorPlanta; pav: PavimentoEditor
     },
     [doc],
   )
+
+  function aoAbrirArquivo(a: ArquivoPdf, d: DocumentoPdf) {
+    void doc?.fechar()
+    setArquivo(a)
+    setDoc(d)
+    setPagina(null)
+    setPublicado(null)
+    setEdicao((e) => ({
+      ...e,
+      pdfNome: a.nome,
+      revisao: revisaoDoNome(a.nome) ?? e.revisao,
+      pagina: Math.min(e.pagina, d.paginas),
+    }))
+  }
+
+  // Atalho "Ajustar ambientes e pinos": reabre o PDF guardado e vai para a etapa 3.
+  useEffect(() => {
+    if (!atalho || !guardado || atalhoIniciado.current) return
+    atalhoIniciado.current = true
+    void (async () => {
+      try {
+        const nome = guardado.nome ?? `${guardado.sha256}.pdf`
+        const { arquivo: a, doc: d } = await lerPdf(nome, await repo.baixarOriginal(guardado.path), carregarServico)
+        const numero = Math.min(guardado.pagina, d.paginas)
+        aoAbrirArquivo(a, d)
+        setEdicao((e) => ({ ...e, pagina: numero, revisao: guardado.revisao }))
+        setPagina(await d.pagina(numero))
+        setEtapa(2)
+        setEstadoAtalho('pronto')
+      } catch (e) {
+        setErroAcao(`Não foi possível reabrir o PDF guardado: ${mensagemDe(e)}. Envie o arquivo na etapa 1.`)
+        setEstadoAtalho('erro')
+      }
+    })()
+    // Roda uma vez, na abertura do editor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const erroPrancha = useMemo(() => {
     try {
@@ -133,6 +192,7 @@ function Editor({ dados, pav }: { dados: DadosEditorPlanta; pav: PavimentoEditor
     moverPino: (a, i, x, y) => editar((e) => moverPino(e, a, i, x, y)),
     removerPino: (a, i) => editarDireto(() => removerPino(edicao, a, i)),
     restaurarPinos: (a) => editar((e) => restaurarPinos(e, a)),
+    adicionarPino: (a, x, y) => editarDireto(() => adicionarPino(edicao, a, x, y)),
     incluir: (nome, cat, x, y) => editarDireto(() => incluirManual(edicao, pav.codigo, nome, cat, x, y)),
     removerManual: (a: Ambiente) => editar((e) => removerManual(e, a)),
   }
@@ -185,7 +245,12 @@ function Editor({ dados, pav }: { dados: DadosEditorPlanta; pav: PavimentoEditor
         </p>
       )}
 
-      {etapa === 0 && (
+      {estadoAtalho === 'abrindo' && (
+        <p className="adm-estado" role="status">
+          Reabrindo o PDF guardado ({guardado?.nome ?? 'sem nome'}, revisão {guardado?.revisao})…
+        </p>
+      )}
+      {etapa === 0 && estadoAtalho !== 'abrindo' && (
         <EtapaArquivo
           dados={dados}
           pav={pav}
@@ -193,19 +258,7 @@ function Editor({ dados, pav }: { dados: DadosEditorPlanta; pav: PavimentoEditor
           doc={doc}
           edicao={edicao}
           carregarServico={carregarServico}
-          onArquivo={(a, d) => {
-            void doc?.fechar()
-            setArquivo(a)
-            setDoc(d)
-            setPagina(null)
-            setPublicado(null)
-            setEdicao((e) => ({
-              ...e,
-              pdfNome: a.nome,
-              revisao: revisaoDoNome(a.nome) ?? e.revisao,
-              pagina: Math.min(e.pagina, d.paginas),
-            }))
-          }}
+          onArquivo={aoAbrirArquivo}
           onEdicao={(f) => setEdicao((e) => ({ ...e, ...f }))}
           onPagina={(p) => {
             setPagina(p)
@@ -317,12 +370,8 @@ function EtapaArquivo({
     setErro(null)
     setOcupado('Lendo o PDF…')
     try {
-      const bytes = await obterBytes()
-      if (bytes.length > LIMITE_PDF) throw new Error('O PDF passa de 50 MB, o limite do armazenamento.')
-      if (String.fromCharCode(...bytes.subarray(0, 5)) !== '%PDF-') throw new Error('O arquivo escolhido não é um PDF.')
-      const servico = await carregarServico()
-      const [sha256, d] = await Promise.all([sha256Hex(bytes), servico.abrir(bytes)])
-      onArquivo({ nome, bytes, sha256 }, d)
+      const { arquivo: a, doc: d } = await lerPdf(nome, await obterBytes(), carregarServico)
+      onArquivo(a, d)
     } catch (e) {
       setErro(mensagemDe(e, 'Não foi possível abrir o PDF.'))
     } finally {

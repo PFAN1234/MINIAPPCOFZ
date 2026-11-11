@@ -7,7 +7,7 @@ test.use({ viewport: { width: 1440, height: 900 }, isMobile: false, hasTouch: fa
 
 const PDF_COFZ = fileURLToPath(new URL('../../DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf', import.meta.url))
 
-test('envia o PDF da COFZ, confere os ambientes, arrasta um pino e publica', async ({ page }) => {
+test('envia o PDF da COFZ, confere os ambientes, arrasta e acrescenta pinos e publica', async ({ page }) => {
   test.setTimeout(240_000)
   const erros: string[] = []
   page.on('pageerror', (e) => erros.push(e.message))
@@ -48,6 +48,22 @@ test('envia o PDF da COFZ, confere os ambientes, arrasta um pino e publica', asy
   await expect(linhaCopa.getByRole('button', { name: 'Voltar pinos ao rótulo' })).toBeVisible()
   const depois = (await pino.boundingBox())!
   expect(depois.x - caixa.x).toBeGreaterThan(30)
+
+  // Acrescenta um pino à Sala DA clicando 60 px à direita do pino dela: a ponta fica no clique.
+  // (Medido em relação à planta: a lista de casos para conferir cresce e empurra a planta.)
+  await page.getByTestId('linha-terreo-sala-da').getByRole('button', { name: 'Adicionar pino' }).click()
+  await expect(page.getByText(/Clique na planta onde fica o novo pino de/)).toBeVisible()
+  const sobreposicao = page.getByLabel('Pinos dos ambientes')
+  const pinoDa = (await page.getByTestId('pino-terreo-sala-da-0').boundingBox())!
+  const svgAntes = (await sobreposicao.boundingBox())!
+  const alvo = { x: pinoDa.x + pinoDa.width / 2 + 60, y: pinoDa.y + pinoDa.height }
+  await page.mouse.click(alvo.x, alvo.y)
+  await expect(page.getByTestId('pino-terreo-sala-da-1')).toBeVisible()
+  const novoPino = (await page.getByTestId('pino-terreo-sala-da-1').boundingBox())!
+  const svgDepois = (await sobreposicao.boundingBox())!
+  expect(Math.abs(novoPino.x + novoPino.width / 2 - svgDepois.x - (alvo.x - svgAntes.x))).toBeLessThan(3)
+  expect(Math.abs(novoPino.y + novoPino.height - svgDepois.y - (alvo.y - svgAntes.y))).toBeLessThan(3)
+  await expect(page.getByTestId('linha-terreo-sala-da').getByRole('button', { name: 'Remover pino 2' })).toBeVisible()
   await page.getByRole('button', { name: 'Continuar' }).click()
 
   // 4. Nova revisão: comparada com o banco, só o pino da copa mudou.
@@ -72,5 +88,11 @@ test('envia o PDF da COFZ, confere os ambientes, arrasta um pino e publica', asy
   await page.getByRole('link', { name: 'Planta de Térreo' }).click()
   await page.getByRole('button', { name: /Reabrir o PDF guardado/ }).click()
   await expect(page.getByText(/1 página\(s\)/)).toBeVisible({ timeout: 60_000 })
+
+  // Atalho da lista de pavimentos: direto nos ambientes, com o pino a mais da Sala DA.
+  await page.getByRole('link', { name: 'Pavimentos' }).click()
+  await page.getByRole('link', { name: 'Ajustar ambientes e pinos de Térreo' }).click()
+  await expect(page.getByRole('heading', { name: 'Ambientes' })).toBeVisible({ timeout: 60_000 })
+  await expect(page.getByTestId('pino-terreo-sala-da-1')).toBeVisible({ timeout: 60_000 })
   expect(erros).toEqual([])
 })

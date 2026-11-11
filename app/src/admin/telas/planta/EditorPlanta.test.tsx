@@ -157,4 +157,35 @@ describe('editor de planta (fixture)', () => {
     await user.click(screen.getByRole('button', { name: 'Desfazer' }))
     expect(await screen.findByRole('heading', { name: 'Removidos (1)' })).toBeInTheDocument()
   })
+  it('adicionar pino a um ambiente e, depois de publicar, reabrir direto nos ambientes', async () => {
+    const user = userEvent.setup()
+    renderizar('/obras/cofz/planta/terreo')
+    await abrirAmbientes(user)
+    const pinos = () => screen.getAllByTestId(/^pino-terreo-copa-/)
+    expect(pinos()).toHaveLength(1)
+    await user.click(within(screen.getByTestId('linha-terreo-copa')).getByRole('button', { name: 'Adicionar pino' }))
+    expect(screen.getByRole('status')).toHaveTextContent('novo pino de Copa')
+    const svg = screen.getByLabelText('Pinos dos ambientes')
+    svg.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 1, clientY: 1 }))
+    await waitFor(() => expect(pinos()).toHaveLength(2))
+    const linha = screen.getByTestId('linha-terreo-copa')
+    expect(within(linha).getByRole('button', { name: 'Voltar pinos ao rótulo' })).toBeInTheDocument()
+    expect(within(linha).getByRole('button', { name: 'Remover pino 2' })).toBeInTheDocument()
+
+    // Sem pino novo no modo desligado: clicar de novo na planta não muda nada.
+    svg.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 1, clientY: 1 }))
+    expect(pinos()).toHaveLength(2)
+
+    await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    await user.click(await screen.findByRole('button', { name: 'Continuar' }))
+    await user.click(await screen.findByRole('button', { name: 'Publicar' }))
+    expect(await screen.findByText(/Publicado: Térreo, revisão R06/)).toBeInTheDocument()
+
+    // Atalho na lista de pavimentos: reabre o PDF guardado e vai para os ambientes, com o pino a mais.
+    await user.click(screen.getByRole('link', { name: 'Pavimentos' }))
+    await user.click(await screen.findByRole('link', { name: 'Ajustar ambientes e pinos de Térreo' }))
+    expect(await screen.findByRole('heading', { name: 'Ambientes' })).toBeInTheDocument()
+    expect(screen.getAllByTestId(/^pino-terreo-copa-/)).toHaveLength(2)
+    expect(screen.getByText(/Arquivo: CE01-01PE02-ARQ-DE009-R06.pdf · revisão R06/)).toBeInTheDocument()
+  })
 })

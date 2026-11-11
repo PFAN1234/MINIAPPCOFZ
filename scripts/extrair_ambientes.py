@@ -91,9 +91,13 @@ def validar_obra(obra: dict, slug: str | None = None) -> None:
                 raise SystemExit(f"ambiente manual sem o campo '{campo}': {manual}")
         if manual["pavimento"] not in codigos:
             raise SystemExit(f"ambiente manual em pavimento desconhecido: {manual['pavimento']!r}")
-        x, y = manual["marcador"].get("x"), manual["marcador"].get("y")
-        if not all(isinstance(v, (int, float)) and 0 <= v <= 1 for v in (x, y)):
-            raise SystemExit(f"marcador do ambiente manual fora de 0–1: {manual['nome_operacional']!r}")
+        extras = manual.get("marcadores")
+        if extras is not None and (not isinstance(extras, list) or not extras):
+            raise SystemExit(f"'marcadores' do ambiente manual deve ser uma lista não vazia: {manual['nome_operacional']!r}")
+        for ponto in pinos_manuais(manual):
+            x, y = ponto.get("x"), ponto.get("y")
+            if not all(isinstance(v, (int, float)) and 0 <= v <= 1 for v in (x, y)):
+                raise SystemExit(f"marcador do ambiente manual fora de 0–1: {manual['nome_operacional']!r}")
     manter = obra.get("manter_codigo", {})
     if not isinstance(manter, dict) or not all(
             isinstance(k, str) and isinstance(v, str) and k and v for k, v in manter.items()):
@@ -243,14 +247,21 @@ def _chave_renomear(pav: str, nome: str, area: float | None) -> tuple:
     return (pav, nome, None if area is None else round(float(area), 2))
 
 
+def pinos_manuais(manual: dict) -> list[dict]:
+    """Pinos de um ambiente manual: ``marcadores`` (lista) quando houver, senão ``[marcador]``."""
+    extras = manual.get("marcadores")
+    return list(extras) if isinstance(extras, list) and extras else [manual["marcador"]]
+
+
 def ambiente_manual(obra: dict, pav_cfg: dict, manual: dict) -> dict:
     """Ambiente sem rótulo na planta, com o pino definido à mão na configuração.
 
     Não tem nome na planta nem área. O ponto ``x, y`` (normalizado na página) é
     onde fica a ponta do pino; ``rotulo_bbox`` é uma caixa de tamanho zero nesse
-    ponto, para os recortes de detalhe ficarem centrados nele.
+    ponto, para os recortes de detalhe ficarem centrados nele. Com ``marcadores``
+    (lista de pontos, a partir do site), o ambiente tem um pino em cada ponto.
     """
-    x, y = round(float(manual["marcador"]["x"]), 6), round(float(manual["marcador"]["y"]), 6)
+    pinos = [(round(float(p["x"]), 6), round(float(p["y"]), 6)) for p in pinos_manuais(manual)]
     return {
         "pavimento": pav_cfg["codigo"],
         "nome_planta": None,
@@ -260,7 +271,7 @@ def ambiente_manual(obra: dict, pav_cfg: dict, manual: dict) -> dict:
         "pdf": f"{obra['pasta_pdf']}/{pav_cfg['pdf']}",
         "pagina": pav_cfg.get("pagina", 1),
         "revisao": obra["revisao"],
-        "marcadores": [{"x": x, "y": y, "rotulo_bbox": [x, y, x, y]}],
+        "marcadores": [{"x": x, "y": y, "rotulo_bbox": [x, y, x, y]} for x, y in pinos],
     }
 
 
