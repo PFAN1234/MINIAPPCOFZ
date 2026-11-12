@@ -203,4 +203,4 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
   - [x] Aplicar a migration `20261112120000_admin_modelo.sql` (conferido: políticas `modelos_admin_*`, as 3 RPCs e a RLS de `publicacao_modelo`).
   - [ ] Teste de fumaça: em HTO → "Modelos 3D", enviar `app/public/modelos/hto/ARQ.frag` (ARQ, R06), publicar e abrir o modelo no Mini App; converter um IFC pequeno pelo site.
   - [x] Banco único (decisão de 2026-11-12): a migration já está no `miniappcofz-dev`, o banco oficial.
-- [ ] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget).
+- [x] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget): `miniappcofz.vercel.app` (Patrício, 2026-11-12). Falta conferir: o widget entra com um admin e recusa outra conta.
