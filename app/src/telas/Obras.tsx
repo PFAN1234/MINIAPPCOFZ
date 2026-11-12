@@ -72,7 +72,7 @@ export default function Obras() {
       <section aria-labelledby="titulo-obras">
         <EstadoConsulta consulta={obras}>
           {(todas) => {
-            const lista = etapa ? todas.filter((o) => o.etapa.id === etapa.id) : todas
+            const lista = etapa ? todas.filter((o) => o.etapa?.id === etapa.id) : todas
             if (lista.length === 0) {
               if (!outrasConhecidas) return <EstadoCarregando />
               if (outras.length > 0) return null

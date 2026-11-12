@@ -8,7 +8,8 @@ import { compararNatural } from './ordenacao.ts'
  */
 export function etapasDasObras(obras: readonly ObraDaLista[], outras: readonly ObraDisponivel[]): Etapa[] {
   const porId = new Map<string, Etapa>()
-  for (const o of obras) if (!porId.has(o.etapa.id)) porId.set(o.etapa.id, o.etapa)
+  // `etapa` pode faltar em dado antigo (cache do aparelho de antes das etapas): a obra fica fora.
+  for (const o of obras) if (o.etapa && !porId.has(o.etapa.id)) porId.set(o.etapa.id, o.etapa)
   for (const o of outras) {
     if (!porId.has(o.etapa_id)) {
       porId.set(o.etapa_id, { id: o.etapa_id, slug: '', nome: o.etapa_nome, ordem: o.etapa_ordem })
