@@ -55,6 +55,7 @@ export default function ObraAdmin() {
           />
           <Planta slug={d.obra.slug} pavimentos={d.pavimentos} />
           <Historico slug={d.obra.slug} />
+          <Modelo3d slug={d.obra.slug} />
           <Exportar slug={d.obra.slug} />
         </article>
       )}
@@ -511,6 +512,22 @@ function Planta({ slug, pavimentos }: { slug: string; pavimentos: PavimentoAdmin
           ))}
         </ul>
       )}
+    </section>
+  )
+}
+
+// --- Modelo 3D -------------------------------------------------------------------------------
+
+function Modelo3d({ slug }: { slug: string }) {
+  return (
+    <section className="adm-secao" aria-labelledby="titulo-modelo-3d">
+      <h2 id="titulo-modelo-3d">Modelo 3D</h2>
+      <p className="adm-dica">
+        Modelos por disciplina para o visualizador do Mini App: envie o IFC (convertido neste navegador) ou o .frag pronto.
+      </p>
+      <Link className="adm-botao" to={`/obras/${slug}/modelos`}>
+        Modelos 3D
+      </Link>
     </section>
   )
 }

@@ -1,6 +1,6 @@
 # Site de administração
 
-Site web (`/admin/`) para cadastrar e editar as obras do Mini App no navegador do computador, sem terminal e sem chave secreta. Plano e fases em `tasks/plano-admin.md`; checklist em `tasks/todo.md` ("Site de administração"). Esta página descreve a **fase 1** (acesso, obras, pavimentos, configuração, admins e exportação) e a **fase 2** (planta em PDF, seção "Planta (fase 2)" no fim). O envio do IFC (modelo) chega na fase 3.
+Site web (`/admin/`) para cadastrar e editar as obras do Mini App no navegador do computador, sem terminal e sem chave secreta. Plano e fases em `tasks/plano-admin.md`; checklist em `tasks/todo.md` ("Site de administração"). Esta página descreve a **fase 1** (acesso, obras, pavimentos, configuração, admins e exportação), a **fase 2** (planta em PDF, seção "Planta (fase 2)") e a **fase 3** (modelo 3D, seção "Modelo 3D (fase 3)" no fim).
 
 ## Peças
 
@@ -200,3 +200,45 @@ As imagens saem do canvas em WebP (`toBlob('image/webp', 0,8)`; qualidade 80 com
 1. Migration `20261112090000_admin_planta.sql` (depois da `20261111170000_admin.sql`). Cria o bucket `originais` e as políticas; não mexe em dados.
 2. Deploy do app (o editor está no pacote do `/admin/`). Nenhuma variável nova.
 3. Conferir com um admin: enviar o PDF atual de um pavimento já publicado, ver "Nenhuma diferença" na etapa 4, publicar e conferir no Mini App e em "Publicações da planta".
+
+## Modelo 3D (fase 3)
+
+O admin publica o modelo 3D de cada disciplina (sigla: ARQ, EST, HID…) pelo site, sem chave secreta: em Obra → "Modelos 3D" (`/admin/obras/<slug>/modelos`). Há duas formas de enviar:
+
+- **IFC:** o arquivo é convertido em `.frag` neste navegador, num Web Worker (`IfcImporter` da That Open com o `web-ifc`, os mesmos do script `npm run modelos`). O IFC é lido em blocos de 1 MB direto do arquivo e não é enviado: só o `.frag` sobe. Há barra de progresso, botão de cancelar e "Baixar o .frag" para guardar o resultado.
+- **`.frag` pronto:** um arquivo gerado no computador por `npm run modelos -- --obra <slug> --ifc <arquivo.ifc>` (ver `app/scripts/ifc_para_frag.mjs`). Serve para o IFC grande demais para a aba.
+
+Sigla e revisão saem do nome no padrão `<obra>-<projeto>-<SIGLA>-<REV>` (ex.: `CE01-14PE01-ARQ-R06.ifc`) e podem ser corrigidas. Publicar uma sigla que já existe substitui o modelo no visualizador. "Retirar" tira a disciplina do visualizador: o arquivo fica no Storage e pode ser publicado de novo. Tudo vai para o histórico da página.
+
+### Peças
+
+| Peça | Onde |
+| --- | --- |
+| Migration | `supabase/migrations/20261112120000_admin_modelo.sql` |
+| Regras e publicação | `app/src/admin/modelo/modelos.ts` (sigla/revisão do nome, limite, conferência do `.frag`, hash, caminho, envio + RPC) |
+| Conversão | `app/src/admin/modelo/conversor.ts` e `conversor.worker.ts`; o `web-ifc.wasm` é servido em `/web-ifc/<versão>/` (plugin `wasmWebIfc` no `vite.config.ts`) |
+| Tela | `app/src/admin/telas/modelo/ModelosObra.tsx` |
+| Testes | `app/src/admin/modelo/modelos.node.test.ts`, `app/src/admin/telas/modelo/ModelosObra.test.tsx`, `app/e2e/admin-modelo.spec.ts` (converte de verdade `e2e/fixtures/TESTE-01-EST-R01.ifc`, gerado por `e2e/fixtures/gerar_ifc_teste.py`, e envia o `ARQ.frag` da HTO), `tests/db/test_admin_modelo.py` |
+
+### Banco e Storage (`20261112120000_admin_modelo.sql`)
+
+| Peça | Regra |
+| --- | --- |
+| Caminho no bucket `modelos` | `<obra_id>/<SIGLA>/<hash>.frag`, com o hash do conteúdo (16 primeiros hex do SHA-256, como o script). Um arquivo novo nunca sobrescreve o que os aparelhos já baixaram; o `hash` da tabela continua sendo a chave do cache no aparelho. O caminho antigo do script `publicar:modelos` (`<obra_id>/<SIGLA>.frag`) continua válido. |
+| Políticas `modelos_admin_select/insert/update` | Só `privado.eh_admin()`, gravação só no padrão do caminho e em obra existente. Sem delete. A leitura dos participantes (`modelos_select`) não muda. |
+| `publicacao_modelo` | Histórico: `acao` (`publicado` ou `retirado`), sigla, revisão, caminho, bytes, hash, `origem` (`ifc` ou `frag`), nome do arquivo, tamanho do IFC, quem e quando. RLS ligada, sem grant: só pelas RPCs. |
+| `admin_registrar_modelo(p_slug, p)` | Confere sigla, revisão, hash, caminho, que o objeto existe no Storage e que o tamanho bate com `metadata.size`; faz upsert em `modelo` por (obra, sigla) e grava o histórico. |
+| `admin_listar_modelos(p_slug)` | `{modelos, historico}` (histórico: os 100 mais recentes). |
+| `admin_retirar_modelo(p_slug, p_sigla)` | Apaga a linha de `modelo` e grava `retirado` no histórico. |
+
+### Limites
+
+- **50 MB por arquivo:** limite de upload do Supabase no plano grátis. O site recusa um `.frag` maior antes de enviar. O ARQ da HTO tem 11,9 MB (IFC de 206 MB).
+- **Memória da aba:** a conversão de um IFC muito grande pode ficar sem memória (o WASM tem teto de ~4 GB). Acima de 400 MB o site avisa; se falhar, a mensagem orienta a converter no computador e enviar o `.frag`.
+- O conversor (worker de ~3,9 MB, quase todo o `web-ifc`) e o `web-ifc.wasm` (1,7 MB) só são baixados quando o admin converte, e ficam fora do precache do Mini App.
+
+### Aplicar num projeto
+
+1. Migration `20261112120000_admin_modelo.sql` (depois da `20261111150000_fase9_modelos.sql` e da `20261112090000_admin_planta.sql`). Só cria políticas, tabela e funções; não mexe em dados.
+2. Deploy do app. Nenhuma variável nova.
+3. Conferir com um admin: em HTO → "Modelos 3D", enviar `app/public/modelos/hto/ARQ.frag` com sigla ARQ e revisão R06, publicar e abrir o modelo no Mini App.

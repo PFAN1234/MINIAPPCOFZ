@@ -10,6 +10,7 @@ import { AcessoNegado, Entrar } from './telas/Entrar.tsx'
 import ObraAdmin, { NovaObra } from './telas/ObraAdmin.tsx'
 import ObrasAdmin from './telas/ObrasAdmin.tsx'
 import EditorPlanta from './telas/planta/EditorPlanta.tsx'
+import ModelosObra from './telas/modelo/ModelosObra.tsx'
 import PlantaObra from './telas/planta/PlantaObra.tsx'
 
 
@@ -68,6 +69,7 @@ export default function AdminApp({ entrada }: { entrada: Entrada }) {
         <Route path="obras/:slug" element={<ObraAdmin />} />
         <Route path="obras/:slug/planta" element={<PlantaObra />} />
         <Route path="obras/:slug/planta/:pavimento" element={<EditorPlanta />} />
+        <Route path="obras/:slug/modelos" element={<ModelosObra />} />
         <Route path="admins" element={<Admins />} />
         <Route path="*" element={<p>Página não encontrada.</p>} />
       </Routes>
