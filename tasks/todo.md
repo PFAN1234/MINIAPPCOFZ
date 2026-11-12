@@ -234,7 +234,8 @@ Contrato: `docs/contrato-etapas.md`. Decisões de 2026-11-12: o app passa a se c
 - [x] Edge Functions: `/vincular_etapa` no `bot-webhook`, ação `excluir_etapa` na `admin-excluir-obra`, textos "Fiscal Bot".
 - [x] Site: etapas (criar, editar, arquivar, excluir, grupo do Telegram), obra dentro da etapa, página Organização (nome e logo), barra do topo com logo.
 - [x] Mini App: nome Fiscal Bot, faixa com logo e nome da OM em todas as telas, seletor de etapa na tela inicial.
-- [ ] Aplicar no `miniappcofz-dev`: migration, deploy de `bot-webhook`, `publish-outbox` e `admin-excluir-obra`, reconfigurar os comandos do bot.
-- [ ] Usuário: trocar o nome do bot e do Mini App no BotFather para Fiscal Bot; enviar o logo da CO-FZ em `/admin/organizacao`; `/vincular_etapa 2a-etapa` no grupo.
+- [x] Aplicar no `miniappcofz-dev` (2026-11-12): migration (a "2ª ETAPA" herdou o grupo das 3 obras), deploy de `bot-webhook`, `publish-outbox` e `admin-excluir-obra`, comandos do bot reconfigurados.
+- [ ] Merge na main para a Vercel publicar o app novo (até lá, o site antigo não consegue criar obra: o banco agora exige a etapa).
+- [ ] Usuário: trocar o nome do bot e do Mini App no BotFather para Fiscal Bot; enviar o logo da CO-FZ em `/admin/organizacao` (o `/vincular_etapa 2a-etapa` não é necessário: a etapa herdou o grupo).
 
 Verificação: testes de banco (arquivar etapa bloqueia acesso e publicação; excluir etapa exige o nome), Deno, Vitest e Playwright (criar etapa e obra, arquivar, excluir digitando o nome, trocar logo; seletor de etapa no Mini App).
