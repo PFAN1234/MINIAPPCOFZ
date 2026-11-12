@@ -4,7 +4,6 @@ import { Abas } from '../components/Abas.tsx'
 import { AbaPlanta } from '../components/AbaPlanta.tsx'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
-import { useTelaCheia } from '../components/telaCheia.ts'
 import { IconeChevron, IconeCubo } from '../components/Icones.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
 import { useObra, usePublicacoesProblema, useSolicitacoes } from '../dados/hooks.ts'
@@ -14,8 +13,8 @@ import { formatarArea, textoPendencias } from '../util/formato.ts'
 import { ordenarNatural } from '../util/ordenacao.ts'
 
 const MODOS = [
-  { id: 'lista', rotulo: 'Lista' },
   { id: 'planta', rotulo: 'Planta' },
+  { id: 'lista', rotulo: 'Lista' },
 ]
 
 export default function Obra() {
@@ -37,7 +36,8 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   const { obra, pavimentos, ambientes } = detalhe
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
-  const modo = params.get('aba') === 'planta' ? 'planta' : 'lista'
+  // A planta é o modo padrão; a lista fica na URL como `?aba=lista`.
+  const modo = params.get('aba') === 'lista' ? 'lista' : 'planta'
   const pavParam = params.get('pav')
   const pav = pavimentos.find((p) => p.codigo === pavParam) ?? pavimentos[0]
   const foco = params.get('foco')
@@ -47,8 +47,6 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   const problemas = usePublicacoesProblema(obra.id, gestor)
   const nGestao = (pedidos.data?.length ?? 0) + (problemas.data?.length ?? 0)
   const nPendencias = ambientes.reduce((soma, a) => soma + a.pendencias_abertas, 0)
-
-  useTelaCheia(modo === 'planta' && !!pav)
 
   function atualizar(mudancas: Record<string, string | null>, replace = false) {
     const prox = new URLSearchParams(params)
@@ -119,7 +117,7 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
         rotulo="Modo de exibição"
         itens={MODOS}
         ativa={modo}
-        onMudar={(id) => atualizar({ aba: id === 'planta' ? 'planta' : null })}
+        onMudar={(id) => atualizar({ aba: id === 'lista' ? 'lista' : null })}
       />
       {modo === 'planta' ? (
         <AbaPlanta
