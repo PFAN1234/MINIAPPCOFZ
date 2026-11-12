@@ -1403,7 +1403,7 @@ body {
   word-break: break-word;
 }
 
-.visualizador {
+.visualizador-modelo {
   position: relative;
   margin: 0 0 12px;
   border: 1px solid var(--borda);
