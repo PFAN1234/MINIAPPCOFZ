@@ -207,6 +207,6 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
 - [ ] Arquivar e excluir no `miniappcofz-dev`:
   - [x] Migration `20261112150000_admin_arquivar_excluir.sql` aplicada (2026-11-12).
   - [x] Edge Function `admin-excluir-obra` publicada (`verify_jwt = false`); conferido: 405 em GET, 401 sem token e com token falso, CORS do site. Usa `SUPABASE_ANON_KEY` (chave legada ativa) para falar com o banco como o admin.
-  - [ ] Republicar `bot-webhook` (responde no tópico "obra arquivada" no `/vincular_obra`) e `publish-outbox` (não avisa pedido de acesso de obra arquivada) com `supabase functions deploy bot-webhook publish-outbox`. Opcional: o banco já recusa vincular e pedir acesso em obra arquivada; as versões no ar continuam funcionando com a migration nova.
+  - [x] Republicadas `bot-webhook` e `publish-outbox` (versão 2, 2026-11-12). Conferido: 405 em GET e 401 sem segredo nas duas; a chamada do cron ao `publish-outbox` novo respondeu 200, sem erro no log.
   - [ ] Teste de fumaça no site com uma obra de teste: arquivar, conferir que some do Mini App, desarquivar, excluir digitando o nome e conferir "Obras excluídas".
 - [x] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget): `miniappcofz.vercel.app` (Patrício, 2026-11-12). Falta conferir: o widget entra com um admin e recusa outra conta.
