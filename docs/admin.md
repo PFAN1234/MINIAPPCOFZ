@@ -291,6 +291,36 @@ Segredos: `SUPABASE_SECRET_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY`), `SUPABASE_PUBL
 3. Segredos: `supabase secrets set SUPABASE_SECRET_KEY=...` (se ainda não existir) e, se o projeto usa as chaves novas, `SUPABASE_PUBLISHABLE_KEY=...`; `ALLOWED_ORIGINS` precisa incluir o domínio do site (o mesmo da `admin-sessao`).
 4. Redeploy de `bot-webhook` (mostra no tópico a mensagem de obra arquivada) e `publish-outbox` (sem aviso de pedido de obra arquivada), **depois** da migration: o `publish-outbox` novo filtra pela coluna `arquivada_em`.
 
+## Etapas e organização
+
+Contrato: `docs/contrato-etapas.md`. O campus é implantado em etapas; cada etapa agrupa obras e tem um grupo do Telegram, com um tópico por obra. O app passou a se chamar **Fiscal Bot**.
+
+### Banco e Storage (`20261112180000_etapas.sql`)
+
+- `etapa` (slug, nome, ordem, grupo do Telegram, arquivada) e `obra.etapa_id` obrigatório. A migration cria a "2ª ETAPA" (`2a-etapa`) e põe nela todas as obras existentes; se as obras vinculadas usavam um grupo só, a etapa herda esse grupo.
+- Obra "ativa" passou a ser obra não arquivada **e** etapa não arquivada: arquivar a etapa tira todas as obras dela do Mini App e para as publicações, sem mexer no arquivamento de cada obra. Desarquivar recoloca na fila o que ficou pendente.
+- `organizacao` (linha única: nome e logo) e bucket público `organizacao` (1 MB, PNG/JPEG/WebP; só admin grava). Leitura pela RPC `organizacao()`, aberta também para `anon`.
+- RPCs do site: `admin_listar_etapas`, `admin_salvar_etapa`, `admin_arquivar_etapa`, `admin_desvincular_etapa`, `admin_resumo_etapa`, `admin_excluir_etapa` (confirmação = nome da etapa; uma linha em `obra_excluida` por obra, com `etapa_nome`) e `admin_salvar_organizacao`. `admin_salvar_obra` recebe `etapa_id` (obrigatório ao criar; ao mover para etapa de outro grupo, o tópico da obra é desvinculado).
+- RPC do bot: `vincular_etapa(slug, chat, título)`; `vincular_obra` agora exige que a etapa da obra esteja vinculada ao mesmo grupo.
+
+### Telegram
+
+1. No grupo da etapa, um admin do grupo envia `/vincular_etapa <slug da etapa>` (ex.: `/vincular_etapa 2a-etapa`).
+2. Em cada tópico, `/vincular_obra <slug da obra>`, como antes. Obra de outra etapa ou etapa sem grupo: o bot recusa e explica.
+3. Para trocar o grupo de uma etapa: "Desvincular grupo" na página da etapa e `/vincular_etapa` no grupo novo (as obras precisam ser vinculadas de novo nos tópicos).
+
+### Site
+
+`/` lista as etapas com as obras de cada uma; `/etapas/<slug>` edita nome e ordem, mostra o grupo, arquiva e exclui (alerta com as obras e contagens, confirmação digitando o nome); `/organizacao` troca o nome da OM e o logo. A exclusão da etapa passa pela Edge Function `admin-excluir-obra` (ação `excluir_etapa`), que limpa o Storage de cada obra; o que sobrar aparece em "Obras excluídas" com "Tentar de novo".
+
+### Aplicar num projeto
+
+1. Aplicar a migration `20261112180000_etapas.sql` (cria o bucket `organizacao`).
+2. Publicar `bot-webhook`, `publish-outbox` e `admin-excluir-obra`.
+3. Reconfigurar os comandos do bot (a ação de configuração do `bot-webhook`, como na fase 6), para `/vincular_etapa` aparecer no menu dos admins de grupo.
+4. No BotFather, trocar o nome do bot e do Mini App para Fiscal Bot (opcional, só exibição).
+5. No site, `/admin/organizacao`: enviar o logo; no grupo da 2ª etapa, `/vincular_etapa 2a-etapa` (se a etapa não herdou o grupo).
+
 ## Realidade aumentada (QR)
 
 Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra, ao lado de "Modelos 3D"). Cadastra a posição do QR de cada ambiente e imprime a folha A4 que o Mini App lê para alinhar o modelo 3D com a obra. Contrato de dados em `docs/contrato-ra.md`; código em `app/src/admin/telas/ra/` e `app/src/admin/ra/` (`qr.ts`, `geometria.ts`).

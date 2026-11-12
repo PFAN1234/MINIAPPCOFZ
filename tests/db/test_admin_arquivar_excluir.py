@@ -236,6 +236,7 @@ def test_sincronizar_acesso_ignora_obra_arquivada(cenario):
 def test_vincular_obra_recusa_arquivada(cenario):
     c = cenario
     tornar_admin(c, c.sem_obra)
+    su(c, 'update public.etapa set telegram_chat_id = -100 where id = %s', (c.etapa,))  # grupo da etapa
     arquivar(c, c.sem_obra, c.obra_a)
     with pytest.raises(errors.InvalidParameterValue, match='está arquivada') as e:
         sql(c, 'select id from public.vincular_obra(%s, -100, 7)', (slug(c, c.obra_a),), papel='service_role')
@@ -283,7 +284,7 @@ def test_arquivar_e_idempotente_e_aparece_nas_listagens(cenario):
     assert por_slug[slug(c, c.obra_a)] is not None and por_slug[slug(c, c.obra_b)] is None
     o = rpc(c, c.sem_obra, 'select public.admin_obter_obra(%s)', (slug(c, c.obra_a),))
     assert o['obra']['arquivada_em'] == primeira['arquivada_em']
-    assert set(o['obra']) == {'id', 'slug', 'nome', 'ordem', 'telegram_vinculado', 'arquivada_em'}
+    assert set(o['obra']) == {'id', 'slug', 'nome', 'ordem', 'telegram_vinculado', 'arquivada_em', 'etapa'}
     assert rpc(c, c.sem_obra, 'select public.admin_obter_obra(%s)', (slug(c, c.obra_b),))['obra']['arquivada_em'] is None
 
     assert arquivar(c, c.sem_obra, c.obra_a, False)['arquivada_em'] is None
@@ -389,7 +390,7 @@ def test_admin_resumo_obra_conta_linhas_e_arquivos(cheio):
              'participantes': 0, 'publicacoes_telegram': 0,
              'arquivos': {'fotos': 0, 'plantas': 0, 'originais': 0, 'modelos': 0}}
     nova = rpc(c, c.sem_obra, 'select public.admin_salvar_obra(%s::jsonb)',
-               (json.dumps({'slug': f'vazia-{uuid.uuid4().hex[:8]}', 'nome': 'Vazia'}),))
+               (json.dumps({'slug': f'vazia-{uuid.uuid4().hex[:8]}', 'nome': 'Vazia', 'etapa_id': str(c.etapa)}),))
     assert rpc(c, c.sem_obra, 'select public.admin_resumo_obra(%s)', (nova['slug'],)) == vazia
     with pytest.raises(errors.NoDataFound):
         sql(c, "select public.admin_resumo_obra('nao-existe')", usuario=c.sem_obra)
@@ -442,10 +443,10 @@ def test_admin_listar_exclusoes(cheio):
     assert ids.index(e2['exclusao_id']) < ids.index(e1['exclusao_id'])  # mais recente primeiro
     item = next(x for x in lista if x['id'] == e1['exclusao_id'])
     assert set(item) == {'id', 'obra_id', 'slug', 'nome', 'excluida_em', 'excluida_por_nome', 'resumo',
-                         'arquivos_removidos_em', 'arquivos_removidos', 'arquivos_erro'}
+                         'arquivos_removidos_em', 'arquivos_removidos', 'arquivos_erro', 'etapa_nome'}
     assert (item['obra_id'], item['nome'], item['excluida_por_nome'], item['resumo']) == (
         str(c.obra_a), 'Obra a', 'Usuário 3', e1['resumo'])
-    assert item['arquivos_removidos_em'] is None and item['arquivos_erro'] is None
+    assert item['arquivos_removidos_em'] is None and item['arquivos_erro'] is None and item['etapa_nome'] is None
     with sessao(c.dsn, papel=None) as cur:
         cur.execute('select count(*) from public.obra_excluida')
         if cur.fetchone()[0] > 50:

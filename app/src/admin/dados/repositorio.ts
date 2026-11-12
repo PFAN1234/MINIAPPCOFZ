@@ -3,12 +3,16 @@ import type {
   Bucket,
   ConfigObra,
   DadosEditorPlanta,
+  DadosEtapa,
   DadosModelos,
   DadosObra,
   DadosWidget,
   Exclusao,
   EstadoSessao,
+  EtapaLista,
+  EtapaSalva,
   ObraAdmin,
+  Organizacao,
   ObraLista,
   ModeloAdmin,
   AmbienteRA,
@@ -18,7 +22,9 @@ import type {
   Publicacao,
   RegistroModelo,
   ResultadoExclusao,
+  ResultadoExclusaoEtapa,
   ResultadoPublicacao,
+  ResumoEtapa,
   ResumoObra,
   UsuarioApp,
 } from './tipos.ts'
@@ -33,6 +39,26 @@ export interface RepositorioAdmin {
   sair(): Promise<void>
   /** Só na fixture: entra sem Telegram (desenvolvimento e e2e). */
   entrarModoTeste?(): Promise<void>
+
+  /** Etapas (ativas e arquivadas) por `ordem, nome`, com as contagens de obras. */
+  listarEtapas(): Promise<EtapaLista[]>
+  /** Cria (sem `id`; slug repetido é recusado) ou edita nome e ordem (com `id`). */
+  salvarEtapa(dados: DadosEtapa): Promise<EtapaSalva>
+  /** Arquiva (true) ou desarquiva (false) a etapa; devolve `arquivada_em`. Não mexe no arquivamento das obras. */
+  arquivarEtapa(slug: string, arquivada: boolean): Promise<string | null>
+  /** Desliga o grupo do Telegram da etapa e os tópicos das obras dela. */
+  desvincularEtapa(slug: string): Promise<void>
+  /** Obras e contagens do que a exclusão da etapa apaga. */
+  resumoEtapa(slug: string): Promise<ResumoEtapa>
+  /** Edge Function `admin-excluir-obra` (ação `excluir_etapa`): apaga a etapa e todas as obras dela. Irreversível. */
+  excluirEtapa(slug: string, confirmacao: string): Promise<ResultadoExclusaoEtapa>
+
+  /** Nome e logo da organização militar (RPC `organizacao()`, também sem sessão). */
+  obterOrganizacao(): Promise<Organizacao>
+  /** `logo_path` null tira o logo; se vier, precisa já estar no bucket `organizacao`. */
+  salvarOrganizacao(dados: { nome: string; logo_path: string | null }): Promise<Organizacao>
+  /** Envia o logo ao bucket `organizacao` (PNG, JPEG ou WebP, até 1 MB) e devolve o caminho. */
+  enviarLogo(arquivo: Blob): Promise<string>
 
   listarObras(): Promise<ObraLista[]>
   obterObra(slug: string): Promise<ObraAdmin>

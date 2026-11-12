@@ -63,9 +63,107 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: calc(6px + env(safe-area-inset-top)) 16px 16px;
+  padding: env(safe-area-inset-top) 16px 16px;
   color: var(--texto-no-azul);
   background: var(--azul);
+}
+
+/* Faixa de identidade (FaixaIdentidade): logo, nome da OM e "Fiscal Bot", no alto do azul. */
+.identidade {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  min-height: 40px;
+  margin-bottom: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--azul-borda);
+}
+
+.identidade-logo {
+  flex: none;
+  width: auto;
+  height: 28px;
+  max-width: 112px;
+  object-fit: contain;
+}
+
+.identidade-textos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.identidade-om {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+}
+
+.identidade-app {
+  color: var(--texto-suave-no-azul);
+  font-weight: 600;
+}
+
+.identidade-om + .identidade-app {
+  padding-left: 8px;
+  border-left: 1px solid var(--azul-borda);
+}
+
+/* Topo só com a faixa (telas antes de entrar). */
+.topo-identidade {
+  padding-bottom: 0;
+}
+
+.topo-identidade .identidade {
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+/* Seletor de etapa da tela inicial: select nativo sobre o azul. */
+.seletor-etapa {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.seletor-etapa-rotulo {
+  flex: none;
+  color: var(--texto-suave-no-azul);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.seletor-etapa select {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 40px 0 12px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto-no-azul);
+  background-color: var(--azul-painel);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  border: 1px solid var(--azul-borda);
+  border-radius: 10px;
+  appearance: none;
+  cursor: pointer;
+}
+
+/* A lista que o sistema abre usa as cores normais (fundo claro). */
+.seletor-etapa option {
+  color: var(--texto);
+  background: var(--superficie);
 }
 
 /* Sobre o azul, o anel de foco azul some: usa o amarelo. */
@@ -339,7 +437,10 @@ a.botao {
 
 .sem-sessao {
   text-align: center;
-  padding-top: 25vh;
+}
+
+.sem-sessao h1 {
+  margin-top: 20vh;
 }
 
 /* Telas */

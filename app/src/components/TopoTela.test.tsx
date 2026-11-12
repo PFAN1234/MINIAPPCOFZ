@@ -1,9 +1,13 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { TelegramWebApp } from '../telegram.ts'
+import { criarRepositorioFixture } from '../dados/fixture.ts'
+import type { Organizacao } from '../dados/tipos.ts'
+import { renderizarApp } from '../test/renderApp.tsx'
 import { FaixaDoTopo } from './faixaDoTopo.ts'
+import { OrganizacaoContexto } from './identidade.ts'
 import { TopoTela } from './TopoTela.tsx'
 
 function simularTelegram() {
@@ -77,5 +81,61 @@ describe('TopoTela', () => {
     )
     const cabecalho = screen.getByRole('heading', { level: 1, name: 'Obras' }).closest('header')!
     expect(cabecalho.nextElementSibling).toBe(screen.getByRole('status'))
+  })
+})
+
+describe('TopoTela: faixa de identidade', () => {
+  function comOrganizacao(organizacao: Organizacao | null) {
+    return render(
+      <MemoryRouter>
+        <OrganizacaoContexto.Provider value={organizacao}>
+          <TopoTela titulo="HTO" />
+        </OrganizacaoContexto.Provider>
+      </MemoryRouter>,
+    )
+  }
+
+  it('com logo: logo decorativo (alt vazio) de 28 px, nome da OM e "Fiscal Bot", acima do título', () => {
+    const { container } = comOrganizacao({ nome: 'CO-FZ', logo_url: 'https://exemplo.test/logo.png' })
+    const faixa = screen.getByTestId('faixa-identidade')
+    const logo = container.querySelector('img')!
+    expect(logo).toHaveAttribute('src', 'https://exemplo.test/logo.png')
+    expect(logo).toHaveAttribute('alt', '')
+    expect(logo).toHaveAttribute('height', '28')
+    expect(faixa).toHaveTextContent('CO-FZ')
+    expect(faixa).toHaveTextContent('Fiscal Bot')
+    const cabecalho = screen.getByRole('heading', { level: 1, name: 'HTO' }).closest('header')!
+    expect(cabecalho.firstElementChild).toBe(faixa)
+  })
+
+  it('logo que não carrega some, e os textos ficam', () => {
+    const { container } = comOrganizacao({ nome: 'CO-FZ', logo_url: 'https://exemplo.test/sumiu.png' })
+    fireEvent.error(container.querySelector('img')!)
+    expect(container.querySelector('img')).toBeNull()
+    expect(screen.getByTestId('faixa-identidade')).toHaveTextContent('CO-FZFiscal Bot')
+  })
+
+  it('sem logo: só os textos', () => {
+    const { container } = comOrganizacao({ nome: 'CO-FZ', logo_url: null })
+    expect(container.querySelector('img')).toBeNull()
+    expect(screen.getByTestId('faixa-identidade')).toHaveTextContent('CO-FZFiscal Bot')
+  })
+
+  it('sem organização (fora do Layout ou ainda sem dados): só "Fiscal Bot"', () => {
+    comOrganizacao(null)
+    expect(screen.getByTestId('faixa-identidade')).toHaveTextContent(/^Fiscal Bot$/)
+  })
+
+  it('no app, mostra a organização da consulta', async () => {
+    renderizarApp('/obras/hto')
+    await screen.findByRole('heading', { level: 1, name: 'HTO' })
+    await waitFor(() => expect(screen.getByTestId('faixa-identidade')).toHaveTextContent('CO-FZFiscal Bot'))
+  })
+
+  it('organização indisponível (erro): a tela abre normalmente, com "Fiscal Bot"', async () => {
+    renderizarApp('/', { ...criarRepositorioFixture(), organizacao: () => Promise.reject(new Error('falhou')) })
+    expect(await screen.findByRole('link', { name: /^HTO/ })).toBeInTheDocument()
+    expect(screen.getByTestId('faixa-identidade')).toHaveTextContent(/^Fiscal Bot$/)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

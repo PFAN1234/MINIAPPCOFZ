@@ -1,7 +1,8 @@
 /**
  * Repositório de teste do site de administração (VITE_DADOS=fixture): HTO e COFZ com a
- * configuração real de `data/<slug>/obra.json`, tudo em memória. Reproduz as regras das
- * RPCs (slug, pavimento com ambientes, último admin). Nunca entra no build de produção.
+ * configuração real de `data/<slug>/obra.json`, na etapa "2ª ETAPA", mais a "3ª ETAPA" vazia e a
+ * organização "CO-FZ" sem logo, tudo em memória. Reproduz as regras das RPCs (slug, pavimento com
+ * ambientes, último admin, etapas). Nunca entra no build de produção.
  */
 import ambientesCofz from '../../../../data/cofz/ambientes.json'
 import obraCofz from '../../../../data/cofz/obra.json'
@@ -12,12 +13,18 @@ import plantasHto from '../../../../data/hto/plantas.json'
 import { ehWebp } from '../planta/render.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import {
+  CAMINHO_LOGO,
   ErroAdmin,
+  NOME_OM_MAX,
+  novoCaminhoLogo,
+  problemaDoLogo,
   type Admin,
   type AmbienteBanco,
   type ConfigObra,
   type EstadoSessao,
   type BucketObra,
+  type EtapaLista,
+  type Organizacao,
   type AmbienteRA,
   type EventoModelo,
   type QrAmbiente,
@@ -122,6 +129,32 @@ interface ObraMemoria {
   config_atualizada_em: string | null
   config_atualizada_por: string | null
   arquivada_em: string | null
+  etapa_id: string
+  /** Grupo do Telegram do tópico vinculado (`obra.telegram_chat_id`); null sem vínculo. */
+  telegram_chat_id: number | null
+}
+
+interface EtapaMemoria {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+  telegram_chat_id: number | null
+  telegram_chat_titulo: string | null
+  arquivada_em: string | null
+}
+
+/** Grupo do Telegram da 2ª ETAPA na fixture. */
+const GRUPO_2A = -1001234567890
+
+/** Lê o arquivo como data URL (a fixture guarda o logo em memória). */
+function dataUrl(arquivo: Blob): Promise<string> {
+  return new Promise((resolver, rejeitar) => {
+    const leitor = new FileReader()
+    leitor.onload = () => resolver(String(leitor.result))
+    leitor.onerror = () => rejeitar(leitor.error ?? new Error('Falha ao ler o arquivo'))
+    leitor.readAsDataURL(arquivo)
+  })
 }
 
 const VOCE: UsuarioApp = { id: 'usuario-teste', nome: 'Você (teste)', username: 'voce', telegram_id: 1, eh_admin: true }
@@ -132,7 +165,14 @@ const USUARIOS_BASE: Omit<UsuarioApp, 'eh_admin'>[] = [
   { id: 'usuario-maria', nome: 'Maria Souza', username: 'maria', telegram_id: 4242 },
 ]
 
-function obraDoJson(id: string, ordem: number, json: ObraJson, ambientes: AmbientesJson): ObraMemoria {
+function obraDoJson(
+  id: string,
+  ordem: number,
+  json: ObraJson,
+  ambientes: AmbientesJson,
+  etapaId: string,
+  chat: number | null,
+): ObraMemoria {
   const { slug, nome, pavimentos, ...resto } = json
   return {
     id,
@@ -153,6 +193,8 @@ function obraDoJson(id: string, ordem: number, json: ObraJson, ambientes: Ambien
     config_atualizada_em: '2026-11-11T12:00:00Z',
     config_atualizada_por: null,
     arquivada_em: null,
+    etapa_id: etapaId,
+    telegram_chat_id: chat,
   }
 }
 
@@ -201,10 +243,37 @@ function copia<T>(v: T): T {
 export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?: boolean } = {}): RepositorioAdmin {
   const ehAdmin = opcoes.admin !== false
   let sessao = opcoes.sessao !== false
-  const obras: ObraMemoria[] = [
-    obraDoJson('obra-hto', 0, obraHto as unknown as ObraJson, ambientesHto as unknown as AmbientesJson),
-    obraDoJson('obra-cofz', 1, obraCofz as unknown as ObraJson, ambientesCofz as unknown as AmbientesJson),
+  const etapas: EtapaMemoria[] = [
+    {
+      id: 'etapa-2a',
+      slug: '2a-etapa',
+      nome: '2ª ETAPA',
+      ordem: 2,
+      telegram_chat_id: GRUPO_2A,
+      telegram_chat_titulo: 'Fiscalização 2ª ETAPA',
+      arquivada_em: null,
+    },
+    {
+      id: 'etapa-3a',
+      slug: '3a-etapa',
+      nome: '3ª ETAPA',
+      ordem: 3,
+      telegram_chat_id: null,
+      telegram_chat_titulo: null,
+      arquivada_em: null,
+    },
   ]
+  const obras: ObraMemoria[] = [
+    obraDoJson('obra-hto', 0, obraHto as unknown as ObraJson, ambientesHto as unknown as AmbientesJson, 'etapa-2a', GRUPO_2A),
+    obraDoJson('obra-cofz', 1, obraCofz as unknown as ObraJson, ambientesCofz as unknown as AmbientesJson, 'etapa-2a', null),
+  ]
+  const organizacao = { nome: 'CO-FZ', logo_path: null as string | null }
+  /** Logos enviados: caminho → data URL. */
+  const logos = new Map<string, string>()
+  const organizacaoAtual = (): Organizacao => ({
+    ...organizacao,
+    logo_url: organizacao.logo_path ? (logos.get(organizacao.logo_path) ?? null) : null,
+  })
   const admins = new Map<string, { criado_em: string; criado_por: string | null }>([
     [VOCE.id, { criado_em: '2026-11-11T12:00:00Z', criado_por: null }],
     ['usuario-patricio', { criado_em: '2026-11-11T12:00:00Z', criado_por: null }],
@@ -260,6 +329,46 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     return o
   }
 
+  function etapaPorSlug(slug: string): EtapaMemoria {
+    const e = etapas.find((x) => x.slug === slug)
+    if (!e) throw new ErroAdmin('Etapa não encontrada')
+    return e
+  }
+  const etapaDe = (o: ObraMemoria): EtapaMemoria => etapas.find((e) => e.id === o.etapa_id)!
+
+  /** A mesma remoção de `admin_excluir_obra` (dados e arquivos), com o registro em `obra_excluida`. */
+  function removerObra(o: ObraMemoria, etapaNome: string | null): Exclusao {
+    const resumo = resumoDe(o)
+    obras.splice(obras.indexOf(o), 1)
+    plantaPorObra.delete(o.id)
+    modelosPorObra.delete(o.id)
+    const removidos: Record<BucketObra, number> = { fotos: 0, plantas: 0, originais: 0, modelos: 0 }
+    for (const k of [...arquivos.keys()]) {
+      const [bucket, obraId] = k.split('/')
+      if (obraId !== o.id) continue
+      arquivos.delete(k)
+      removidos[bucket as BucketObra]++
+    }
+    for (let i = publicacoes.length - 1; i >= 0; i--) if (publicacoes[i].obra_id === o.id) publicacoes.splice(i, 1)
+    for (let i = historicoModelos.length - 1; i >= 0; i--) if (historicoModelos[i].obra_id === o.id) historicoModelos.splice(i, 1)
+    const agora = new Date().toISOString()
+    const exclusao: Exclusao = {
+      id: `exclusao-${++sequencia}`,
+      obra_id: o.id,
+      slug: o.slug,
+      nome: o.nome,
+      excluida_em: agora,
+      excluida_por_nome: VOCE.nome,
+      resumo,
+      arquivos_removidos_em: agora,
+      arquivos_removidos: removidos,
+      arquivos_erro: null,
+      etapa_nome: etapaNome,
+    }
+    exclusoes.unshift(exclusao)
+    return exclusao
+  }
+
   const nomeDe = (id: string | null) => USUARIOS_BASE.find((u) => u.id === id)?.nome ?? null
   const ordenarPavs = (o: ObraMemoria) =>
     [...o.pavimentos].sort((a, b) => a.ordem - b.ordem || a.codigo.localeCompare(b.codigo))
@@ -291,6 +400,146 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       sessao = false
     },
 
+    async listarEtapas(): Promise<EtapaLista[]> {
+      exigirAdmin()
+      return [...etapas]
+        .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome))
+        .map((e) => {
+          const daEtapa = obras.filter((o) => o.etapa_id === e.id)
+          return {
+            id: e.id,
+            slug: e.slug,
+            nome: e.nome,
+            ordem: e.ordem,
+            arquivada_em: e.arquivada_em,
+            telegram_vinculado: e.telegram_chat_id !== null,
+            telegram_chat_titulo: e.telegram_chat_titulo,
+            obras: daEtapa.length,
+            obras_arquivadas: daEtapa.filter((o) => o.arquivada_em).length,
+          }
+        })
+    },
+
+    async salvarEtapa(d) {
+      exigirAdmin()
+      const nome = (d.nome ?? '').trim()
+      if (!nome || nome.length > 120) throw new ErroAdmin('Informe o nome da etapa (até 120 caracteres)')
+      if (!Number.isInteger(d.ordem)) throw new ErroAdmin('O campo ordem precisa ser um número inteiro')
+      if (d.id) {
+        const e = etapas.find((x) => x.id === d.id)
+        if (!e) throw new ErroAdmin('Etapa não encontrada')
+        e.nome = nome
+        e.ordem = d.ordem
+        return { id: e.id, slug: e.slug, nome: e.nome, ordem: e.ordem }
+      }
+      const slug = d.slug ?? ''
+      if (!SLUG.test(slug) || slug.length > 40) {
+        throw new ErroAdmin('Slug inválido: use letras minúsculas, dígitos e hífen (até 40 caracteres)')
+      }
+      if (etapas.some((x) => x.slug === slug)) throw new ErroAdmin(`Já existe uma etapa com o slug ${slug}`)
+      const nova: EtapaMemoria = {
+        id: `etapa-nova-${++sequencia}`,
+        slug,
+        nome,
+        ordem: d.ordem,
+        telegram_chat_id: null,
+        telegram_chat_titulo: null,
+        arquivada_em: null,
+      }
+      etapas.push(nova)
+      return { id: nova.id, slug, nome, ordem: nova.ordem }
+    },
+
+    async arquivarEtapa(slug, arquivada) {
+      exigirAdmin()
+      const e = etapaPorSlug(slug)
+      e.arquivada_em = arquivada ? (e.arquivada_em ?? new Date().toISOString()) : null
+      return e.arquivada_em
+    },
+
+    async desvincularEtapa(slug) {
+      exigirAdmin()
+      const e = etapaPorSlug(slug)
+      e.telegram_chat_id = null
+      e.telegram_chat_titulo = null
+      for (const o of obras) if (o.etapa_id === e.id) o.telegram_chat_id = null
+    },
+
+    async resumoEtapa(slug) {
+      exigirAdmin()
+      const e = etapaPorSlug(slug)
+      const daEtapa = [...obras]
+        .filter((o) => o.etapa_id === e.id)
+        .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome))
+      const total: ResumoObra = {
+        registros: 0,
+        fotos: 0,
+        ambientes: 0,
+        pavimentos: 0,
+        plantas: 0,
+        modelos: 0,
+        participantes: 0,
+        publicacoes_telegram: 0,
+        arquivos: { fotos: 0, plantas: 0, originais: 0, modelos: 0 },
+      }
+      for (const o of daEtapa) {
+        const r = resumoDe(o)
+        for (const k of Object.keys(r) as (keyof ResumoObra)[]) {
+          if (k === 'arquivos') {
+            for (const b of Object.keys(r.arquivos) as BucketObra[]) total.arquivos[b] += r.arquivos[b]
+          } else total[k] += r[k]
+        }
+      }
+      return { obras: daEtapa.map((o) => ({ slug: o.slug, nome: o.nome })), total }
+    },
+
+    async excluirEtapa(slug, confirmacao) {
+      exigirAdmin()
+      const e = etapaPorSlug(slug)
+      if ((confirmacao ?? '').trim() !== e.nome) {
+        throw new ErroAdmin(`Para excluir, digite exatamente o nome da etapa: ${e.nome}`)
+      }
+      const feitas = obras.filter((o) => o.etapa_id === e.id).map((o) => removerObra(o, e.nome))
+      etapas.splice(etapas.indexOf(e), 1)
+      return {
+        exclusoes: feitas.map((x) => ({
+          exclusao_id: x.id,
+          removidos: x.arquivos_removidos ?? {},
+          pendente: false,
+          erro: null,
+        })),
+        pendente: false,
+        erro: null,
+      }
+    },
+
+    async obterOrganizacao() {
+      // Como a RPC `organizacao()`: também sem sessão (tela de entrada).
+      return organizacaoAtual()
+    },
+
+    async salvarOrganizacao(d) {
+      exigirAdmin()
+      const nome = (d.nome ?? '').trim()
+      if (!nome || nome.length > NOME_OM_MAX) throw new ErroAdmin(`Informe o nome da OM (até ${NOME_OM_MAX} caracteres)`)
+      if (d.logo_path !== null) {
+        if (!CAMINHO_LOGO.test(d.logo_path)) throw new ErroAdmin('Caminho do logo inválido')
+        if (!logos.has(d.logo_path)) throw new ErroAdmin('Logo não encontrado no Storage: envie o arquivo antes de salvar')
+      }
+      organizacao.nome = nome
+      organizacao.logo_path = d.logo_path
+      return organizacaoAtual()
+    },
+
+    async enviarLogo(arquivo) {
+      exigirAdmin()
+      const problema = problemaDoLogo(arquivo)
+      if (problema) throw new ErroAdmin(problema)
+      const caminho = novoCaminhoLogo(arquivo.type)
+      logos.set(caminho, await dataUrl(arquivo))
+      return caminho
+    },
+
     async listarObras(): Promise<ObraLista[]> {
       exigirAdmin()
       return [...obras]
@@ -305,14 +554,33 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
           status: typeof o.config?.status === 'string' ? o.config.status : null,
           config_atualizada_em: o.config_atualizada_em,
           arquivada_em: o.arquivada_em,
+          etapa_id: o.etapa_id,
+          etapa_slug: etapaDe(o).slug,
+          etapa_nome: etapaDe(o).nome,
+          etapa_arquivada_em: etapaDe(o).arquivada_em,
         }))
     },
 
     async obterObra(slug): Promise<ObraAdmin> {
       exigirAdmin()
       const o = obraPorSlug(slug)
+      const e = etapaDe(o)
       return copia({
-        obra: { id: o.id, slug: o.slug, nome: o.nome, ordem: o.ordem, telegram_vinculado: false, arquivada_em: o.arquivada_em },
+        obra: {
+          id: o.id,
+          slug: o.slug,
+          nome: o.nome,
+          ordem: o.ordem,
+          telegram_vinculado: o.telegram_chat_id !== null,
+          arquivada_em: o.arquivada_em,
+          etapa: {
+            id: e.id,
+            slug: e.slug,
+            nome: e.nome,
+            arquivada_em: e.arquivada_em,
+            telegram_vinculado: e.telegram_chat_id !== null,
+          },
+        },
         pavimentos: ordenarPavs(o).map(
           (p): PavimentoAdmin => ({ ...p, ambientes_ativos: p.ambientes, plantas: p.ambientes > 0 ? 1 : 0 }),
         ),
@@ -327,12 +595,19 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       const nome = (d.nome ?? '').trim()
       if (!nome || nome.length > 120) throw new ErroAdmin('Informe o nome da obra (até 120 caracteres)')
       if (!Number.isInteger(d.ordem)) throw new ErroAdmin('O campo ordem precisa ser um número inteiro')
+      const destino = d.etapa_id === undefined ? null : etapas.find((e) => e.id === d.etapa_id)
+      if (destino === undefined) throw new ErroAdmin('Etapa não encontrada')
       if (d.id) {
         const o = obras.find((x) => x.id === d.id)
         if (!o) throw new ErroAdmin('Obra não encontrada')
         if (d.slug && d.slug !== o.slug) throw new ErroAdmin('O slug não pode ser alterado depois de criado')
         o.nome = nome
         o.ordem = d.ordem
+        if (destino && destino.id !== o.etapa_id) {
+          o.etapa_id = destino.id
+          // Grupo diferente: o tópico vinculado não vale mais.
+          if (o.telegram_chat_id !== destino.telegram_chat_id) o.telegram_chat_id = null
+        }
         return { id: o.id, slug: o.slug, nome: o.nome, ordem: o.ordem }
       }
       const slug = d.slug ?? ''
@@ -340,6 +615,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         throw new ErroAdmin('Slug inválido: use letras minúsculas, dígitos e hífen (até 40 caracteres)')
       }
       if (obras.some((x) => x.slug === slug)) throw new ErroAdmin(`Já existe uma obra com o slug ${slug}`)
+      if (!destino) throw new ErroAdmin('Escolha a etapa da obra')
       const nova: ObraMemoria = {
         id: `obra-nova-${++sequencia}`,
         slug,
@@ -350,6 +626,8 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         config_atualizada_em: null,
         config_atualizada_por: null,
         arquivada_em: null,
+        etapa_id: destino.id,
+        telegram_chat_id: null,
       }
       obras.push(nova)
       return { id: nova.id, slug, nome, ordem: nova.ordem }
@@ -491,34 +769,8 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       if ((confirmacao ?? '').trim() !== o.nome) {
         throw new ErroAdmin(`Para excluir, digite exatamente o nome da obra: ${o.nome}`)
       }
-      const resumo = resumoDe(o)
-      obras.splice(obras.indexOf(o), 1)
-      plantaPorObra.delete(o.id)
-      modelosPorObra.delete(o.id)
-      const removidos: Record<BucketObra, number> = { fotos: 0, plantas: 0, originais: 0, modelos: 0 }
-      for (const k of [...arquivos.keys()]) {
-        const [bucket, obraId] = k.split('/')
-        if (obraId !== o.id) continue
-        arquivos.delete(k)
-        removidos[bucket as BucketObra]++
-      }
-      for (let i = publicacoes.length - 1; i >= 0; i--) if (publicacoes[i].obra_id === o.id) publicacoes.splice(i, 1)
-      for (let i = historicoModelos.length - 1; i >= 0; i--) if (historicoModelos[i].obra_id === o.id) historicoModelos.splice(i, 1)
-      const agora = new Date().toISOString()
-      const exclusao: Exclusao = {
-        id: `exclusao-${++sequencia}`,
-        obra_id: o.id,
-        slug: o.slug,
-        nome: o.nome,
-        excluida_em: agora,
-        excluida_por_nome: VOCE.nome,
-        resumo,
-        arquivos_removidos_em: agora,
-        arquivos_removidos: removidos,
-        arquivos_erro: null,
-      }
-      exclusoes.unshift(exclusao)
-      return { exclusao_id: exclusao.id, obra_id: o.id, arquivos_removidos: removidos, pendente: false }
+      const exclusao = removerObra(o, null)
+      return { exclusao_id: exclusao.id, obra_id: o.id, arquivos_removidos: exclusao.arquivos_removidos ?? {}, pendente: false }
     },
 
     async listarExclusoes() {

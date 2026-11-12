@@ -56,6 +56,12 @@ export interface ObraLista {
   config_atualizada_em: string | null
   /** Obra arquivada (some do Mini App e não publica no Telegram); null se ativa. */
   arquivada_em: string | null
+  /** Etapa da obra (`obra.etapa_id`, sempre preenchido no banco). */
+  etapa_id: string
+  etapa_slug: string
+  etapa_nome: string
+  /** Etapa arquivada: vale como obra arquivada, sem mexer no `arquivada_em` da obra. */
+  etapa_arquivada_em: string | null
 }
 
 export interface PavimentoAdmin extends PavimentoResumo {
@@ -74,20 +80,120 @@ export interface ConfigObra {
   [chave: string]: unknown
 }
 
+/** Etapa embutida em `admin_obter_obra`. */
+export interface EtapaDaObra {
+  id: string
+  slug: string
+  nome: string
+  arquivada_em: string | null
+  telegram_vinculado: boolean
+}
+
 export interface ObraAdmin {
-  obra: { id: string; slug: string; nome: string; ordem: number; telegram_vinculado: boolean; arquivada_em: string | null }
+  obra: {
+    id: string
+    slug: string
+    nome: string
+    ordem: number
+    telegram_vinculado: boolean
+    arquivada_em: string | null
+    /** null só se o servidor ainda não tiver as etapas. */
+    etapa: EtapaDaObra | null
+  }
   pavimentos: PavimentoAdmin[]
   config: ConfigObra | null
   config_atualizada_em: string | null
   config_atualizada_por: string | null
 }
 
-/** Criação (sem `id`, com `slug`) ou edição (com `id`; o slug não muda). */
+/**
+ * Criação (sem `id`, com `slug` e `etapa_id`) ou edição (com `id`; o slug não muda; `etapa_id`,
+ * se vier, move a obra de etapa).
+ */
 export interface DadosObra {
   id?: string
   slug?: string
   nome: string
   ordem: number
+  etapa_id?: string
+}
+
+// --- Etapas e organização: RPCs em supabase/migrations/20261112180000_etapas.sql ----------------
+
+/** Uma etapa do campus (`admin_listar_etapas`), com as contagens de obras. */
+export interface EtapaLista {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+  arquivada_em: string | null
+  /** A etapa tem grupo do Telegram (`/vincular_etapa <slug>`). */
+  telegram_vinculado: boolean
+  /** Título do grupo na hora do vínculo (null se não registrado). */
+  telegram_chat_titulo: string | null
+  obras: number
+  obras_arquivadas: number
+}
+
+/** Criação (sem `id`, com `slug`) ou edição de nome e ordem (com `id`). */
+export interface DadosEtapa {
+  id?: string
+  slug?: string
+  nome: string
+  ordem: number
+}
+
+export interface EtapaSalva {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+}
+
+/** O que a exclusão da etapa apaga (`admin_resumo_etapa`): as obras e a soma das contagens. */
+export interface ResumoEtapa {
+  obras: { slug: string; nome: string }[]
+  total: ResumoObra
+}
+
+/** Resposta da Edge Function `admin-excluir-obra`, ação `excluir_etapa`. */
+export interface ResultadoExclusaoEtapa {
+  exclusoes: { exclusao_id: string; removidos: Partial<Record<BucketObra, number>>; pendente: boolean; erro: string | null }[]
+  /** Parte dos arquivos ficou no Storage (tentar de novo em "Obras excluídas"). */
+  pendente: boolean
+  erro: string | null
+}
+
+/** Identidade da organização militar (RPC `organizacao()`). */
+export interface Organizacao {
+  nome: string
+  /** Caminho no bucket público `organizacao`; null = sem logo. */
+  logo_path: string | null
+  /** URL pública do logo (montada pelo repositório); null sem logo. */
+  logo_url: string | null
+}
+
+export const NOME_OM_MAX = 80
+/** Limite do bucket `organizacao` (1 MB). */
+export const LOGO_MAX_BYTES = 1024 * 1024
+/** Tipos aceitos pelo bucket `organizacao` e a extensão do caminho de cada um. */
+export const TIPOS_LOGO: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
+/** Caminho do logo no bucket: `logo-<16 hex>.<png|jpg|webp>` (nome novo a cada troca). */
+export const CAMINHO_LOGO = /^logo-[0-9a-f]{16}\.(png|jpg|webp)$/
+
+/** Confere o arquivo do logo antes de enviar; devolve a mensagem de erro ou null. */
+export function problemaDoLogo(arquivo: { type: string; size: number }): string | null {
+  if (!(arquivo.type in TIPOS_LOGO)) return 'O logo precisa ser PNG, JPEG ou WebP.'
+  if (arquivo.size > LOGO_MAX_BYTES) return 'O logo pode ter no máximo 1 MB.'
+  return null
+}
+
+/** Caminho novo para o logo, com a extensão do tipo. */
+export function novoCaminhoLogo(tipo: string): string {
+  const bytes = new Uint8Array(8)
+  crypto.getRandomValues(bytes)
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
+  return `logo-${hex}.${TIPOS_LOGO[tipo] ?? 'png'}`
 }
 
 export interface ObraSalva {
@@ -239,6 +345,8 @@ export interface Exclusao {
   arquivos_removidos_em: string | null
   arquivos_removidos: Partial<Record<BucketObra, number>> | null
   arquivos_erro: string | null
+  /** Nome da etapa, quando a obra saiu junto com ela. */
+  etapa_nome?: string | null
 }
 
 /** Modelo 3D (.frag) publicado de uma disciplina (tabela `modelo`). */

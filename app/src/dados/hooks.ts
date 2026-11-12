@@ -7,6 +7,15 @@ export function useObras() {
   return useQuery({ queryKey: ['obras'], queryFn: () => repo.listarObras() })
 }
 
+/**
+ * Nome e logo da organização militar, para a faixa de identidade do topo. Entra no cache
+ * guardado no aparelho (vale sem sinal); em erro, a faixa mostra só "Fiscal Bot".
+ */
+export function useOrganizacao() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['organizacao'], queryFn: () => repo.organizacao(), staleTime: 5 * 60_000 })
+}
+
 export function useObra(slug: string) {
   const repo = useRepositorio()
   return useQuery({ queryKey: ['obra', slug], queryFn: () => repo.obterObra(slug) })

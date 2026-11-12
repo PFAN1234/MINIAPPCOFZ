@@ -138,7 +138,7 @@ def test_seed_da_cofz_atualizado():
         "supabase/seed/cofz.sql desatualizado: rode python3 scripts/gerar_seed.py --obra cofz"
     linhas = sql.splitlines()
     assert linhas[0].startswith("-- Gerado por scripts/gerar_seed.py a partir de data/cofz/ambientes.json")
-    assert "insert into public.obra (slug, nome) values ('cofz', 'COFZ')" in sql
+    assert "insert into public.obra (slug, nome, etapa_id) values ('cofz', 'COFZ', (select e.id from public.etapa e where e.slug = '2a-etapa'))" in sql
     assert "'hto'" not in sql
     assert sum(linha.startswith("insert into public.ambiente ") for linha in linhas) == 19
     assert sum(linha.startswith("insert into public.planta_detalhe ") for linha in linhas) == 19

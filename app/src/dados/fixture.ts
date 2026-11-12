@@ -21,9 +21,12 @@ import type {
   ImagemPlanta,
   NovoEncerramento,
   NovoRegistro,
+  Etapa,
+  ObraDaLista,
   ObraDetalhe,
   ObraDisponivel,
   ObraResumo,
+  Organizacao,
   PapelObra,
   Participante,
   Pavimento,
@@ -40,7 +43,25 @@ const ID_HTO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 const ID_AURORA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e02'
 
 const ID_DEMONSTRACAO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e03'
+const ID_ALOJAMENTOS = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e04'
 const ID_PEDIDO_MARIA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4f01'
+
+/** Etapas da fixture: as obras atuais na 2ª, uma obra simples na 3ª (testes do seletor). */
+export const ETAPA_2: Etapa = {
+  id: '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4b02',
+  slug: '2a-etapa',
+  nome: '2ª ETAPA',
+  ordem: 2,
+}
+export const ETAPA_3: Etapa = {
+  id: '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4b03',
+  slug: '3a-etapa',
+  nome: '3ª ETAPA',
+  ordem: 3,
+}
+
+/** Como a linha padrão de `organizacao` no banco: "CO-FZ", sem logo. */
+const NOME_ORGANIZACAO = 'CO-FZ'
 
 /** Obra em que o usuário de teste está no grupo do Telegram, mas sem acesso. */
 const OBRA_DEMONSTRACAO: ObraResumo = {
@@ -67,9 +88,10 @@ const PARTICIPANTES_BASE: (Participante & { papel_inicial: PapelObra })[] = [
   { usuario_id: ID_JOAO, nome: 'João Lima', username: 'joao', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-25T09:10:00Z' },
 ]
 
-const OBRAS: ObraResumo[] = [
-  { id: ID_HTO, slug: 'hto', nome: 'HTO' },
-  { id: ID_AURORA, slug: 'aurora', nome: 'Residencial Aurora' },
+const OBRAS: ObraDaLista[] = [
+  { id: ID_HTO, slug: 'hto', nome: 'HTO', etapa: ETAPA_2 },
+  { id: ID_AURORA, slug: 'aurora', nome: 'Residencial Aurora', etapa: ETAPA_2 },
+  { id: ID_ALOJAMENTOS, slug: 'alojamentos', nome: 'Bloco de Alojamentos', etapa: ETAPA_3 },
 ]
 
 interface DetalheJson {
@@ -305,7 +327,7 @@ function ambientesComContagem(registros: RegistroResumo[]): Ambiente[] {
 function obraPorSlug(slug: string): ObraResumo {
   const obra = OBRAS.find((o) => o.slug === slug)
   if (!obra) throw new Error('Obra não encontrada.')
-  return obra
+  return { id: obra.id, slug: obra.slug, nome: obra.nome }
 }
 
 /** `<obra_id>/<revisao>/<pavimento>/...` vira `/__plantas/<revisao>/<pavimento>/...`. */
@@ -404,6 +426,8 @@ export function criarRepositorioFixture(
     persistencia?: Storage | null
     /** O usuário de teste é admin do Mini App (mostra o botão Administração)? Padrão: não. */
     admin?: boolean
+    /** URL do logo da organização. Padrão: sem logo, como no banco recém-migrado. */
+    logo?: string | null
   } = {},
 ): Repositorio {
   const persistencia = opcoes.persistencia ?? null
@@ -549,7 +573,11 @@ export function criarRepositorioFixture(
     },
 
     async listarObras() {
-      return OBRAS.map((o) => ({ ...o }))
+      return OBRAS.map((o) => ({ ...o, etapa: { ...o.etapa } }))
+    },
+
+    async organizacao(): Promise<Organizacao> {
+      return { nome: NOME_ORGANIZACAO, logo_url: opcoes.logo || null }
     },
 
     async obterObra(slug): Promise<ObraDetalhe> {
@@ -624,7 +652,15 @@ export function criarRepositorioFixture(
     },
 
     async obrasDisponiveis(): Promise<ObraDisponivel[]> {
-      return [{ ...OBRA_DEMONSTRACAO, solicitacao: pedidos[ID_DEMONSTRACAO] ?? null }]
+      return [
+        {
+          ...OBRA_DEMONSTRACAO,
+          solicitacao: pedidos[ID_DEMONSTRACAO] ?? null,
+          etapa_id: ETAPA_2.id,
+          etapa_nome: ETAPA_2.nome,
+          etapa_ordem: ETAPA_2.ordem,
+        },
+      ]
     },
 
     async solicitarAcesso(obraId) {

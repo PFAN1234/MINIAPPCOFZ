@@ -8,8 +8,17 @@ import { criarClienteSupabase } from '../../dados/supabase.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import {
   ErroAdmin,
+  CAMINHO_LOGO,
+  novoCaminhoLogo,
+  problemaDoLogo,
   type Admin,
+  type BucketObra,
   type ConfigObra,
+  type EtapaLista,
+  type EtapaSalva,
+  type Organizacao,
+  type ResultadoExclusaoEtapa,
+  type ResumoEtapa,
   type DadosEditorPlanta,
   type AmbienteRA,
   type DadosModelos,
@@ -108,8 +117,8 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     if (error) throw new ErroAdmin('Não foi possível guardar a sessão. Tente de novo.', { cause: error })
   }
 
-  /** Chama a Edge Function `admin-excluir-obra` com a sessão do admin. */
-  async function funcaoExcluir(corpo: Record<string, unknown>): Promise<ResultadoExclusao> {
+  /** Chama a Edge Function `admin-excluir-obra` com a sessão do admin; devolve o JSON da resposta. */
+  async function funcaoExcluir(corpo: Record<string, unknown>, naoEncontrado: string): Promise<Record<string, unknown>> {
     const { data } = await cliente.auth.getSession()
     const token = data.session?.access_token
     if (!token) throw new ErroAdmin('Sua sessão expirou. Entre de novo.')
@@ -123,22 +132,41 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     } catch (e) {
       throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
     }
-    const json = (await resposta.json().catch(() => null)) as (ResultadoExclusao & Record<string, unknown>) | null
+    const json = (await resposta.json().catch(() => null)) as Record<string, unknown> | null
     if (resposta.status !== 200 || !json) {
       const texto = [json?.erro, json?.mensagem, json?.error].find((v) => typeof v === 'string') as string | undefined
       const padrao: Record<number, string> = {
         401: 'Sua sessão expirou. Entre de novo.',
         403: 'Acesso negado: apenas admins do Mini App.',
-        404: 'Obra não encontrada',
+        404: naoEncontrado,
       }
-      throw new ErroAdmin(texto ?? padrao[resposta.status] ?? 'Não foi possível excluir a obra. Tente de novo.')
+      throw new ErroAdmin(texto ?? padrao[resposta.status] ?? 'Não foi possível excluir. Tente de novo.')
     }
+    return json
+  }
+
+  /** Ações `excluir` e `limpar` (uma obra). */
+  async function excluirUma(corpo: Record<string, unknown>): Promise<ResultadoExclusao> {
+    const json = await funcaoExcluir(corpo, 'Obra não encontrada')
     return {
       exclusao_id: String(json.exclusao_id),
       obra_id: String(json.obra_id),
-      arquivos_removidos: json.arquivos_removidos ?? {},
+      arquivos_removidos: (json.arquivos_removidos as ResultadoExclusao['arquivos_removidos'] | undefined) ?? {},
       pendente: Boolean(json.pendente),
       ...(typeof json.erro === 'string' ? { erro: json.erro } : {}),
+    }
+  }
+
+  const textoOuNulo = (v: unknown) => (v == null ? null : String(v))
+  /** `obras` pode vir como contagem ou como lista. */
+  const contagem = (v: unknown) => (Array.isArray(v) ? v.length : Number(v ?? 0))
+
+  function organizacaoDe(l: Linha | null): Organizacao {
+    const logo = typeof l?.logo_path === 'string' && l.logo_path ? l.logo_path : null
+    return {
+      nome: typeof l?.nome === 'string' && l.nome ? l.nome : 'CO-FZ',
+      logo_path: logo,
+      logo_url: logo ? `${base}/storage/v1/object/public/organizacao/${logo}` : null,
     }
   }
 
@@ -179,6 +207,101 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       await cliente.auth.signOut({ scope: 'local' })
     },
 
+    async listarEtapas() {
+      const linhas = await rpc<Linha[] | null>('admin_listar_etapas')
+      return (linhas ?? []).map(
+        (l): EtapaLista => ({
+          id: String(l.id),
+          slug: String(l.slug),
+          nome: String(l.nome),
+          ordem: Number(l.ordem ?? 0),
+          arquivada_em: textoOuNulo(l.arquivada_em),
+          telegram_vinculado: l.telegram_vinculado === true,
+          telegram_chat_titulo: textoOuNulo(l.telegram_chat_titulo),
+          obras: contagem(l.obras),
+          obras_arquivadas: contagem(l.obras_arquivadas),
+        }),
+      )
+    },
+
+    async salvarEtapa(dados) {
+      try {
+        return await rpc<EtapaSalva>('admin_salvar_etapa', { p: dados })
+      } catch (e) {
+        const codigo = (e as ErroAdmin).cause && ((e as ErroAdmin).cause as ErroBruto).code
+        if (codigo === '23505') throw new ErroAdmin(`Já existe uma etapa com o slug ${dados.slug ?? ''}`, { cause: e })
+        throw e
+      }
+    },
+
+    async arquivarEtapa(slug, arquivada) {
+      const r = await rpc<{ arquivada_em: string | null } | null>('admin_arquivar_etapa', {
+        p_slug: slug,
+        p_arquivada: arquivada,
+      })
+      return r?.arquivada_em ?? null
+    },
+
+    async desvincularEtapa(slug) {
+      await rpc('admin_desvincular_etapa', { p_slug: slug })
+    },
+
+    async resumoEtapa(slug) {
+      const r = await rpc<ResumoEtapa | null>('admin_resumo_etapa', { p_slug: slug })
+      if (!r) throw new ErroAdmin('Etapa não encontrada')
+      return { obras: r.obras ?? [], total: r.total }
+    },
+
+    async excluirEtapa(slug, confirmacao) {
+      const json = await funcaoExcluir({ acao: 'excluir_etapa', slug, confirmacao }, 'Etapa não encontrada')
+      const lista = Array.isArray(json.exclusoes) ? (json.exclusoes as Linha[]) : []
+      const r: ResultadoExclusaoEtapa = {
+        exclusoes: lista.map((x) => ({
+          exclusao_id: String(x.exclusao_id),
+          removidos: (x.removidos as Partial<Record<BucketObra, number>> | null) ?? {},
+          pendente: Boolean(x.pendente),
+          erro: textoOuNulo(x.erro),
+        })),
+        pendente: Boolean(json.pendente),
+        erro: textoOuNulo(json.erro),
+      }
+      return r
+    },
+
+    async obterOrganizacao() {
+      const d = await rpc<Linha | Linha[] | null>('organizacao')
+      return organizacaoDe(Array.isArray(d) ? (d[0] ?? null) : d)
+    },
+
+    async salvarOrganizacao(dados) {
+      return organizacaoDe(await rpc<Linha | null>('admin_salvar_organizacao', { p: dados }))
+    },
+
+    async enviarLogo(arquivo) {
+      const problema = problemaDoLogo(arquivo)
+      if (problema) throw new ErroAdmin(problema)
+      const caminho = novoCaminhoLogo(arquivo.type)
+      if (!CAMINHO_LOGO.test(caminho)) throw new ErroAdmin('Caminho do logo inválido.')
+      let erro: unknown
+      try {
+        const { error } = await cliente.storage
+          .from('organizacao')
+          .upload(caminho, arquivo, { upsert: false, contentType: arquivo.type, cacheControl: '31536000' })
+        erro = error
+      } catch (e) {
+        throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
+      }
+      if (erro) {
+        const msg = (erro as { message?: string }).message ?? ''
+        if (/row-level security|unauthorized|403/i.test(msg)) {
+          throw new ErroAdmin('Sem permissão para enviar o logo (bucket organizacao).', { cause: erro })
+        }
+        if (/payload too large|413|exceeded/i.test(msg)) throw new ErroAdmin('O logo pode ter no máximo 1 MB.', { cause: erro })
+        throw new ErroAdmin(`Falha ao enviar o logo: ${msg || 'erro do Storage'}`, { cause: erro })
+      }
+      return caminho
+    },
+
     async listarObras() {
       const linhas = await rpc<Linha[]>('admin_listar_obras')
       return (linhas ?? []).map(
@@ -192,12 +315,32 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
           status: l.status == null ? null : String(l.status),
           config_atualizada_em: l.config_atualizada_em == null ? null : String(l.config_atualizada_em),
           arquivada_em: l.arquivada_em == null ? null : String(l.arquivada_em),
+          etapa_id: String(l.etapa_id ?? ''),
+          etapa_slug: String(l.etapa_slug ?? ''),
+          etapa_nome: String(l.etapa_nome ?? ''),
+          etapa_arquivada_em: textoOuNulo(l.etapa_arquivada_em),
         }),
       )
     },
 
-    obterObra(slug) {
-      return rpc<ObraAdmin>('admin_obter_obra', { p_slug: slug })
+    async obterObra(slug) {
+      const d = await rpc<ObraAdmin>('admin_obter_obra', { p_slug: slug })
+      const e = d.obra.etapa as (ObraAdmin['obra']['etapa'] & Linha) | null | undefined
+      return {
+        ...d,
+        obra: {
+          ...d.obra,
+          etapa: e
+            ? {
+                id: String(e.id),
+                slug: String(e.slug),
+                nome: String(e.nome),
+                arquivada_em: textoOuNulo(e.arquivada_em),
+                telegram_vinculado: e.telegram_vinculado === true,
+              }
+            : null,
+        },
+      }
     },
 
     salvarObra(dados) {
@@ -270,15 +413,18 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     },
 
     excluirObra(slug, confirmacao) {
-      return funcaoExcluir({ acao: 'excluir', slug, confirmacao })
+      return excluirUma({ acao: 'excluir', slug, confirmacao })
     },
 
     async listarExclusoes() {
-      return (await rpc<Exclusao[] | null>('admin_listar_exclusoes')) ?? []
+      return ((await rpc<Exclusao[] | null>('admin_listar_exclusoes')) ?? []).map((e) => ({
+        ...e,
+        etapa_nome: e.etapa_nome ?? null,
+      }))
     },
 
     limparExclusao(id) {
-      return funcaoExcluir({ acao: 'limpar', exclusao_id: id })
+      return excluirUma({ acao: 'limpar', exclusao_id: id })
     },
 
     async listarModelosAdmin(slug) {

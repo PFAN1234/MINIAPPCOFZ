@@ -266,6 +266,7 @@ def test_vincular_obra_atualiza_e_reagenda(cenario):
     pid = nova_publicacao(c, proxima_tentativa_em="now() + interval '1 hour'")
     outra = nova_publicacao(c, estado='publicado')
     slug = sql(c, 'select slug from public.obra where id = %s', (c.obra_a,))[0][0]
+    sql(c, 'update public.etapa set telegram_chat_id = -100123 where id = %s', (c.etapa,))  # grupo da etapa
     r = sql(c, 'select id, telegram_chat_id, telegram_thread_id from public.vincular_obra(%s, %s, %s)',
             (slug, -100123, 7), papel='service_role')[0]
     assert r == (c.obra_a, -100123, 7)
