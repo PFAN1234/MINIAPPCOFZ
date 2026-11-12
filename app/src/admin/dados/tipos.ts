@@ -54,6 +54,8 @@ export interface ObraLista {
   /** `config.status`; null sem configuração. */
   status: string | null
   config_atualizada_em: string | null
+  /** Obra arquivada (some do Mini App e não publica no Telegram); null se ativa. */
+  arquivada_em: string | null
 }
 
 export interface PavimentoAdmin extends PavimentoResumo {
@@ -73,7 +75,7 @@ export interface ConfigObra {
 }
 
 export interface ObraAdmin {
-  obra: { id: string; slug: string; nome: string; ordem: number; telegram_vinculado: boolean }
+  obra: { id: string; slug: string; nome: string; ordem: number; telegram_vinculado: boolean; arquivada_em: string | null }
   pavimentos: PavimentoAdmin[]
   config: ConfigObra | null
   config_atualizada_em: string | null
@@ -197,7 +199,89 @@ export interface ResultadoPublicacao {
   inativados: number
 }
 
-export type Bucket = 'originais' | 'plantas'
+export type Bucket = 'originais' | 'plantas' | 'modelos'
+
+/** Buckets com arquivos da obra (todos com o id da obra como 1ª pasta). */
+export type BucketObra = 'fotos' | 'plantas' | 'originais' | 'modelos'
+
+/** O que a exclusão da obra apaga (`admin_resumo_obra`). */
+export interface ResumoObra {
+  registros: number
+  fotos: number
+  ambientes: number
+  pavimentos: number
+  plantas: number
+  modelos: number
+  participantes: number
+  publicacoes_telegram: number
+  arquivos: Record<BucketObra, number>
+}
+
+/** Resposta da Edge Function `admin-excluir-obra` (ações `excluir` e `limpar`). */
+export interface ResultadoExclusao {
+  exclusao_id: string
+  obra_id: string
+  arquivos_removidos: Partial<Record<BucketObra, number>>
+  /** A obra saiu do banco, mas parte dos arquivos ficou no Storage (tentar de novo). */
+  pendente: boolean
+  erro?: string
+}
+
+/** Uma exclusão registrada (`admin_listar_exclusoes`). */
+export interface Exclusao {
+  id: string
+  obra_id: string
+  slug: string
+  nome: string
+  excluida_em: string
+  excluida_por_nome: string | null
+  resumo: Partial<ResumoObra> | null
+  arquivos_removidos_em: string | null
+  arquivos_removidos: Partial<Record<BucketObra, number>> | null
+  arquivos_erro: string | null
+}
+
+/** Modelo 3D (.frag) publicado de uma disciplina (tabela `modelo`). */
+export interface ModeloAdmin {
+  sigla: string
+  revisao: string | null
+  caminho: string
+  bytes: number
+  hash: string
+  atualizado_em: string
+}
+
+/** Linha do histórico de modelos (`publicacao_modelo`). */
+export interface EventoModelo {
+  id: string
+  acao: 'publicado' | 'retirado'
+  sigla: string
+  revisao: string | null
+  bytes: number | null
+  hash: string | null
+  origem: 'ifc' | 'frag' | null
+  arquivo_nome: string | null
+  ifc_bytes: number | null
+  publicado_em: string
+  publicado_por_nome: string | null
+}
+
+export interface DadosModelos {
+  modelos: ModeloAdmin[]
+  historico: EventoModelo[]
+}
+
+/** Payload da RPC `admin_registrar_modelo` (o arquivo já está no bucket `modelos`). */
+export interface RegistroModelo {
+  sigla: string
+  revisao: string | null
+  caminho: string
+  bytes: number
+  hash: string
+  origem: 'ifc' | 'frag'
+  arquivo_nome?: string | null
+  ifc_bytes?: number | null
+}
 
 /** Erro já com a mensagem para a tela. */
 export class ErroAdmin extends Error {

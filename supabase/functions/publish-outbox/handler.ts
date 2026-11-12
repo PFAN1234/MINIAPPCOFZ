@@ -451,7 +451,9 @@ export function criarHandler(deps: Deps) {
         "id, nome, slug, telegram_chat_id, telegram_thread_id",
       )
         .not("telegram_chat_id", "is", null)
-        .not("telegram_thread_id", "is", null),
+        .not("telegram_thread_id", "is", null)
+        // Obra arquivada não publica nada no tópico, nem aviso de pedido.
+        .is("arquivada_em", null),
       "obra",
     ) as {
       id: string;

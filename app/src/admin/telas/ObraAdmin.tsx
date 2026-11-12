@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ComDados, mensagemDe, Resultado, SelectCategoria } from '../componentes.tsx'
 import { Historico } from './planta/PlantaObra.tsx'
+import ArquivarExcluir, { AvisoArquivada } from './obra/ArquivarExcluir.tsx'
 import { useExportarObra, useObraAdmin, useSalvarConfig, useSalvarObra, useSalvarPavimentos } from '../dados/hooks.ts'
 import {
   ROTULO_STATUS,
@@ -31,9 +32,7 @@ export default function ObraAdmin() {
             <Link to="/">← Obras</Link>
           </p>
           <h1 id="titulo-obra">{d.obra.nome}</h1>
-          <p className="adm-alerta adm-alerta-info">
-            O envio do modelo (IFC) chega na próxima fase do site; por enquanto, pelos scripts (scripts/README.md).
-          </p>
+          {d.obra.arquivada_em && <AvisoArquivada arquivadaEm={d.obra.arquivada_em} />}
           <DadosDaObra
             key={`${d.obra.nome}|${d.obra.ordem}`}
             obra={d.obra}
@@ -55,7 +54,9 @@ export default function ObraAdmin() {
           />
           <Planta slug={d.obra.slug} pavimentos={d.pavimentos} />
           <Historico slug={d.obra.slug} />
+          <Modelo3d slug={d.obra.slug} />
           <Exportar slug={d.obra.slug} />
+          <ArquivarExcluir obra={d.obra} />
         </article>
       )}
     </ComDados>
@@ -511,6 +512,22 @@ function Planta({ slug, pavimentos }: { slug: string; pavimentos: PavimentoAdmin
           ))}
         </ul>
       )}
+    </section>
+  )
+}
+
+// --- Modelo 3D -------------------------------------------------------------------------------
+
+function Modelo3d({ slug }: { slug: string }) {
+  return (
+    <section className="adm-secao" aria-labelledby="titulo-modelo-3d">
+      <h2 id="titulo-modelo-3d">Modelo 3D</h2>
+      <p className="adm-dica">
+        Modelos por disciplina para o visualizador do Mini App: envie o IFC (convertido neste navegador) ou o .frag pronto.
+      </p>
+      <Link className="adm-botao" to={`/obras/${slug}/modelos`}>
+        Modelos 3D
+      </Link>
     </section>
   )
 }

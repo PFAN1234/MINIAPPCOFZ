@@ -521,6 +521,25 @@ td.adm-acoes {
   border: 0;
 }
 
+.adm-area-planta {
+  position: relative;
+}
+
+.adm-aviso-flutuante {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 10px;
+  max-width: calc(100% - 16px);
+  border: 1px solid var(--adm-borda);
+  border-radius: 6px;
+  background: var(--adm-superficie);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+}
+
 .adm-cursor-mira {
   cursor: crosshair;
 }
@@ -585,4 +604,27 @@ td.adm-acoes {
 
 .adm-editor-tabela input {
   min-width: 11em;
+}
+
+/* Arquivar ou excluir obra (fim da página da obra). */
+.adm-secao-perigo {
+  border-top: 2px solid var(--adm-erro);
+}
+
+.adm-bloco + .adm-bloco {
+  margin-top: 20px;
+}
+
+.adm-bloco h3 {
+  margin: 12px 0 4px;
+  font-size: 1rem;
+}
+
+.adm-selo-arquivada {
+  background: var(--adm-borda);
+  color: var(--adm-texto);
+}
+
+.adm-linha-arquivada td {
+  color: var(--adm-suave);
 }

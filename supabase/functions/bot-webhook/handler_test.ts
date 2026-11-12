@@ -17,7 +17,7 @@ function montar(
   opts: {
     respostas?: Respostas;
     obra?: unknown;
-    rpcErro?: boolean;
+    rpcErro?: boolean | { message: string; code?: string };
     rpcLanca?: boolean;
   } = {},
 ) {
@@ -33,7 +33,10 @@ function montar(
       if (opts.rpcLanca) return Promise.reject(new Error("boom"));
       return Promise.resolve(
         opts.rpcErro
-          ? { data: null, error: { message: "falhou" } }
+          ? {
+            data: null,
+            error: opts.rpcErro === true ? { message: "falhou" } : opts.rpcErro,
+          }
           : { data: opts.obra ?? null, error: null },
       );
     },
@@ -313,6 +316,18 @@ Deno.test("/vincular_obra com slug inexistente", async () => {
     args: { p_slug: "xyz", p_chat: CHAT, p_thread: THREAD },
   });
   assertEquals(enviadas(chamadas)[0].corpo.text, "Obra “xyz” não encontrada.");
+});
+
+Deno.test("/vincular_obra com obra arquivada mostra a mensagem do banco", async () => {
+  const msg =
+    "A obra “HTO” está arquivada. Peça a um admin do Mini App para desarquivá-la antes de vincular o tópico.";
+  const { handler, chamadas } = montar({
+    respostas: { getChatMember: status("creator") },
+    rpcErro: { message: msg, code: "22023" },
+  });
+  const r = await update(handler, noTopico("/vincular_obra hto"));
+  assertEquals(r.status, 200);
+  assertEquals(enviadas(chamadas)[0].corpo.text, msg);
 });
 
 Deno.test("/vincular_obra com sucesso (e @bot no comando)", async () => {

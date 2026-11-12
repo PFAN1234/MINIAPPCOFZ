@@ -1,6 +1,6 @@
 # Site de administração
 
-Site web (`/admin/`) para cadastrar e editar as obras do Mini App no navegador do computador, sem terminal e sem chave secreta. Plano e fases em `tasks/plano-admin.md`; checklist em `tasks/todo.md` ("Site de administração"). Esta página descreve a **fase 1** (acesso, obras, pavimentos, configuração, admins e exportação) e a **fase 2** (planta em PDF, seção "Planta (fase 2)" no fim). O envio do IFC (modelo) chega na fase 3.
+Site web (`/admin/`) para cadastrar e editar as obras do Mini App no navegador do computador, sem terminal e sem chave secreta. Plano e fases em `tasks/plano-admin.md`; checklist em `tasks/todo.md` ("Site de administração"). Esta página descreve a **fase 1** (acesso, obras, pavimentos, configuração, admins e exportação), a **fase 2** (planta em PDF, seção "Planta (fase 2)") e a **fase 3** (modelo 3D, seção "Modelo 3D (fase 3)" no fim).
 
 ## Peças
 
@@ -131,9 +131,11 @@ Obra → "Planta de <pavimento>" (ou `/admin/obras/<slug>/planta`, que lista os 
 
 1. **Arquivo**: escolher o PDF (até 50 MB) ou "Reabrir o PDF guardado" (o da última publicação do pavimento, baixado do bucket `originais`); escolher a página; informar a revisão (vem do nome `...-R07.pdf` quando houver; nome e revisão diferentes bloqueiam). "Ler a página" extrai o texto.
 2. **Recorte e máscaras**: a página inteira com o recorte do edifício (azul) e as máscaras (tracejado vermelho). Arrastar no desenho cria o recorte ou uma máscara (conforme a ferramenta), arrastar um retângulo o move e as alças dos cantos redimensionam; a tabela mostra os valores normalizados (0–1, como no `obra.json`), editáveis, com descrição e "Apagar". "Usar em todos os pavimentos" grava em `config.prancha`; desmarcado, só no pavimento (`config.pavimentos[i].prancha`).
-3. **Ambientes**: tabela e planta recortada lado a lado. Renomear (nome operacional), categoria (select com as categorias do extrator), arrastar pino, "Remover pino N" (rótulo duplo), "Voltar pinos ao rótulo", "Incluir ambiente sem rótulo" (clicar na planta) e "Remover ambiente" (manuais). Os casos de `revisar` do extrator aparecem no topo e as linhas ficam marcadas; itens da configuração que não valem mais para a planta (renomear de outra área, `manter_codigo` antigo, pinos de um código que sumiu) são listados e ficam de fora ao publicar.
+3. **Ambientes**: tabela e planta recortada lado a lado. Renomear (nome operacional), categoria (select com as categorias do extrator), arrastar pino, "Adicionar pino" (na linha, depois um clique na planta), "Remover pino N" (quando há mais de um), "Voltar pinos ao rótulo", "Incluir ambiente sem rótulo" (clicar na planta) e "Remover ambiente" (manuais). Os casos de `revisar` do extrator aparecem no topo e as linhas ficam marcadas; itens da configuração que não valem mais para a planta (renomear de outra área, `manter_codigo` antigo, pinos de um código que sumiu) são listados e ficam de fora ao publicar.
 4. **Nova revisão**: diferenças contra o que está no banco (novos, removidos com sucessor sugerido, códigos mantidos, nome e área alterados, pino deslocado). "Confirmar: é o mesmo ambiente" grava `manter_codigo` (o novo herda o código e os registros); "Desfazer" tira.
 5. **Prova e publicar**: a prova (visão geral com todos os pinos, para baixar em PNG) e "Publicar", com barra de progresso: envia o PDF para `originais`, gera e envia `planta.webp`, `planta-hd.webp` e um recorte por ambiente para `plantas` (upsert) e chama `admin_publicar_revisao`. Erro em qualquer passo para tudo antes da RPC (o banco não muda) e mostra a mensagem. Depois, "Marcar como revisado" grava `status: revisado` e `revisao_humana` na configuração.
+
+**Ajustar depois de publicar:** na lista de pavimentos (`/admin/obras/<slug>/planta`), "Ajustar ambientes e pinos de <pavimento>" aparece quando o pavimento já foi publicado pelo site. Abre `.../planta/<pavimento>?ajustar=1`, que baixa o PDF guardado em `originais`, lê a página e vai direto para a etapa 3, com a mesma revisão. Ali, "Adicionar pino" (na linha do ambiente, depois um clique na planta) põe um pino a mais; "Incluir ambiente sem rótulo" cria um ambiente novo; depois é seguir as etapas e publicar de novo (mesma revisão: substitui as imagens). Pavimentos que ainda só vieram dos scripts precisam de um envio do PDF pela etapa 1 antes.
 
 A página da obra ganhou as seções "Planta (PDF)" e "Publicações da planta" (histórico: quando, pavimento, revisão, quem, PDF, número de ambientes e contagem de diferenças).
 
@@ -144,9 +146,9 @@ Tudo continua no formato do `obra.json`, em `obra_config.config`:
 | Edição | Campo |
 | --- | --- |
 | Renomear ambiente rotulado | `renomear` (pavimento + nome na planta + área). Se o ambiente já existe no banco, `manter_codigo[<id novo calculado>] = <código atual>`: o código não muda. |
-| Renomear ou mover ambiente sem rótulo | a entrada dele em `ambientes_manuais` |
+| Renomear ambiente sem rótulo, ou arrastar, acrescentar ou remover pino dele | a entrada dele em `ambientes_manuais`: `marcador` (primeiro pino) e, com mais de um pino, `marcadores` (lista com todos). Vale para as próximas revisões também. O `extrair_ambientes.py` lê `marcadores` igual ao site. |
 | Categoria de ambiente rotulado | `categorias[<nome na planta>]` (vale para todos os rótulos com esse nome) |
-| Arrastar ou remover pino | `marcadores_ajustados[<código>] = {revisao, marcadores}` (campo novo, só do site): vale só na revisão em que foi feito; numa revisão nova os pinos voltam a sair dos rótulos. A caixa do rótulo anda junto com o pino, para o recorte de detalhe acompanhar. |
+| Arrastar, acrescentar ("Adicionar pino") ou remover pino de ambiente rotulado | `marcadores_ajustados[<código>] = {revisao, marcadores}` (campo novo, só do site): vale só na revisão em que foi feito; numa revisão nova os pinos voltam a sair dos rótulos. A caixa do rótulo anda junto com o pino, para o recorte de detalhe acompanhar. |
 | Incluir ambiente sem rótulo | `ambientes_manuais` |
 | É o mesmo ambiente | `manter_codigo` |
 | Publicação | `revisao`, `pavimentos[i]` (`pdf`, `pagina`, `revisao` e, se for o caso, `prancha`), `status: aguardando_revisao_humana` |
@@ -198,3 +200,93 @@ As imagens saem do canvas em WebP (`toBlob('image/webp', 0,8)`; qualidade 80 com
 1. Migration `20261112090000_admin_planta.sql` (depois da `20261111170000_admin.sql`). Cria o bucket `originais` e as políticas; não mexe em dados.
 2. Deploy do app (o editor está no pacote do `/admin/`). Nenhuma variável nova.
 3. Conferir com um admin: enviar o PDF atual de um pavimento já publicado, ver "Nenhuma diferença" na etapa 4, publicar e conferir no Mini App e em "Publicações da planta".
+
+## Modelo 3D (fase 3)
+
+O admin publica o modelo 3D de cada disciplina (sigla: ARQ, EST, HID…) pelo site, sem chave secreta: em Obra → "Modelos 3D" (`/admin/obras/<slug>/modelos`). Há duas formas de enviar:
+
+- **IFC:** o arquivo é convertido em `.frag` neste navegador, num Web Worker (`IfcImporter` da That Open com o `web-ifc`, os mesmos do script `npm run modelos`). O IFC é lido em blocos de 1 MB direto do arquivo e não é enviado: só o `.frag` sobe. Há barra de progresso, botão de cancelar e "Baixar o .frag" para guardar o resultado.
+- **`.frag` pronto:** um arquivo gerado no computador por `npm run modelos -- --obra <slug> --ifc <arquivo.ifc>` (ver `app/scripts/ifc_para_frag.mjs`). Serve para o IFC grande demais para a aba.
+
+Sigla e revisão saem do nome no padrão `<obra>-<projeto>-<SIGLA>-<REV>` (ex.: `CE01-14PE01-ARQ-R06.ifc`) e podem ser corrigidas. Publicar uma sigla que já existe substitui o modelo no visualizador. "Retirar" tira a disciplina do visualizador: o arquivo fica no Storage e pode ser publicado de novo. Tudo vai para o histórico da página.
+
+### Peças
+
+| Peça | Onde |
+| --- | --- |
+| Migration | `supabase/migrations/20261112120000_admin_modelo.sql` |
+| Regras e publicação | `app/src/admin/modelo/modelos.ts` (sigla/revisão do nome, limite, conferência do `.frag`, hash, caminho, envio + RPC) |
+| Conversão | `app/src/admin/modelo/conversor.ts` e `conversor.worker.ts`; o `web-ifc.wasm` é servido em `/web-ifc/<versão>/` (plugin `wasmWebIfc` no `vite.config.ts`) |
+| Tela | `app/src/admin/telas/modelo/ModelosObra.tsx` |
+| Testes | `app/src/admin/modelo/modelos.node.test.ts`, `app/src/admin/telas/modelo/ModelosObra.test.tsx`, `app/e2e/admin-modelo.spec.ts` (converte de verdade `e2e/fixtures/TESTE-01-EST-R01.ifc`, gerado por `e2e/fixtures/gerar_ifc_teste.py`, e envia o `ARQ.frag` da HTO), `tests/db/test_admin_modelo.py` |
+
+### Banco e Storage (`20261112120000_admin_modelo.sql`)
+
+| Peça | Regra |
+| --- | --- |
+| Caminho no bucket `modelos` | `<obra_id>/<SIGLA>/<hash>.frag`, com o hash do conteúdo (16 primeiros hex do SHA-256, como o script). Um arquivo novo nunca sobrescreve o que os aparelhos já baixaram; o `hash` da tabela continua sendo a chave do cache no aparelho. O caminho antigo do script `publicar:modelos` (`<obra_id>/<SIGLA>.frag`) continua válido. |
+| Políticas `modelos_admin_select/insert/update` | Só `privado.eh_admin()`, gravação só no padrão do caminho e em obra existente. Sem delete. A leitura dos participantes (`modelos_select`) não muda. |
+| `publicacao_modelo` | Histórico: `acao` (`publicado` ou `retirado`), sigla, revisão, caminho, bytes, hash, `origem` (`ifc` ou `frag`), nome do arquivo, tamanho do IFC, quem e quando. RLS ligada, sem grant: só pelas RPCs. |
+| `admin_registrar_modelo(p_slug, p)` | Confere sigla, revisão, hash, caminho, que o objeto existe no Storage e que o tamanho bate com `metadata.size`; faz upsert em `modelo` por (obra, sigla) e grava o histórico. |
+| `admin_listar_modelos(p_slug)` | `{modelos, historico}` (histórico: os 100 mais recentes). |
+| `admin_retirar_modelo(p_slug, p_sigla)` | Apaga a linha de `modelo` e grava `retirado` no histórico. |
+
+### Limites
+
+- **50 MB por arquivo:** limite de upload do Supabase no plano grátis. O site recusa um `.frag` maior antes de enviar. O ARQ da HTO tem 11,9 MB (IFC de 206 MB).
+- **Memória da aba:** a conversão de um IFC muito grande pode ficar sem memória (o WASM tem teto de ~4 GB). Acima de 400 MB o site avisa; se falhar, a mensagem orienta a converter no computador e enviar o `.frag`.
+- O conversor (worker de ~3,9 MB, quase todo o `web-ifc`) e o `web-ifc.wasm` (1,7 MB) só são baixados quando o admin converte, e ficam fora do precache do Mini App.
+
+### Aplicar num projeto
+
+1. Migration `20261112120000_admin_modelo.sql` (depois da `20261111150000_fase9_modelos.sql` e da `20261112090000_admin_planta.sql`). Só cria políticas, tabela e funções; não mexe em dados.
+2. Deploy do app. Nenhuma variável nova.
+3. Conferir com um admin: em HTO → "Modelos 3D", enviar `app/public/modelos/hto/ARQ.frag` com sigla ARQ e revisão R06, publicar e abrir o modelo no Mini App.
+
+## Arquivar e excluir obra
+
+Migration `supabase/migrations/20261112150000_admin_arquivar_excluir.sql`; Edge Function `supabase/functions/admin-excluir-obra/` (detalhes no `README.md` dela); testes `tests/db/test_admin_arquivar_excluir.py` e `admin-excluir-obra/handler_test.ts`.
+
+| Ação | Faz | Não faz |
+| --- | --- | --- |
+| **Arquivar** (obra concluída) | Grava `obra.arquivada_em`/`arquivada_por`. `privado.eh_participante` e `eh_gestor` passam a dar false para a obra: ela some do Mini App (RLS de obra, registros, fotos, plantas, modelos e Storage) e ninguém registra, encerra, sobe foto, decide pedido nem gerencia participantes. Some de `obras_disponiveis`; `solicitar_acesso` recusa (22023); `sincronizar_acesso` a ignora; `vincular_obra` recusa (22023, o bot mostra a mensagem no tópico); `reivindicar_publicacoes` não pega itens dela; o `publish-outbox` não manda aviso de pedido de acesso dela. | Não apaga nada e é reversível. Não tira participantes. Não mexe no site de administração (a obra continua listada e editável). Admin que participa da obra também deixa de vê-la no Mini App. |
+| **Desarquivar** | Limpa as duas colunas e põe as publicações pendentes da obra na fila na hora (o cron publica no minuto seguinte). Tudo volta como antes. | — |
+| **Excluir** (irreversível) | Exige o nome exato da obra. Grava a auditoria em `obra_excluida` (quem, quando, contagens), apaga a obra e todas as linhas dela (registros, encerramentos, fotos, pendências, publicações no Telegram, pavimentos, ambientes, plantas e detalhes, publicações de planta e de modelo, modelos, configuração, participantes, pedidos de acesso, membros do grupo) numa transação; depois a Edge Function remove os arquivos `<obra_id>/...` dos buckets `fotos`, `plantas`, `originais` e `modelos`. | Não apaga usuários nem admins. Não apaga mensagens do Telegram. |
+
+**Telegram:** as mensagens já postadas no tópico continuam no grupo nos dois casos (nada é apagado lá). Ao arquivar, os itens `pendente` da fila ficam parados (não são reivindicados) e saem quando a obra é desarquivada; os que já estavam `enviando` terminam normalmente. Ao excluir, os itens da fila são apagados com a obra e nunca saem.
+
+**Exclusão em duas etapas:** o Supabase não deixa apagar direto nas tabelas do Storage, então a RPC apaga só o banco e a Edge Function remove os arquivos pela API do Storage e chama `admin_registrar_limpeza`. Se a remoção falhar, a obra já está apagada, a resposta vem com `pendente: true` e a exclusão fica com `arquivos_erro` em `admin_listar_exclusoes`; basta repetir com a ação `limpar`.
+
+**FKs sem cascata:** `registro → ambiente` e `planta_detalhe → ambiente` não apagam em cascata (de propósito: o ambiente não pode ser apagado com histórico). `admin_excluir_obra` apaga `registro` (que leva encerramentos, fotos e publicações) e `planta_detalhe` antes de `obra`; o resto sai pela cascata de `obra`. O teste `test_fks_dentro_da_obra_sem_cascata_sao_as_tratadas` falha se surgir outra FK sem cascata dentro da obra.
+
+### RPCs
+
+| RPC | Quem | Retorno |
+| --- | --- | --- |
+| `admin_arquivar_obra(p_slug text, p_arquivada boolean)` | admin | `{slug, arquivada_em}` (`null` ao desarquivar). Idempotente: arquivar de novo mantém data e autor. |
+| `admin_listar_obras()` / `admin_obter_obra(p_slug)` | admin | Como antes, mais `arquivada_em` (por obra; em `admin_obter_obra`, dentro de `obra`). |
+| `admin_resumo_obra(p_slug text)` | admin | `{registros, fotos, ambientes, pavimentos, plantas, modelos, participantes, publicacoes_telegram, arquivos: {fotos, plantas, originais, modelos}}` (arquivos: objetos em `storage.objects` com o prefixo `<obra_id>/`). |
+| `admin_excluir_obra(p_slug text, p_confirmacao text)` | admin | `{exclusao_id, obra_id, resumo}`. Confirmação diferente do nome (comparação com `btrim`, maiúsculas contam): 22023 "Para excluir, digite exatamente o nome da obra: …". |
+| `admin_listar_exclusoes()` | admin | Até 50, da mais recente: `[{id, obra_id, slug, nome, excluida_em, excluida_por_nome, resumo, arquivos_removidos_em, arquivos_removidos, arquivos_erro}]`. |
+| `admin_exclusao_para_limpar(p_id uuid)` | service_role | `obra_id` da exclusão (P0002 se não existir). |
+| `admin_registrar_limpeza(p_id uuid, p_removidos jsonb, p_erro text)` | service_role | Soma `p_removidos` ao que já foi removido; sem erro marca `arquivos_removidos_em` e limpa `arquivos_erro`, com erro grava `arquivos_erro`. |
+
+Erros como nas outras RPCs: 28000 sem sessão, 42501 não admin, P0002 obra não encontrada, 22023 dado inválido.
+
+### Edge Function `admin-excluir-obra`
+
+`POST` com `Authorization: Bearer <access token do admin>`:
+
+- `{"acao": "excluir", "slug": "...", "confirmacao": "<nome da obra>"}` → `200 {"ok": true, "exclusao_id", "obra_id", "resumo", "arquivos_removidos": {"fotos", "plantas", "originais", "modelos"}, "pendente": false}`.
+- `{"acao": "limpar", "exclusao_id": "<uuid>"}` → a mesma resposta, sem `resumo`.
+- Falha no Storage depois da exclusão: `200` com `"pendente": true, "erro": "<mensagem>"`.
+- `400` corpo inválido ou confirmação que não confere (mensagem da RPC), `401` sem JWT ou JWT inválido, `403` não admin, `404` obra/exclusão não encontrada, `405` método, `500` erro interno.
+
+Segredos: `SUPABASE_SECRET_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY`), `SUPABASE_PUBLISHABLE_KEY` (ou `SUPABASE_ANON_KEY`, já injetada) e `ALLOWED_ORIGINS`.
+
+### Aplicar num projeto
+
+1. Migration `20261112150000_admin_arquivar_excluir.sql` (depois da `20261112120000_admin_modelo.sql`). Acrescenta duas colunas em `obra` (nulas: nenhuma obra fica arquivada), a tabela `obra_excluida` e as funções; não mexe em dados.
+2. `supabase functions deploy admin-excluir-obra` (o `verify_jwt = false` vem do `supabase/config.toml`).
+3. Segredos: `supabase secrets set SUPABASE_SECRET_KEY=...` (se ainda não existir) e, se o projeto usa as chaves novas, `SUPABASE_PUBLISHABLE_KEY=...`; `ALLOWED_ORIGINS` precisa incluir o domínio do site (o mesmo da `admin-sessao`).
+4. Redeploy de `bot-webhook` (mostra no tópico a mensagem de obra arquivada) e `publish-outbox` (sem aviso de pedido de obra arquivada), **depois** da migration: o `publish-outbox` novo filtra pela coluna `arquivada_em`.

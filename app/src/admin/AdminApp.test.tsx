@@ -120,7 +120,7 @@ describe('obras', () => {
     await usuario.type(screen.getByLabelText(/Slug/), 'obra-nova')
     await usuario.click(screen.getByRole('button', { name: 'Criar obra' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Obra Nova' })).toBeInTheDocument()
-    expect(screen.getByText(/envio do modelo \(IFC\) chega na próxima fase/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Modelo 3D' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Planta (PDF)' })).toBeInTheDocument()
     expect(screen.getByText('Nenhum pavimento.')).toBeInTheDocument()
 

@@ -11,7 +11,13 @@ import {
   type Admin,
   type ConfigObra,
   type DadosEditorPlanta,
+  type DadosModelos,
+  type Exclusao,
+  type ModeloAdmin,
   type Publicacao,
+  type RegistroModelo,
+  type ResultadoExclusao,
+  type ResumoObra,
   type ResultadoPublicacao,
   type DadosWidget,
   type EstadoSessao,
@@ -100,6 +106,40 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     if (error) throw new ErroAdmin('Não foi possível guardar a sessão. Tente de novo.', { cause: error })
   }
 
+  /** Chama a Edge Function `admin-excluir-obra` com a sessão do admin. */
+  async function funcaoExcluir(corpo: Record<string, unknown>): Promise<ResultadoExclusao> {
+    const { data } = await cliente.auth.getSession()
+    const token = data.session?.access_token
+    if (!token) throw new ErroAdmin('Sua sessão expirou. Entre de novo.')
+    let resposta: Response
+    try {
+      resposta = await fetch(`${base}/functions/v1/admin-excluir-obra`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: chave, Authorization: `Bearer ${token}` },
+        body: JSON.stringify(corpo),
+      })
+    } catch (e) {
+      throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
+    }
+    const json = (await resposta.json().catch(() => null)) as (ResultadoExclusao & Record<string, unknown>) | null
+    if (resposta.status !== 200 || !json) {
+      const texto = [json?.erro, json?.mensagem, json?.error].find((v) => typeof v === 'string') as string | undefined
+      const padrao: Record<number, string> = {
+        401: 'Sua sessão expirou. Entre de novo.',
+        403: 'Acesso negado: apenas admins do Mini App.',
+        404: 'Obra não encontrada',
+      }
+      throw new ErroAdmin(texto ?? padrao[resposta.status] ?? 'Não foi possível excluir a obra. Tente de novo.')
+    }
+    return {
+      exclusao_id: String(json.exclusao_id),
+      obra_id: String(json.obra_id),
+      arquivos_removidos: json.arquivos_removidos ?? {},
+      pendente: Boolean(json.pendente),
+      ...(typeof json.erro === 'string' ? { erro: json.erro } : {}),
+    }
+  }
+
   return {
     async estadoSessao(): Promise<EstadoSessao> {
       const { data } = await cliente.auth.getSession()
@@ -149,6 +189,7 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
           ambientes_ativos: Number(l.ambientes_ativos ?? 0),
           status: l.status == null ? null : String(l.status),
           config_atualizada_em: l.config_atualizada_em == null ? null : String(l.config_atualizada_em),
+          arquivada_em: l.arquivada_em == null ? null : String(l.arquivada_em),
         }),
       )
     },
@@ -212,6 +253,48 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
 
     publicarRevisao(slug, payload) {
       return rpc<ResultadoPublicacao>('admin_publicar_revisao', { p_slug: slug, p: payload })
+    },
+
+    async arquivarObra(slug, arquivada) {
+      const r = await rpc<{ arquivada_em: string | null } | null>('admin_arquivar_obra', {
+        p_slug: slug,
+        p_arquivada: arquivada,
+      })
+      return r?.arquivada_em ?? null
+    },
+
+    resumoObra(slug) {
+      return rpc<ResumoObra>('admin_resumo_obra', { p_slug: slug })
+    },
+
+    excluirObra(slug, confirmacao) {
+      return funcaoExcluir({ acao: 'excluir', slug, confirmacao })
+    },
+
+    async listarExclusoes() {
+      return (await rpc<Exclusao[] | null>('admin_listar_exclusoes')) ?? []
+    },
+
+    limparExclusao(id) {
+      return funcaoExcluir({ acao: 'limpar', exclusao_id: id })
+    },
+
+    async listarModelosAdmin(slug) {
+      const d = await rpc<DadosModelos | null>('admin_listar_modelos', { p_slug: slug })
+      const numero = (v: unknown) => (v == null ? null : Number(v))
+      return {
+        modelos: (d?.modelos ?? []).map((m) => ({ ...m, bytes: Number(m.bytes) })),
+        historico: (d?.historico ?? []).map((h) => ({ ...h, bytes: numero(h.bytes), ifc_bytes: numero(h.ifc_bytes) })),
+      }
+    },
+
+    async registrarModelo(slug, registro: RegistroModelo) {
+      const m = await rpc<ModeloAdmin>('admin_registrar_modelo', { p_slug: slug, p: registro })
+      return { ...m, bytes: Number(m.bytes) }
+    },
+
+    async retirarModelo(slug, sigla) {
+      await rpc('admin_retirar_modelo', { p_slug: slug, p_sigla: sigla })
     },
 
     async listarAdmins() {
