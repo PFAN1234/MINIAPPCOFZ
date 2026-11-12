@@ -6,7 +6,7 @@
 
 GIF vertical de 600 × 1080, duração de 35,65 segundos, repetição contínua e tamanho de 5.969.255 bytes. Mostra: Geral → lista de obras → HTO → modelo federado → retorno à HTO → histórico do Apto. 101 → novo registro → pendências → encerrar pendência. Inclui as telas 5 e 6 do `mini-app-v2.png`, com toque na primeira pendência para abrir seu detalhe. A passagem do formulário para a lista de pendências é uma transição editorial entre fluxos demonstrativos. Termina na tela de encerramento, sem simular envio ou conclusão da pendência.
 
-Foram conferidos visualmente os nove estados e decodificados todos os 88 quadros do GIF; duração, dimensões e repetição foram verificadas. Montagem com Pillow 13.0.0, preservando as imagens de origem e a [primeira versão do GIF](demo-mini-app.gif).
+Foram conferidos visualmente os nove estados e decodificados todos os 88 quadros do GIF; duração, dimensões e repetição foram verificadas. Montagem com Pillow 13.0.0, preservando as imagens de origem. A primeira versão do GIF foi removida do repositório e está no histórico do Git.
 
 Para reproduzir a partir da raiz do projeto:
 
@@ -24,7 +24,7 @@ Proposta atual: mensagem do bot fixada no tópico **Geral**, com botão **Abrir 
 
 Implementação futura: usar botão de URL com link `t.me` do Mini App abrindo o início, sem destino automático HTO, conforme [Direct Link Mini Apps](https://core.telegram.org/bots/webapps#direct-link-mini-apps). Não confundir com botão `web_app` restrito a conversa privada. A seleção da obra não substitui autorização no servidor e não dá acesso automático às mensagens do grupo. A publicação dos registros dependerá do bot configurado.
 
-Gerado com `image_gen`. [Imagem atual](entrada-telegram-v2.png) · [Prompt completo](prompt-entrada-telegram-v2.txt). A [versão anterior](entrada-telegram-v1.png), com entrada direta pela HTO, foi substituída por esta proposta e permanece apenas como histórico.
+Gerado com `image_gen`. [Imagem atual](entrada-telegram-v2.png) · [Prompt completo](prompt-entrada-telegram-v2.txt). A versão anterior, com entrada direta pela HTO, foi substituída por esta proposta e está apenas no histórico do Git.
 
 ## Telas do aplicativo
 
@@ -49,20 +49,14 @@ Ao abrir HTO, a proposta 2 inclui o cartão **Visualizar modelo federado**, ante
 
 ![Transição da página HTO para o modelo federado](hto-modelo-federado-v1.png)
 
-A proposta atual mostra a página inicial HTO e a abertura do visualizador lado a lado. O seletor usa somente as siglas de três letras presentes na referência `Screenshot 2026-11-06 072441.png`: **ARQ, ELT, HID, ESG, DRE, PCI, VES, TLD e ANT**. As nove opções aparecem simultaneamente em uma grade; apenas ARQ está selecionado no exemplo, compatível com a imagem de arquitetura. A presença das siglas no mockup não indica importação dos respectivos arquivos.
+A proposta atual mostra a página inicial HTO e a abertura do visualizador lado a lado. O seletor usa somente as siglas de três letras presentes na captura de referência fornecida pelo usuário: **ARQ, ELT, HID, ESG, DRE, PCI, VES, TLD e ANT**. As nove opções aparecem simultaneamente em uma grade; apenas ARQ está selecionado no exemplo, compatível com a imagem de arquitetura. A presença das siglas no mockup não indica importação dos respectivos arquivos.
 
 Gerado com a ferramenta integrada `image_gen`. [Imagem da transição](hto-modelo-federado-v1.png) · [Prompt completo](prompt-hto-modelo-federado-v1.txt).
 
 ### Primeira proposta do visualizador
 
-Proposta complementar acessada por **HTO → Visualizar modelo federado**, usando a terceira imagem fornecida (`Screenshot 2026-11-06 063757.png`) como referência visual da edificação.
+A primeira proposta do visualizador (`modelo-federado-v1.png`) foi substituída pela transição acima e removida do repositório; a imagem e o prompt estão no histórico do Git.
 
-![Tela do modelo federado](modelo-federado-v1.png)
+Referências fornecidas pelo usuário: capturas do Telegram com os tópicos do grupo e com registros HTO e fotos (removidas do repositório; estão no histórico do Git). As pendências, estados e controles na proposta são exemplos de interface, sem afirmar defeitos reais, sincronização ou encerramento desses serviços. As fotos na prancha foram recompostas pela ferramenta de geração para referência visual.
 
-Inclui filtro por pavimento, tela cheia, zoom, giro, deslocamento, enquadramento e seleção dos modelos ARQ/ANT/TLD. O exemplo mostra apenas ARQ ligado, coerente com a captura de arquitetura. A imagem foi recomposta pelo `image_gen`; os controles são propostas visuais, sem implementação ou validação de federação nesta etapa.
-
-Artefato: [modelo-federado-v1.png](modelo-federado-v1.png). Prompt completo usado na ferramenta integrada: [prompt-modelo-federado-v1.txt](prompt-modelo-federado-v1.txt).
-
-Referências fornecidas pelo usuário: `Screenshot 2026-11-06 061618.png` (tópicos do grupo) e `Screenshot 2026-11-06 061729.png` (registros HTO e fotos). As pendências, estados e controles na proposta são exemplos de interface, sem afirmar defeitos reais, sincronização ou encerramento desses serviços. As fotos na prancha foram recompostas pela ferramenta de geração para referência visual.
-
-Gerado com a ferramenta integrada `image_gen`, via skill `imagegen`. Prompt da atualização: [prompt-mini-app-v2.txt](prompt-mini-app-v2.txt). Artefato atual: [mini-app-v2.png](mini-app-v2.png). Primeira versão preservada: [mini-app-v1.png](mini-app-v1.png), com [prompt original](prompt-mini-app-v1.txt).
+Gerado com a ferramenta integrada `image_gen`, via skill `imagegen`. Prompt da atualização: [prompt-mini-app-v2.txt](prompt-mini-app-v2.txt). Artefato atual: [mini-app-v2.png](mini-app-v2.png). A primeira versão e seu prompt estão no histórico do Git.
