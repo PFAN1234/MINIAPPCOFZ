@@ -282,7 +282,7 @@ Deno.test("foto única: sendPhoto, multipart, legenda HTML e publicado", async (
       "HTO · Térreo",
       "Reboco concluído",
       "👤 Fulano · 10/11 14:32",
-      '<a href="https://t.me/diarioobra_cofz_bot/diario?startapp=registro_reg-1">Abrir no Diário da obra</a>',
+      '<a href="https://t.me/diarioobra_cofz_bot/diario?startapp=registro_reg-1">Abrir no Fiscal Bot</a>',
     ].join("\n"),
   );
   assertEquals(m.finalizacoes, [{
@@ -347,10 +347,10 @@ Deno.test("legenda: HTML escapado e texto visível limitado a 1024", async () =>
   const visivel = textoVisivel(caption);
   assertEquals(visivel.length, 1024);
   assert(
-    visivel.includes("…\n👤 Fulano · 10/11 14:32\nAbrir no Diário da obra"),
+    visivel.includes("…\n👤 Fulano · 10/11 14:32\nAbrir no Fiscal Bot"),
   );
   // O link (rodapé) permanece inteiro.
-  assert(caption.endsWith("Abrir no Diário da obra</a>"));
+  assert(caption.endsWith("Abrir no Fiscal Bot</a>"));
 });
 
 Deno.test("obra sem tópico: pendente em 15 min, sem chamar o Telegram", async () => {
@@ -528,7 +528,7 @@ Deno.test("encerramento: reply_parameters, observação e gestor", async () => {
       "HTO · Térreo",
       "Refeito &lt;ok&gt;",
       "👤 Gestora · 11/11 09:05",
-      '<a href="https://t.me/diarioobra_cofz_bot/diario?startapp=registro_reg-1">Abrir no Diário da obra</a>',
+      '<a href="https://t.me/diarioobra_cofz_bot/diario?startapp=registro_reg-1">Abrir no Fiscal Bot</a>',
     ].join("\n"),
   );
   assertEquals(m.finalizacoes[0].p_id, 2);
@@ -593,7 +593,7 @@ Deno.test("aviso de pedido de acesso: envia e grava notificada_em", async () => 
     chat_id: -1001,
     message_thread_id: 55,
     text:
-      '🔑 <b>Fulano</b> (@fulano) pediu acesso ao Diário da obra.\nGestores: <a href="https://t.me/diarioobra_cofz_bot/diario?startapp=acessos_hto">ver pedidos</a>',
+      '🔑 <b>Fulano</b> (@fulano) pediu acesso ao Fiscal Bot.\nGestores: <a href="https://t.me/diarioobra_cofz_bot/diario?startapp=acessos_hto">ver pedidos</a>',
     parse_mode: "HTML",
     link_preview_options: { is_disabled: true },
   });

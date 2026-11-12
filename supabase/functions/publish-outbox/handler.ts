@@ -296,10 +296,10 @@ export function criarHandler(deps: Deps) {
 
   function abrirNoApp(url: string) {
     return {
-      texto: "Abrir no Diário da obra",
+      texto: "Abrir no Fiscal Bot",
       html: `<a href="${
         escaparHtml(url).replaceAll('"', "&quot;")
-      }">Abrir no Diário da obra</a>`,
+      }">Abrir no Fiscal Bot</a>`,
     };
   }
 
@@ -487,7 +487,7 @@ export function criarHandler(deps: Deps) {
           chat_id: obra.telegram_chat_id,
           message_thread_id: obra.telegram_thread_id,
           text:
-            `🔑 ${quem} pediu acesso ao Diário da obra.\nGestores: <a href="${url}">ver pedidos</a>`,
+            `🔑 ${quem} pediu acesso ao Fiscal Bot.\nGestores: <a href="${url}">ver pedidos</a>`,
           parse_mode: "HTML",
           link_preview_options: { is_disabled: true },
         });

@@ -2,7 +2,7 @@
 
 begin;
 
-insert into public.obra (slug, nome) values ('cofz', 'COFZ') on conflict (slug) do update set nome = excluded.nome;
+insert into public.obra (slug, nome, etapa_id) values ('cofz', 'COFZ', (select e.id from public.etapa e where e.slug = '2a-etapa')) on conflict (slug) do update set nome = excluded.nome;
 
 insert into public.pavimento (obra_id, codigo, nome, ordem) select o.id, 'terreo', 'Térreo', 1 from public.obra o where o.slug = 'cofz' on conflict (obra_id, codigo) do update set nome = excluded.nome, ordem = excluded.ordem;
 

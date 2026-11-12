@@ -3,7 +3,10 @@
 // - `excluir` `{slug, confirmacao}`: chama `admin_excluir_obra` como o admin (o banco confere
 //   o admin e a confirmação, apaga as linhas e grava `obra_excluida`) e depois remove os
 //   arquivos da obra no Storage com a chave secreta;
-// - `limpar` `{exclusao_id}`: repete só a remoção dos arquivos (quando a primeira falhou).
+// - `limpar` `{exclusao_id}`: repete só a remoção dos arquivos (quando a primeira falhou);
+// - `excluir_etapa` `{slug, confirmacao}`: chama `admin_excluir_etapa` como o admin (apaga a
+//   etapa e todas as obras dela, uma linha de `obra_excluida` por obra) e limpa o Storage de
+//   cada exclusão devolvida, como em `excluir`.
 // Os arquivos de todos os buckets ficam em `<obra_id>/...`; o resultado vai para
 // `admin_registrar_limpeza`. O token nunca vai para o log.
 import { cabecalhosCors, json } from "../_shared/http.ts";
@@ -148,6 +151,7 @@ const NAO_AUTORIZADO = { erro: "Não autorizado" };
 const ACESSO_NEGADO = { erro: "Acesso negado" };
 const CORPO_INVALIDO = { erro: "Corpo inválido" };
 const NAO_ENCONTRADA = { erro: "Obra não encontrada" };
+const ETAPA_NAO_ENCONTRADA = { erro: "Etapa não encontrada" };
 const ERRO_INTERNO = { erro: "Erro interno" };
 
 export function criarHandler(deps: Deps) {
@@ -235,6 +239,94 @@ export function criarHandler(deps: Deps) {
     );
   }
 
+  /** Limpeza de uma exclusão da etapa; uma falha não impede as outras. */
+  async function limparExclusao(exclusaoId: string) {
+    try {
+      const { data: obraId, error } = await deps.admin.rpc(
+        "admin_exclusao_para_limpar",
+        { p_id: exclusaoId },
+      );
+      if (error) {
+        throw new Error(`admin_exclusao_para_limpar: ${error.message}`);
+      }
+      if (typeof obraId !== "string" || !UUID.test(obraId)) {
+        throw new Error("admin_exclusao_para_limpar: resposta inesperada");
+      }
+      const l = await limparERegistrar(exclusaoId, obraId);
+      return {
+        exclusao_id: exclusaoId,
+        removidos: l.arquivos_removidos,
+        pendente: l.pendente,
+        erro: l.erro ?? null,
+      };
+    } catch (e) {
+      console.error(
+        `admin-excluir-obra: limpeza de ${exclusaoId} falhou:`,
+        e instanceof Error ? e.message : "erro desconhecido",
+      );
+      return {
+        exclusao_id: exclusaoId,
+        removidos: zerada(),
+        pendente: true,
+        erro: "Não foi possível remover os arquivos desta obra. Tente de novo.",
+      };
+    }
+  }
+
+  async function excluirEtapa(
+    jwt: string,
+    corpo: Record<string, unknown>,
+    cors: Record<string, string>,
+  ) {
+    const { slug, confirmacao } = corpo;
+    if (
+      typeof slug !== "string" || slug === "" ||
+      typeof confirmacao !== "string"
+    ) {
+      return json(CORPO_INVALIDO, 400, cors);
+    }
+    const { data, error } = await deps.clienteUsuario(jwt).rpc(
+      "admin_excluir_etapa",
+      { p_slug: slug, p_confirmacao: confirmacao },
+    );
+    if (error) {
+      switch (error.code) {
+        case "28000":
+          return json(NAO_AUTORIZADO, 401, cors);
+        case "42501":
+          return json(ACESSO_NEGADO, 403, cors);
+        case "22023":
+          return json({ erro: error.message }, 400, cors);
+        case "P0002":
+          return json(ETAPA_NAO_ENCONTRADA, 404, cors);
+        default:
+          throw new Error(`admin_excluir_etapa: ${error.message}`);
+      }
+    }
+    const r = (data ?? {}) as Record<string, unknown>;
+    const ids = r.exclusoes;
+    if (
+      !Array.isArray(ids) ||
+      !ids.every((id) => typeof id === "string" && UUID.test(id))
+    ) {
+      throw new Error("admin_excluir_etapa: resposta inesperada");
+    }
+    const exclusoes = [];
+    for (const id of ids as string[]) exclusoes.push(await limparExclusao(id));
+    const pendentes = exclusoes.filter((x) => x.pendente).length;
+    return json(
+      {
+        exclusoes,
+        pendente: pendentes > 0,
+        erro: pendentes > 0
+          ? `Sobraram arquivos no Storage de ${pendentes} obra(s) excluída(s). Tente de novo em "Obras excluídas".`
+          : null,
+      },
+      200,
+      cors,
+    );
+  }
+
   async function limpar(
     jwt: string,
     corpo: Record<string, unknown>,
@@ -311,6 +403,8 @@ export function criarHandler(deps: Deps) {
           return await excluir(jwt, corpo, cors);
         case "limpar":
           return await limpar(jwt, corpo, cors);
+        case "excluir_etapa":
+          return await excluirEtapa(jwt, corpo, cors);
         default:
           return json(CORPO_INVALIDO, 400, cors);
       }
