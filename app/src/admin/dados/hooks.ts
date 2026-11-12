@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
-import type { ConfigObra, DadosObra, PavimentoResumo } from './tipos.ts'
+import type { ConfigObra, DadosObra, PavimentoResumo, QrAmbiente } from './tipos.ts'
 
 export function useObrasAdmin() {
   const repo = useRepositorioAdmin()
@@ -111,6 +111,26 @@ export function useRetirarModelo(slug: string) {
   const repo = useRepositorioAdmin()
   const invalidar = useInvalidarObras()
   return useMutation({ mutationFn: (sigla: string) => repo.retirarModelo(slug, sigla), onSuccess: invalidar })
+}
+
+export function useAmbientesRA(obraId: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'ra', obraId], queryFn: () => repo.listarRA(obraId) })
+}
+
+export function useDefinirQr() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({
+    mutationFn: (p: { ambienteId: string; qr: QrAmbiente }) => repo.definirQr(p.ambienteId, p.qr),
+    onSuccess: invalidar,
+  })
+}
+
+export function useRemoverQr() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (ambienteId: string) => repo.removerQr(ambienteId), onSuccess: invalidar })
 }
 
 export function useArquivarObra(slug: string) {

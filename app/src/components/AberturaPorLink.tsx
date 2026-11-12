@@ -7,6 +7,8 @@ import { Aviso } from './Aviso.tsx'
 const CHAVE_CONSUMIDO = 'startapp-consumido'
 const REGISTRO = /^registro_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
 const ACESSOS = /^acessos_([a-z0-9][a-z0-9-]*)$/i
+/** QR do ambiente (realidade aumentada): `amb_<slug>_<codigo>`. */
+const AMBIENTE = /^amb_([a-z0-9][a-z0-9-]*)_([a-z0-9][a-z0-9-]*)$/i
 
 function jaConsumido(parametro: string): boolean {
   try {
@@ -26,7 +28,9 @@ function marcarConsumido(parametro: string): void {
 
 /**
  * Trata o parâmetro do link `startapp` uma vez por abertura do app:
- * `registro_<uuid>` abre o registro no ambiente; `acessos_<slug>` abre os pedidos de acesso.
+ * `registro_<uuid>` abre o registro no ambiente; `acessos_<slug>` abre os pedidos de acesso;
+ * `amb_<slug>_<codigo>` (QR fixado no ambiente) abre o ambiente; `ra_teste` abre o teste
+ * da realidade aumentada no aparelho.
  */
 export function AberturaPorLink() {
   const repo = useRepositorio()
@@ -41,6 +45,17 @@ export function AberturaPorLink() {
     if (acessos) {
       marcarConsumido(parametro)
       navigate(`/obras/${acessos[1]}/acessos`)
+      return
+    }
+    if (parametro === 'ra_teste') {
+      marcarConsumido(parametro)
+      navigate('/ra-teste')
+      return
+    }
+    const ambiente = AMBIENTE.exec(parametro)
+    if (ambiente) {
+      marcarConsumido(parametro)
+      navigate(`/obras/${ambiente[1]}/ambientes/${ambiente[2]}`)
       return
     }
     const registro = REGISTRO.exec(parametro)

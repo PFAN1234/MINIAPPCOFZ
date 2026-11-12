@@ -150,7 +150,7 @@ export function criarRepositorioSupabase(
       const linhas = checar(
         await cliente
           .from('foto')
-          .select('id, registro_id, storage_path, largura, altura, ordem')
+          .select('*')
           .in('registro_id', lote)
           .order('ordem'),
       ) as Linha[]
@@ -162,6 +162,8 @@ export function criarRepositorioSupabase(
           path: String(f.storage_path),
           largura: Number(f.largura),
           altura: Number(f.altura),
+          // A coluna só existe depois da migration da RA.
+          ...(f.origem === 'ra_limpa' || f.origem === 'ra_modelo' ? { origem: f.origem } : {}),
         })
         mapa.set(chave, lista)
       }
@@ -173,7 +175,7 @@ export function criarRepositorioSupabase(
     const linhas = checar(
       await cliente
         .from('foto')
-        .select('id, storage_path, largura, altura, ordem')
+        .select('*')
         .eq('encerramento_id', encerramentoId)
         .order('ordem'),
     ) as Linha[]
@@ -573,6 +575,42 @@ export function criarRepositorioSupabase(
           hash: String(l.hash),
         }),
       )
+    },
+
+    async obterGeometria(obra, ambiente) {
+      // Tabelas da RA: se a migration ainda não foi aplicada, o ambiente fica sem RA.
+      const { data: g, error } = await cliente
+        .from('ambiente_geometria')
+        .select('contorno, y_piso, y_teto')
+        .eq('ambiente_id', ambiente.id)
+        .maybeSingle()
+      if (error || !g) return null
+      const [qr, referencial, modelos] = await Promise.all([
+        cliente.from('ambiente_qr').select('parede, distancia_m, altura_m, lado_m').eq('ambiente_id', ambiente.id).maybeSingle(),
+        cliente.from('ra_referencial').select('sigla, coordenadas').eq('obra_id', obra.id).maybeSingle(),
+        cliente.from('modelo').select('sigla, matriz').eq('obra_id', obra.id).not('matriz', 'is', null),
+      ])
+      const linhaQr = qr.data as Linha | null
+      const linhaRef = referencial.data as Linha | null
+      return {
+        contorno: (g.contorno as [number, number][]).map(([x, z]) => [Number(x), Number(z)]),
+        yPiso: Number(g.y_piso),
+        yTeto: Number(g.y_teto),
+        qr: linhaQr
+          ? {
+              parede: Number(linhaQr.parede),
+              distancia_m: Number(linhaQr.distancia_m),
+              altura_m: Number(linhaQr.altura_m),
+              lado_m: Number(linhaQr.lado_m),
+            }
+          : null,
+        referencial: linhaRef
+          ? { sigla: String(linhaRef.sigla), coordenadas: (linhaRef.coordenadas as number[]).map(Number) }
+          : null,
+        matrizes: Object.fromEntries(
+          ((modelos.data ?? []) as Linha[]).map((m) => [String(m.sigla), (m.matriz as number[]).map(Number)]),
+        ),
+      }
     },
 
     async baixarModelo(_slug, modelo) {

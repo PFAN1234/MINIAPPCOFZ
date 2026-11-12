@@ -30,6 +30,11 @@ export function MiniaturaRegistro({
         onClick={() => setAberto(true)}
       >
         {url && <img src={url} alt="" loading="lazy" />}
+        {fotos.some((f) => f.origem === 'ra_modelo') && (
+          <span className="miniatura-ra" title="Comparado com o modelo (realidade aumentada)">
+            RA
+          </span>
+        )}
         {extras > 0 && (
           <span className="miniatura-extras" aria-hidden="true">
             +{extras}
