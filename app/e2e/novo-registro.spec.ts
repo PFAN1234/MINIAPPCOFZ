@@ -33,10 +33,10 @@ function botaoSalvar(page: Page): Locator {
 
 async function abrirNovoRegistro(page: Page) {
   await page.goto('/obras/hto/ambientes/terreo-apto-101')
-  await expect(page.getByRole('heading', { name: 'Apto. 101', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
   await page.getByRole('button', { name: 'Novo registro' }).click()
   await expect(page).toHaveURL(/\/obras\/hto\/ambientes\/terreo-apto-101\/novo$/)
-  await expect(page.getByRole('heading', { name: 'Novo registro', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Novo registro', level: 1 })).toBeVisible()
 }
 
 /** Anexa a foto pela Galeria e espera a miniatura deixar de estar "preparando…". */

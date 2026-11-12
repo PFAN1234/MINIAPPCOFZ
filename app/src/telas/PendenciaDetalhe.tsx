@@ -8,6 +8,7 @@ import { SeloSituacao } from '../components/CartaoPendencia.tsx'
 import { Publicacao } from '../components/ListaRegistros.tsx'
 import { textoEstadoEncerramento } from '../components/RegistroLocal.tsx'
 import { SeletorFotos } from '../components/SeletorFotos.tsx'
+import { TopoTela } from '../components/TopoTela.tsx'
 import { useFotosEscolhidas } from '../components/useFotosEscolhidas.ts'
 import { criarRascunhoEncerramento } from '../dados/envio.ts'
 import { usePendencia } from '../dados/hooks.ts'
@@ -22,15 +23,18 @@ export default function PendenciaDetalheTela() {
   const { id = '' } = useParams()
   const consulta = usePendencia(id)
   return (
-    <EstadoConsulta consulta={consulta}>
+    <EstadoConsulta consulta={consulta} topo={<TopoTela titulo="Pendência" />}>
       {(detalhe) =>
         detalhe ? (
           <Carregada detalhe={detalhe} />
         ) : (
-          <EstadoVazio
-            titulo="Pendência não encontrada"
-            texto="Ela não existe ou você não tem acesso a ela."
-          />
+          <>
+            <TopoTela titulo="Pendência" />
+            <EstadoVazio
+              titulo="Pendência não encontrada"
+              texto="Ela não existe ou você não tem acesso a ela."
+            />
+          </>
         )
       }
     </EstadoConsulta>
@@ -43,14 +47,15 @@ function Carregada({ detalhe }: { detalhe: PendenciaDetalhe }) {
   const local = useEncerramentoLocal(registro.id)
   return (
     <section aria-labelledby="titulo-pendencia">
-      <p className="voltar-linha">
-        <Link to={`/obras/${registro.obra.slug}?pav=${pavimento.codigo}`}>
-          ← {registro.obra.nome} / {pavimento.nome}
-        </Link>
-      </p>
-      <h2 id="titulo-pendencia" className="titulo-tela">
-        {registro.ambiente.nome}
-      </h2>
+      <TopoTela
+        titulo={registro.ambiente.nome}
+        idTitulo="titulo-pendencia"
+        subtitulo={
+          <Link to={`/obras/${registro.obra.slug}?pav=${pavimento.codigo}`}>
+            {registro.obra.nome} · {pavimento.nome}
+          </Link>
+        }
+      />
       <div className="pendencia-cabeca">
         <p className="pendencia-legenda">{registro.legenda}</p>
         <SeloSituacao situacao={registro.situacao} />

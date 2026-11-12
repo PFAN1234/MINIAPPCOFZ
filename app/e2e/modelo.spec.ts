@@ -32,7 +32,7 @@ test('o botão do cartão da obra leva ao modelo federado', async ({ page }) => 
   await page.goto('/obras/hto')
   await page.getByRole('link', { name: /Visualizar modelo federado/ }).tap()
   await expect(page).toHaveURL(/\/obras\/hto\/modelo$/)
-  await expect(page.getByRole('heading', { name: 'Modelo federado', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Modelo federado', level: 1 })).toBeVisible()
 })
 
 // O .frag é gerado a partir do IFC (fora do Git): `npm run modelos -- --obra hto`.

@@ -14,12 +14,12 @@ test.beforeEach(async ({ page }) => {
 
 async function abrirPendenciaDaTomada(page: Page) {
   await page.goto('/obras/hto')
-  await expect(page.getByRole('heading', { name: 'HTO', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'HTO', level: 1 })).toBeVisible()
   await page.getByRole('link', { name: /^Pendências \d+/ }).tap()
   await expect(page).toHaveURL(/\/obras\/hto\/pendencias$/)
   await expect(page.getByRole('tab', { name: 'Abertas (3)' })).toBeVisible()
   await page.getByRole('link', { name: /Tomada da sala/ }).tap()
-  await expect(page.getByRole('heading', { name: 'Apto. 101', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
 }
 
 async function preencherEncerramento(page: Page) {
@@ -73,7 +73,7 @@ test('encerrar sem sinal fica na fila e é enviado quando o sinal volta', async 
 test('Gestão: mudar o papel de um participante e reenviar uma publicação', async ({ page }) => {
   await page.goto('/obras/hto')
   await page.getByRole('link', { name: /^Gestão/ }).tap()
-  await expect(page.getByRole('heading', { name: 'Gestão', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Gestão', level: 1 })).toBeVisible()
 
   const papel = page.getByLabel('Papel de Marcos Teixeira')
   await expect(papel).toHaveValue('equipe')

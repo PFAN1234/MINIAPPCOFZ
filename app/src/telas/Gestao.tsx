@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { Horario } from '../components/Horario.tsx'
 import { PedidosAcesso } from '../components/PedidosAcesso.tsx'
+import { TopoTela } from '../components/TopoTela.tsx'
 import {
   useDefinirPapel,
   useObra,
@@ -18,7 +19,9 @@ export default function Gestao() {
   const { slug = '' } = useParams()
   const obra = useObra(slug)
   return (
-    <EstadoConsulta consulta={obra}>{(detalhe) => <GestaoCarregada detalhe={detalhe} />}</EstadoConsulta>
+    <EstadoConsulta consulta={obra} topo={<TopoTela titulo="Gestão" />}>
+      {(detalhe) => <GestaoCarregada detalhe={detalhe} />}
+    </EstadoConsulta>
   )
 }
 
@@ -26,12 +29,11 @@ function GestaoCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   const { obra, papel } = detalhe
   return (
     <section aria-labelledby="titulo-gestao">
-      <p className="voltar-linha">
-        <Link to={`/obras/${obra.slug}`}>← {obra.nome}</Link>
-      </p>
-      <h2 id="titulo-gestao" className="titulo-tela">
-        Gestão
-      </h2>
+      <TopoTela
+        titulo="Gestão"
+        idTitulo="titulo-gestao"
+        subtitulo={<Link to={`/obras/${obra.slug}`}>{obra.nome}</Link>}
+      />
       {papel !== 'gestor' ? (
         <EstadoVazio titulo="Só gestores da obra têm acesso à gestão." />
       ) : (

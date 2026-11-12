@@ -27,8 +27,7 @@ body {
 h1,
 h2,
 h3,
-.estado-titulo,
-.estado-vazio-titulo {
+.estado-titulo {
   font-family: var(--fonte-titulo);
 }
 
@@ -43,30 +42,111 @@ textarea {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-.app-header {
-  padding: 16px;
+/* Sem padding em cima: o topo azul de cada tela (TopoTela) encosta no cabeçalho do Telegram. */
+.app-main {
+  flex: 1;
+  padding: 0 16px 16px;
+}
+
+/*
+ * Topo de cada tela (TopoTela): azul, emendado com o cabeçalho do Telegram. Ocupa a largura toda
+ * (anula o padding lateral de .app-main) e leva junto a faixa de envio, logo abaixo do azul.
+ */
+.topo {
+  margin: 0 -16px 16px;
+}
+
+.topo-tela {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: calc(6px + env(safe-area-inset-top)) 16px 16px;
   color: var(--texto-no-azul);
   background: var(--azul);
-  border-bottom: 1px solid var(--azul-borda);
 }
 
 /* Sobre o azul, o anel de foco azul some: usa o amarelo. */
-.app-header :focus-visible {
+.topo-tela :focus-visible {
   outline-color: var(--destaque);
 }
 
-.app-header h1 {
-  margin: 0;
-  font-size: 1.25rem;
+.topo-tela a {
+  color: var(--texto-no-azul);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
-.app-main {
-  flex: 1;
-  padding: 16px;
+/* "Voltar" fora do Telegram (dentro dele, vale o BackButton nativo). */
+.topo-voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0 0 4px -8px;
+  padding: 0 12px 0 8px;
+  color: var(--texto-no-azul);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.topo-sobretitulo {
+  margin: 0 0 2px;
+  color: var(--texto-suave-no-azul);
+  font-size: 14px;
+}
+
+.topo-sobretitulo a {
+  color: var(--texto-suave-no-azul);
+}
+
+/* Telas de uma coisa (obra, ambiente, novo registro): o nome como é, 36 px. */
+.topo-titulo {
+  max-width: 100%;
+  margin: 0;
+  font-family: var(--fonte-titulo);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 38px;
+  overflow-wrap: anywhere;
+}
+
+/* Telas de lista (Início, Registros, Pendências): maiúsculas, 34 px. */
+.topo-lista .topo-titulo {
+  font-size: 34px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Nome longo: letra menor e quebra de linha, nunca reticências. */
+.topo-titulo[data-tamanho='longo'] {
+  font-size: 30px;
+  line-height: 33px;
+}
+
+.topo-titulo[data-tamanho='muito-longo'] {
+  font-size: 26px;
+  line-height: 29px;
+}
+
+.topo-subtitulo {
+  margin: 2px 0 0;
+  color: var(--texto-suave-no-azul);
+  font-size: 15px;
+}
+
+.topo-acoes {
+  align-self: stretch;
+  margin-top: 12px;
 }
 
 .app-main h2 {
@@ -77,41 +157,12 @@ textarea {
   letter-spacing: 0.04em;
 }
 
-.estado-vazio {
-  padding: 32px 16px;
-  text-align: center;
-  background: var(--bg-secundario);
-  border: 1px dashed var(--borda);
-  border-radius: 12px;
-}
-
-.estado-vazio p {
-  margin: 0;
-}
-
-.estado-vazio-titulo {
-  font-weight: 600;
-}
-
-.estado-vazio-texto {
-  margin-top: 4px;
-  color: var(--texto-suave);
-  font-size: 0.9rem;
-}
-
 /* Acessibilidade: foco visível */
 :focus-visible {
   outline: 2px solid var(--foco);
   outline-offset: 2px;
 }
 
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.botao-voltar,
 .botao {
   min-height: 44px;
   padding: 0 16px;
@@ -123,14 +174,16 @@ textarea {
   cursor: pointer;
 }
 
-.botao-voltar {
-  color: inherit;
-  background: transparent;
-  padding: 0 8px;
+a.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
+/* Espaço para a barra inferior fixa (72 px). */
 .app-main {
-  padding-bottom: 80px;
+  padding-bottom: 88px;
 }
 
 .app-main section + section {
@@ -142,14 +195,77 @@ textarea {
   text-align: center;
 }
 
-.estado-titulo {
-  margin: 0;
-  font-weight: 600;
-}
-
 .estado-texto {
   margin: 4px 0 12px;
   color: var(--texto-suave);
+}
+
+/* Carregando: discreto, de altura fixa; só aparece se demorar (não pisca nem empurra a tela). */
+.estado-carregando {
+  min-height: 96px;
+  animation: estado-aparece 0.2s ease-out 0.4s both;
+}
+
+.estado-carregando .estado-texto {
+  margin: 0;
+  font-size: 15px;
+}
+
+@keyframes estado-aparece {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .estado-carregando {
+    animation: none;
+  }
+}
+
+/* Vazio, erro e sem sinal (B13): caixa tracejada, círculo branco com ícone, título e texto. */
+.estado-caixa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 16px;
+  text-align: center;
+  border: 2px dashed var(--borda);
+  border-radius: 12px;
+}
+
+.estado-icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  color: var(--texto);
+  background: var(--superficie);
+  border-radius: 50%;
+}
+
+.estado-erro .estado-icone {
+  color: var(--erro);
+}
+
+.estado-titulo {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 26px;
+}
+
+.estado-caixa .estado-texto {
+  max-width: 300px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 21px;
+}
+
+.estado-acao {
+  margin-top: 4px;
 }
 
 .lista {
@@ -187,26 +303,38 @@ textarea {
   right: 0;
   bottom: 0;
   left: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  height: calc(72px + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  background: var(--bg-secundario);
-  border-top: 1px solid var(--borda);
+  background: var(--superficie);
+  border-top: 2px solid var(--azul);
 }
 
 .barra-item {
   display: flex;
-  flex: 1;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
+  gap: 2px;
+  min-width: 0;
   color: var(--texto-suave);
-  font-size: 0.9rem;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
   text-decoration: none;
 }
 
 .barra-item[aria-current='page'] {
-  color: var(--link);
-  font-weight: 600;
+  color: var(--texto);
+  font-weight: 700;
+  box-shadow: inset 0 4px 0 var(--destaque);
+}
+
+.barra-rotulo {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .sem-sessao {
@@ -225,24 +353,6 @@ textarea {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-.app-main h2.titulo-tela {
-  margin: 0 0 12px;
-  font-size: 1.4rem;
-  color: var(--texto);
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-.subtitulo {
-  margin: -8px 0 16px;
-  color: var(--texto-suave);
-  font-size: 0.9rem;
-}
-
-.subtitulo a {
-  color: var(--link);
 }
 
 .lista-item-linha {
@@ -927,41 +1037,78 @@ textarea {
   flex-wrap: wrap;
 }
 
-/* Barra de sincronização e itens guardados no aparelho */
-.barra-sinc {
-  padding: 8px 16px;
-  background: var(--bg-secundario);
-  border-bottom: 1px solid var(--borda);
-}
-
+/* Faixa de envio e de sem sinal (logo abaixo do topo azul) e itens guardados no aparelho */
 .barra-sinc-linha {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 44px;
+  gap: 10px;
+  min-height: 60px;
+  padding: 8px 16px;
+  color: var(--destaque-texto);
+  background: var(--destaque);
+}
+
+.barra-sinc-linha .icone {
+  flex: none;
 }
 
 .barra-sinc-linha p {
+  flex: 1;
   margin: 0;
-  font-size: 0.9rem;
-}
-
-.barra-sinc-erro p {
-  color: var(--erro);
+  font-size: 16px;
   font-weight: 600;
+  line-height: 20px;
 }
 
+/* Erro no envio: faixa vermelha (vermelho sobre amarelo não teria contraste). */
+.barra-sinc-erro {
+  color: var(--texto-no-azul);
+  background: var(--erro);
+}
+
+.barra-sinc-erro :focus-visible {
+  outline-color: var(--texto-no-azul);
+}
+
+/* "Enviar": caixa de 40 px com borda azul; o alvo de toque tem 44 px. */
 .barra-sinc-botao {
+  position: relative;
   flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  color: var(--destaque-texto);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.barra-sinc-botao::before {
+  position: absolute;
+  inset: 2px 0;
+  content: '';
+  border: 2px solid var(--azul);
+  border-radius: 8px;
+}
+
+.barra-sinc-botao:disabled {
+  cursor: default;
+  opacity: 0.7;
 }
 
 .barra-sinc-link {
   display: inline-flex;
+  flex: none;
   align-items: center;
+  min-width: 44px;
   min-height: 44px;
   padding: 0 8px;
-  color: var(--link);
+  color: inherit;
+  font-weight: 700;
 }
 
 .registro-coluna {
@@ -1021,16 +1168,6 @@ textarea {
   --info: var(--servico);
   --info-suave: color-mix(in srgb, var(--info) 10%, var(--superficie));
   --info-borda: color-mix(in srgb, var(--info) 35%, transparent);
-}
-
-.voltar-linha {
-  margin: 0 0 4px;
-  font-size: 0.9rem;
-}
-
-.voltar-linha a {
-  color: var(--link);
-  text-decoration: none;
 }
 
 .secao-titulo {

@@ -119,7 +119,7 @@ describe('Novo registro', () => {
     )
   })
 
-  it('falha de rede deixa o item no aparelho e "Tentar agora" envia depois', async () => {
+  it('falha de rede deixa o item no aparelho e "Enviar" envia depois', async () => {
     const usuario = userEvent.setup()
     const base = criarRepositorioFixture()
     let falhar = true
@@ -138,7 +138,7 @@ describe('Novo registro', () => {
 
     expect(await screen.findByText('Salvo no aparelho · aguardando envio')).toBeInTheDocument()
     expect(screen.getByText('1 registro aguardando envio')).toBeInTheDocument()
-    const tentar = await screen.findByRole('button', { name: 'Tentar agora' })
+    const tentar = await screen.findByRole('button', { name: 'Enviar' })
 
     falhar = false
     await usuario.click(tentar)
@@ -233,16 +233,16 @@ describe('Novo registro', () => {
     const usuario = userEvent.setup()
     const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false)
     renderizar(criarRepositorioFixture())
-    // Vazio: sai sem perguntar.
-    await screen.findByRole('heading', { name: 'Novo registro' })
+    // Vazio: sai sem perguntar. (O título já aparece enquanto o ambiente carrega; espera o formulário.)
+    await screen.findByLabelText('Legenda')
     await usuario.type(screen.getByLabelText('Legenda'), 'rascunho')
 
-    await usuario.click(screen.getByRole('button', { name: '← Voltar' }))
+    await usuario.click(screen.getByRole('button', { name: 'Voltar' }))
     expect(confirmar).toHaveBeenCalledWith('Descartar este registro?')
     expect(screen.getByRole('heading', { name: 'Novo registro' })).toBeInTheDocument()
 
     confirmar.mockReturnValue(true)
-    await usuario.click(screen.getByRole('button', { name: '← Voltar' }))
+    await usuario.click(screen.getByRole('button', { name: 'Voltar' }))
     expect(await screen.findByRole('heading', { name: 'Obras' })).toBeInTheDocument()
   })
 
@@ -250,8 +250,9 @@ describe('Novo registro', () => {
     const usuario = userEvent.setup()
     const confirmar = vi.spyOn(window, 'confirm')
     renderizar(criarRepositorioFixture())
-    await screen.findByRole('heading', { name: 'Novo registro' })
-    await usuario.click(screen.getByRole('button', { name: '← Voltar' }))
+    // O título já aparece enquanto o ambiente carrega; o formulário vem depois.
+    await screen.findByLabelText('Legenda')
+    await usuario.click(screen.getByRole('button', { name: 'Voltar' }))
     expect(confirmar).not.toHaveBeenCalled()
   })
 })

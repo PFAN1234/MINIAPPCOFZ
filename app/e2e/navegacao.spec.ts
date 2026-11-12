@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 /** Estado que o Telegram simulado expõe em `window.__tg`. */
 interface EstadoTelegram {
@@ -64,25 +64,85 @@ test.beforeEach(async ({ page }) => {
 
 async function abrirAmbienteApto101(page: Page) {
   await page.goto('/obras/hto/ambientes/terreo-apto-101')
-  await expect(page.getByRole('heading', { name: 'Apto. 101', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
 }
+
+/** Cor de fundo do primeiro ancestral do elemento que tem fundo (o topo azul, no caso do h1). */
+async function fundoDoAncestral(alvo: Locator): Promise<string> {
+  return alvo.evaluate((el) => {
+    for (let atual = el.parentElement; atual; atual = atual.parentElement) {
+      const cor = getComputedStyle(atual).backgroundColor
+      if (cor !== 'rgba(0, 0, 0, 0)' && cor !== 'transparent') return cor
+    }
+    return ''
+  })
+}
+
+test.describe('topo azul', () => {
+  for (const [rota, titulo] of [
+    ['/', 'Obras'],
+    ['/obras/hto', 'HTO'],
+    ['/obras/hto/ambientes/terreo-apto-101', 'Apto. 101'],
+    ['/pendencias', 'Pendências'],
+  ]) {
+    test(`o h1 "${titulo}" fica no topo azul, no alto da tela`, async ({ page }) => {
+      await page.goto(rota)
+      const h1 = page.getByRole('heading', { level: 1, name: titulo, exact: true })
+      await expect(h1).toBeVisible()
+      expect(await fundoDoAncestral(h1)).toBe('rgb(11, 22, 37)')
+      // Nada entre o topo e o cabeçalho do Telegram: o azul começa no y = 0.
+      const topo = await h1.locator('xpath=ancestor::header[1]').boundingBox()
+      expect(topo?.y).toBe(0)
+    })
+  }
+
+  test('sem sinal, a faixa aparece logo abaixo do topo azul', async ({ page, context }) => {
+    await page.goto('/obras/hto')
+    const h1 = page.getByRole('heading', { level: 1, name: 'HTO' })
+    await expect(h1).toBeVisible()
+    await context.setOffline(true)
+    const faixa = page.getByRole('status').filter({ hasText: 'Sem conexão' })
+    await expect(faixa).toBeVisible()
+    const topo = (await h1.locator('xpath=ancestor::header[1]').boundingBox())!
+    const caixa = (await faixa.boundingBox())!
+    expect(topo.y).toBe(0)
+    expect(caixa.y).toBeCloseTo(topo.y + topo.height, 0)
+    await context.setOffline(false)
+  })
+
+  test('"Voltar" e os itens da barra inferior têm alvo de toque de 44 px ou mais', async ({ page }) => {
+    await page.goto('/obras/hto')
+    await expect(page.getByRole('heading', { level: 1, name: 'HTO' })).toBeVisible()
+    const alvos = [
+      page.getByRole('button', { name: 'Voltar' }),
+      ...['Início', 'Registros', 'Pendências'].map((nome) =>
+        page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('link', { name: new RegExp(`^${nome}`) }),
+      ),
+    ]
+    for (const alvo of alvos) {
+      const caixa = (await alvo.boundingBox())!
+      expect(caixa.width).toBeGreaterThanOrEqual(44)
+      expect(caixa.height).toBeGreaterThanOrEqual(44)
+    }
+  })
+})
 
 test.describe('fora do Telegram', () => {
   test('Obras → HTO → Apto. 101 pela lista, e Voltar retorna à obra', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Obras', level: 2, exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Obras', level: 1, exact: true })).toBeVisible()
 
     await page.getByRole('link', { name: /^HTO\b/ }).click()
-    await expect(page.getByRole('heading', { name: 'HTO', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'HTO', level: 1 })).toBeVisible()
 
     await page.getByRole('link', { name: /^Apto\. 101\b/ }).click()
     await expect(page).toHaveURL(/\/obras\/hto\/ambientes\/terreo-apto-101$/)
-    await expect(page.getByRole('heading', { name: 'Apto. 101', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
     await expect(page.getByText(/23,88\s*m²/)).toBeVisible()
 
     await page.getByRole('button', { name: 'Voltar' }).click()
     await expect(page).toHaveURL(/\/obras\/hto$/)
-    await expect(page.getByRole('heading', { name: 'HTO', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'HTO', level: 1 })).toBeVisible()
   })
 
   test('tocar no pino "Apto. 101" da planta abre o Ambiente', async ({ page }) => {
@@ -99,7 +159,7 @@ test.describe('fora do Telegram', () => {
 
     await pino.tap()
     await expect(page).toHaveURL(/\/obras\/hto\/ambientes\/terreo-apto-101$/)
-    await expect(page.getByRole('heading', { name: 'Apto. 101', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
   })
 
   test('"Onde fica" leva à planta centrada no ambiente', async ({ page }) => {
@@ -125,24 +185,24 @@ test.describe('Telegram simulado', () => {
     page,
   }) => {
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Obras', level: 2, exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Obras', level: 1, exact: true })).toBeVisible()
     const inicial = await page.evaluate(() => window.__tg)
     expect(inicial.ready).toBeGreaterThan(0)
     expect(inicial.expand).toBeGreaterThan(0)
     expect(await page.evaluate(() => window.__tg.visivel)).toBe(false)
 
     await page.getByRole('link', { name: /^HTO\b/ }).click()
-    await expect(page.getByRole('heading', { name: 'HTO', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'HTO', level: 1 })).toBeVisible()
     expect(await page.evaluate(() => window.__tg.visivel)).toBe(true)
     await expect(page.getByRole('button', { name: 'Voltar' })).toHaveCount(0)
 
     await page.getByRole('link', { name: /^Apto\. 101\b/ }).click()
-    await expect(page.getByRole('heading', { name: 'Apto. 101', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Voltar' })).toHaveCount(0)
     expect(await page.evaluate(() => window.__tg.handlers())).toBe(1)
 
     await page.evaluate(() => window.__tg.disparar())
     await expect(page).toHaveURL(/\/obras\/hto$/)
-    await expect(page.getByRole('heading', { name: 'HTO', level: 2 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'HTO', level: 1 })).toBeVisible()
   })
 })

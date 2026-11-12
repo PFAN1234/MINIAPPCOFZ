@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { EstadoCarregando, EstadoConsulta } from '../components/Estado.tsx'
 import { IconeCubo } from '../components/Icones.tsx'
+import { TopoTela } from '../components/TopoTela.tsx'
 import { useRepositorio } from '../dados/contexto.tsx'
 import { useObra } from '../dados/hooks.ts'
 import { modeloComCache } from '../modelo/cacheModelo.ts'
@@ -37,15 +38,14 @@ export default function Modelo() {
   }
 
   return (
-    <EstadoConsulta consulta={obra}>
+    <EstadoConsulta consulta={obra} topo={<TopoTela titulo="Modelo federado" />}>
       {({ obra: o }) => (
         <section aria-labelledby="titulo-modelo">
-          <p className="voltar-linha">
-            <Link to={`/obras/${o.slug}`}>← {o.nome}</Link>
-          </p>
-          <h2 id="titulo-modelo" className="titulo-tela">
-            Modelo federado
-          </h2>
+          <TopoTela
+            titulo="Modelo federado"
+            idTitulo="titulo-modelo"
+            subtitulo={<Link to={`/obras/${o.slug}`}>{o.nome}</Link>}
+          />
           {modelos.isPending ? (
             <EstadoCarregando />
           ) : disponiveis.length > 0 ? (

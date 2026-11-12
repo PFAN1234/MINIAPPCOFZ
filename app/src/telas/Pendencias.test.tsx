@@ -26,8 +26,8 @@ describe('Pendências', () => {
   it('na rota da obra: abas com contagem, filtro por ambiente e aba Resolvidas', async () => {
     const usuario = userEvent.setup()
     renderizarApp('/obras/hto/pendencias')
-    expect(await screen.findByRole('heading', { level: 2, name: 'Pendências' })).toBeInTheDocument()
-    expect(await screen.findByRole('link', { name: '← HTO' })).toHaveAttribute('href', '/obras/hto')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Pendências' })).toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'HTO' })).toHaveAttribute('href', '/obras/hto')
     expect(await screen.findByRole('tab', { name: 'Abertas (3)', selected: true })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Resolvidas (1)' })).toBeInTheDocument()
 
@@ -77,7 +77,8 @@ describe('Pendências', () => {
     await usuario.click(salvar)
     await screen.findByText('Registro salvo no aparelho')
 
-    await usuario.click(await screen.findByRole('link', { name: 'Pendências' }))
+    const navegacao = await screen.findByRole('navigation', { name: 'Navegação principal' })
+    await usuario.click(await within(navegacao).findByRole('link', { name: /^Pendências/ }))
     expect(await screen.findByRole('tab', { name: 'Abertas (4)' })).toBeInTheDocument()
     const item = (await screen.findByText('Janela sem trinco')).closest('li')!
     expect(within(item).getByText('Salvo no aparelho · aguardando envio')).toBeInTheDocument()

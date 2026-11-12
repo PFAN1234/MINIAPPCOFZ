@@ -4,6 +4,7 @@ import { Abas } from '../components/Abas.tsx'
 import { EstadoConsulta } from '../components/Estado.tsx'
 import { ListaRegistros } from '../components/ListaRegistros.tsx'
 import { OndeFica } from '../components/OndeFica.tsx'
+import { TopoTela } from '../components/TopoTela.tsx'
 import { useAvisoDaRota } from '../components/useAvisoDaRota.ts'
 import { useAmbiente, useRegistros } from '../dados/hooks.ts'
 import type { AmbienteDetalhe } from '../dados/tipos.ts'
@@ -23,7 +24,7 @@ export default function Ambiente() {
   const { slug = '', codigo = '' } = useParams()
   const consulta = useAmbiente(slug, codigo)
   return (
-    <EstadoConsulta consulta={consulta}>
+    <EstadoConsulta consulta={consulta} topo={<TopoTela titulo="Ambiente" />}>
       {(detalhe) => <AmbienteCarregado detalhe={detalhe} />}
     </EstadoConsulta>
   )
@@ -40,14 +41,17 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
 
   return (
     <section aria-labelledby="titulo-ambiente">
+      <TopoTela
+        titulo={ambiente.nome_operacional}
+        idTitulo="titulo-ambiente"
+        subtitulo={
+          <>
+            <Link to={`/obras/${obra.slug}?pav=${pavimento.codigo}`}>{obra.nome}</Link> · {pavimento.nome}
+            {area && ` · ${area}`}
+          </>
+        }
+      />
       {aviso && <Aviso texto={aviso} onFechar={fecharAviso} />}
-      <h2 id="titulo-ambiente" className="titulo-tela">
-        {ambiente.nome_operacional}
-      </h2>
-      <p className="subtitulo">
-        <Link to={`/obras/${obra.slug}?pav=${pavimento.codigo}`}>{obra.nome}</Link> · {pavimento.nome}
-        {area && ` · ${area}`}
-      </p>
       {!ambiente.ativo && (
         <p className="aviso-inativo" role="note">
           {AVISO_INATIVO}

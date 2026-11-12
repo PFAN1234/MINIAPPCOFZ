@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { EstadoConsulta } from '../components/Estado.tsx'
 import { ListaRegistros } from '../components/ListaRegistros.tsx'
+import { TopoTela } from '../components/TopoTela.tsx'
 import { useObras, useRegistros } from '../dados/hooks.ts'
 import type { TipoRegistro } from '../dados/tipos.ts'
 import { useRegistrosLocais } from '../offline/contexto.tsx'
@@ -38,7 +39,7 @@ export default function Registros() {
 
   return (
     <section aria-labelledby="titulo-registros">
-      <h2 id="titulo-registros">Registros</h2>
+      <TopoTela lista titulo="Registros" idTitulo="titulo-registros" />
       <div className="filtros-registros">
         <select
           className="filtro-select"

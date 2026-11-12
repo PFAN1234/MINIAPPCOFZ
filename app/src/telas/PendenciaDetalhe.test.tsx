@@ -33,8 +33,8 @@ describe('Detalhe da pendência', () => {
   it('aberta, como gestor: mostra a pendência e o formulário; só habilita com foto', async () => {
     const usuario = userEvent.setup()
     renderizarApp(ABERTA)
-    expect(await screen.findByRole('heading', { level: 2, name: 'Apto. 101' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '← HTO / Térreo' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Apto. 101' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'HTO · Térreo' })).toBeInTheDocument()
     expect(screen.getByText('Tomada da sala sem espelho; refazer o acabamento.')).toBeInTheDocument()
     expect(screen.getAllByText('Aberta').length).toBeGreaterThan(0)
     expect(screen.getByText(/Marcos Teixeira/)).toBeInTheDocument()
@@ -110,7 +110,7 @@ describe('Detalhe da pendência', () => {
 
     await usuario.click(encerrar)
     expect(await screen.findByText('Encerramento salvo no aparelho')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: 'Pendências' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Pendências' })).toBeInTheDocument()
     // O envio corre em segundo plano; depois dele, a pendência passa a Resolvidas.
     expect(await screen.findByRole('tab', { name: 'Resolvidas (2)' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Abertas (2)' })).toBeInTheDocument()

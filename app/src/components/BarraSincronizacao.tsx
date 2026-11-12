@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { Link } from 'react-router'
 import { useFila } from '../offline/contexto.tsx'
+import { IconeAlerta, IconeCelular, IconeSemSinal } from './Icones.tsx'
 
 function assinarConexao(fn: () => void): () => void {
   window.addEventListener('online', fn)
@@ -12,7 +13,10 @@ function assinarConexao(fn: () => void): () => void {
 }
 const estaOnline = () => navigator.onLine
 
-/** Faixa acima do conteúdo com o estado da fila de envio e da conexão. */
+/**
+ * Faixa amarela com o estado da fila de envio e da conexão. O `TopoTela` a mostra logo abaixo
+ * do azul (ver `faixaDoTopo.ts`); a faixa inteira é a região `status`.
+ */
 export function BarraSincronizacao() {
   const { estado, sincronizar } = useFila()
   const online = useSyncExternalStore(assinarConexao, estaOnline)
@@ -33,10 +37,11 @@ export function BarraSincronizacao() {
   if (aguardando === 0 && comErro === 0 && online) return null
 
   return (
-    <div className="barra-sinc">
+    <div className="barra-sinc" role="status">
       {aguardando > 0 && (
         <div className="barra-sinc-linha">
-          <p role="status">
+          <IconeCelular tamanho={22} />
+          <p>
             {soRegistros
               ? aguardando === 1
                 ? '1 registro aguardando envio'
@@ -47,17 +52,18 @@ export function BarraSincronizacao() {
           </p>
           <button
             type="button"
-            className="botao barra-sinc-botao"
+            className="barra-sinc-botao"
             disabled={estado.sincronizando}
             onClick={() => void sincronizar()}
           >
-            {estado.sincronizando ? 'Enviando…' : 'Tentar agora'}
+            {estado.sincronizando ? 'Enviando…' : 'Enviar'}
           </button>
         </div>
       )}
       {comErro > 0 && (
         <div className="barra-sinc-linha barra-sinc-erro">
-          <p role="status">
+          <IconeAlerta tamanho={22} />
+          <p>
             {soRegistros
               ? comErro === 1
                 ? '1 registro com erro no envio'
@@ -73,7 +79,8 @@ export function BarraSincronizacao() {
       )}
       {aguardando === 0 && comErro === 0 && (
         <div className="barra-sinc-linha">
-          <p role="status">Sem conexão · mostrando dados salvos no aparelho</p>
+          <IconeSemSinal tamanho={22} />
+          <p>Sem conexão · mostrando dados salvos no aparelho</p>
         </div>
       )}
     </div>
