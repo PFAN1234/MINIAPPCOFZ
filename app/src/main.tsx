@@ -7,10 +7,11 @@ import App from './App.tsx'
 import { EstadoCarregando } from './components/Estado.tsx'
 import { RepositorioProvider } from './dados/contexto.tsx'
 import { registrarSw } from './registrarSw.ts'
-import { expand, ready } from './telegram.ts'
+import { aplicarCoresTelegram, expand, ready } from './telegram.ts'
 
 ready()
 expand()
+aplicarCoresTelegram()
 registrarSw()
 
 const queryClient = new QueryClient({

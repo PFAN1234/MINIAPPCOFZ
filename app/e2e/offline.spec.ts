@@ -166,6 +166,44 @@ test('fluxo completo: salva sem sinal, sobrevive a recarga offline e envia ao vo
   await expect(page.locator('.registro-item', { hasText: legenda })).toHaveCount(1)
 })
 
+test('sem sinal, as fontes do app (Barlow) carregam do service worker', async ({ page, context }) => {
+  await prepararAparelhoParaOffline(page)
+
+  // As seis fontes (.woff2) estão no cache do app (precache, ver também sw.spec.ts).
+  const fontesNoCache = await page.evaluate(async () => {
+    const nome = (await caches.keys()).filter((n) => n.startsWith('app-')).pop()!
+    const chaves = (await (await caches.open(nome)).keys()).map((r) => new URL(r.url).pathname)
+    return new Set(chaves.filter((c) => c.endsWith('.woff2'))).size
+  })
+  expect(fontesNoCache).toBe(6)
+
+  await context.setOffline(true)
+  const fontesPelaRede: string[] = []
+  page.on('response', (r) => {
+    if (/\.woff2?$/.test(new URL(r.url()).pathname) && !r.fromServiceWorker()) fontesPelaRede.push(r.url())
+  })
+  await page.reload()
+  await expect(cabecalhoAmbiente(page)).toBeVisible()
+
+  const fontes = await page.evaluate(async () => {
+    await document.fonts.ready
+    return {
+      texto: document.fonts.check('16px Barlow'),
+      titulo: document.fonts.check('700 16px "Barlow Semi Condensed"'),
+      carregadas: [...document.fonts]
+        .filter((f) => f.status === 'loaded')
+        .map((f) => `${f.family.replace(/["']/g, '')} ${f.weight}`),
+    }
+  })
+  expect(fontes.texto).toBe(true)
+  expect(fontes.titulo).toBe(true)
+  // check() também dá true quando a fonte nem existe: confere que as faces foram mesmo carregadas.
+  expect(fontes.carregadas).toContain('Barlow 400')
+  expect(fontes.carregadas).toContain('Barlow Semi Condensed 700')
+  expect(fontesPelaRede).toEqual([])
+  await context.setOffline(false)
+})
+
 test('cota de armazenamento: alerta "Sem espaço no aparelho" e o formulário continua preenchido', async ({
   page,
 }) => {

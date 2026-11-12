@@ -35,6 +35,15 @@ export interface TelegramWebApp {
   disableClosingConfirmation(): void
   /** Abre o link no navegador externo (Bot API 6.1+). */
   openLink?(url: string): void
+  /** Versão da Bot API do cliente (ex.: '7.10'). */
+  version?: string
+  isVersionAtLeast?(versao: string): boolean
+  /** Cor do cabeçalho do Telegram. Hex só a partir da 6.9 (de 6.1 a 6.8, só 'bg_color' ou 'secondary_bg_color'). */
+  setHeaderColor?(cor: string): void
+  /** Cor de fundo do Mini App (6.1+). */
+  setBackgroundColor?(cor: string): void
+  /** Cor da barra inferior do Telegram (7.10+). */
+  setBottomBarColor?(cor: string): void
 }
 
 declare global {
@@ -65,6 +74,36 @@ export function ready(): void {
 /** Expande o Mini App para a altura máxima. */
 export function expand(): void {
   webApp()?.expand()
+}
+
+/** Cores que o app pede ao Telegram (as mesmas de `estilo/tokens.css`: --azul, --fundo, --superficie). */
+export const CORES_TELEGRAM = {
+  cabecalho: '#0B1625',
+  fundo: '#ECEFF3',
+  barraInferior: '#FFFFFF',
+} as const
+
+/** Pede uma cor só se o cliente tiver a versão mínima; erro do cliente não derruba o app. */
+function pedirCor(app: TelegramWebApp, versaoMinima: string, metodo: ((cor: string) => void) | undefined, cor: string) {
+  try {
+    if (typeof metodo !== 'function' || typeof app.isVersionAtLeast !== 'function') return
+    if (!app.isVersionAtLeast(versaoMinima)) return
+    metodo.call(app, cor)
+  } catch {
+    /* cliente antigo ou fora do Telegram: fica a cor padrão do Telegram */
+  }
+}
+
+/**
+ * Pinta o cabeçalho, o fundo e a barra inferior do Telegram com as cores do app (tema sempre claro,
+ * topo azul-escuro). Cada cor só é pedida quando a versão do cliente aceita; chamada uma vez ao abrir.
+ */
+export function aplicarCoresTelegram(): void {
+  const app = webApp()
+  if (!app) return
+  pedirCor(app, '6.9', app.setHeaderColor, CORES_TELEGRAM.cabecalho)
+  pedirCor(app, '6.1', app.setBackgroundColor, CORES_TELEGRAM.fundo)
+  pedirCor(app, '7.10', app.setBottomBarColor, CORES_TELEGRAM.barraInferior)
 }
 
 /** `initData` bruto a ser validado no servidor; string vazia fora do Telegram. */

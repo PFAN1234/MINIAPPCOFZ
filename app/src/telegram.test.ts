@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  aplicarCoresTelegram,
   BackButton,
   colorScheme,
   disableClosingConfirmation,
@@ -115,5 +116,77 @@ describe('parâmetro inicial e usuário', () => {
     window.Telegram = { WebApp: criarWebApp() }
     expect(parametroInicial()).toBeNull()
     expect(idUsuarioTelegram()).toBeNull()
+  })
+})
+
+describe('cores do Telegram', () => {
+  /** Compara versões como o SDK do Telegram: por partes numéricas ('7.10' > '7.2'). */
+  function versaoMaiorOuIgual(versao: string, minima: string): boolean {
+    const a = versao.split('.').map(Number)
+    const b = minima.split('.').map(Number)
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      const x = a[i] ?? 0
+      const y = b[i] ?? 0
+      if (x !== y) return x > y
+    }
+    return true
+  }
+
+  function webAppNaVersao(versao: string) {
+    const app = {
+      ...criarWebApp(),
+      version: versao,
+      isVersionAtLeast: (minima: string) => versaoMaiorOuIgual(versao, minima),
+      setHeaderColor: vi.fn(),
+      setBackgroundColor: vi.fn(),
+      setBottomBarColor: vi.fn(),
+    }
+    window.Telegram = { WebApp: app }
+    return app
+  }
+
+  it.each([
+    { versao: '6.0', cabecalho: false, fundo: false, barra: false },
+    { versao: '6.1', cabecalho: false, fundo: true, barra: false },
+    { versao: '6.8', cabecalho: false, fundo: true, barra: false },
+    { versao: '6.9', cabecalho: true, fundo: true, barra: false },
+    { versao: '7.0', cabecalho: true, fundo: true, barra: false },
+    { versao: '7.2', cabecalho: true, fundo: true, barra: false },
+    { versao: '7.10', cabecalho: true, fundo: true, barra: true },
+    { versao: '8.0', cabecalho: true, fundo: true, barra: true },
+  ])('versão $versao: só pede as cores que a versão aceita', ({ versao, cabecalho, fundo, barra }) => {
+    const app = webAppNaVersao(versao)
+    aplicarCoresTelegram()
+
+    if (cabecalho) expect(app.setHeaderColor).toHaveBeenCalledExactlyOnceWith('#0B1625')
+    else expect(app.setHeaderColor).not.toHaveBeenCalled()
+    if (fundo) expect(app.setBackgroundColor).toHaveBeenCalledExactlyOnceWith('#ECEFF3')
+    else expect(app.setBackgroundColor).not.toHaveBeenCalled()
+    if (barra) expect(app.setBottomBarColor).toHaveBeenCalledExactlyOnceWith('#FFFFFF')
+    else expect(app.setBottomBarColor).not.toHaveBeenCalled()
+  })
+
+  it('sem window.Telegram, não faz nada e não lança erro', () => {
+    expect(() => aplicarCoresTelegram()).not.toThrow()
+  })
+
+  it('cliente sem isVersionAtLeast ou sem os métodos: não pede nada e não lança erro', () => {
+    const app = criarWebApp()
+    window.Telegram = { WebApp: app }
+    expect(() => aplicarCoresTelegram()).not.toThrow()
+
+    const semMetodos = { ...criarWebApp(), isVersionAtLeast: () => true }
+    window.Telegram = { WebApp: semMetodos }
+    expect(() => aplicarCoresTelegram()).not.toThrow()
+  })
+
+  it('erro de um método não impede os outros nem derruba o app', () => {
+    const app = webAppNaVersao('7.10')
+    app.setHeaderColor.mockImplementation(() => {
+      throw new Error('WebAppHeaderColorInvalid')
+    })
+    expect(() => aplicarCoresTelegram()).not.toThrow()
+    expect(app.setBackgroundColor).toHaveBeenCalledOnce()
+    expect(app.setBottomBarColor).toHaveBeenCalledOnce()
   })
 })

@@ -1,0 +1,11 @@
+/*
+ * Fontes servidas pelo próprio app (sem CDN), para funcionarem sem sinal: só o subconjunto
+ * latino (cobre ã, ç, é, õ) e os pesos usados. Texto: Barlow 400, 500, 600 e 700.
+ * Títulos: Barlow Semi Condensed 600 e 700.
+ */
+@import '@fontsource/barlow/latin-400.css';
+@import '@fontsource/barlow/latin-500.css';
+@import '@fontsource/barlow/latin-600.css';
+@import '@fontsource/barlow/latin-700.css';
+@import '@fontsource/barlow-semi-condensed/latin-600.css';
+@import '@fontsource/barlow-semi-condensed/latin-700.css';

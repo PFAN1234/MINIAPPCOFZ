@@ -64,7 +64,7 @@ Cada fase é um PR, com typecheck, lint, Vitest e e2e verdes. Ao fim de cada fas
 ### V0. Fundação (pequena)
 1. `app/src/estilo/tokens.css` com a tabela acima; `index.css` e `admin.css` passam a usar as variáveis (com os apelidos). Sai o `@media (prefers-color-scheme: dark)` dos dois e `color-scheme` vira `light`.
 2. Fontes: pacotes `@fontsource/barlow` e `@fontsource/barlow-semi-condensed` (versões exatas, só o subconjunto latino e os pesos usados: 400, 500, 600 e 700; títulos 600 e 700). Conferir que os `.woff2` entram no `precache-manifest.json` do Mini App e que o admin não puxa nada a mais.
-3. `telegram.ts`: `setHeaderColor('#0B1625')`, `setBackgroundColor('#ECEFF3')` e `setBottomBarColor('#FFFFFF')`, cada um protegido por `isVersionAtLeast` (6.1 para os dois primeiros, 7.10 para o último). Chamados uma vez ao abrir o app.
+3. `telegram.ts`: `setHeaderColor('#0B1625')`, `setBackgroundColor('#ECEFF3')` e `setBottomBarColor('#FFFFFF')`, cada um protegido por `isVersionAtLeast` (6.9 para o cabeçalho, porque até a 6.8 o Telegram só aceita `bg_color`/`secondary_bg_color` e não hex; 6.1 para o fundo; 7.10 para a barra inferior). Chamados uma vez ao abrir o app.
 4. Ícones: completar `components/Icones.tsx` com os que as telas usam (casa, lista, alerta, câmera, galeria, mais, lupa, planta, cubo, celular, sem sinal, check, fechar, voltar, pessoas), todos com traço e `aria-hidden`.
 
 Pronto quando o app abre com as cores e as fontes novas sem mudar a estrutura das telas, e as fontes aparecem sem sinal (e2e `offline.spec.ts`).
@@ -105,8 +105,8 @@ Planta (busca e pavimento na faixa azul, pinos amarelos com borda azul, número 
 
 | Risco | Mitigação |
 |---|---|
-| Telegram antigo sem `setHeaderColor`/`setBottomBarColor`. | Chamadas protegidas por versão; sem elas o app continua legível (cabeçalho padrão do Telegram). |
+| Telegram antigo sem `setHeaderColor`/`setBottomBarColor`. | Chamadas protegidas por versão (cabeçalho em hex só a partir da 6.9, fundo 6.1, barra inferior 7.10); sem elas o app continua legível (cabeçalho padrão do Telegram). |
 | iPhone sem service worker: fontes não ficam no precache. | Fontes ficam no cache HTTP do WebView; a pilha de fontes de reserva (`system-ui`) mantém a leitura. |
-| Peso das fontes no primeiro acesso. | Só o subconjunto latino e quatro pesos (cerca de 100 KB). |
+| Peso das fontes no primeiro acesso. | Só o subconjunto latino: quatro pesos da Barlow e dois da Semi Condensed (seis `.woff2`, cerca de 136 KB). |
 | Muitos testes quebram pela troca de textos. | Uma fase por PR e nomes acessíveis estáveis. |
 | Telas longas do admin (ObraAdmin 557 linhas, EditorPlanta 584) difíceis de reorganizar. | V4 separa cada aba e cada etapa em componentes próprios antes de trocar o visual. |

@@ -64,9 +64,11 @@ export interface ManifestoPrecache {
 
 /**
  * Monta o manifesto de precache a partir dos nomes de arquivo do bundle.
- * Fora: mapas `.map`, o próprio manifesto e o visualizador 3D (chunk e worker: ~3,7 MB,
- * só úteis com os `.frag`, que exigem rede). Também fora o conversor de IFC do site de
- * administração (worker e `web-ifc.wasm`), que o grafo de imports não alcança.
+ * Fora: mapas `.map`, o próprio manifesto, o visualizador 3D (chunk e worker: ~3,7 MB,
+ * só úteis com os `.frag`, que exigem rede), o conversor de IFC do site de administração
+ * (worker e `web-ifc.wasm`), que o grafo de imports não alcança, e as fontes `.woff`: o
+ * `@font-face` das fontes (@fontsource) lista o `.woff2` primeiro e todo navegador com
+ * service worker o usa; o `.woff` é só a reserva de navegadores antigos. Os `.woff2` entram.
  * `/index.html` sempre entra.
  * A `versao` é o hash dos nomes ordenados: não depende da ordem de entrada.
  */
@@ -78,6 +80,7 @@ export function montarManifesto(nomes: string[]): ManifestoPrecache {
         (n) =>
           n !== 'precache-manifest.json' &&
           !n.endsWith('.map') &&
+          !n.endsWith('.woff') &&
           !/^assets\/(VisualizadorModelo|worker|conversor\.worker)-/.test(n) &&
           !n.startsWith('web-ifc/'),
       ),
