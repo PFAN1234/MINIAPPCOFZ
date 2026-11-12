@@ -230,10 +230,10 @@ Verificação: em cada fase, typecheck, lint, Vitest e e2e verdes e capturas 390
 
 Contrato: `docs/contrato-etapas.md`. Decisões de 2026-11-12: o app passa a se chamar Fiscal Bot; cada etapa do campus tem suas obras e um grupo do Telegram (um tópico por obra), ligado com `/vincular_etapa <slug>`; seletor de etapa na tela inicial do Mini App; logo e nome da OM em todas as telas, configurados no site; obras existentes na "2ª ETAPA"; arquivar etapa vale para todas as obras dela; excluir etapa apaga as obras e pede o nome digitado.
 
-- [ ] Banco: migration `20261112180000_etapas.sql` (`etapa`, `obra.etapa_id`, `organizacao`, bucket `organizacao`, RPCs `admin_*_etapa`, `organizacao`, `vincular_etapa`) e testes de banco.
-- [ ] Edge Functions: `/vincular_etapa` no `bot-webhook`, ação `excluir_etapa` na `admin-excluir-obra`, textos "Fiscal Bot".
-- [ ] Site: etapas (criar, editar, arquivar, excluir, grupo do Telegram), obra dentro da etapa, página Organização (nome e logo), barra do topo com logo.
-- [ ] Mini App: nome Fiscal Bot, faixa com logo e nome da OM em todas as telas, seletor de etapa na tela inicial.
+- [x] Banco: migration `20261112180000_etapas.sql` (`etapa`, `obra.etapa_id`, `organizacao`, bucket `organizacao`, RPCs `admin_*_etapa`, `organizacao`, `vincular_etapa`) e testes de banco.
+- [x] Edge Functions: `/vincular_etapa` no `bot-webhook`, ação `excluir_etapa` na `admin-excluir-obra`, textos "Fiscal Bot".
+- [x] Site: etapas (criar, editar, arquivar, excluir, grupo do Telegram), obra dentro da etapa, página Organização (nome e logo), barra do topo com logo.
+- [x] Mini App: nome Fiscal Bot, faixa com logo e nome da OM em todas as telas, seletor de etapa na tela inicial.
 - [ ] Aplicar no `miniappcofz-dev`: migration, deploy de `bot-webhook`, `publish-outbox` e `admin-excluir-obra`, reconfigurar os comandos do bot.
 - [ ] Usuário: trocar o nome do bot e do Mini App no BotFather para Fiscal Bot; enviar o logo da CO-FZ em `/admin/organizacao`; `/vincular_etapa 2a-etapa` no grupo.
 

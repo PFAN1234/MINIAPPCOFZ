@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
-import type { ConfigObra, DadosObra, PavimentoResumo } from './tipos.ts'
+import type { ConfigObra, DadosEtapa, DadosObra, PavimentoResumo } from './tipos.ts'
 
 export function useObrasAdmin() {
   const repo = useRepositorioAdmin()
@@ -45,6 +45,74 @@ export function useSalvarConfig(slug: string) {
 export function useExportarObra() {
   const repo = useRepositorioAdmin()
   return useMutation({ mutationFn: (slug: string) => repo.exportarObra(slug) })
+}
+
+// --- Etapas ------------------------------------------------------------------------------------
+
+export function useEtapas() {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'etapas'], queryFn: () => repo.listarEtapas() })
+}
+
+/** Etapas e obras andam juntas (contagens, etapa de cada obra): relê tudo do admin. */
+export function useSalvarEtapa() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (d: DadosEtapa) => repo.salvarEtapa(d), onSuccess: invalidar })
+}
+
+export function useArquivarEtapa(slug: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (arquivada: boolean) => repo.arquivarEtapa(slug, arquivada), onSuccess: invalidar })
+}
+
+export function useDesvincularEtapa(slug: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: () => repo.desvincularEtapa(slug), onSuccess: invalidar })
+}
+
+export function useResumoEtapa(slug: string, ativo: boolean) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'resumo-etapa', slug], queryFn: () => repo.resumoEtapa(slug), enabled: ativo })
+}
+
+export function useExcluirEtapa(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useMutation({ mutationFn: (confirmacao: string) => repo.excluirEtapa(slug, confirmacao) })
+}
+
+// --- Organização -------------------------------------------------------------------------------
+
+/**
+ * Nome e logo da OM. Fora do prefixo `admin`: vale também na tela de entrada e não sai ao
+ * trocar de sessão. Sem novas tentativas: quem usa cai para só "Fiscal Bot" se falhar.
+ */
+export function useOrganizacao() {
+  const repo = useRepositorioAdmin()
+  return useQuery({
+    queryKey: ['organizacao'],
+    queryFn: () => repo.obterOrganizacao(),
+    retry: false,
+    staleTime: 5 * 60_000,
+  })
+}
+
+/** Envia o logo novo (se houver) e grava nome e logo. */
+export function useSalvarOrganizacao() {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (d: { nome: string; logo: Blob | null; logo_path: string | null }) => {
+      const caminho = d.logo ? await repo.enviarLogo(d.logo) : d.logo_path
+      return repo.salvarOrganizacao({ nome: d.nome, logo_path: caminho })
+    },
+    onSuccess: (org) => {
+      qc.setQueryData(['organizacao'], org)
+      return qc.invalidateQueries({ queryKey: ['organizacao'] })
+    },
+  })
 }
 
 export function useAdmins() {

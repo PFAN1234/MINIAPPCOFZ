@@ -1,12 +1,20 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useId, useState, type FormEvent } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { ComDados, mensagemDe, Resultado, SelectCategoria } from '../componentes.tsx'
 import { Historico } from './planta/PlantaObra.tsx'
 import ArquivarExcluir, { AvisoArquivada } from './obra/ArquivarExcluir.tsx'
-import { useExportarObra, useObraAdmin, useSalvarConfig, useSalvarObra, useSalvarPavimentos } from '../dados/hooks.ts'
+import {
+  useEtapas,
+  useExportarObra,
+  useObraAdmin,
+  useSalvarConfig,
+  useSalvarObra,
+  useSalvarPavimentos,
+} from '../dados/hooks.ts'
 import {
   ROTULO_STATUS,
   type ConfigObra,
+  type EtapaLista,
   type ObraAdmin as DadosObraAdmin,
   type PavimentoAdmin,
   type StatusObra,
@@ -29,12 +37,25 @@ export default function ObraAdmin() {
       {(d) => (
         <article aria-labelledby="titulo-obra">
           <p>
-            <Link to="/">← Obras</Link>
+            <Link to="/">← Etapas</Link>
           </p>
           <h1 id="titulo-obra">{d.obra.nome}</h1>
+          {d.obra.etapa && (
+            <p className="adm-etapa-da-obra">
+              Etapa: <Link to={`/etapas/${d.obra.etapa.slug}`}>{d.obra.etapa.nome}</Link>
+            </p>
+          )}
+          {d.obra.etapa?.arquivada_em && (
+            <p className="adm-alerta adm-alerta-aviso" role="status">
+              A etapa {d.obra.etapa.nome} está arquivada (desde{' '}
+              {new Date(d.obra.etapa.arquivada_em).toLocaleString('pt-BR')}): esta obra não aparece no Mini App e nada é
+              publicado no Telegram enquanto a etapa estiver arquivada, mesmo com a obra ativa. Desarquive na{' '}
+              <Link to={`/etapas/${d.obra.etapa.slug}`}>página da etapa</Link> ou mude a obra de etapa.
+            </p>
+          )}
           {d.obra.arquivada_em && <AvisoArquivada arquivadaEm={d.obra.arquivada_em} />}
           <DadosDaObra
-            key={`${d.obra.nome}|${d.obra.ordem}`}
+            key={`${d.obra.nome}|${d.obra.ordem}|${d.obra.etapa?.id ?? ''}`}
             obra={d.obra}
             sucesso={sucesso('obra')}
             onSalvo={() => setSalvo({ secao: 'obra', texto: 'Obra salva.' })}
@@ -69,9 +90,46 @@ function inteiro(texto: string): number | null {
 
 // --- Nova obra -------------------------------------------------------------------------------
 
+/** Select das etapas (ativas; a atual entra mesmo arquivada). */
+function SelectEtapa({
+  etapas,
+  valor,
+  atual,
+  onMudar,
+  descricao,
+}: {
+  etapas: EtapaLista[]
+  valor: string
+  atual?: string
+  onMudar: (id: string) => void
+  descricao?: string
+}) {
+  const opcoes = etapas.filter((e) => !e.arquivada_em || e.id === atual)
+  return (
+    <select value={valor} onChange={(e) => onMudar(e.target.value)} required aria-describedby={descricao}>
+      {!valor && <option value="">Escolha a etapa…</option>}
+      {opcoes.map((e) => (
+        <option key={e.id} value={e.id}>
+          {e.nome}
+          {e.arquivada_em ? ' (arquivada)' : ''}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 export function NovaObra() {
+  const etapas = useEtapas()
+  return <ComDados consulta={etapas}>{(lista) => <FormNovaObra etapas={lista} />}</ComDados>
+}
+
+function FormNovaObra({ etapas }: { etapas: EtapaLista[] }) {
   const salvar = useSalvarObra()
   const navegar = useNavigate()
+  const [busca] = useSearchParams()
+  const ativas = etapas.filter((e) => !e.arquivada_em)
+  const pedida = ativas.find((e) => e.slug === busca.get('etapa'))
+  const [etapaId, setEtapaId] = useState(pedida?.id ?? (ativas.length === 1 ? ativas[0].id : ''))
   const [slug, setSlug] = useState('')
   const [nome, setNome] = useState('')
   const [ordem, setOrdem] = useState('0')
@@ -80,40 +138,55 @@ export function NovaObra() {
   function enviar(e: FormEvent) {
     e.preventDefault()
     const n = inteiro(ordem)
+    if (!etapaId) return setAviso('Escolha a etapa da obra.')
     if (!SLUG.test(slug)) return setAviso('Slug inválido: use letras minúsculas, dígitos e hífen.')
     if (!nome.trim()) return setAviso('Informe o nome da obra.')
     if (n === null) return setAviso('A ordem precisa ser um número inteiro.')
     setAviso(null)
-    salvar.mutate({ slug, nome: nome.trim(), ordem: n }, { onSuccess: (o) => navegar(`/obras/${o.slug}`) })
+    salvar.mutate(
+      { slug, nome: nome.trim(), ordem: n, etapa_id: etapaId },
+      { onSuccess: (o) => navegar(`/obras/${o.slug}`) },
+    )
   }
 
+  const voltar = ativas.find((e) => e.id === etapaId)
   return (
     <section aria-labelledby="titulo-nova">
       <p>
-        <Link to="/">← Obras</Link>
+        {voltar ? <Link to={`/etapas/${voltar.slug}`}>← {voltar.nome}</Link> : <Link to="/">← Etapas</Link>}
       </p>
       <h1 id="titulo-nova">Nova obra</h1>
-      <form className="adm-form" onSubmit={enviar}>
-        <label>
-          Slug
-          <input value={slug} onChange={(e) => setSlug(e.target.value.trim())} placeholder="ex.: cofz" required />
-          <span className="adm-dica">Letras minúsculas, dígitos e hífen. Não muda depois de criado.</span>
-        </label>
-        <label>
-          Nome
-          <input value={nome} onChange={(e) => setNome(e.target.value)} required />
-        </label>
-        <label>
-          Ordem
-          <input value={ordem} onChange={(e) => setOrdem(e.target.value)} inputMode="numeric" />
-        </label>
-        <Resultado sucesso={null} erro={aviso ? new Error(aviso) : salvar.error} />
-        <div>
-          <button type="submit" className="adm-botao adm-botao-principal" disabled={salvar.isPending}>
-            Criar obra
-          </button>
-        </div>
-      </form>
+      {ativas.length === 0 ? (
+        <p className="adm-alerta adm-alerta-aviso" role="status">
+          Não há etapa ativa. <Link to="/nova-etapa">Crie uma etapa</Link> antes de cadastrar a obra.
+        </p>
+      ) : (
+        <form className="adm-form" onSubmit={enviar}>
+          <label>
+            Etapa
+            <SelectEtapa etapas={etapas} valor={etapaId} onMudar={setEtapaId} />
+          </label>
+          <label>
+            Slug
+            <input value={slug} onChange={(e) => setSlug(e.target.value.trim())} placeholder="ex.: cofz" required />
+            <span className="adm-dica">Letras minúsculas, dígitos e hífen. Não muda depois de criado.</span>
+          </label>
+          <label>
+            Nome
+            <input value={nome} onChange={(e) => setNome(e.target.value)} required />
+          </label>
+          <label>
+            Ordem
+            <input value={ordem} onChange={(e) => setOrdem(e.target.value)} inputMode="numeric" />
+          </label>
+          <Resultado sucesso={null} erro={aviso ? new Error(aviso) : salvar.error} />
+          <div>
+            <button type="submit" className="adm-botao adm-botao-principal" disabled={salvar.isPending}>
+              Criar obra
+            </button>
+          </div>
+        </form>
+      )}
     </section>
   )
 }
@@ -127,9 +200,14 @@ interface PropsSecao {
 
 function DadosDaObra({ obra, sucesso, onSalvo }: PropsSecao & { obra: DadosObraAdmin['obra'] }) {
   const salvar = useSalvarObra()
+  const etapas = useEtapas()
+  const idDica = useId()
   const [nome, setNome] = useState(obra.nome)
   const [ordem, setOrdem] = useState(String(obra.ordem))
+  const [etapaId, setEtapaId] = useState(obra.etapa?.id ?? '')
   const [aviso, setAviso] = useState<string | null>(null)
+  const destino = etapas.data?.find((e) => e.id === etapaId)
+  const mudaEtapa = !!obra.etapa && etapaId !== '' && etapaId !== obra.etapa.id
 
   function enviar(e: FormEvent) {
     e.preventDefault()
@@ -137,7 +215,11 @@ function DadosDaObra({ obra, sucesso, onSalvo }: PropsSecao & { obra: DadosObraA
     if (!nome.trim()) return setAviso('Informe o nome da obra.')
     if (n === null) return setAviso('A ordem precisa ser um número inteiro.')
     setAviso(null)
-    salvar.mutate({ id: obra.id, nome: nome.trim(), ordem: n }, { onSuccess: onSalvo })
+    // `etapa_id` só vai quando muda: é o que move a obra de etapa.
+    salvar.mutate(
+      { id: obra.id, nome: nome.trim(), ordem: n, ...(mudaEtapa ? { etapa_id: etapaId } : {}) },
+      { onSuccess: onSalvo },
+    )
   }
 
   return (
@@ -156,8 +238,37 @@ function DadosDaObra({ obra, sucesso, onSalvo }: PropsSecao & { obra: DadosObraA
           Ordem
           <input value={ordem} onChange={(e) => setOrdem(e.target.value)} inputMode="numeric" />
         </label>
+        {obra.etapa && etapas.data && (
+          <div className="adm-campo-com-dica">
+            <label>
+              Etapa
+              <SelectEtapa
+                etapas={etapas.data}
+                valor={etapaId}
+                atual={obra.etapa.id}
+                onMudar={setEtapaId}
+                descricao={idDica}
+              />
+            </label>
+            <span className="adm-dica" id={idDica}>
+              Mudar de etapa move a obra para a lista da outra etapa. Se o grupo do Telegram da outra etapa for
+              diferente, o vínculo da obra com o tópico é apagado (vincule de novo com /vincular_obra {obra.slug}).
+            </span>
+          </div>
+        )}
+        {mudaEtapa && destino && (
+          <p className="adm-alerta adm-alerta-aviso" role="status">
+            Ao salvar, a obra passa para a etapa {destino.nome}.
+            {destino.arquivada_em ? ' Essa etapa está arquivada.' : ''}
+          </p>
+        )}
         <p className="adm-dica">
-          Grupo do Telegram: {obra.telegram_vinculado ? 'vinculado' : 'não vinculado (use /vincular_obra no tópico)'}
+          Tópico do Telegram:{' '}
+          {obra.telegram_vinculado
+            ? 'vinculado'
+            : obra.etapa && !obra.etapa.telegram_vinculado
+              ? `não vinculado. Vincule antes o grupo da etapa (/vincular_etapa ${obra.etapa.slug}) e depois use /vincular_obra ${obra.slug} no tópico.`
+              : `não vinculado (use /vincular_obra ${obra.slug} no tópico do grupo da etapa).`}
         </p>
         <Resultado sucesso={sucesso} erro={aviso ? new Error(aviso) : salvar.error} />
         <div>

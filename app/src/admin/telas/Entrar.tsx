@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { mensagemDe } from '../componentes.tsx'
+import { IdentidadeOM, mensagemDe, NOME_APP } from '../componentes.tsx'
 import { useRepositorioAdmin } from '../dados/contexto.tsx'
 import type { DadosWidget, UsuarioSessao } from '../dados/tipos.ts'
 
@@ -77,7 +77,8 @@ export function Entrar({ erroEntrada, onEntrou }: Props) {
 
   return (
     <main className="adm-entrada">
-      <h1>Administração do Diário da obra</h1>
+      <IdentidadeOM grande comApp={false} />
+      <h1>Administração do {NOME_APP}</h1>
       <p>Entre com a sua conta do Telegram. Só admins do Mini App têm acesso.</p>
       {erro && (
         <p className="adm-alerta adm-alerta-erro" role="alert">

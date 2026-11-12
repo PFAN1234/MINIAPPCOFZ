@@ -637,3 +637,145 @@ td.adm-acoes {
 .adm-linha-arquivada td {
   color: var(--adm-suave);
 }
+
+/* --- Identidade da OM (barra do topo e tela de entrada) ----------------------------------- */
+
+.adm-marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.adm-logo {
+  height: 28px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  display: block;
+}
+
+.adm-nome-om {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.adm-nome-om + .adm-nome-app {
+  padding-left: 10px;
+  border-left: 1px solid var(--azul-borda);
+  font-weight: 500;
+  color: var(--texto-suave-no-azul);
+}
+
+.adm-marca-grande {
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+}
+
+.adm-marca-grande .adm-logo {
+  height: 48px;
+}
+
+/* --- Etapas ------------------------------------------------------------------------------- */
+
+.adm-cartao-etapa .adm-titulo-linha {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.adm-cartao-etapa h2 {
+  margin-bottom: 4px;
+}
+
+.adm-cartao-etapa h2 a {
+  color: inherit;
+}
+
+.adm-meta-etapa {
+  margin: 0;
+}
+
+.adm-acoes-topo {
+  margin-top: 0;
+  flex-wrap: nowrap;
+}
+
+.adm-passos {
+  margin: 8px 0 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.adm-comando {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--adm-info-bg);
+  border: 1px solid var(--adm-borda);
+  user-select: all;
+}
+
+.adm-etapa-da-obra {
+  margin: -8px 0 16px;
+  color: var(--adm-suave);
+}
+
+.adm-alerta .adm-alerta-subtitulo {
+  margin-top: 10px;
+}
+
+/* --- Organização -------------------------------------------------------------------------- */
+
+.adm-form.adm-form-org {
+  max-width: 720px;
+}
+
+.adm-logo-linha {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.adm-logo-linha .adm-dica {
+  margin: 0 0 8px;
+}
+
+.adm-logo-previa {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 200px;
+  height: 120px;
+  padding: 12px;
+  border: 1px dashed var(--adm-borda);
+  border-radius: 8px;
+  background: var(--azul);
+}
+
+.adm-logo-previa img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.adm-logo-previa .adm-dica {
+  color: var(--texto-suave-no-azul);
+  margin: 0;
+}
+
+/* O input de arquivo fica oculto dentro do rótulo com cara de botão: o foco aparece no rótulo. */
+.adm-form label.adm-botao-arquivo {
+  display: inline-block;
+  font-weight: 400;
+}
+
+.adm-botao-arquivo:focus-within {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Campo com a dica fora do rótulo (a dica entra por aria-describedby). */
+.adm-campo-com-dica {
+  display: grid;
+  gap: 4px;
+}
