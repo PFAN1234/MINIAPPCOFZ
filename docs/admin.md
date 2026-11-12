@@ -242,3 +242,51 @@ Sigla e revisão saem do nome no padrão `<obra>-<projeto>-<SIGLA>-<REV>` (ex.: 
 1. Migration `20261112120000_admin_modelo.sql` (depois da `20261111150000_fase9_modelos.sql` e da `20261112090000_admin_planta.sql`). Só cria políticas, tabela e funções; não mexe em dados.
 2. Deploy do app. Nenhuma variável nova.
 3. Conferir com um admin: em HTO → "Modelos 3D", enviar `app/public/modelos/hto/ARQ.frag` com sigla ARQ e revisão R06, publicar e abrir o modelo no Mini App.
+
+## Arquivar e excluir obra
+
+Migration `supabase/migrations/20261112150000_admin_arquivar_excluir.sql`; Edge Function `supabase/functions/admin-excluir-obra/` (detalhes no `README.md` dela); testes `tests/db/test_admin_arquivar_excluir.py` e `admin-excluir-obra/handler_test.ts`.
+
+| Ação | Faz | Não faz |
+| --- | --- | --- |
+| **Arquivar** (obra concluída) | Grava `obra.arquivada_em`/`arquivada_por`. `privado.eh_participante` e `eh_gestor` passam a dar false para a obra: ela some do Mini App (RLS de obra, registros, fotos, plantas, modelos e Storage) e ninguém registra, encerra, sobe foto, decide pedido nem gerencia participantes. Some de `obras_disponiveis`; `solicitar_acesso` recusa (22023); `sincronizar_acesso` a ignora; `vincular_obra` recusa (22023, o bot mostra a mensagem no tópico); `reivindicar_publicacoes` não pega itens dela; o `publish-outbox` não manda aviso de pedido de acesso dela. | Não apaga nada e é reversível. Não tira participantes. Não mexe no site de administração (a obra continua listada e editável). Admin que participa da obra também deixa de vê-la no Mini App. |
+| **Desarquivar** | Limpa as duas colunas e põe as publicações pendentes da obra na fila na hora (o cron publica no minuto seguinte). Tudo volta como antes. | — |
+| **Excluir** (irreversível) | Exige o nome exato da obra. Grava a auditoria em `obra_excluida` (quem, quando, contagens), apaga a obra e todas as linhas dela (registros, encerramentos, fotos, pendências, publicações no Telegram, pavimentos, ambientes, plantas e detalhes, publicações de planta e de modelo, modelos, configuração, participantes, pedidos de acesso, membros do grupo) numa transação; depois a Edge Function remove os arquivos `<obra_id>/...` dos buckets `fotos`, `plantas`, `originais` e `modelos`. | Não apaga usuários nem admins. Não apaga mensagens do Telegram. |
+
+**Telegram:** as mensagens já postadas no tópico continuam no grupo nos dois casos (nada é apagado lá). Ao arquivar, os itens `pendente` da fila ficam parados (não são reivindicados) e saem quando a obra é desarquivada; os que já estavam `enviando` terminam normalmente. Ao excluir, os itens da fila são apagados com a obra e nunca saem.
+
+**Exclusão em duas etapas:** o Supabase não deixa apagar direto nas tabelas do Storage, então a RPC apaga só o banco e a Edge Function remove os arquivos pela API do Storage e chama `admin_registrar_limpeza`. Se a remoção falhar, a obra já está apagada, a resposta vem com `pendente: true` e a exclusão fica com `arquivos_erro` em `admin_listar_exclusoes`; basta repetir com a ação `limpar`.
+
+**FKs sem cascata:** `registro → ambiente` e `planta_detalhe → ambiente` não apagam em cascata (de propósito: o ambiente não pode ser apagado com histórico). `admin_excluir_obra` apaga `registro` (que leva encerramentos, fotos e publicações) e `planta_detalhe` antes de `obra`; o resto sai pela cascata de `obra`. O teste `test_fks_dentro_da_obra_sem_cascata_sao_as_tratadas` falha se surgir outra FK sem cascata dentro da obra.
+
+### RPCs
+
+| RPC | Quem | Retorno |
+| --- | --- | --- |
+| `admin_arquivar_obra(p_slug text, p_arquivada boolean)` | admin | `{slug, arquivada_em}` (`null` ao desarquivar). Idempotente: arquivar de novo mantém data e autor. |
+| `admin_listar_obras()` / `admin_obter_obra(p_slug)` | admin | Como antes, mais `arquivada_em` (por obra; em `admin_obter_obra`, dentro de `obra`). |
+| `admin_resumo_obra(p_slug text)` | admin | `{registros, fotos, ambientes, pavimentos, plantas, modelos, participantes, publicacoes_telegram, arquivos: {fotos, plantas, originais, modelos}}` (arquivos: objetos em `storage.objects` com o prefixo `<obra_id>/`). |
+| `admin_excluir_obra(p_slug text, p_confirmacao text)` | admin | `{exclusao_id, obra_id, resumo}`. Confirmação diferente do nome (comparação com `btrim`, maiúsculas contam): 22023 "Para excluir, digite exatamente o nome da obra: …". |
+| `admin_listar_exclusoes()` | admin | Até 50, da mais recente: `[{id, obra_id, slug, nome, excluida_em, excluida_por_nome, resumo, arquivos_removidos_em, arquivos_removidos, arquivos_erro}]`. |
+| `admin_exclusao_para_limpar(p_id uuid)` | service_role | `obra_id` da exclusão (P0002 se não existir). |
+| `admin_registrar_limpeza(p_id uuid, p_removidos jsonb, p_erro text)` | service_role | Soma `p_removidos` ao que já foi removido; sem erro marca `arquivos_removidos_em` e limpa `arquivos_erro`, com erro grava `arquivos_erro`. |
+
+Erros como nas outras RPCs: 28000 sem sessão, 42501 não admin, P0002 obra não encontrada, 22023 dado inválido.
+
+### Edge Function `admin-excluir-obra`
+
+`POST` com `Authorization: Bearer <access token do admin>`:
+
+- `{"acao": "excluir", "slug": "...", "confirmacao": "<nome da obra>"}` → `200 {"ok": true, "exclusao_id", "obra_id", "resumo", "arquivos_removidos": {"fotos", "plantas", "originais", "modelos"}, "pendente": false}`.
+- `{"acao": "limpar", "exclusao_id": "<uuid>"}` → a mesma resposta, sem `resumo`.
+- Falha no Storage depois da exclusão: `200` com `"pendente": true, "erro": "<mensagem>"`.
+- `400` corpo inválido ou confirmação que não confere (mensagem da RPC), `401` sem JWT ou JWT inválido, `403` não admin, `404` obra/exclusão não encontrada, `405` método, `500` erro interno.
+
+Segredos: `SUPABASE_SECRET_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY`), `SUPABASE_PUBLISHABLE_KEY` (ou `SUPABASE_ANON_KEY`, já injetada) e `ALLOWED_ORIGINS`.
+
+### Aplicar num projeto
+
+1. Migration `20261112150000_admin_arquivar_excluir.sql` (depois da `20261112120000_admin_modelo.sql`). Acrescenta duas colunas em `obra` (nulas: nenhuma obra fica arquivada), a tabela `obra_excluida` e as funções; não mexe em dados.
+2. `supabase functions deploy admin-excluir-obra` (o `verify_jwt = false` vem do `supabase/config.toml`).
+3. Segredos: `supabase secrets set SUPABASE_SECRET_KEY=...` (se ainda não existir) e, se o projeto usa as chaves novas, `SUPABASE_PUBLISHABLE_KEY=...`; `ALLOWED_ORIGINS` precisa incluir o domínio do site (o mesmo da `admin-sessao`).
+4. Redeploy de `bot-webhook` (mostra no tópico a mensagem de obra arquivada) e `publish-outbox` (sem aviso de pedido de obra arquivada), **depois** da migration: o `publish-outbox` novo filtra pela coluna `arquivada_em`.
