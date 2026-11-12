@@ -421,8 +421,10 @@ def test_admin_listar_etapas(cenario):
                     'arquivada_em': None, 'telegram_vinculado': True, 'telegram_chat_titulo': 'Grupo X',
                     'obras': 2, 'obras_arquivadas': 1}
     assert por_id[str(vazia)]['obras'] == 0 and por_id[str(vazia)]['telegram_vinculado'] is False
-    ordem = [(x['ordem'], x['nome']) for x in lista]
-    assert ordem == sorted(ordem)
+    # Por ordem (o desempate pelo nome segue a collation do servidor, que muda entre ambientes).
+    ordens = [x['ordem'] for x in lista]
+    assert ordens == sorted(ordens)
+    assert lista[0]['id'] == str(vazia)
     assert '2a-etapa' in {x['slug'] for x in lista}
     with pytest.raises(errors.InsufficientPrivilege):
         sql(c, 'select public.admin_listar_etapas()', usuario=c.gestor_a)
