@@ -1,4 +1,4 @@
-# Diário da obra (app)
+# Fiscal Bot (app)
 
 Telegram Mini App em React + Vite + TypeScript. Backend: Supabase. Hospedagem: Vercel (Root Directory = `app`).
 
@@ -17,7 +17,7 @@ Para navegar sem Supabase, com os dados de teste da HTO (`data/hto/*.json`) e as
 VITE_DADOS=fixture npm run dev     # ou: VITE_DADOS=fixture npm run build && npm run preview
 ```
 
-O modo fixture inclui a HTO, uma segunda obra vazia e alguns registros de exemplo. As imagens saem de `/__plantas/<revisao>/<pavimento>/...`, servidas por um plugin do Vite (`vite.config.ts`) em dev e preview. Sem `VITE_DADOS=fixture` o build de produção **não** contém a fixture nem os JSON de teste.
+O modo fixture inclui a organização "CO-FZ" (sem logo; `localStorage['fixture-logo'] = <url>` põe um), duas etapas ("2ª ETAPA", com a HTO e uma segunda obra vazia, e "3ª ETAPA", com uma obra vazia) e alguns registros de exemplo. As imagens saem de `/__plantas/<revisao>/<pavimento>/...`, servidas por um plugin do Vite (`vite.config.ts`) em dev e preview. Sem `VITE_DADOS=fixture` o build de produção **não** contém a fixture nem os JSON de teste.
 
 Funciona em navegador comum (sem Telegram): `src/telegram.ts` devolve valores neutros quando `window.Telegram` não existe.
 
@@ -30,7 +30,7 @@ Funciona em navegador comum (sem Telegram): `src/telegram.ts` devolve valores ne
 | `VITE_DADOS` | Opcional. `fixture` usa dados de teste em vez do Supabase |
 | `VITE_TELEGRAM_BOT` | Site de administração: nome do bot (sem `@`) para o Telegram Login Widget |
 
-Em modo Supabase, sem sessão (o login pelo Telegram chega na fase 6), o app mostra "Abra o Diário da obra pelo Telegram".
+Em modo Supabase, sem sessão (o login pelo Telegram chega na fase 6), o app mostra "Abra o Fiscal Bot pelo Telegram".
 
 ## Site de administração (`/admin/`)
 

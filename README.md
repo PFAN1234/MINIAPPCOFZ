@@ -1,4 +1,4 @@
-# Mini App CO-FZ — Diário da obra
+# Mini App CO-FZ — Fiscal Bot
 
 Proposta de Mini App para Telegram destinada ao acompanhamento das obras do grupo CO-FZ. O fluxo começa no tópico **Geral**, abre a lista de obras e permite escolher a **HTO**, consultar ambientes, visualizar a proposta de modelo federado e registrar serviços ou pendências com fotos.
 

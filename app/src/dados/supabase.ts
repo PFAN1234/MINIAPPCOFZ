@@ -16,9 +16,12 @@ import type {
   Marcador,
   NovoEncerramento,
   NovoRegistro,
+  Etapa,
+  ObraDaLista,
   ObraDetalhe,
   ObraDisponivel,
   ObraResumo,
+  Organizacao,
   PapelObra,
   Participante,
   Pavimento,
@@ -50,6 +53,22 @@ export function criarClienteSupabase(opcoes?: SupabaseClientOptions<'public'>): 
     )
   }
   return createClient(url, chave, opcoes)
+}
+
+/** URL pública do logo no bucket (público) `organizacao`. */
+export function urlPublicaLogo(logoPath: string): string {
+  const base = String(import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '')
+  const caminho = logoPath.split('/').map(encodeURIComponent).join('/')
+  return `${base}/storage/v1/object/public/organizacao/${caminho}`
+}
+
+function mapearEtapa(l: Linha | null | undefined): Etapa {
+  return {
+    id: String(l?.id ?? ''),
+    slug: String(l?.slug ?? ''),
+    nome: String(l?.nome ?? ''),
+    ordem: Number(l?.ordem ?? 0),
+  }
 }
 
 function checar<T>(resposta: { data: T | null; error: { message: string } | null }): T {
@@ -303,9 +322,36 @@ export function criarRepositorioSupabase(
     },
 
     async listarObras() {
-      return checar(
-        await cliente.from('obra').select('id, slug, nome').order('ordem').order('nome'),
-      ) as ObraResumo[]
+      const linhas = checar(
+        await cliente
+          .from('obra')
+          .select('id, slug, nome, etapa(id, slug, nome, ordem)')
+          .order('ordem')
+          .order('nome'),
+      ) as Linha[]
+      return linhas.map(
+        (l): ObraDaLista => ({
+          id: String(l.id),
+          slug: String(l.slug),
+          nome: String(l.nome),
+          etapa: mapearEtapa(l.etapa as Linha | null),
+        }),
+      )
+    },
+
+    async organizacao(): Promise<Organizacao> {
+      try {
+        const { data, error } = await cliente.rpc('organizacao')
+        if (error) throw error
+        const l = (Array.isArray(data) ? data[0] : data) as Linha | null
+        const logo = typeof l?.logo_path === 'string' && l.logo_path ? l.logo_path : null
+        return {
+          nome: typeof l?.nome === 'string' ? l.nome : '',
+          logo_url: logo ? urlPublicaLogo(logo) : null,
+        }
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
     },
 
     async obterObra(slug): Promise<ObraDetalhe> {
@@ -620,6 +666,9 @@ export function criarRepositorioSupabase(
             slug: String(l.slug),
             nome: String(l.nome),
             solicitacao: l.solicitacao === 'pendente' || l.solicitacao === 'recusada' ? l.solicitacao : null,
+            etapa_id: String(l.etapa_id ?? ''),
+            etapa_nome: String(l.etapa_nome ?? ''),
+            etapa_ordem: Number(l.etapa_ordem ?? 0),
           }),
         )
       } catch (e) {

@@ -15,6 +15,7 @@ import {
   type ReactNode,
 } from 'react'
 import { EstadoCarregando, EstadoErro } from '../components/Estado.tsx'
+import { TelaDeEntrada } from '../components/FaixaIdentidade.tsx'
 import { useRepositorio } from '../dados/contexto.tsx'
 import type { TipoRegistro } from '../dados/tipos.ts'
 import { abrirArmazenamento, type Armazenamento } from './armazenamento.ts'
@@ -103,14 +104,27 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
 
   if (usuario.isError || (usuario.isSuccess && !usuarioId)) {
     return (
-      <EstadoErro
-        mensagem="Não foi possível identificar o usuário."
-        onTentarDeNovo={() => void usuario.refetch()}
-      />
+      <TelaDeEntrada>
+        <EstadoErro
+          mensagem="Não foi possível identificar o usuário."
+          onTentarDeNovo={() => void usuario.refetch()}
+        />
+      </TelaDeEntrada>
     )
   }
-  if (!usuarioId || !pronto || pronto.usuarioId !== usuarioId) return <EstadoCarregando />
+  if (!usuarioId || !pronto || pronto.usuarioId !== usuarioId) {
+    return (
+      <TelaDeEntrada>
+        <EstadoCarregando />
+      </TelaDeEntrada>
+    )
+  }
   return <Contexto.Provider value={pronto}>{children}</Contexto.Provider>
+}
+
+/** Id do usuário da sessão (para separar no aparelho o que é de cada um). */
+export function useUsuarioId(): string {
+  return usePronto().usuarioId
 }
 
 function usePronto(): Pronto {

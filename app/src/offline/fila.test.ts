@@ -40,6 +40,9 @@ function criarRepoFalso() {
     async souAdmin() {
       return false
     },
+    async organizacao() {
+      return { nome: 'CO-FZ', logo_url: null }
+    },
     async criarLinkAdmin() {
       throw new Error('n/a')
     },

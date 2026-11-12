@@ -15,6 +15,26 @@ export interface ObraResumo {
   nome: string
 }
 
+/** Etapa de implantação do campus: agrupa obras (e tem um grupo do Telegram). */
+export interface Etapa {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+}
+
+/** Obra da tela inicial (`listarObras`), com a etapa a que pertence. */
+export interface ObraDaLista extends ObraResumo {
+  etapa: Etapa
+}
+
+/** Identidade da organização militar (RPC `organizacao`). */
+export interface Organizacao {
+  nome: string
+  /** URL pública do logo no bucket `organizacao`; `null` se não houver logo. */
+  logo_url: string | null
+}
+
 export interface ImagemPlanta {
   /** Caminho no bucket `plantas`: `<obra_id>/<revisao>/<pavimento>/...`. */
   path: string
@@ -148,6 +168,9 @@ export interface ObraDisponivel {
   nome: string
   /** Estado do pedido mais recente; `null` se nunca pediu. */
   solicitacao: 'pendente' | 'recusada' | null
+  etapa_id: string
+  etapa_nome: string
+  etapa_ordem: number
 }
 
 /** Pedido de acesso pendente, visto pelo gestor da obra. */

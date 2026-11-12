@@ -10,8 +10,9 @@ import type {
   FiltroRegistros,
   LinkAdmin,
   ObraDetalhe,
+  ObraDaLista,
   ObraDisponivel,
-  ObraResumo,
+  Organizacao,
   RegistroLocalizado,
   RegistroResumo,
   SolicitacaoAcesso,
@@ -19,7 +20,8 @@ import type {
 import type { ModeloFrag } from '../modelo/modelos.ts'
 
 export interface Repositorio {
-  listarObras(): Promise<ObraResumo[]>
+  /** Obras em que o usuário participa, cada uma com a sua etapa. */
+  listarObras(): Promise<ObraDaLista[]>
   /** Pavimentos (com planta ativa), ambientes e pendências abertas por ambiente. */
   obterObra(slug: string): Promise<ObraDetalhe>
   obterAmbiente(slug: string, codigo: string): Promise<AmbienteDetalhe>
@@ -72,6 +74,8 @@ export interface Repositorio {
   souAdmin(): Promise<boolean>
   /** Link de uso único (2 min) para abrir o site de administração já com a sessão. */
   criarLinkAdmin(): Promise<LinkAdmin>
+  /** Nome e logo da organização militar (faixa de identidade do topo). */
+  organizacao(): Promise<Organizacao>
 }
 
 /**
@@ -82,10 +86,12 @@ export interface Repositorio {
 export async function criarRepositorio(): Promise<Repositorio> {
   if (import.meta.env.VITE_DADOS === 'fixture') {
     const { criarRepositorioFixture } = await import('./fixture.ts')
-    // `localStorage['fixture-admin'] = 'nao'` esconde o botão Administração.
+    // `localStorage['fixture-admin'] = 'nao'` esconde o botão Administração;
+    // `localStorage['fixture-logo'] = <url>` dá um logo à organização (capturas de tela).
     return criarRepositorioFixture({
       persistencia: localStorage,
       admin: localStorage.getItem('fixture-admin') !== 'nao',
+      logo: localStorage.getItem('fixture-logo'),
     })
   }
   const { criarRepositorioSupabase } = await import('./supabase.ts')
