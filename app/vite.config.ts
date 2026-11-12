@@ -64,15 +64,23 @@ export interface ManifestoPrecache {
 
 /**
  * Monta o manifesto de precache a partir dos nomes de arquivo do bundle.
- * Fora: mapas `.map`, o próprio manifesto e o visualizador 3D (chunk e worker: ~3,7 MB,
- * só úteis com os `.frag`, que exigem rede). `/index.html` sempre entra.
+ * Fora: mapas `.map`, o próprio manifesto, o visualizador 3D (chunk e worker: ~3,7 MB,
+ * só úteis com os `.frag`, que exigem rede) e as fontes `.woff`: o `@font-face` das fontes
+ * (@fontsource) lista o `.woff2` primeiro e todo navegador com service worker o usa; o `.woff`
+ * é só a reserva de navegadores antigos. Os `.woff2` entram. `/index.html` sempre entra.
  * A `versao` é o hash dos nomes ordenados: não depende da ordem de entrada.
  */
 export function montarManifesto(nomes: string[]): ManifestoPrecache {
   const unicos = new Set(
     nomes
       .map((n) => n.replace(/^\/+/, ''))
-      .filter((n) => n !== 'precache-manifest.json' && !n.endsWith('.map') && !/^assets\/(VisualizadorModelo|worker)-/.test(n)),
+      .filter(
+        (n) =>
+          n !== 'precache-manifest.json' &&
+          !n.endsWith('.map') &&
+          !n.endsWith('.woff') &&
+          !/^assets\/(VisualizadorModelo|worker)-/.test(n),
+      ),
   )
   unicos.add('index.html')
   const arquivos = [...unicos].sort().map((n) => `/${n}`)

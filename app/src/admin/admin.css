@@ -1,37 +1,23 @@
-/* Site de administração: layout para computador, tema claro/escuro do sistema. */
-:root {
-  color-scheme: light dark;
-  --adm-bg: #f6f7f9;
-  --adm-superficie: #ffffff;
-  --adm-texto: #1a1d21;
-  --adm-suave: #5f6b7a;
-  --adm-borda: #d9dee5;
-  --adm-destaque: #2563eb;
-  --adm-destaque-texto: #ffffff;
-  --adm-erro: #b42318;
-  --adm-erro-bg: #fef3f2;
-  --adm-ok: #067647;
-  --adm-ok-bg: #ecfdf3;
-  --adm-info-bg: #eff6ff;
-  font-family:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  line-height: 1.45;
-}
+/* Site de administração: layout para computador, sempre claro (cores de estilo/tokens.css). */
+@import '../estilo/tokens.css';
+@import '../estilo/fontes.css';
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --adm-bg: #11151a;
-    --adm-superficie: #1a2027;
-    --adm-texto: #e8ecf1;
-    --adm-suave: #9aa6b4;
-    --adm-borda: #2e3742;
-    --adm-destaque: #4f8cff;
-    --adm-erro: #ff8a80;
-    --adm-erro-bg: #3a1d1b;
-    --adm-ok: #6ce9a6;
-    --adm-ok-bg: #12301f;
-    --adm-info-bg: #16243a;
-  }
+/* Apelidos dos nomes antigos durante a migração para estilo/tokens.css (saem na V5). */
+:root {
+  --adm-bg: var(--fundo);
+  --adm-superficie: var(--superficie);
+  --adm-texto: var(--texto);
+  --adm-suave: var(--texto-suave);
+  --adm-borda: var(--borda);
+  --adm-destaque: var(--destaque);
+  --adm-destaque-texto: var(--destaque-texto);
+  --adm-erro: var(--erro);
+  --adm-erro-bg: color-mix(in srgb, var(--erro) 8%, var(--superficie));
+  --adm-ok: var(--ok);
+  --adm-ok-bg: color-mix(in srgb, var(--ok) 6%, var(--superficie));
+  --adm-info-bg: color-mix(in srgb, var(--servico) 8%, var(--superficie));
+  font-family: var(--fonte-texto);
+  line-height: 1.45;
 }
 
 * {
@@ -45,7 +31,26 @@ body {
 }
 
 a {
-  color: var(--adm-destaque);
+  color: var(--link);
+}
+
+:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+.adm-marca {
+  font-family: var(--fonte-titulo);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 code {
@@ -68,8 +73,19 @@ h2 {
   align-items: center;
   gap: 24px;
   padding: 12px 32px;
-  background: var(--adm-superficie);
-  border-bottom: 1px solid var(--adm-borda);
+  color: var(--texto-no-azul);
+  background: var(--azul);
+  border-bottom: 1px solid var(--azul-borda);
+}
+
+/* Sobre o azul, o anel de foco azul some: usa o amarelo. */
+.adm-topo :focus-visible {
+  outline-color: var(--destaque);
+}
+
+.adm-topo .adm-botao {
+  color: var(--texto-no-azul);
+  border-color: var(--azul-borda);
 }
 
 .adm-marca {
@@ -84,18 +100,18 @@ h2 {
 
 .adm-nav a {
   text-decoration: none;
-  color: var(--adm-suave);
+  color: var(--texto-suave-no-azul);
   padding: 4px 2px;
   border-bottom: 2px solid transparent;
 }
 
 .adm-nav a.active {
-  color: var(--adm-texto);
-  border-bottom-color: var(--adm-destaque);
+  color: var(--texto-no-azul);
+  border-bottom-color: var(--destaque);
 }
 
 .adm-usuario {
-  color: var(--adm-suave);
+  color: var(--texto-suave-no-azul);
 }
 
 .adm-conteudo {
@@ -192,7 +208,7 @@ select {
   padding: 6px 8px;
   border: 1px solid var(--adm-borda);
   border-radius: 6px;
-  background: var(--adm-bg);
+  background: var(--adm-superficie);
   color: var(--adm-texto);
   width: 100%;
 }
@@ -306,13 +322,13 @@ td.adm-acoes {
 }
 
 .adm-selo-revisado {
-  color: var(--adm-ok);
-  background: var(--adm-ok-bg);
+  color: #fff;
+  background: var(--ok);
   border-color: transparent;
 }
 
 .adm-selo-aguardando_revisao_humana {
-  color: #b54708;
+  color: var(--incerto);
   border-color: currentColor;
 }
 
@@ -353,15 +369,8 @@ td.adm-acoes {
 }
 
 .adm-alerta-aviso {
-  background: #fffaeb;
-  color: #7a2e0e;
-}
-
-@media (prefers-color-scheme: dark) {
-  .adm-alerta-aviso {
-    background: #3a2a10;
-    color: #fedf89;
-  }
+  background: color-mix(in srgb, var(--destaque) 14%, var(--superficie));
+  color: var(--incerto);
 }
 
 .adm-alerta ul {
@@ -412,7 +421,7 @@ td.adm-acoes {
 .adm-prancha {
   position: relative;
   border: 1px solid var(--adm-borda);
-  background: #ffffff;
+  background: var(--superficie);
   min-height: 120px;
   margin: 12px 0;
 }
@@ -434,16 +443,16 @@ td.adm-acoes {
 }
 
 .adm-ret-recorte {
-  fill: rgba(37, 99, 235, 0.06);
-  stroke: #2563eb;
+  fill: color-mix(in srgb, var(--servico) 6%, transparent);
+  stroke: var(--servico);
   stroke-width: 3;
   vector-effect: non-scaling-stroke;
   cursor: move;
 }
 
 .adm-ret-mascara {
-  fill: rgba(255, 255, 255, 0.75);
-  stroke: #dc2626;
+  fill: color-mix(in srgb, var(--superficie) 75%, transparent);
+  stroke: var(--erro);
   stroke-width: 2;
   stroke-dasharray: 6 4;
   vector-effect: non-scaling-stroke;
@@ -455,8 +464,8 @@ td.adm-acoes {
 }
 
 .adm-alca {
-  fill: #ffffff;
-  stroke: #1a1d21;
+  fill: var(--superficie);
+  stroke: var(--azul);
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
   cursor: nwse-resize;
@@ -472,11 +481,11 @@ td.adm-acoes {
 }
 
 .adm-linha-revisar td:first-child {
-  box-shadow: inset 3px 0 0 #f79009;
+  box-shadow: inset 3px 0 0 var(--incerto);
 }
 
 .adm-selo-revisar {
-  color: #b54708;
+  color: var(--incerto);
   border-color: currentColor;
   margin-left: 6px;
 }
@@ -526,24 +535,24 @@ td.adm-acoes {
 }
 
 .adm-pino {
-  fill: #dc2626;
-  stroke: #ffffff;
+  fill: var(--destaque);
+  stroke: var(--azul);
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
   cursor: grab;
 }
 
 .adm-pino-miolo {
-  fill: #ffffff;
+  fill: var(--superficie);
   stroke: none;
 }
 
 .adm-pino-sel {
-  fill: #2563eb;
+  fill: var(--servico);
 }
 
 .adm-pino-novo {
-  fill: #16a34a;
+  fill: var(--ok);
 }
 
 .adm-novo-ambiente {

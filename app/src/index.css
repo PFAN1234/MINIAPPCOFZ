@@ -1,24 +1,16 @@
-:root {
-  color-scheme: light dark;
-  --bg: var(--tg-theme-bg-color, #ffffff);
-  --bg-secundario: var(--tg-theme-secondary-bg-color, #f1f3f5);
-  --texto: var(--tg-theme-text-color, #1a1a1a);
-  --texto-suave: var(--tg-theme-hint-color, #6b7280);
-  --borda: color-mix(in srgb, var(--texto-suave) 35%, transparent);
-  font-family:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
-  line-height: 1.4;
-}
+@import './estilo/tokens.css';
+@import './estilo/fontes.css';
 
-/* Fora do Telegram, segue o tema do sistema; dentro dele, valem as variáveis --tg-theme-*. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: var(--tg-theme-bg-color, #17212b);
-    --bg-secundario: var(--tg-theme-secondary-bg-color, #232e3c);
-    --texto: var(--tg-theme-text-color, #f5f5f5);
-    --texto-suave: var(--tg-theme-hint-color, #8b9aab);
-  }
+/*
+ * Apelidos dos nomes antigos durante a migração para estilo/tokens.css (saem na V5):
+ * página em --fundo, cartões, listas e campos em --superficie.
+ * --texto, --texto-suave e --borda já vêm de tokens.css com o mesmo nome.
+ */
+:root {
+  --bg: var(--fundo);
+  --bg-secundario: var(--superficie);
+  font-family: var(--fonte-texto);
+  line-height: 1.4;
 }
 
 * {
@@ -28,8 +20,23 @@
 body {
   margin: 0;
   min-height: 100dvh;
-  background: var(--bg);
+  background: var(--fundo);
   color: var(--texto);
+}
+
+h1,
+h2,
+h3,
+.estado-titulo,
+.estado-vazio-titulo {
+  font-family: var(--fonte-titulo);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 .app {
@@ -42,8 +49,14 @@ body {
 
 .app-header {
   padding: 16px;
-  background: var(--bg-secundario);
-  border-bottom: 1px solid var(--borda);
+  color: var(--texto-no-azul);
+  background: var(--azul);
+  border-bottom: 1px solid var(--azul-borda);
+}
+
+/* Sobre o azul, o anel de foco azul some: usa o amarelo. */
+.app-header :focus-visible {
+  outline-color: var(--destaque);
 }
 
 .app-header h1 {
@@ -88,7 +101,7 @@ body {
 
 /* Acessibilidade: foco visível */
 :focus-visible {
-  outline: 2px solid var(--tg-theme-link-color, #2481cc);
+  outline: 2px solid var(--foco);
   outline-offset: 2px;
 }
 
@@ -103,15 +116,15 @@ body {
   min-height: 44px;
   padding: 0 16px;
   font: inherit;
-  color: var(--tg-theme-button-text-color, #ffffff);
-  background: var(--tg-theme-button-color, #2481cc);
+  color: var(--destaque-texto);
+  background: var(--destaque);
   border: 0;
   border-radius: 10px;
   cursor: pointer;
 }
 
 .botao-voltar {
-  color: var(--texto);
+  color: inherit;
   background: transparent;
   padding: 0 8px;
 }
@@ -192,7 +205,7 @@ body {
 }
 
 .barra-item[aria-current='page'] {
-  color: var(--tg-theme-link-color, #2481cc);
+  color: var(--link);
   font-weight: 600;
 }
 
@@ -229,7 +242,7 @@ body {
 }
 
 .subtitulo a {
-  color: var(--tg-theme-link-color, #2481cc);
+  color: var(--link);
 }
 
 .lista-item-linha {
@@ -259,33 +272,18 @@ body {
 }
 
 .selo-aberta {
-  color: #7a3b00;
-  background: #ffe2c2;
+  color: #fff;
+  background: var(--pendencia);
 }
 
 .selo-resolvida {
-  color: #14532d;
-  background: #d3f3df;
+  color: #fff;
+  background: var(--ok);
 }
 
 .selo-servico {
-  color: #0b4a7a;
-  background: #d8ecfb;
-}
-
-@media (prefers-color-scheme: dark) {
-  .selo-aberta {
-    color: #ffd2a3;
-    background: #5a3410;
-  }
-  .selo-resolvida {
-    color: #b9efcd;
-    background: #17432a;
-  }
-  .selo-servico {
-    color: #bfe0f8;
-    background: #1b3b55;
-  }
+  color: #fff;
+  background: var(--servico);
 }
 
 .registro-topo {
@@ -304,7 +302,7 @@ body {
   gap: 4px;
   padding: 4px;
   margin: 0 0 12px;
-  background: var(--bg-secundario);
+  background: var(--borda-fraca);
   border-radius: 12px;
 }
 
@@ -324,8 +322,8 @@ body {
 .aba[aria-selected='true'] {
   color: var(--texto);
   font-weight: 600;
-  background: var(--bg);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.18);
+  background: var(--superficie);
+  box-shadow: 0 1px 3px rgb(11 22 37 / 0.18);
 }
 
 .campo-busca {
@@ -362,8 +360,8 @@ body {
 
 /* Planta */
 .aba-planta {
-  --pino-cor: var(--tg-theme-button-color, #2481cc);
-  --pino-texto: var(--tg-theme-button-text-color, #ffffff);
+  --pino-cor: var(--destaque);
+  --pino-texto: var(--destaque-texto);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -392,10 +390,10 @@ body {
   margin: 4px 0 0;
   padding: 4px;
   list-style: none;
-  background: var(--bg);
+  background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: 10px;
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.2);
+  box-shadow: 0 4px 16px rgb(11 22 37 / 0.2);
 }
 
 .planta-sugestao {
@@ -443,7 +441,7 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #fff;
+  background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: 10px;
   touch-action: none;
@@ -482,22 +480,22 @@ body {
 }
 
 .pino-forma {
-  fill: var(--pino-cor, #2481cc);
-  stroke: #fff;
+  fill: var(--pino-cor, var(--destaque));
+  stroke: var(--azul);
   stroke-width: 1.5;
 }
 
 .pino-furo {
-  fill: #fff;
+  fill: var(--pino-texto, var(--destaque-texto));
 }
 
 .pino:focus-visible .pino-forma {
-  stroke: #000;
+  stroke: var(--foco);
   stroke-width: 2.5;
 }
 
 .pino-selo circle {
-  fill: #d93025;
+  fill: var(--pendencia);
   stroke: #fff;
   stroke-width: 1.5;
 }
@@ -542,7 +540,7 @@ body {
   display: block;
   width: 100%;
   overflow: hidden;
-  background: #fff;
+  background: var(--superficie);
   border-radius: 8px;
 }
 
@@ -556,12 +554,13 @@ body {
 
 .onde-fica-mapa svg {
   overflow: visible;
-  --pino-cor: var(--tg-theme-button-color, #2481cc);
+  --pino-cor: var(--destaque);
+  --pino-texto: var(--destaque-texto);
 }
 
 .onde-fica-acao {
   min-height: 24px;
-  color: var(--tg-theme-link-color, #2481cc);
+  color: var(--link);
   font-weight: 600;
 }
 
@@ -668,7 +667,7 @@ body {
   color: #fff;
   font-size: 0.75rem;
   text-align: center;
-  background: rgb(0 0 0 / 0.6);
+  background: color-mix(in srgb, var(--azul) 60%, transparent);
 }
 
 .foto-status-erro {
@@ -677,7 +676,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 6px;
-  background: rgb(150 20 20 / 0.85);
+  background: color-mix(in srgb, var(--erro) 85%, transparent);
 }
 
 .foto-remover {
@@ -690,7 +689,7 @@ body {
   color: #fff;
   font-size: 1.2rem;
   line-height: 1;
-  background: rgb(0 0 0 / 0.65);
+  background: color-mix(in srgb, var(--azul) 65%, transparent);
   border: 0;
   border-radius: 50%;
   cursor: pointer;
@@ -732,29 +731,22 @@ body {
 }
 
 .segmentado input:checked + span {
-  color: var(--tg-theme-button-text-color, #fff);
+  color: var(--destaque-texto);
   font-weight: 600;
-  background: var(--tg-theme-button-color, #2481cc);
+  background: var(--destaque);
 }
 
 .segmentado input:focus-visible + span {
-  outline: 2px solid var(--tg-theme-link-color, #2481cc);
+  outline: 2px solid var(--foco);
   outline-offset: 2px;
 }
 
 .form-erro {
   margin: 0;
   padding: 10px 12px;
-  color: #7a1010;
-  background: #fde0e0;
+  color: var(--erro);
+  background: color-mix(in srgb, var(--erro) 10%, var(--superficie));
   border-radius: 10px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .form-erro {
-    color: #ffd0d0;
-    background: #5a1a1a;
-  }
 }
 
 .botao-bloco {
@@ -771,18 +763,18 @@ body {
   gap: 8px;
   margin-bottom: 12px;
   padding: 10px 12px;
-  color: #14532d;
+  color: #fff;
   font-weight: 600;
-  background: #d3f3df;
+  background: var(--ok);
   border-radius: 10px;
 }
 
 .aviso-inativo {
   margin: 0 0 12px;
   padding: 10px 12px;
-  color: #713f12;
+  color: var(--texto);
   font-size: 0.9rem;
-  background: #fdf0c4;
+  background: color-mix(in srgb, var(--destaque) 22%, var(--superficie));
   border-radius: 10px;
 }
 
@@ -794,18 +786,6 @@ body {
   background: transparent;
   border: 0;
   cursor: pointer;
-}
-
-@media (prefers-color-scheme: dark) {
-  .aviso {
-    color: #b9efcd;
-    background: #17432a;
-  }
-
-  .aviso-inativo {
-    color: #f6dfa0;
-    background: #4a3a10;
-  }
 }
 
 .registro-item {
@@ -851,7 +831,7 @@ body {
   color: #fff;
   font-size: 0.75rem;
   font-weight: 600;
-  background: rgb(0 0 0 / 0.65);
+  background: color-mix(in srgb, var(--azul) 65%, transparent);
   border-radius: 999px;
 }
 
@@ -871,7 +851,7 @@ body {
 }
 
 .publicacao-ok {
-  color: #1d7a42;
+  color: var(--ok);
 }
 
 .publicacao-espera {
@@ -879,7 +859,7 @@ body {
 }
 
 .publicacao-problema {
-  color: #b42318;
+  color: var(--erro);
 }
 
 .visualizador {
@@ -889,7 +869,7 @@ body {
   display: flex;
   flex-direction: column;
   color: #fff;
-  background: #000;
+  background: var(--azul);
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -968,7 +948,7 @@ body {
 }
 
 .barra-sinc-erro p {
-  color: #b42318;
+  color: var(--erro);
   font-weight: 600;
 }
 
@@ -981,7 +961,7 @@ body {
   align-items: center;
   min-height: 44px;
   padding: 0 8px;
-  color: var(--tg-theme-link-color, #2481cc);
+  color: var(--link);
 }
 
 .registro-coluna {
@@ -1014,14 +994,8 @@ body {
 
 .erro-texto {
   margin: 8px 0 0;
-  color: #b42318;
+  color: var(--erro);
   font-size: 0.9rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .erro-texto {
-    color: #fda29b;
-  }
 }
 
 .aviso-fixo {
@@ -1037,15 +1011,16 @@ body {
 }
 
 .registro-destaque {
-  outline: 2px solid var(--tg-theme-link-color, #2481cc);
+  outline: 2px solid var(--foco);
   outline-offset: 2px;
 }
 
 /* Fase 7: obra, modelo, pendências, detalhe e gestão */
+/* Cartões informativos (modelo 3D, aviso do modelo) e contagem dos atalhos, em azul. */
 :root {
-  --destaque: var(--tg-theme-button-color, #2481cc);
-  --destaque-suave: color-mix(in srgb, var(--destaque) 12%, var(--bg));
-  --destaque-borda: color-mix(in srgb, var(--destaque) 35%, transparent);
+  --info: var(--servico);
+  --info-suave: color-mix(in srgb, var(--info) 10%, var(--superficie));
+  --info-borda: color-mix(in srgb, var(--info) 35%, transparent);
 }
 
 .voltar-linha {
@@ -1054,7 +1029,7 @@ body {
 }
 
 .voltar-linha a {
-  color: var(--tg-theme-link-color, #2481cc);
+  color: var(--link);
   text-decoration: none;
 }
 
@@ -1074,14 +1049,14 @@ body {
   margin: 0 0 12px;
   color: var(--texto);
   text-decoration: none;
-  background: var(--destaque-suave);
-  border: 1px solid var(--destaque-borda);
+  background: var(--info-suave);
+  border: 1px solid var(--info-borda);
   border-radius: 12px;
 }
 
 .cartao-modelo-icone {
   display: flex;
-  color: var(--destaque);
+  color: var(--info);
 }
 
 .cartao-modelo-texto {
@@ -1121,12 +1096,12 @@ body {
   color: #fff;
   font-size: 0.75rem;
   text-align: center;
-  background: var(--destaque);
+  background: var(--info);
   border-radius: 999px;
 }
 
 .atalho-selo-alerta {
-  background: #d9480f;
+  background: var(--pendencia);
 }
 
 .cartao-info {
@@ -1135,8 +1110,8 @@ body {
   align-items: flex-start;
   padding: 14px;
   margin: 0 0 8px;
-  background: var(--destaque-suave);
-  border: 1px solid var(--destaque-borda);
+  background: var(--info-suave);
+  border: 1px solid var(--info-borda);
   border-radius: 12px;
 }
 
@@ -1146,7 +1121,7 @@ body {
 
 .cartao-info-icone {
   display: flex;
-  color: var(--destaque);
+  color: var(--info);
 }
 
 .chips {
@@ -1385,7 +1360,7 @@ body {
 .participante-acoes select {
   flex: none;
   padding: 0 8px;
-  background: var(--bg);
+  background: var(--superficie);
   border: 1px solid var(--borda);
   border-radius: 8px;
 }
@@ -1427,11 +1402,11 @@ body {
   font-size: 0.9rem;
   text-align: center;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  background: color-mix(in srgb, var(--superficie) 85%, transparent);
 }
 
 .visualizador-erro {
-  color: #c0392b;
+  color: var(--erro);
 }
 
 .visualizador-enquadrar {
@@ -1441,7 +1416,7 @@ body {
 }
 
 .chip[aria-pressed='true'] {
-  color: var(--tg-theme-button-text-color, #fff);
+  color: var(--destaque-texto);
   background: var(--destaque);
   border-color: var(--destaque);
 }

@@ -36,3 +36,23 @@ test('app abre offline pelo service worker, inclusive em rota profunda', async (
   await expect(page.getByRole('heading').first()).toBeVisible()
   await context.setOffline(false)
 })
+
+test('o precache do Mini App traz as fontes do app (.woff2), sem a reserva .woff', async ({ request }) => {
+  const resposta = await request.get('/precache-manifest.json')
+  expect(resposta.ok()).toBe(true)
+  const { arquivos } = (await resposta.json()) as { arquivos: string[] }
+
+  for (const fonte of [
+    'barlow-latin-400',
+    'barlow-latin-500',
+    'barlow-latin-600',
+    'barlow-latin-700',
+    'barlow-semi-condensed-latin-600',
+    'barlow-semi-condensed-latin-700',
+  ]) {
+    expect(arquivos.filter((a) => a.startsWith(`/assets/${fonte}-normal-`) && a.endsWith('.woff2'))).toHaveLength(1)
+  }
+  expect(arquivos.filter((a) => a.endsWith('.woff'))).toEqual([])
+  // Só os pesos usados: nada além das seis fontes.
+  expect(arquivos.filter((a) => /\.(woff2?|ttf|otf)$/.test(a))).toHaveLength(6)
+})

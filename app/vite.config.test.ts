@@ -30,6 +30,13 @@ describe('montarManifesto', () => {
     expect(arquivos).toEqual(montarManifesto(nomes).arquivos)
   })
 
+  it('inclui as fontes .woff2 e deixa fora a reserva .woff', () => {
+    const fontes = ['assets/barlow-latin-400-normal-a1.woff2', 'assets/barlow-latin-400-normal-b2.woff']
+    const { arquivos } = montarManifesto([...nomes, ...fontes])
+    expect(arquivos).toContain('/assets/barlow-latin-400-normal-a1.woff2')
+    expect(arquivos).not.toContain('/assets/barlow-latin-400-normal-b2.woff')
+  })
+
   it('versão é estável e independe da ordem', () => {
     const a = montarManifesto(nomes)
     const b = montarManifesto([...nomes].reverse())

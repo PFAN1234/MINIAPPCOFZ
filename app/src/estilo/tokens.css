@@ -1,0 +1,43 @@
+/*
+ * Cores e fontes do Diário da obra (direção B · Canteiro). Valem para o Mini App e para o
+ * site de administração. Tema sempre claro: o app não segue o tema do Telegram nem o do sistema.
+ * Tabela e contrastes conferidos em tasks/plano-visual.md.
+ */
+:root {
+  color-scheme: light;
+
+  /* Azul-escuro: topo, títulos, texto forte, botões escuros. */
+  --azul: #0B1625;
+  --azul-painel: #17283E;
+  --azul-borda: #263A55;
+  --azul-area: #122136;
+
+  /* Telas claras. */
+  --fundo: #ECEFF3;
+  --superficie: #FFFFFF;
+  --texto: #0B1625;
+  --texto-suave: #4A5868;
+  --texto-no-azul: #FFFFFF;
+  --texto-suave-no-azul: #C3D1E2;
+  --borda: #CBD3DD;
+  --borda-fraca: #DCE2E9;
+
+  /* Ação principal (amarelo): o texto por cima é sempre --destaque-texto. */
+  --destaque: #F5B700;
+  --destaque-texto: #0B1625;
+
+  /* Estados. Pendência e serviço levam texto branco por cima. */
+  --pendencia: #C2410C;
+  --servico: #2459B8;
+  --ok: #157F3B;
+  --incerto: #8A5300;
+  --erro: #B42318;
+
+  /* Links e anel de foco. */
+  --link: var(--servico);
+  --foco: var(--servico);
+
+  /* Fontes servidas pelo próprio app (ver estilo/fontes.css). */
+  --fonte-texto: 'Barlow', system-ui, sans-serif;
+  --fonte-titulo: 'Barlow Semi Condensed', 'Barlow', system-ui, sans-serif;
+}
