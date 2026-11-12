@@ -9,7 +9,9 @@ export interface ClienteRpc {
   rpc(
     nome: string,
     args?: Record<string, unknown>,
-  ): PromiseLike<{ data: unknown; error: { message: string } | null }>;
+  ): PromiseLike<
+    { data: unknown; error: { message: string; code?: string } | null }
+  >;
 }
 
 export interface Segredos {

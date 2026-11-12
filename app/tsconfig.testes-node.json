@@ -5,6 +5,6 @@
     "lib": ["ES2023", "DOM"],
     "types": ["node", "vite/client"]
   },
-  "include": ["src/**/*.node.test.ts"],
+  "include": ["src/**/*.node.test.ts", "src/admin/modelo/globais.d.ts"],
   "exclude": []
 }

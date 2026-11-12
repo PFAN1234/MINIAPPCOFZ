@@ -101,3 +101,41 @@ export function useInvalidarPlanta() {
   const qc = useQueryClient()
   return () => qc.invalidateQueries({ queryKey: ['admin'], predicate: (q) => q.queryKey[1] !== 'sessao' })
 }
+
+export function useModelosAdmin(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'modelos', slug], queryFn: () => repo.listarModelosAdmin(slug) })
+}
+
+export function useRetirarModelo(slug: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (sigla: string) => repo.retirarModelo(slug, sigla), onSuccess: invalidar })
+}
+
+export function useArquivarObra(slug: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (arquivada: boolean) => repo.arquivarObra(slug, arquivada), onSuccess: invalidar })
+}
+
+export function useResumoObra(slug: string, ativo: boolean) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'resumo', slug], queryFn: () => repo.resumoObra(slug), enabled: ativo })
+}
+
+export function useExcluirObra(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useMutation({ mutationFn: (confirmacao: string) => repo.excluirObra(slug, confirmacao) })
+}
+
+export function useExclusoes() {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'exclusoes'], queryFn: () => repo.listarExclusoes() })
+}
+
+export function useLimparExclusao() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (id: string) => repo.limparExclusao(id), onSuccess: invalidar })
+}

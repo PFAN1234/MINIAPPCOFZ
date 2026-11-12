@@ -3,15 +3,21 @@ import type {
   Bucket,
   ConfigObra,
   DadosEditorPlanta,
+  DadosModelos,
   DadosObra,
   DadosWidget,
+  Exclusao,
   EstadoSessao,
   ObraAdmin,
   ObraLista,
+  ModeloAdmin,
   ObraSalva,
   PavimentoResumo,
   Publicacao,
+  RegistroModelo,
+  ResultadoExclusao,
   ResultadoPublicacao,
+  ResumoObra,
   UsuarioApp,
 } from './tipos.ts'
 
@@ -33,6 +39,15 @@ export interface RepositorioAdmin {
   salvarPavimentos(slug: string, lista: PavimentoResumo[]): Promise<PavimentoResumo[]>
   salvarConfig(slug: string, config: ConfigObra): Promise<void>
   exportarObra(slug: string): Promise<unknown>
+  /** Arquiva (true) ou desarquiva (false); devolve `arquivada_em`. */
+  arquivarObra(slug: string, arquivada: boolean): Promise<string | null>
+  /** Contagens do que a exclusão apaga. */
+  resumoObra(slug: string): Promise<ResumoObra>
+  /** Edge Function `admin-excluir-obra`: apaga a obra, tudo dela e os arquivos. Irreversível. */
+  excluirObra(slug: string, confirmacao: string): Promise<ResultadoExclusao>
+  listarExclusoes(): Promise<Exclusao[]>
+  /** Tenta de novo remover os arquivos de uma exclusão que ficou pendente. */
+  limparExclusao(id: string): Promise<ResultadoExclusao>
 
   /** Planta (fase 2): ambientes, planta ativa e último PDF guardado de cada pavimento. */
   obterEditorPlanta(slug: string): Promise<DadosEditorPlanta>
@@ -43,6 +58,13 @@ export interface RepositorioAdmin {
   baixarOriginal(caminho: string): Promise<Uint8Array>
   /** RPC `admin_publicar_revisao` (payload montado em planta/publicar.ts). */
   publicarRevisao(slug: string, payload: unknown): Promise<ResultadoPublicacao>
+
+  /** Modelo 3D (fase 3): modelos publicados e histórico (`admin_listar_modelos`). */
+  listarModelosAdmin(slug: string): Promise<DadosModelos>
+  /** RPC `admin_registrar_modelo`, depois de enviar o `.frag` ao bucket `modelos`. */
+  registrarModelo(slug: string, registro: RegistroModelo): Promise<ModeloAdmin>
+  /** RPC `admin_retirar_modelo`: tira a disciplina do visualizador (o arquivo fica guardado). */
+  retirarModelo(slug: string, sigla: string): Promise<void>
 
   listarAdmins(): Promise<Admin[]>
   incluirAdmin(usuarioId: string): Promise<void>

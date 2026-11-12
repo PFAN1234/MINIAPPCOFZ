@@ -52,7 +52,10 @@ export interface AmbienteManual {
   pavimento: string
   nome_operacional: string
   categoria: string
+  /** Primeiro pino (o único, se não houver `marcadores`). */
   marcador: { x: number; y: number }
+  /** Todos os pinos, quando o ambiente tem mais de um (o primeiro igual a `marcador`). */
+  marcadores?: { x: number; y: number }[]
   observacao?: string
 }
 
