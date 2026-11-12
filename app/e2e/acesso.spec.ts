@@ -50,7 +50,7 @@ test('o gestor aprova o pedido da Maria', async ({ page }) => {
 test('link startapp registro_<id> abre o ambiente com o visualizador', async ({ page }) => {
   await page.addInitScript(telegramComParametro(`registro_${ID_REGISTRO}`))
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Apto. 101', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
   await expect(page).toHaveURL(new RegExp(`aba=pendencias&registro=${ID_REGISTRO}`))
   const dialogo = page.getByRole('dialog')
   await expect(dialogo).toBeVisible()

@@ -23,9 +23,10 @@ vi.mock('../modelo/VisualizadorModelo.tsx', () => ({
 }))
 
 describe('Obra: cartão do modelo e atalhos', () => {
-  it('mostra "← Obras", o cartão do modelo federado e os atalhos (gestor)', async () => {
+  it('mostra o link "Obras" no topo, o cartão do modelo federado e os atalhos (gestor)', async () => {
     renderizarApp('/obras/hto')
-    expect(await screen.findByRole('link', { name: '← Obras' })).toHaveAttribute('href', '/')
+    expect(await screen.findByRole('heading', { level: 1, name: 'HTO' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Obras' })).toHaveAttribute('href', '/')
     expect(screen.getByRole('link', { name: /Visualizar modelo federado/ })).toHaveAttribute(
       'href',
       '/obras/hto/modelo',
@@ -52,8 +53,8 @@ describe('Obra: cartão do modelo e atalhos', () => {
     const usuario = userEvent.setup()
     renderizarApp('/obras/hto', repoComModelos([]))
     await usuario.click(await screen.findByRole('link', { name: /Visualizar modelo federado/ }))
-    expect(await screen.findByRole('heading', { level: 2, name: 'Modelo federado' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '← HTO' })).toHaveAttribute('href', '/obras/hto')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Modelo federado' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'HTO' })).toHaveAttribute('href', '/obras/hto')
     expect(await screen.findByText('Esta obra ainda não tem modelos 3D publicados.')).toBeInTheDocument()
     const chips = within(screen.getByRole('list', { name: 'Modelos' })).getAllByRole('button')
     expect(chips.map((c) => c.textContent)).toEqual(['ARQ', 'ELT', 'HID', 'ESG', 'DRE', 'PCI', 'VES', 'TLD', 'ANT'])

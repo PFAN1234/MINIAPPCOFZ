@@ -6,19 +6,17 @@ import { CartaoPendencia } from '../components/CartaoPendencia.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { IconeFiltro } from '../components/Icones.tsx'
 import { RegistroLocal } from '../components/RegistroLocal.tsx'
+import { TopoTela } from '../components/TopoTela.tsx'
 import { useAvisoDaRota } from '../components/useAvisoDaRota.ts'
 import { useObra, useObras, useRegistros } from '../dados/hooks.ts'
 import type { RegistroResumo } from '../dados/tipos.ts'
 import { useRegistrosLocais } from '../offline/contexto.tsx'
 import { ordenarNatural } from '../util/ordenacao.ts'
 
-function VoltarParaObra({ slug }: { slug: string }) {
+/** Na rota da obra, o subtítulo do topo leva de volta à obra. */
+function LinkDaObra({ slug }: { slug: string }) {
   const obra = useObra(slug)
-  return (
-    <p className="voltar-linha">
-      <Link to={`/obras/${slug}`}>← {obra.data?.obra.nome ?? 'Obra'}</Link>
-    </p>
-  )
+  return <Link to={`/obras/${slug}`}>{obra.data?.obra.nome ?? 'Obra'}</Link>
 }
 
 /**
@@ -57,11 +55,13 @@ export default function Pendencias() {
 
   return (
     <section aria-labelledby="titulo-pendencias">
+      <TopoTela
+        lista
+        titulo="Pendências"
+        idTitulo="titulo-pendencias"
+        subtitulo={slug ? <LinkDaObra slug={slug} /> : undefined}
+      />
       {aviso && <Aviso texto={aviso} onFechar={fecharAviso} />}
-      {slug && <VoltarParaObra slug={slug} />}
-      <h2 id="titulo-pendencias" className="titulo-tela">
-        Pendências
-      </h2>
       <EstadoConsulta consulta={registros}>
         {(lista) => {
           const doFiltro = lista.filter(

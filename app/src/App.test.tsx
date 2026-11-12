@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -41,15 +41,15 @@ describe('navegação com a fixture', () => {
   it('Obras → HTO → Apto. 101', async () => {
     const usuario = userEvent.setup()
     renderizar()
-    expect(await screen.findByRole('heading', { level: 2, name: 'Obras' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Obras' })).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: /Residencial Aurora/ })).toBeInTheDocument()
 
     await usuario.click(await screen.findByRole('link', { name: /^HTO/ }))
-    expect(await screen.findByRole('heading', { level: 2, name: 'HTO' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'HTO' })).toBeInTheDocument()
 
     await usuario.click(await screen.findByRole('link', { name: /Apto\. 101/ }))
     expect(
-      await screen.findByRole('heading', { level: 2, name: 'Apto. 101' }),
+      await screen.findByRole('heading', { level: 1, name: 'Apto. 101' }),
     ).toBeInTheDocument()
     expect(screen.getByText(/Térreo/)).toBeInTheDocument()
   })
@@ -57,10 +57,24 @@ describe('navegação com a fixture', () => {
   it('a barra inferior leva às Pendências (abertas, de todas as obras)', async () => {
     const usuario = userEvent.setup()
     renderizar()
-    await usuario.click(await screen.findByRole('link', { name: 'Pendências' }))
-    expect(await screen.findByRole('heading', { level: 2, name: 'Pendências' })).toBeInTheDocument()
+    const navegacao = await screen.findByRole('navigation', { name: 'Navegação principal' })
+    // Com as pendências do Início carregadas, o rótulo leva a contagem.
+    const item = await within(navegacao).findByRole('link', { name: 'Pendências · 3 abertas' })
+    await usuario.click(item)
+    expect(await screen.findByRole('heading', { level: 1, name: 'Pendências' })).toBeInTheDocument()
+    expect(item).toHaveAttribute('aria-current', 'page')
     expect(await screen.findByRole('tab', { name: 'Abertas (3)' })).toHaveAttribute('aria-selected', 'true')
     expect(await screen.findAllByRole('link', { name: /Aberta/ })).toHaveLength(3)
+  })
+
+  it('endereço inexistente mostra a 404 com "Voltar ao início"', async () => {
+    const usuario = userEvent.setup()
+    renderizar('/nao-existe')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Página não encontrada' })).toBeInTheDocument()
+    const inicio = screen.getByRole('link', { name: 'Voltar ao início' })
+    expect(inicio).toHaveAttribute('href', '/')
+    await usuario.click(inicio)
+    expect(await screen.findByRole('heading', { level: 1, name: 'Obras' })).toBeInTheDocument()
   })
 
   it('mostra erro com "Tentar de novo"', async () => {
@@ -202,7 +216,7 @@ describe('acesso às obras', () => {
     expect(await screen.findByRole('link', { name: 'Gestão 3' })).toHaveAttribute('href', '/obras/hto/gestao')
     cleanup()
     renderizar('/obras/hto/acessos')
-    expect(await screen.findByRole('heading', { level: 2, name: 'Pedidos de acesso' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Pedidos de acesso' })).toBeInTheDocument()
     expect(await screen.findByText('Maria Souza')).toBeInTheDocument()
     expect(screen.getByText('@maria')).toBeInTheDocument()
     await usuario.click(screen.getByRole('button', { name: /Aprovar/ }))
@@ -261,7 +275,7 @@ describe('abertura por link startapp', () => {
     sessionStorage.clear()
     simularTelegram(`registro_${ID_REGISTRO}`)
     renderizar('/')
-    expect(await screen.findByRole('heading', { level: 2, name: 'Apto. 101' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Apto. 101' })).toBeInTheDocument()
     expect(await screen.findByRole('dialog')).toBeInTheDocument()
     const item = screen.getByText(/Tomada da sala/).closest('li')
     expect(item).toHaveClass('registro-destaque')
@@ -272,7 +286,7 @@ describe('abertura por link startapp', () => {
     sessionStorage.clear()
     simularTelegram('acessos_hto')
     renderizar('/')
-    expect(await screen.findByRole('heading', { level: 2, name: 'Pedidos de acesso' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Pedidos de acesso' })).toBeInTheDocument()
   })
 
   it('registro inexistente mostra o aviso', async () => {
@@ -286,7 +300,7 @@ describe('abertura por link startapp', () => {
     sessionStorage.setItem('startapp-consumido', 'acessos_hto')
     simularTelegram('acessos_hto')
     renderizar('/')
-    expect(await screen.findByRole('heading', { level: 2, name: 'Obras' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Obras' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Pedidos de acesso' })).not.toBeInTheDocument()
   })
 })

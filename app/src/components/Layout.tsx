@@ -1,37 +1,29 @@
 import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router'
-import { dentroDoTelegram } from '../telegram.ts'
-import { useBackButtonTelegram, useVoltar } from '../telegramBack.ts'
+import { Outlet } from 'react-router'
+import { useBackButtonTelegram } from '../telegramBack.ts'
 import { BarraSincronizacao } from './BarraSincronizacao.tsx'
 import { BarraInferior } from './BarraInferior.tsx'
+import { FaixaDoTopo } from './faixaDoTopo.ts'
 import { TelaCheiaContexto } from './telaCheia.ts'
 
+/**
+ * Moldura das telas. O nome do app já aparece no cabeçalho do Telegram; cada tela desenha o
+ * próprio topo (`TopoTela`), que mostra a faixa de envio logo abaixo do azul.
+ */
 export function Layout() {
   const [telaCheia, setTelaCheia] = useState(false)
-  const { pathname } = useLocation()
-  const voltar = useVoltar()
   useBackButtonTelegram()
-
-  // Fora do Telegram não há BackButton nativo: oferece um botão na página.
-  const botaoVoltar = pathname !== '/' && !dentroDoTelegram()
 
   return (
     <TelaCheiaContexto.Provider value={setTelaCheia}>
-      <div className="app">
-        <header className="app-header">
-          {botaoVoltar && (
-            <button type="button" className="botao-voltar" onClick={voltar}>
-              ← Voltar
-            </button>
-          )}
-          <h1>Diário da obra</h1>
-        </header>
-        <BarraSincronizacao />
-        <main className="app-main">
-          <Outlet />
-        </main>
-        {!telaCheia && <BarraInferior />}
-      </div>
+      <FaixaDoTopo.Provider value={<BarraSincronizacao />}>
+        <div className="app">
+          <main className="app-main">
+            <Outlet />
+          </main>
+          {!telaCheia && <BarraInferior />}
+        </div>
+      </FaixaDoTopo.Provider>
     </TelaCheiaContexto.Provider>
   )
 }

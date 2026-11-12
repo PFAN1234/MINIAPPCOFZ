@@ -3,8 +3,10 @@ import { Link } from 'react-router'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { ListaRegistros } from '../components/ListaRegistros.tsx'
+import { TopoTela } from '../components/TopoTela.tsx'
 import type { ObraDisponivel } from '../dados/tipos.ts'
 import {
+  FILTRO_PENDENCIAS_ABERTAS,
   useCriarLinkAdmin,
   useObras,
   useObrasDisponiveis,
@@ -24,7 +26,7 @@ export default function Obras() {
   const obras = useObras()
   const recentes = useRegistros({ limite: 5 })
   const locais = useRegistrosLocais()
-  const abertas = useRegistros({ tipo: 'pendencia', situacao: 'aberta' })
+  const abertas = useRegistros(FILTRO_PENDENCIAS_ABERTAS)
   const [busca, setBusca] = useState('')
   const online = useOnline()
   const disponiveis = useObrasDisponiveis()
@@ -40,8 +42,8 @@ export default function Obras() {
 
   return (
     <>
+      <TopoTela lista titulo="Obras" idTitulo="titulo-obras" />
       <section aria-labelledby="titulo-obras">
-        <h2 id="titulo-obras">Obras</h2>
         <EstadoConsulta consulta={obras}>
           {(lista) => {
             if (lista.length === 0) {

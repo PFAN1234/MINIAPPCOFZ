@@ -7,6 +7,7 @@ import Acessos from './telas/Acessos.tsx'
 import Ambiente from './telas/Ambiente.tsx'
 import Gestao from './telas/Gestao.tsx'
 import Modelo from './telas/Modelo.tsx'
+import NaoEncontrada from './telas/NaoEncontrada.tsx'
 import NovoRegistro from './telas/NovoRegistro.tsx'
 import Obra from './telas/Obra.tsx'
 import Obras from './telas/Obras.tsx'
@@ -33,10 +34,7 @@ export default function App() {
             <Route path="obras/:slug/gestao" element={<Gestao />} />
             <Route path="obras/:slug/ambientes/:codigo" element={<Ambiente />} />
             <Route path="obras/:slug/ambientes/:codigo/novo" element={<NovoRegistro />} />
-            <Route
-              path="*"
-              element={<p>Página não encontrada.</p>}
-            />
+            <Route path="*" element={<NaoEncontrada />} />
           </Route>
         </Routes>
       </OfflineProvider>

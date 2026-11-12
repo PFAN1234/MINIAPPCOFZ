@@ -6,6 +6,7 @@ import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { useTelaCheia } from '../components/telaCheia.ts'
 import { IconeChevron, IconeCubo } from '../components/Icones.tsx'
+import { TopoTela } from '../components/TopoTela.tsx'
 import { useObra, usePublicacoesProblema, useSolicitacoes } from '../dados/hooks.ts'
 import type { ObraDetalhe } from '../dados/tipos.ts'
 import { filtrarAmbientes } from '../util/busca.ts'
@@ -21,8 +22,15 @@ export default function Obra() {
   const { slug = '' } = useParams()
   const obra = useObra(slug)
   return (
-    <EstadoConsulta consulta={obra}>{(detalhe) => <ObraCarregada detalhe={detalhe} />}</EstadoConsulta>
+    <EstadoConsulta consulta={obra} topo={<TopoTela titulo="Obra" sobretitulo={<LinkObras />} />}>
+      {(detalhe) => <ObraCarregada detalhe={detalhe} />}
+    </EstadoConsulta>
   )
+}
+
+/** A volta para a lista de obras (antes "← Obras") fica na linha acima do título. */
+function LinkObras() {
+  return <Link to="/">Obras</Link>
 }
 
 function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
@@ -53,12 +61,7 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
 
   const cabecalho = (
     <>
-      <p className="voltar-linha">
-        <Link to="/">← Obras</Link>
-      </p>
-      <h2 id="titulo-obra" className="titulo-tela">
-        {obra.nome}
-      </h2>
+      <TopoTela titulo={obra.nome} idTitulo="titulo-obra" sobretitulo={<LinkObras />} />
       <Link className="cartao-modelo" to={`/obras/${obra.slug}/modelo`}>
         <span className="cartao-modelo-icone">
           <IconeCubo tamanho={32} />

@@ -27,7 +27,7 @@ function comInativo(codigo: string): Repositorio {
 describe('ambiente inativo (saiu da planta numa revisão)', () => {
   it('a tela abre com o aviso, sem "Onde fica", e mantém o histórico', async () => {
     renderizarApp('/obras/hto/ambientes/terreo-apto-101', comInativo('terreo-apto-101'))
-    expect(await screen.findByRole('heading', { level: 2, name: 'Apto. 101' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Apto. 101' })).toBeInTheDocument()
     expect(screen.getByRole('note')).toHaveTextContent(AVISO)
     expect(screen.queryByText('Onde fica')).not.toBeInTheDocument()
     expect(
@@ -37,7 +37,7 @@ describe('ambiente inativo (saiu da planta numa revisão)', () => {
 
   it('ambiente ativo não mostra o aviso', async () => {
     renderizarApp('/obras/hto/ambientes/terreo-apto-101')
-    expect(await screen.findByRole('heading', { level: 2, name: 'Apto. 101' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Apto. 101' })).toBeInTheDocument()
     expect(await screen.findByText('Onde fica')).toBeInTheDocument()
     expect(screen.queryByText(AVISO)).not.toBeInTheDocument()
   })

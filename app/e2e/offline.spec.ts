@@ -25,7 +25,7 @@ function botaoSalvar(page: Page): Locator {
 }
 
 function cabecalhoAmbiente(page: Page): Locator {
-  return page.getByRole('heading', { name: 'Apto. 101', level: 2 })
+  return page.getByRole('heading', { name: 'Apto. 101', level: 1 })
 }
 
 /** Anexa a foto pela Galeria e espera a miniatura deixar de estar "preparando…". */
@@ -110,9 +110,9 @@ async function prepararAparelhoParaOffline(page: Page) {
   await esperarCacheNoAparelho(page)
 }
 
-/** Sem sinal, a barra mostra o aviso de envio pendente. */
+/** Sem sinal, a faixa (região `status`, com o botão "Enviar") mostra o aviso de envio pendente. */
 function avisoAguardandoEnvio(page: Page, quantidade: string): Locator {
-  return page.getByRole('status').filter({ hasText: new RegExp(`^${quantidade} registros? aguardando envio$`) })
+  return page.getByRole('status').filter({ hasText: new RegExp(`^${quantidade} registros? aguardando envio`) })
 }
 
 test('fluxo completo: salva sem sinal, sobrevive a recarga offline e envia ao voltar o sinal', async ({
@@ -127,7 +127,7 @@ test('fluxo completo: salva sem sinal, sobrevive a recarga offline e envia ao vo
   // Novo registro sem sinal: a navegação é pelo app, já que o Ambiente está em memória.
   await page.getByRole('button', { name: 'Novo registro' }).click()
   await expect(page).toHaveURL(new RegExp(`${ROTA_NOVO}$`))
-  await expect(page.getByRole('heading', { name: 'Novo registro', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Novo registro', level: 1 })).toBeVisible()
   await anexarFoto(page)
   await escolherTipo(page, 'Pendência')
   await page.getByLabel('Legenda').fill(legenda)
@@ -142,6 +142,10 @@ test('fluxo completo: salva sem sinal, sobrevive a recarga offline e envia ao vo
   await expect(item).toBeVisible()
   await expect(item.locator('.publicacao')).toHaveText('Salvo no aparelho · aguardando envio')
   await expect(avisoAguardandoEnvio(page, '1')).toBeVisible()
+  // "Enviar" na faixa: alvo de toque de pelo menos 44 px.
+  const enviar = (await avisoAguardandoEnvio(page, '1').getByRole('button', { name: 'Enviar' }).boundingBox())!
+  expect(enviar.height).toBeGreaterThanOrEqual(44)
+  expect(enviar.width).toBeGreaterThanOrEqual(44)
 
   // Recarrega offline: o app abre pelo service worker e o registro continua no aparelho.
   await page.reload()
@@ -219,7 +223,7 @@ test('cota de armazenamento: alerta "Sem espaço no aparelho" e o formulário co
   })
 
   await page.goto(ROTA_NOVO)
-  await expect(page.getByRole('heading', { name: 'Novo registro', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Novo registro', level: 1 })).toBeVisible()
   await anexarFoto(page)
   await escolherTipo(page, 'Pendência')
   await page.getByLabel('Legenda').fill(legenda)
@@ -228,7 +232,7 @@ test('cota de armazenamento: alerta "Sem espaço no aparelho" e o formulário co
 
   const alerta = page.getByRole('alert')
   await expect(alerta).toContainText('Sem espaço no aparelho')
-  await expect(page.getByRole('heading', { name: 'Novo registro', level: 2 })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Novo registro', level: 1 })).toBeVisible()
   await expect(page.getByLabel('Legenda')).toHaveValue(legenda)
   await expect(page).toHaveURL(new RegExp(`${ROTA_NOVO}$`))
 })

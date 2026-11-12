@@ -28,6 +28,28 @@ export function useRegistros(filtro: FiltroRegistros = {}) {
   })
 }
 
+/** Pendências abertas de todas as obras: a consulta do Início, também lida pela barra inferior. */
+export const FILTRO_PENDENCIAS_ABERTAS: FiltroRegistros = { tipo: 'pendencia', situacao: 'aberta' }
+
+/**
+ * Total de pendências abertas para a barra inferior, tirado da mesma consulta do Início.
+ * Não busca nada sozinho: enquanto não houver dados (os do Início ou os guardados no aparelho),
+ * devolve `undefined`. Com dados, acompanha a consulta e é refeito só quando ela é invalidada
+ * (depois de um envio), para o número não ficar velho fora do Início.
+ */
+export function useTotalPendenciasAbertas(): number | undefined {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['registros', FILTRO_PENDENCIAS_ABERTAS],
+    queryFn: () => repo.listarRegistros(FILTRO_PENDENCIAS_ABERTAS),
+    enabled: (consulta) => consulta.state.data !== undefined,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    select: (lista) => lista.length,
+  }).data
+}
+
 /** URLs assinadas valem 1 h; renova um pouco antes. */
 export function useUrlsImagens(paths: string[], bucket: 'plantas' | 'fotos' = 'plantas') {
   const repo = useRepositorio()

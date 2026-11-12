@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { EstadoConsulta } from '../components/Estado.tsx'
 import { SeletorFotos } from '../components/SeletorFotos.tsx'
+import { TopoTela } from '../components/TopoTela.tsx'
 import { useFotosEscolhidas } from '../components/useFotosEscolhidas.ts'
 import { useTelaCheia } from '../components/telaCheia.ts'
 import { useAmbiente } from '../dados/hooks.ts'
@@ -18,7 +19,7 @@ export default function NovoRegistro() {
   const { slug = '', codigo = '' } = useParams()
   const consulta = useAmbiente(slug, codigo)
   return (
-    <EstadoConsulta consulta={consulta}>
+    <EstadoConsulta consulta={consulta} topo={<TopoTela titulo="Novo registro" />}>
       {(detalhe) => <Formulario detalhe={detalhe} />}
     </EstadoConsulta>
   )
@@ -108,12 +109,11 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
 
   return (
     <section aria-labelledby="titulo-novo">
-      <h2 id="titulo-novo" className="titulo-tela">
-        Novo registro
-      </h2>
-      <p className="subtitulo">
-        {obra.nome} · {pavimento.nome} · {ambiente.nome_operacional}
-      </p>
+      <TopoTela
+        titulo="Novo registro"
+        idTitulo="titulo-novo"
+        subtitulo={`${obra.nome} · ${pavimento.nome} · ${ambiente.nome_operacional}`}
+      />
       <form className="form-registro" onSubmit={(e) => void salvar(e)} noValidate>
         <fieldset className="form-conjunto" disabled={guardando}>
           <SeletorFotos
