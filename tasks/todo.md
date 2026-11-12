@@ -176,6 +176,20 @@ Diagnóstico existente preservado em `docs/validacao-hto.md` e `artifacts/valida
 
 Verificação: sobreposição visual e controle independente de coordenadas; recorte não contém ambientes vizinhos inteiros; carregamento sob demanda sem enviar o IFC completo ao celular. Dependência: 8.
 
+## 10. Realidade aumentada no registro de fotos
+
+Plano: `tasks/plano-ra.md` (decisões de 2026-11-12: modelo ELT fornecido pelo usuário; só a "RA parada" dentro do Telegram; alinhamento por dois cantos e por QR; duas fotos por disparo, limpa e com o modelo).
+
+- [ ] Receber o IFC de elétrica (ELT) da HTO em `DOCS HTO/IFC/`.
+- [ ] RA0. Prova no aparelho real (Android e iPhone, dentro do Telegram): câmera, sensores, WebGL sobre vídeo, leitura de QR, ângulo de visão.
+- [ ] RA1. Dados: ELT convertido e publicado, matriz ELT → ARQ validada, vínculo ambiente ↔ IfcSpace, `ambiente_geometria`, `foto.origem` e `foto.ra`.
+- [ ] RA2. Tela de RA com alinhamento por dois cantos e ajuste fino.
+- [ ] RA3. Par de fotos no Novo registro, fila offline, publicação e histórico.
+- [ ] RA4. QR: cadastro e impressão no `/admin/`, detecção e pose no app.
+- [ ] RA5. Piloto em campo em quatro ambientes, medição do erro e `docs/ra.md`.
+
+Verificação: Vitest recupera poses sintéticas (< 1 cm, < 0,5°); e2e com câmera falsa salva o par de fotos; no aparelho, o contorno do Apto. 101 encaixa nas arestas reais. Dependência: 9 (federação validada e vínculo com o IfcSpace); o RA0 pode ser feito já.
+
 ## Site de administração
 
 Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
