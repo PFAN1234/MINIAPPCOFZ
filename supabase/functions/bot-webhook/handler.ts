@@ -140,6 +140,11 @@ export function criarHandler(deps: Deps) {
       p_chat: m.chat.id,
       p_thread: m.message_thread_id,
     });
+    // 22023: recusa com mensagem para o grupo (ex.: obra arquivada no site de administração).
+    if (error?.code === "22023") {
+      await responder(m, error.message);
+      return;
+    }
     if (error) throw new Error(`vincular_obra: ${error.message}`);
     const obra = data as { id?: string; nome?: string } | null;
     if (!obra || !obra.id) {

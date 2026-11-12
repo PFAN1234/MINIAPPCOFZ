@@ -439,3 +439,7 @@ verify_jwt = false
 # Site de administração: confere o JWT (ação criar), o token de uso único e o Login Widget por conta própria.
 [functions.admin-sessao]
 verify_jwt = false
+
+# Site de administração: exclusão de obra; confere o JWT do admin por conta própria.
+[functions.admin-excluir-obra]
+verify_jwt = false

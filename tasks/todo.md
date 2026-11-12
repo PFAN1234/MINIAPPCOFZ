@@ -5,6 +5,7 @@ Detalhes de cada fase em `tasks/plano-app.md`. Decisão de 2026-11-09: o visuali
 ## Prioridade atual — fundação e dados da HTO (2026-11-09)
 
 - [x] Criar o projeto Supabase de desenvolvimento e o projeto Vercel ligado a `app/` (2026-11-09).
+- [x] Decisão de 2026-11-12: um banco só. O `miniappcofz-dev` é o banco oficial do Mini App e do site `/admin/` (é o que a Vercel usa em produção); não há projeto de produção separado. Se um dia houver, aplicar todas as migrations, publicar as Edge Functions, cadastrar os segredos e trocar `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` na Vercel.
 - [x] Extrair os ambientes dos dois PDFs para `data/hto/ambientes.json`.
 - [x] Revisar a lista de ambientes e os pinos nas imagens de prova.
 
@@ -157,7 +158,7 @@ Decisões de 2026-11-11 em `tasks/plano-app.md` (seção "Novas obras") e roteir
 - [x] Nova revisão, ambiente renomeado e ambiente removido: o extrator usa o `ambientes.json` anterior como base (códigos mantidos, `manter_codigo` para renomeação confirmada, `ambientes_removidos` acumulativa e relatório `diferencas`); o seed desativa a planta de outra revisão antes de gravar a nova e marca os removidos com `ativo = false`; migração `20261111130000_ambiente_ativo.sql`; o app tira os inativos da lista, da busca e da planta e mostra um aviso na tela do ambiente inativo. HTO e COFZ regeneradas sem mudança além dos campos novos.
 - [x] Seed inativa também qualquer ambiente da obra fora da lista atual (cobre id provisório aplicado antes do `manter_codigo`).
 - [x] Migração `ambiente_ativo` aplicada no `miniappcofz-dev` (2026-11-11). Os seeds regenerados não mudam nada no banco (mesma revisão; todos os 87 ambientes da HTO e 19 da COFZ estão na lista e ativos), então não precisaram ser reaplicados.
-- [ ] Produção: aplicar a migração `ambiente_ativo` antes de publicar esta versão do app.
+- [x] Banco único: a migração `ambiente_ativo` está no `miniappcofz-dev`, o banco oficial (decisão de 2026-11-12: sem banco de produção separado).
 
 Verificação: pytest (`tests/test_revisoes.py` e `tests/db/test_revisoes_banco.py`: R01 → R02 com planta anterior inativa, removidos inativos e registros preservados) e Vitest (aviso e filtro dos inativos).
 
@@ -187,16 +188,28 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
   - [x] Aplicar `supabase/seed/admins.sql` depois de Patrício e Eduardo terem aberto o Mini App; conferir a consulta do fim do arquivo.
   - [x] Vercel: `VITE_TELEGRAM_BOT` = `diarioobra_cofz_bot` (o deploy novo vem com o merge na main).
   - [x] Conferir: botão "Administração" e link abrem o site logado (Patrício, 2026-11-11). Falta: link não vale de novo; Login Widget entra com admin e recusa outra conta.
-  - [ ] Produção: repetir a migration, a função e os seeds antes de publicar esta versão do app.
+  - [x] Banco único (decisão de 2026-11-12): migration, função `admin-sessao` e seeds já estão no `miniappcofz-dev`, que é o banco oficial; não há produção separada.
 - [x] Fase 2 (código, 2026-11-12): planta no navegador. Migration `20261112090000_admin_planta.sql` (bucket `originais`, gravação do admin em `plantas`, `publicacao_planta`, RPCs `admin_publicar_revisao`, `admin_editor_planta`, `admin_listar_publicacoes`); port do extrator e das imagens em `app/src/admin/planta/` com paridade (HTO e COFZ); editor em `/admin/obras/<slug>/planta/<pavimento>`; histórico na página da obra. Documentação em `docs/admin.md` ("Planta (fase 2)").
 - [ ] Fase 2 no `miniappcofz-dev` (migration aplicada em 2026-11-12; falta o teste de fumaça; passo a passo em `docs/admin.md`, "Planta (fase 2)" → "Aplicar num projeto"):
   - [x] Aplicar a migration `20261112090000_admin_planta.sql` (cria o bucket `originais` e as políticas de Storage).
   - [x] Conferir: bucket `originais` privado, 50 MB, só `application/pdf`; políticas `originais_admin_*` e `plantas_admin_*` em `storage.objects`.
   - [ ] Deploy do app na Vercel (o merge na main publica o editor em `/admin/`).
   - [ ] Teste de fumaça: como admin, enviar o PDF da COFZ no térreo, conferir que a etapa "Nova revisão" não mostra diferenças, publicar (mesma revisão R06: substitui as imagens) e conferir no Mini App a planta e um "Onde fica"; ver a linha nova em "Publicações da planta".
-  - [ ] Produção: repetir a migration antes de publicar esta versão do app.
-- [ ] Fase 3: modelo no navegador (IFC → .frag em Web Worker, envio de .frag pronto, limite de 50 MB).
-- [ ] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget).
+  - [x] Banco único (decisão de 2026-11-12): a migration já está no `miniappcofz-dev`, o banco oficial.
+- [x] Pinos e ambientes manuais depois de publicar (código, 2026-11-12): "Adicionar pino" em qualquer ambiente (rotulado → `marcadores_ajustados`; sem rótulo → `marcadores` em `ambientes_manuais`, lido também pelo `extrair_ambientes.py`) e atalho "Ajustar ambientes e pinos" na lista de pavimentos, que reabre o PDF guardado direto na etapa 3. Sem migration.
+- [ ] Teste de fumaça do ajuste: publicar um pavimento pelo site, voltar em "Ajustar ambientes e pinos", acrescentar um pino e um ambiente, publicar e conferir no Mini App.
+- [x] Fase 3 (código, 2026-11-12): modelo 3D pelo site. Migration `20261112120000_admin_modelo.sql` (políticas de admin no bucket `modelos`, caminho `<obra_id>/<SIGLA>/<hash>.frag`, `publicacao_modelo`, RPCs `admin_registrar_modelo`, `admin_listar_modelos`, `admin_retirar_modelo`); IFC → .frag num Web Worker ou .frag pronto, limite de 50 MB; página `/admin/obras/<slug>/modelos` com histórico. Documentação em `docs/admin.md` ("Modelo 3D (fase 3)").
+- [ ] Fase 3 no `miniappcofz-dev` (migration aplicada em 2026-11-12; falta o teste de fumaça; passo a passo em `docs/admin.md`, "Modelo 3D (fase 3)" → "Aplicar num projeto"):
+  - [x] Aplicar a migration `20261112120000_admin_modelo.sql` (conferido: políticas `modelos_admin_*`, as 3 RPCs e a RLS de `publicacao_modelo`).
+  - [ ] Teste de fumaça: em HTO → "Modelos 3D", enviar `app/public/modelos/hto/ARQ.frag` (ARQ, R06), publicar e abrir o modelo no Mini App; converter um IFC pequeno pelo site.
+  - [x] Banco único (decisão de 2026-11-12): a migration já está no `miniappcofz-dev`, o banco oficial.
+- [x] Arquivar e excluir obra (código, 2026-11-12): migration `20261112150000_admin_arquivar_excluir.sql` (obra arquivada some do Mini App, não recebe registros nem pedidos de acesso e não publica; `admin_arquivar_obra`, `admin_resumo_obra`, `admin_excluir_obra`, `admin_listar_exclusoes`), Edge Function `admin-excluir-obra` (apaga os arquivos dos 4 buckets) e a seção "Arquivar ou excluir" no site. Documentação em `docs/admin.md` ("Arquivar e excluir obra").
+- [ ] Arquivar e excluir no `miniappcofz-dev`:
+  - [x] Migration `20261112150000_admin_arquivar_excluir.sql` aplicada (2026-11-12).
+  - [x] Edge Function `admin-excluir-obra` publicada (`verify_jwt = false`); conferido: 405 em GET, 401 sem token e com token falso, CORS do site. Usa `SUPABASE_ANON_KEY` (chave legada ativa) para falar com o banco como o admin.
+  - [x] Republicadas `bot-webhook` e `publish-outbox` (versão 2, 2026-11-12). Conferido: 405 em GET e 401 sem segredo nas duas; a chamada do cron ao `publish-outbox` novo respondeu 200, sem erro no log.
+  - [ ] Teste de fumaça no site com uma obra de teste: arquivar, conferir que some do Mini App, desarquivar, excluir digitando o nome e conferir "Obras excluídas".
+- [x] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget): `miniappcofz.vercel.app` (Patrício, 2026-11-12). Falta conferir: o widget entra com um admin e recusa outra conta.
 
 ## Novo visual (direção B · Canteiro)
 

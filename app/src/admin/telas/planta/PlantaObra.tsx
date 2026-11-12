@@ -15,7 +15,7 @@ export default function PlantaObra() {
             <Link to={`/obras/${slug}`}>← {d.obra.nome}</Link>
           </p>
           <h1 id="titulo-planta-obra">Planta · {d.obra.nome}</h1>
-          <p className="adm-dica">Escolha o pavimento para enviar o PDF, ajustar e publicar a planta.</p>
+          <p className="adm-dica">Escolha o pavimento para enviar o PDF, ajustar e publicar a planta. Depois da primeira publicação pelo site, "Ajustar ambientes e pinos" reabre o PDF guardado para acrescentar pinos e ambientes sem enviar o arquivo de novo.</p>
           {d.pavimentos.length === 0 ? (
             <p className="adm-alerta adm-alerta-info">Cadastre os pavimentos na página da obra antes de enviar a planta.</p>
           ) : (
@@ -43,7 +43,16 @@ export default function PlantaObra() {
                     <td>
                       <Link className="adm-botao" to={`/obras/${slug}/planta/${p.codigo}`}>
                         Editar planta de {p.nome}
-                      </Link>
+                      </Link>{' '}
+                      {p.planta && p.ultimo_pdf && (
+                        <Link
+                          className="adm-botao adm-botao-discreto"
+                          to={`/obras/${slug}/planta/${p.codigo}?ajustar=1`}
+                          title="Reabre o PDF guardado e vai direto para os ambientes"
+                        >
+                          Ajustar ambientes e pinos de {p.nome}
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -3,10 +3,12 @@ import ambientesHto from '../../../../data/hto/ambientes.json'
 import { criarRepositorioAdminFixture } from '../dados/fixture.ts'
 import { criarServicoFalso, spansDosAmbientes } from '../telas/planta/servicoFalso.ts'
 import {
+  adicionarPino,
   baseDoBanco,
   configParaSalvar,
   edicaoInicial,
   extrairPavimento,
+  incluirManual,
   moverPino,
   problemaRevisao,
   removerPino,
@@ -59,6 +61,42 @@ describe('editor: base do banco e extração do pavimento', () => {
     expect(r.ambientes.find((a) => a.id === circ.id)!.marcadores).toHaveLength(1)
     expect(r.diferencas.marcador_deslocado.map((d) => d.id).sort()).toEqual([circ.id, 'terreo-apto-101'].sort())
     expect(() => removerPino(e, r.ambientes.find((a) => a.id === circ.id)!, 0)).toThrow('ao menos um pino')
+  })
+
+  it('pino acrescentado: em ambiente rotulado vai para marcadores_ajustados; em manual, para a entrada dele', async () => {
+    const dados = await dadosHto()
+    let e = edicaoInicial(dados, 'terreo')
+    const r0 = extrairPavimento(dados, 'terreo', e, pagina).resultado
+    const apto = r0.ambientes.find((a) => a.id === 'terreo-apto-101')!
+    e = adicionarPino(e, apto, 0.4, 0.6)
+    expect(e.marcadores_ajustados['terreo-apto-101'].marcadores).toHaveLength(apto.marcadores.length + 1)
+
+    e = incluirManual(e, 'terreo', 'Depósito externo', 'servico', 0.1, 0.2)
+    let r = extrairPavimento(dados, 'terreo', e, pagina).resultado
+    const dep = r.ambientes.find((a) => a.nome_operacional === 'Depósito externo')!
+    e = adicionarPino(e, dep, 0.15, 0.25)
+    expect(e.ambientes_manuais.at(-1)).toMatchObject({
+      marcador: { x: 0.1, y: 0.2 },
+      marcadores: [
+        { x: 0.1, y: 0.2 },
+        { x: 0.15, y: 0.25 },
+      ],
+    })
+    expect(e.marcadores_ajustados[dep.id]).toBeUndefined()
+    r = extrairPavimento(dados, 'terreo', e, pagina).resultado
+    const dep2 = r.ambientes.find((a) => a.id === dep.id)!
+    expect(dep2.marcadores.map((m) => [m.x, m.y])).toEqual([
+      [0.1, 0.2],
+      [0.15, 0.25],
+    ])
+    expect(r.ambientes.find((a) => a.id === 'terreo-apto-101')!.marcadores.at(-1)).toMatchObject({ x: 0.4, y: 0.6 })
+
+    // Mover o segundo pino e remover o primeiro (o manual volta a ter só `marcador`).
+    e = moverPino(e, dep2, 1, 0.3, 0.35)
+    r = extrairPavimento(dados, 'terreo', e, pagina).resultado
+    e = removerPino(e, r.ambientes.find((a) => a.id === dep.id)!, 0)
+    expect(e.ambientes_manuais.at(-1)!.marcador).toEqual({ x: 0.3, y: 0.35 })
+    expect(e.ambientes_manuais.at(-1)!.marcadores).toBeUndefined()
   })
 
   it('renomear ambiente publicado mantém o código; configuração preserva o outro pavimento', async () => {

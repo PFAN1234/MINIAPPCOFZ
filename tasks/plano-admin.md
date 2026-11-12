@@ -86,7 +86,7 @@ Decisões da implementação (2026-11-12):
 | pdf.js no navegador | `pdfjs-dist` 6.4.299 (versão exata); worker, fontes padrão e WASM emitidos pelo Vite e servidos pelo site; carregado sob demanda pelo editor. WebP pelo canvas, com `@jsquash/webp` 1.5.0 (WASM) quando o navegador não gera WebP. Nada disso entra no precache do Mini App. |
 | Testes | Paridade e renderização em Node (`*.node.test.ts`, pdf.js legacy + `@napi-rs/canvas` 1.1.0, tsconfig próprio); telas com um serviço de PDF falso; e2e com o PDF real da COFZ no Chromium. |
 
-### Fase 3: modelo (IFC)
+### Fase 3: modelo (IFC) — feita (2026-11-12; ver `docs/admin.md`, "Modelo 3D (fase 3)")
 1. Conversão no navegador em Web Worker, com barra de progresso e aviso de memória; opção de enviar um `.frag` já convertido (pelo script Node) quando o IFC for grande demais.
 2. Upload para `modelos` e `admin_registrar_modelo` (sigla, revisão, bytes, hash).
 3. Limite de 50 MB por arquivo no Supabase grátis: validar antes de enviar.
