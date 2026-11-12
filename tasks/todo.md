@@ -197,3 +197,18 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
   - [ ] Produção: repetir a migration antes de publicar esta versão do app.
 - [ ] Fase 3: modelo no navegador (IFC → .frag em Web Worker, envio de .frag pronto, limite de 50 MB).
 - [ ] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget).
+
+## Novo visual (direção B · Canteiro)
+
+Plano: `tasks/plano-visual.md` (decisões de 2026-11-12). Prancha de design com as telas de referência (B1 a B20) linkada no plano.
+
+- [x] Propostas de design (três direções), escolha da direção B, paleta azul-escuro `#0B1625` e amarelo, sempre clara, e telas de referência do Mini App e do admin (2026-11-12).
+- [x] Corrigir a colisão da classe `.visualizador` (fotos x modelo 3D), com teste e2e de tela cheia (2026-11-12).
+- [ ] V0. Fundação: `app/src/estilo/tokens.css`, fontes Barlow servidas pelo app (no precache), cores do cabeçalho e do fundo do Telegram, ícones.
+- [ ] V1. Estrutura do Mini App: `TopoTela`, barra inferior com ícones, faixa de sincronização, estados vazio, erro e 404.
+- [ ] V2. Telas principais: Obras, Obra, Ambiente (atalhos "+ Serviço" e "+ Pendência"), Novo registro (`?tipo=`).
+- [ ] V3. Demais telas: Planta, Pendências, Pendência e encerramento, Registros, Gestão, Modelo federado, sem sinal.
+- [ ] V4. Admin: barra lateral, Entrar, Obras, Administradores, página da obra em abas, editor da planta em área escura.
+- [ ] V5. Conferência com a prancha, contraste e toque, teste no Telegram real (Android e iPhone), limpeza do CSS antigo.
+
+Verificação: em cada fase, typecheck, lint, Vitest e e2e verdes e capturas 390×844 (Mini App) e 1440×900 (admin) comparadas com a prancha.
