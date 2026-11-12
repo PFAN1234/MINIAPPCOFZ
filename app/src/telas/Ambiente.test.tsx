@@ -43,7 +43,7 @@ describe('ambiente inativo (saiu da planta numa revisão)', () => {
   })
 
   it('a lista da obra não mostra o inativo, mas a contagem de pendências o inclui', async () => {
-    renderizarApp('/obras/hto?q=101', comInativo('terreo-apto-101'))
+    renderizarApp('/obras/hto?aba=lista&q=101', comInativo('terreo-apto-101'))
     expect(await screen.findByRole('link', { name: /Banheiro 101/ })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Apto\. 101/ })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /^Pendências\s*3$/ })).toBeInTheDocument()

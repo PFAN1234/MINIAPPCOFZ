@@ -46,6 +46,9 @@ describe('navegação com a fixture', () => {
 
     await usuario.click(await screen.findByRole('link', { name: /^HTO/ }))
     expect(await screen.findByRole('heading', { level: 1, name: 'HTO' })).toBeInTheDocument()
+    // A obra abre na planta; a lista fica a um toque.
+    expect(await screen.findByTestId('aba-planta')).toBeInTheDocument()
+    await usuario.click(screen.getByRole('tab', { name: 'Lista' }))
 
     await usuario.click(await screen.findByRole('link', { name: /Apto\. 101/ }))
     expect(
@@ -97,7 +100,7 @@ describe('telas', () => {
 
   it('Obra: busca "circ" mostra as circulações e area em pt-BR', async () => {
     const usuario = userEvent.setup()
-    renderizar('/obras/hto')
+    renderizar('/obras/hto?aba=lista')
     expect(await screen.findByRole('link', { name: /Apto\. 101/ })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Apto\. 101/ })).toHaveTextContent('23,88 m²')
     await usuario.type(screen.getByRole('searchbox'), 'circ')
@@ -111,12 +114,18 @@ describe('telas', () => {
 
   it('Obra: trocar de pavimento troca a lista', async () => {
     const usuario = userEvent.setup()
-    renderizar('/obras/hto')
+    renderizar('/obras/hto?aba=lista')
     expect(await screen.findByRole('link', { name: /Apto\. 101/ })).toBeInTheDocument()
     const abas = screen.getAllByRole('tab', { selected: false })
     await usuario.click(abas.find((a) => /1º/.test(a.textContent ?? ''))!)
     expect(await screen.findByRole('link', { name: /Circula/ })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Apto\. 101/ })).not.toBeInTheDocument()
+  })
+
+  it('Obra: abre na planta por padrão, no primeiro pavimento', async () => {
+    renderizar('/obras/hto')
+    expect(await screen.findByTestId('aba-planta')).toHaveTextContent('planta terreo foco -')
+    expect(screen.getByRole('tab', { name: 'Planta' })).toHaveAttribute('aria-selected', 'true')
   })
 
   it('Obra: aba Planta renderiza AbaPlanta com pav e foco da URL e esconde a barra inferior', async () => {
