@@ -52,7 +52,17 @@ test('link startapp registro_<id> abre o ambiente com o visualizador', async ({ 
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Apto. 101', level: 2 })).toBeVisible()
   await expect(page).toHaveURL(new RegExp(`aba=pendencias&registro=${ID_REGISTRO}`))
-  await expect(page.getByRole('dialog')).toBeVisible()
+  const dialogo = page.getByRole('dialog')
+  await expect(dialogo).toBeVisible()
+  // Regressão: o visualizador de fotos deve cobrir a viewport inteira (tela cheia),
+  // e não virar um painel dentro da página por colisão de classe CSS.
+  const viewport = page.viewportSize()!
+  await expect(dialogo).toHaveCSS('position', 'fixed')
+  const caixa = (await dialogo.boundingBox())!
+  expect(caixa.x).toBe(0)
+  expect(caixa.y).toBe(0)
+  expect(caixa.width).toBe(viewport.width)
+  expect(caixa.height).toBe(viewport.height)
   await page.getByRole('button', { name: 'Fechar' }).tap()
   await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page.locator('.registro-destaque')).toContainText('Tomada da sala')

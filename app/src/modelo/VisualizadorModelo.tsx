@@ -116,7 +116,7 @@ export default function VisualizadorModelo({ modelos, baixar, ativos }: Props) {
   }, [ativos])
 
   return (
-    <div className="visualizador">
+    <div className="visualizador-modelo">
       <div ref={contenedor} className="visualizador-tela" role="img" aria-label="Modelo 3D federado" />
       {estado.tipo === 'carregando' && (
         <p className="visualizador-aviso" role="status">
