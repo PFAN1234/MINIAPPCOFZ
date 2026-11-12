@@ -4,7 +4,6 @@ import { Abas } from '../components/Abas.tsx'
 import { AbaPlanta } from '../components/AbaPlanta.tsx'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
-import { useTelaCheia } from '../components/telaCheia.ts'
 import { IconeChevron, IconeCubo } from '../components/Icones.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
 import { useObra, usePublicacoesProblema, useSolicitacoes } from '../dados/hooks.ts'
@@ -48,8 +47,6 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   const problemas = usePublicacoesProblema(obra.id, gestor)
   const nGestao = (pedidos.data?.length ?? 0) + (problemas.data?.length ?? 0)
   const nPendencias = ambientes.reduce((soma, a) => soma + a.pendencias_abertas, 0)
-
-  useTelaCheia(modo === 'planta' && !!pav)
 
   function atualizar(mudancas: Record<string, string | null>, replace = false) {
     const prox = new URLSearchParams(params)

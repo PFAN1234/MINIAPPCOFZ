@@ -128,10 +128,10 @@ describe('telas', () => {
     expect(screen.getByRole('tab', { name: 'Planta' })).toHaveAttribute('aria-selected', 'true')
   })
 
-  it('Obra: aba Planta renderiza AbaPlanta com pav e foco da URL e esconde a barra inferior', async () => {
+  it('Obra: aba Planta renderiza AbaPlanta com pav e foco da URL e mantém a barra inferior', async () => {
     renderizar('/obras/hto?aba=planta&pav=1pav&foco=1pav-circulacao')
     expect(await screen.findByTestId('aba-planta')).toHaveTextContent('planta 1pav foco 1pav-circulacao')
-    expect(screen.queryByRole('navigation', { name: 'Navegação principal' })).not.toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
   })
 
   it('Ambiente: Pendências mostra as abertas da fixture', async () => {
