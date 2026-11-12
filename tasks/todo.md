@@ -204,5 +204,9 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
   - [ ] Teste de fumaça: em HTO → "Modelos 3D", enviar `app/public/modelos/hto/ARQ.frag` (ARQ, R06), publicar e abrir o modelo no Mini App; converter um IFC pequeno pelo site.
   - [x] Banco único (decisão de 2026-11-12): a migration já está no `miniappcofz-dev`, o banco oficial.
 - [x] Arquivar e excluir obra (código, 2026-11-12): migration `20261112150000_admin_arquivar_excluir.sql` (obra arquivada some do Mini App, não recebe registros nem pedidos de acesso e não publica; `admin_arquivar_obra`, `admin_resumo_obra`, `admin_excluir_obra`, `admin_listar_exclusoes`), Edge Function `admin-excluir-obra` (apaga os arquivos dos 4 buckets) e a seção "Arquivar ou excluir" no site. Documentação em `docs/admin.md` ("Arquivar e excluir obra").
-- [ ] Arquivar e excluir no `miniappcofz-dev`: aplicar a migration; publicar `admin-excluir-obra` (nova) e de novo `bot-webhook` e `publish-outbox` (depois da migration); teste de fumaça com uma obra de teste criada no site.
+- [ ] Arquivar e excluir no `miniappcofz-dev`:
+  - [x] Migration `20261112150000_admin_arquivar_excluir.sql` aplicada (2026-11-12).
+  - [x] Edge Function `admin-excluir-obra` publicada (`verify_jwt = false`); conferido: 405 em GET, 401 sem token e com token falso, CORS do site. Usa `SUPABASE_ANON_KEY` (chave legada ativa) para falar com o banco como o admin.
+  - [ ] Republicar `bot-webhook` (responde no tópico "obra arquivada" no `/vincular_obra`) e `publish-outbox` (não avisa pedido de acesso de obra arquivada) com `supabase functions deploy bot-webhook publish-outbox`. Opcional: o banco já recusa vincular e pedir acesso em obra arquivada; as versões no ar continuam funcionando com a migration nova.
+  - [ ] Teste de fumaça no site com uma obra de teste: arquivar, conferir que some do Mini App, desarquivar, excluir digitando o nome e conferir "Obras excluídas".
 - [x] Configurar `/setdomain` do bot no BotFather com o domínio do site (Login Widget): `miniappcofz.vercel.app` (Patrício, 2026-11-12). Falta conferir: o widget entra com um admin e recusa outra conta.
