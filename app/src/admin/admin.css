@@ -605,3 +605,26 @@ td.adm-acoes {
 .adm-editor-tabela input {
   min-width: 11em;
 }
+
+/* Arquivar ou excluir obra (fim da página da obra). */
+.adm-secao-perigo {
+  border-top: 2px solid var(--adm-erro);
+}
+
+.adm-bloco + .adm-bloco {
+  margin-top: 20px;
+}
+
+.adm-bloco h3 {
+  margin: 12px 0 4px;
+  font-size: 1rem;
+}
+
+.adm-selo-arquivada {
+  background: var(--adm-borda);
+  color: var(--adm-texto);
+}
+
+.adm-linha-arquivada td {
+  color: var(--adm-suave);
+}

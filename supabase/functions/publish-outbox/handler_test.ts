@@ -649,3 +649,14 @@ Deno.test("aviso: no máximo 5 por rodada e só de obra vinculada", async () => 
   assertEquals((await r.json()).avisos_enviados, 5);
   assertEquals(m.chamadas.length, 5);
 });
+
+Deno.test("aviso: obra arquivada não recebe aviso de pedido", async () => {
+  const t = tabelasBase();
+  t.obra = [{ ...OBRA, arquivada_em: "2026-11-12T10:00:00Z" }];
+  t.solicitacao_acesso = [pedido()];
+  const m = montar({ tabelas: t });
+  const r = await rodar(m.handler);
+  assertEquals((await r.json()).avisos_enviados, 0);
+  assertEquals(m.chamadas.length, 0);
+  assertEquals(m.atualizacoes, []);
+});

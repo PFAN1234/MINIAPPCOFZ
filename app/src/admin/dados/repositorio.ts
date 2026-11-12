@@ -6,6 +6,7 @@ import type {
   DadosModelos,
   DadosObra,
   DadosWidget,
+  Exclusao,
   EstadoSessao,
   ObraAdmin,
   ObraLista,
@@ -14,7 +15,9 @@ import type {
   PavimentoResumo,
   Publicacao,
   RegistroModelo,
+  ResultadoExclusao,
   ResultadoPublicacao,
+  ResumoObra,
   UsuarioApp,
 } from './tipos.ts'
 
@@ -36,6 +39,15 @@ export interface RepositorioAdmin {
   salvarPavimentos(slug: string, lista: PavimentoResumo[]): Promise<PavimentoResumo[]>
   salvarConfig(slug: string, config: ConfigObra): Promise<void>
   exportarObra(slug: string): Promise<unknown>
+  /** Arquiva (true) ou desarquiva (false); devolve `arquivada_em`. */
+  arquivarObra(slug: string, arquivada: boolean): Promise<string | null>
+  /** Contagens do que a exclusão apaga. */
+  resumoObra(slug: string): Promise<ResumoObra>
+  /** Edge Function `admin-excluir-obra`: apaga a obra, tudo dela e os arquivos. Irreversível. */
+  excluirObra(slug: string, confirmacao: string): Promise<ResultadoExclusao>
+  listarExclusoes(): Promise<Exclusao[]>
+  /** Tenta de novo remover os arquivos de uma exclusão que ficou pendente. */
+  limparExclusao(id: string): Promise<ResultadoExclusao>
 
   /** Planta (fase 2): ambientes, planta ativa e último PDF guardado de cada pavimento. */
   obterEditorPlanta(slug: string): Promise<DadosEditorPlanta>
