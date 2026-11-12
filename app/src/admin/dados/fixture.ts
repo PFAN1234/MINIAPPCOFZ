@@ -17,13 +17,16 @@ import {
   type AmbienteBanco,
   type ConfigObra,
   type EstadoSessao,
+  type BucketObra,
   type EventoModelo,
+  type Exclusao,
   type ModeloAdmin,
   type ObraAdmin,
   type ObraLista,
   type PavimentoAdmin,
   type PavimentoResumo,
   type PlantaAtiva,
+  type ResumoObra,
   type Publicacao,
   type UsuarioApp,
 } from './tipos.ts'
@@ -116,6 +119,7 @@ interface ObraMemoria {
   config: ConfigObra | null
   config_atualizada_em: string | null
   config_atualizada_por: string | null
+  arquivada_em: string | null
 }
 
 const VOCE: UsuarioApp = { id: 'usuario-teste', nome: 'Você (teste)', username: 'voce', telegram_id: 1, eh_admin: true }
@@ -146,6 +150,7 @@ function obraDoJson(id: string, ordem: number, json: ObraJson, ambientes: Ambien
     } as ConfigObra,
     config_atualizada_em: '2026-11-11T12:00:00Z',
     config_atualizada_por: null,
+    arquivada_em: null,
   }
 }
 
@@ -174,6 +179,26 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
   const arquivos = new Map<string, Blob>()
   const modelosPorObra = new Map<string, ModeloAdmin[]>()
   const historicoModelos: (EventoModelo & { obra_id: string })[] = []
+  const exclusoes: Exclusao[] = []
+  /** Arquivos da obra por bucket (o id da obra é a 1ª pasta em todos). */
+  const arquivosDaObra = (obraId: string) =>
+    [...arquivos.keys()].filter((k) => k.split('/')[1] === obraId).map((k) => k.split('/')[0] as BucketObra)
+  function resumoDe(o: ObraMemoria): ResumoObra {
+    const contagem: Record<BucketObra, number> = { fotos: 0, plantas: 0, originais: 0, modelos: 0 }
+    for (const b of arquivosDaObra(o.id)) contagem[b] = (contagem[b] ?? 0) + 1
+    const planta = plantaPorObra.get(o.id)
+    return {
+      registros: 0,
+      fotos: 0,
+      ambientes: planta?.ambientes.length ?? 0,
+      pavimentos: o.pavimentos.length,
+      plantas: planta?.plantas.size ?? 0,
+      modelos: modelosPorObra.get(o.id)?.length ?? 0,
+      participantes: 0,
+      publicacoes_telegram: 0,
+      arquivos: contagem,
+    }
+  }
   const plantaDe = (o: ObraMemoria): PlantaMemoria => {
     let p = plantaPorObra.get(o.id)
     if (!p) {
@@ -238,6 +263,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
           ambientes_ativos: o.pavimentos.reduce((s, p) => s + p.ambientes, 0),
           status: typeof o.config?.status === 'string' ? o.config.status : null,
           config_atualizada_em: o.config_atualizada_em,
+          arquivada_em: o.arquivada_em,
         }))
     },
 
@@ -245,7 +271,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       exigirAdmin()
       const o = obraPorSlug(slug)
       return copia({
-        obra: { id: o.id, slug: o.slug, nome: o.nome, ordem: o.ordem, telegram_vinculado: false },
+        obra: { id: o.id, slug: o.slug, nome: o.nome, ordem: o.ordem, telegram_vinculado: false, arquivada_em: o.arquivada_em },
         pavimentos: ordenarPavs(o).map(
           (p): PavimentoAdmin => ({ ...p, ambientes_ativos: p.ambientes, plantas: p.ambientes > 0 ? 1 : 0 }),
         ),
@@ -282,6 +308,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         config: null,
         config_atualizada_em: null,
         config_atualizada_por: null,
+        arquivada_em: null,
       }
       obras.push(nova)
       return { id: nova.id, slug, nome, ordem: nova.ordem }
@@ -403,6 +430,68 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         throw new ErroAdmin(`O arquivo ${caminho} não é WebP.`)
       }
       arquivos.set(`${bucket}/${caminho}`, arquivo)
+    },
+
+    async arquivarObra(slug, arquivada) {
+      exigirAdmin()
+      const o = obraPorSlug(slug)
+      o.arquivada_em = arquivada ? (o.arquivada_em ?? new Date().toISOString()) : null
+      return o.arquivada_em
+    },
+
+    async resumoObra(slug) {
+      exigirAdmin()
+      return resumoDe(obraPorSlug(slug))
+    },
+
+    async excluirObra(slug, confirmacao) {
+      exigirAdmin()
+      const o = obraPorSlug(slug)
+      if ((confirmacao ?? '').trim() !== o.nome) {
+        throw new ErroAdmin(`Para excluir, digite exatamente o nome da obra: ${o.nome}`)
+      }
+      const resumo = resumoDe(o)
+      obras.splice(obras.indexOf(o), 1)
+      plantaPorObra.delete(o.id)
+      modelosPorObra.delete(o.id)
+      const removidos: Record<BucketObra, number> = { fotos: 0, plantas: 0, originais: 0, modelos: 0 }
+      for (const k of [...arquivos.keys()]) {
+        const [bucket, obraId] = k.split('/')
+        if (obraId !== o.id) continue
+        arquivos.delete(k)
+        removidos[bucket as BucketObra]++
+      }
+      for (let i = publicacoes.length - 1; i >= 0; i--) if (publicacoes[i].obra_id === o.id) publicacoes.splice(i, 1)
+      for (let i = historicoModelos.length - 1; i >= 0; i--) if (historicoModelos[i].obra_id === o.id) historicoModelos.splice(i, 1)
+      const agora = new Date().toISOString()
+      const exclusao: Exclusao = {
+        id: `exclusao-${++sequencia}`,
+        obra_id: o.id,
+        slug: o.slug,
+        nome: o.nome,
+        excluida_em: agora,
+        excluida_por_nome: VOCE.nome,
+        resumo,
+        arquivos_removidos_em: agora,
+        arquivos_removidos: removidos,
+        arquivos_erro: null,
+      }
+      exclusoes.unshift(exclusao)
+      return { exclusao_id: exclusao.id, obra_id: o.id, arquivos_removidos: removidos, pendente: false }
+    },
+
+    async listarExclusoes() {
+      exigirAdmin()
+      return copia(exclusoes)
+    },
+
+    async limparExclusao(id) {
+      exigirAdmin()
+      const e = exclusoes.find((x) => x.id === id)
+      if (!e) throw new ErroAdmin('Exclusão não encontrada')
+      e.arquivos_removidos_em = new Date().toISOString()
+      e.arquivos_erro = null
+      return { exclusao_id: e.id, obra_id: e.obra_id, arquivos_removidos: e.arquivos_removidos ?? {}, pendente: false }
     },
 
     async listarModelosAdmin(slug) {
