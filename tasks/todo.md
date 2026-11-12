@@ -204,7 +204,7 @@ Plano: `tasks/plano-visual.md` (decisões de 2026-11-12). Prancha de design com 
 
 - [x] Propostas de design (três direções), escolha da direção B, paleta azul-escuro `#0B1625` e amarelo, sempre clara, e telas de referência do Mini App e do admin (2026-11-12).
 - [x] Corrigir a colisão da classe `.visualizador` (fotos x modelo 3D), com teste e2e de tela cheia (2026-11-12).
-- [ ] V0. Fundação: `app/src/estilo/tokens.css`, fontes Barlow servidas pelo app (no precache), cores do cabeçalho e do fundo do Telegram, ícones.
+- [x] V0. Fundação: `app/src/estilo/tokens.css`, fontes Barlow servidas pelo app (no precache), cores do cabeçalho e do fundo do Telegram, ícones (2026-11-12). Entraram as variáveis de cor (Mini App e admin sempre claros, sem `--tg-theme-*` nem modo escuro, topo azul-escuro), Barlow e Barlow Semi Condensed latinas (`@fontsource` 5.3.0, seis `.woff2` no precache), `aplicarCoresTelegram()` com as versões mínimas 6.9, 6.1 e 7.10 e 14 ícones novos em `Icones.tsx`, sem mudar a estrutura das telas.
 - [ ] V1. Estrutura do Mini App: `TopoTela`, barra inferior com ícones, faixa de sincronização, estados vazio, erro e 404.
 - [ ] V2. Telas principais: Obras, Obra, Ambiente (atalhos "+ Serviço" e "+ Pendência"), Novo registro (`?tipo=`).
 - [ ] V3. Demais telas: Planta, Pendências, Pendência e encerramento, Registros, Gestão, Modelo federado, sem sinal.
