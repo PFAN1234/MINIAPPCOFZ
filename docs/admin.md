@@ -320,3 +320,34 @@ Contrato: `docs/contrato-etapas.md`. O campus é implantado em etapas; cada etap
 3. Reconfigurar os comandos do bot (a ação de configuração do `bot-webhook`, como na fase 6), para `/vincular_etapa` aparecer no menu dos admins de grupo.
 4. No BotFather, trocar o nome do bot e do Mini App para Fiscal Bot (opcional, só exibição).
 5. No site, `/admin/organizacao`: enviar o logo; no grupo da 2ª etapa, `/vincular_etapa 2a-etapa` (se a etapa não herdou o grupo).
+
+## Realidade aumentada (QR)
+
+Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra, ao lado de "Modelos 3D"). Cadastra a posição do QR de cada ambiente e imprime a folha A4 que o Mini App lê para alinhar o modelo 3D com a obra. Contrato de dados em `docs/contrato-ra.md`; código em `app/src/admin/telas/ra/` e `app/src/admin/ra/` (`qr.ts`, `geometria.ts`).
+
+**Pré-requisito:** a obra precisa ter a geometria dos ambientes (`scripts/gerar_geometria.py --obra <slug>` e aplicar o seed). Sem ela a página mostra "Esta obra ainda não tem a geometria dos ambientes…".
+
+**Configuração:** o link do QR usa `VITE_TELEGRAM_BOT` (o mesmo do Login Widget) e `VITE_TELEGRAM_APP` (nome curto do Mini App no BotFather; padrão `fiscalcofz`). O conteúdo é `https://t.me/<bot>/<app>?startapp=amb_<slug>_<codigo>`. Ver `app/.env.example`.
+
+### Passo a passo
+
+1. Abra a página da obra e clique em "Realidade aumentada". Os ambientes aparecem por pavimento, com a marca "Com QR" ou "Sem QR".
+2. Clique em "Abrir" no ambiente. O desenho mostra o contorno visto de cima (x para a direita, z para baixo), com os cantos numerados a partir de 1 e o comprimento de cada parede (a parede *n* vai do canto *n* ao canto *n+1*).
+3. Escolha a **parede** onde o QR será fixado e informe a **distância** em metros a partir do canto inicial da parede (entre 0 e o comprimento dela), a **altura** do centro do QR acima do piso (padrão 1,50 m; entre 0 e 5 m) e o **lado** do QR em centímetros (padrão 18 cm; entre 5 e 100 cm). A marca vermelha no desenho acompanha o formulário. O lado é gravado em metros e se refere ao quadrado do QR, sem a margem branca.
+4. Clique em "Salvar". "Remover QR" (com confirmação) apaga o cadastro.
+5. Com o QR salvo, clique em "Imprimir" (o botão só fica ativo quando o formulário bate com o que está salvo).
+
+### Impressão
+
+- A folha é A4 (`@page { size: A4; margin: 0 }`); o resto da página some na impressão. Na janela de impressão do navegador, escolha **escala 100% / tamanho real** e desligue "ajustar à página" e cabeçalhos e rodapés.
+- Confira a **régua de 10 cm** impressa ao lado do QR: se não medir 10 cm, a escala está errada e o alinhamento da RA fica errado.
+- Lados acima de 18 cm não cabem numa folha A4 com a margem branca (a tela avisa).
+- Fixe a folha na parede indicada, na distância e na altura da instrução impressa ("Fixar na parede *n*, a *d* m do canto *n*, com o centro a *h* m do piso. Bordas no prumo."), virada para dentro do ambiente.
+
+### Peças
+
+| Peça | Onde |
+| --- | --- |
+| RPCs | `admin_listar_ra(p_obra)`, `admin_definir_qr(p_ambiente, p_parede, p_distancia_m, p_altura_m, p_lado_m)`, `admin_remover_qr(p_ambiente)` |
+| Repositório | `listarRA`, `definirQr`, `removerQr` (`dados/`; a fixture traz dois ambientes da HTO com geometria, um deles com QR) |
+| Testes | `app/src/admin/ra/*.test.ts`, `app/src/admin/telas/ra/RaObra.test.tsx` |

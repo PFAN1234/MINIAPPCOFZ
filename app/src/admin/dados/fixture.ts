@@ -25,7 +25,9 @@ import {
   type BucketObra,
   type EtapaLista,
   type Organizacao,
+  type AmbienteRA,
   type EventoModelo,
+  type QrAmbiente,
   type Exclusao,
   type ModeloAdmin,
   type ObraAdmin,
@@ -196,6 +198,44 @@ function obraDoJson(
   }
 }
 
+/** Geometria de teste (HTO): um retângulo de 6,03 × 3,96 m e um ambiente em L, o primeiro com QR. */
+function geometriaHto(): AmbienteRA[] {
+  return [
+    {
+      ambiente_id: 'terreo-administracao',
+      codigo: 'terreo-administracao',
+      nome: 'Administração',
+      pavimento: 'Térreo',
+      contorno: [
+        [0, 0],
+        [6.03, 0],
+        [6.03, 3.96],
+        [0, 3.96],
+      ],
+      y_piso: -0.805,
+      y_teto: 1.795,
+      qr: { parede: 0, distancia_m: 2.5, altura_m: 1.5, lado_m: 0.18 },
+    },
+    {
+      ambiente_id: 'terreo-alojamento',
+      codigo: 'terreo-alojamento',
+      nome: 'Alojamento',
+      pavimento: 'Térreo',
+      contorno: [
+        [0, 0],
+        [5, 0],
+        [5, 2],
+        [3, 2],
+        [3, 4],
+        [0, 4],
+      ],
+      y_piso: -0.805,
+      y_teto: 1.795,
+      qr: null,
+    },
+  ]
+}
+
 function copia<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T
 }
@@ -249,6 +289,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
   const modelosPorObra = new Map<string, ModeloAdmin[]>()
   const historicoModelos: (EventoModelo & { obra_id: string })[] = []
   const exclusoes: Exclusao[] = []
+  const geometriaPorObra = new Map<string, AmbienteRA[]>([['obra-hto', geometriaHto()]])
   /** Arquivos da obra por bucket (o id da obra é a 1ª pasta em todos). */
   const arquivosDaObra = (obraId: string) =>
     [...arquivos.keys()].filter((k) => k.split('/')[1] === obraId).map((k) => k.split('/')[0] as BucketObra)
@@ -814,6 +855,37 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         publicado_em: new Date().toISOString(),
         publicado_por_nome: VOCE.nome,
       })
+    },
+
+    async listarRA(obraId) {
+      exigirAdmin()
+      return copia(geometriaPorObra.get(obraId) ?? [])
+    },
+
+    async definirQr(ambienteId, qr: QrAmbiente) {
+      exigirAdmin()
+      const a = [...geometriaPorObra.values()].flat().find((x) => x.ambiente_id === ambienteId)
+      if (!a) throw new ErroAdmin('Ambiente sem geometria.')
+      const n = a.contorno.length
+      if (!Number.isInteger(qr.parede) || qr.parede < 0 || qr.parede >= n) {
+        throw new ErroAdmin(`Parede inválida: use de 1 a ${n}.`)
+      }
+      const [x0, z0] = a.contorno[qr.parede]
+      const [x1, z1] = a.contorno[(qr.parede + 1) % n]
+      const comprimento = Math.hypot(x1 - x0, z1 - z0)
+      if (!(qr.distancia_m >= 0 && qr.distancia_m <= comprimento)) {
+        throw new ErroAdmin('A distância precisa estar entre 0 e o comprimento da parede.')
+      }
+      if (!(qr.altura_m >= 0 && qr.altura_m <= 5)) throw new ErroAdmin('A altura precisa estar entre 0 e 5 m.')
+      if (!(qr.lado_m >= 0.05 && qr.lado_m <= 1)) throw new ErroAdmin('O lado precisa estar entre 5 e 100 cm.')
+      a.qr = { ...qr }
+    },
+
+    async removerQr(ambienteId) {
+      exigirAdmin()
+      const a = [...geometriaPorObra.values()].flat().find((x) => x.ambiente_id === ambienteId)
+      if (!a) throw new ErroAdmin('Ambiente sem geometria.')
+      a.qr = null
     },
 
     async baixarOriginal(caminho) {

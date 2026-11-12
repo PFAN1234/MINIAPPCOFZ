@@ -20,7 +20,9 @@ import {
   type ResultadoExclusaoEtapa,
   type ResumoEtapa,
   type DadosEditorPlanta,
+  type AmbienteRA,
   type DadosModelos,
+  type QrAmbiente,
   type Exclusao,
   type ModeloAdmin,
   type Publicacao,
@@ -441,6 +443,38 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
 
     async retirarModelo(slug, sigla) {
       await rpc('admin_retirar_modelo', { p_slug: slug, p_sigla: sigla })
+    },
+
+    async listarRA(obraId) {
+      const lista = (await rpc<AmbienteRA[] | null>('admin_listar_ra', { p_obra: obraId })) ?? []
+      return lista.map((a) => ({
+        ...a,
+        y_piso: Number(a.y_piso),
+        y_teto: Number(a.y_teto),
+        contorno: a.contorno.map(([x, z]): [number, number] => [Number(x), Number(z)]),
+        qr: a.qr
+          ? {
+              parede: Number(a.qr.parede),
+              distancia_m: Number(a.qr.distancia_m),
+              altura_m: Number(a.qr.altura_m),
+              lado_m: Number(a.qr.lado_m),
+            }
+          : null,
+      }))
+    },
+
+    async definirQr(ambienteId, qr: QrAmbiente) {
+      await rpc('admin_definir_qr', {
+        p_ambiente: ambienteId,
+        p_parede: qr.parede,
+        p_distancia_m: qr.distancia_m,
+        p_altura_m: qr.altura_m,
+        p_lado_m: qr.lado_m,
+      })
+    },
+
+    async removerQr(ambienteId) {
+      await rpc('admin_remover_qr', { p_ambiente: ambienteId })
     },
 
     async listarAdmins() {

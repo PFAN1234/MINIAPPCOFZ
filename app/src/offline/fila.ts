@@ -157,6 +157,7 @@ export function criarFila(o: {
         largura: f.largura,
         altura: f.altura,
         bytes: f.bytes,
+        ...(f.origem ? { origem: f.origem, ra: f.ra } : {}),
       })
     }
     return {
@@ -407,6 +408,7 @@ export function criarFila(o: {
           largura: f.largura,
           altura: f.altura,
           bytes: f.bytes,
+          ...(f.origem ? { origem: f.origem, ra: f.ra } : {}),
         })),
         erro: null,
       }

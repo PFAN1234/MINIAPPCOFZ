@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { prepararFoto, type FotoPreparada } from '../util/imagem.ts'
+import type { FotoRA } from '../ra/tipos.ts'
 import { MAX_FOTOS, type ItemFoto } from './SeletorFotos.tsx'
 
 export interface FotoEscolhida extends ItemFoto {
   arquivo: File
+  /** Foto vinda da realidade aumentada (id, origem e dados do alinhamento já definidos). */
+  ra?: FotoRA
   preparada?: FotoPreparada
 }
 
@@ -30,7 +33,7 @@ export function useFotosEscolhidas() {
     [],
   )
 
-  const adicionar = useCallback((arquivos: File[]) => {
+  const adicionar = useCallback((arquivos: File[], daRA?: FotoRA[]) => {
     const vagas = MAX_FOTOS - fotosRef.current.length
     const aceitos = arquivos.slice(0, Math.max(0, vagas))
     setAviso(
@@ -38,16 +41,20 @@ export function useFotosEscolhidas() {
         ? `Só cabem ${MAX_FOTOS} fotos; ${arquivos.length - aceitos.length} ficou de fora.`
         : '',
     )
-    const novos: FotoEscolhida[] = aceitos.map((arquivo) => {
+    const novos: FotoEscolhida[] = aceitos.map((arquivo, i) => {
       const previa = criarPrevia(arquivo)
       if (previa) previas.current.push(previa)
-      return { chave: `f${++contador.current}`, arquivo, previa, estado: 'preparando' }
+      return { chave: `f${++contador.current}`, arquivo, previa, estado: 'preparando', ra: daRA?.[i] }
     })
     fotosRef.current = [...fotosRef.current, ...novos]
     setFotos(fotosRef.current)
     for (const item of novos) {
-      prepararFoto(item.arquivo).then(
-        (preparada) => atualizar(item.chave, { estado: 'pronta', preparada }),
+      prepararFoto(item.arquivo, { id: item.ra?.id }).then(
+        (preparada) =>
+          atualizar(item.chave, {
+            estado: 'pronta',
+            preparada: item.ra ? { ...preparada, origem: item.ra.origem, ra: item.ra.ra } : preparada,
+          }),
         (e: unknown) =>
           atualizar(item.chave, {
             estado: 'erro',

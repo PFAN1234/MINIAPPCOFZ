@@ -391,6 +391,28 @@ export interface RegistroModelo {
   ifc_bytes?: number | null
 }
 
+/** Posição do QR de um ambiente (tabela `ambiente_qr`; ver docs/contrato-ra.md). */
+export interface QrAmbiente {
+  /** Aresta i do contorno: de `contorno[i]` a `contorno[(i+1) % n]` (a partir de 0). */
+  parede: number
+  distancia_m: number
+  altura_m: number
+  lado_m: number
+}
+
+/** Ambiente com geometria (`admin_listar_ra`). */
+export interface AmbienteRA {
+  ambiente_id: string
+  codigo: string
+  nome: string
+  pavimento: string
+  /** [x, z] em metros, sem repetir o primeiro ponto. */
+  contorno: [number, number][]
+  y_piso: number
+  y_teto: number
+  qr: QrAmbiente | null
+}
+
 /** Erro já com a mensagem para a tela. */
 export class ErroAdmin extends Error {
   constructor(message: string, opcoes?: { cause?: unknown }) {

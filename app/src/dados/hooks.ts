@@ -193,3 +193,23 @@ export function useResolverPublicacao() {
       ]),
   })
 }
+
+/** Modelos 3D publicados da obra. */
+export function useModelos(slug: string, habilitado = true) {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['modelos', slug], queryFn: () => repo.listarModelos(slug), enabled: habilitado })
+}
+
+/** Geometria do ambiente para a realidade aumentada; `null` quando o ambiente não tem. */
+export function useGeometria(
+  obra: { id: string; slug: string } | undefined,
+  ambiente: { id: string; codigo: string } | undefined,
+  habilitado = true,
+) {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['geometria', obra?.id, ambiente?.id],
+    queryFn: () => repo.obterGeometria(obra!, ambiente!),
+    enabled: habilitado && Boolean(obra && ambiente),
+  })
+}

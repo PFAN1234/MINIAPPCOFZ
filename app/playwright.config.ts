@@ -27,7 +27,12 @@ export default defineConfig({
         viewport: { width: 390, height: 844 },
         isMobile: true,
         hasTouch: true,
-        ...(executavel ? { launchOptions: { executablePath: executavel } } : {}),
+        // Câmera simulada para a realidade aumentada (`e2e/ra.spec.ts`).
+        permissions: ['camera'],
+        launchOptions: {
+          args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'],
+          ...(executavel ? { executablePath: executavel } : {}),
+        },
       },
     },
   ],

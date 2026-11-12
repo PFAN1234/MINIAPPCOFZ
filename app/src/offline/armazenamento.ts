@@ -5,7 +5,7 @@
  */
 import { openDB, type DBSchema, type IDBPDatabase, type IDBPTransaction } from 'idb'
 import type { TipoErroEnvio } from '../dados/erros.ts'
-import type { TipoRegistro } from '../dados/tipos.ts'
+import type { FotoEnviada, TipoRegistro } from '../dados/tipos.ts'
 
 export interface RegistroLocal {
   id: string // = Rascunho.id
@@ -16,7 +16,7 @@ export interface RegistroLocal {
   legenda: string
   capturadoEm: string // ISO
   criadoEm: string // ISO; ordem da fila
-  fotos: { id: string; largura: number; altura: number; bytes: number }[] // na ordem escolhida
+  fotos: FotoEnviada[] // na ordem escolhida
   /** Falha definitiva; enquanto não for nula, a fila não tenta sozinha. */
   erro: { tipo: TipoErroEnvio; mensagem: string } | null
 }

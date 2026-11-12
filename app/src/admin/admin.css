@@ -779,3 +779,138 @@ td.adm-acoes {
   display: grid;
   gap: 4px;
 }
+
+/* Realidade aumentada (QR): desenho do ambiente e folha A4 de impressão. */
+.ra-ambiente {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.ra-desenho {
+  width: 100%;
+  max-height: 70vh;
+  background: var(--adm-superficie);
+  border: 1px solid var(--adm-borda);
+  border-radius: 8px;
+}
+
+.ra-piso {
+  fill: var(--adm-info-bg);
+  stroke: var(--adm-texto);
+  stroke-width: 0.04;
+  stroke-linejoin: round;
+}
+
+.ra-rotulo,
+.ra-canto-num {
+  fill: var(--adm-suave);
+}
+
+.ra-canto {
+  fill: var(--adm-texto);
+}
+
+.ra-qr {
+  stroke: var(--adm-destaque);
+  stroke-linecap: butt;
+}
+
+.ra-qr-centro {
+  fill: var(--adm-erro);
+}
+
+.ra-folha {
+  display: none;
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media (max-width: 800px) {
+  .ra-ambiente {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .adm-topo,
+  .ra-tela {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+  }
+
+  .adm-conteudo {
+    padding: 0;
+    margin: 0;
+    max-width: none;
+  }
+
+  .ra-folha {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 210mm;
+    height: 297mm;
+    padding: 12mm 10mm;
+    overflow: hidden;
+    break-after: avoid;
+    background: #fff;
+    color: #000;
+    text-align: center;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ra-folha p,
+  .ra-folha h2 {
+    margin: 0;
+  }
+
+  .ra-folha-obra {
+    font-size: 12pt;
+  }
+
+  .ra-folha-titulo {
+    font-size: 24pt;
+  }
+
+  .ra-folha-sub {
+    font-size: 12pt;
+    margin-bottom: 4mm !important;
+  }
+
+  .ra-folha-qr {
+    background: #fff;
+    line-height: 0;
+    flex: none;
+  }
+
+  .ra-folha-qr svg {
+    display: block;
+  }
+
+  .ra-folha-instrucao {
+    font-size: 14pt;
+    font-weight: 600;
+    margin-top: 4mm !important;
+  }
+
+  .ra-folha-aviso {
+    font-size: 12pt;
+    margin: 3mm 0 4mm !important;
+  }
+
+  .ra-folha-rodape {
+    font-size: 8pt;
+    margin-top: 3mm !important;
+    word-break: break-all;
+  }
+}

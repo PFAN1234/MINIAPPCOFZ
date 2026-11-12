@@ -15,6 +15,8 @@ import type {
   Organizacao,
   ObraLista,
   ModeloAdmin,
+  AmbienteRA,
+  QrAmbiente,
   ObraSalva,
   PavimentoResumo,
   Publicacao,
@@ -91,6 +93,13 @@ export interface RepositorioAdmin {
   registrarModelo(slug: string, registro: RegistroModelo): Promise<ModeloAdmin>
   /** RPC `admin_retirar_modelo`: tira a disciplina do visualizador (o arquivo fica guardado). */
   retirarModelo(slug: string, sigla: string): Promise<void>
+
+  /** Realidade aumentada: ambientes com geometria e seu QR (RPC `admin_listar_ra`). */
+  listarRA(obraId: string): Promise<AmbienteRA[]>
+  /** RPC `admin_definir_qr` (distâncias em metros). */
+  definirQr(ambienteId: string, qr: QrAmbiente): Promise<void>
+  /** RPC `admin_remover_qr`. */
+  removerQr(ambienteId: string): Promise<void>
 
   listarAdmins(): Promise<Admin[]>
   incluirAdmin(usuarioId: string): Promise<void>

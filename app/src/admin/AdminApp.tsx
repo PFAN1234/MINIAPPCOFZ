@@ -14,6 +14,7 @@ import Organizacao from './telas/Organizacao.tsx'
 import EditorPlanta from './telas/planta/EditorPlanta.tsx'
 import ModelosObra from './telas/modelo/ModelosObra.tsx'
 import PlantaObra from './telas/planta/PlantaObra.tsx'
+import RaObra from './telas/ra/RaObra.tsx'
 
 
 interface Sessao {
@@ -75,6 +76,7 @@ export default function AdminApp({ entrada }: { entrada: Entrada }) {
         <Route path="obras/:slug/planta/:pavimento" element={<EditorPlanta />} />
         <Route path="obras/:slug/modelos" element={<ModelosObra />} />
         <Route path="organizacao" element={<Organizacao />} />
+        <Route path="obras/:slug/ra" element={<RaObra />} />
         <Route path="admins" element={<Admins />} />
         <Route path="*" element={<p>Página não encontrada.</p>} />
       </Routes>

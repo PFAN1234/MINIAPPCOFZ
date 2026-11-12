@@ -1,4 +1,5 @@
 /** Tipos do domínio usados pelo app (independentes da origem dos dados). */
+import type { DadosRA, OrigemFoto } from '../ra/tipos.ts'
 
 /** Marcador normalizado na página do PDF (0 a 1, origem no canto superior esquerdo). */
 export interface Marcador {
@@ -113,6 +114,8 @@ export interface FotoRegistro {
   path: string
   largura: number
   altura: number
+  /** `ra_limpa` e `ra_modelo` são o par tirado na realidade aumentada. */
+  origem?: OrigemFoto
 }
 
 export interface RegistroResumo {
@@ -132,6 +135,16 @@ export interface RegistroResumo {
   publicacao: EstadoPublicacao | null
 }
 
+/** Dados de uma foto na conclusão do registro; `origem` e `ra` só nas fotos da realidade aumentada. */
+export interface FotoEnviada {
+  id: string
+  largura: number
+  altura: number
+  bytes: number
+  origem?: Exclude<OrigemFoto, 'normal'>
+  ra?: DadosRA
+}
+
 export interface NovoRegistro {
   id: string
   ambienteId: string
@@ -140,7 +153,7 @@ export interface NovoRegistro {
   /** ISO. */
   capturadoEm: string
   /** Na ordem escolhida. */
-  fotos: { id: string; largura: number; altura: number; bytes: number }[]
+  fotos: FotoEnviada[]
 }
 
 export interface CaminhoFoto {
