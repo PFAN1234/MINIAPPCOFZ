@@ -27,10 +27,9 @@ O GIF apresenta nove etapas, incluindo a abertura pelo Telegram, escolha da obra
 | `tasks/` | Plano e checklist de execução |
 | `artifacts/validation/` | Inventários, evidências e scripts de diagnóstico PDF/IFC |
 | `tests/` | Testes dos cálculos de geometria e registro |
-| `dashboard/` | Painel local de acompanhamento do desenvolvimento |
 | `DOCS HTO/` | PDFs originais e instruções para fornecer os modelos IFC |
 
-As capturas `Screenshot*.png` na raiz são as referências visuais fornecidas para os mockups. Os dois PDFs originais estão em [DOCS HTO/PDF](DOCS%20HTO/PDF/). Os modelos IFC são mantidos separadamente; consulte [DOCS HTO/README.md](DOCS%20HTO/README.md).
+Os dois PDFs originais estão em [DOCS HTO/PDF](DOCS%20HTO/PDF/). Os modelos IFC são mantidos separadamente; consulte [DOCS HTO/README.md](DOCS%20HTO/README.md).
 
 ## Reproduzir o GIF
 
@@ -54,6 +53,6 @@ python3 -m venv .venv
 .venv/bin/python -m pytest tests -q
 ```
 
-Os testes usam exemplos geométricos e inventários incluídos. A inspeção PDF pode ser reproduzida com os originais incluídos e as dependências em `artifacts/validation/pdf/reproduce/requirements.txt`. Para executar novamente a conversão IFC, forneça os modelos nos caminhos documentados. O [painel de desenvolvimento](dashboard/README.md) funciona localmente com `python3 dashboard/serve.py`; ele não é o Mini App.
+Os testes usam exemplos geométricos e inventários incluídos. A inspeção PDF pode ser reproduzida com os originais incluídos e as dependências em `artifacts/validation/pdf/reproduce/requirements.txt`. Para executar novamente a conversão IFC, forneça os modelos nos caminhos documentados.
 
-Próximas entregas, roadmap e requisitos estão em [docs/ROADMAP.md](docs/ROADMAP.md), [tasks/plan.md](tasks/plan.md) e [tasks/todo.md](tasks/todo.md).
+Próximas entregas, roadmap e requisitos estão em [docs/ROADMAP.md](docs/ROADMAP.md), [tasks/plano-app.md](tasks/plano-app.md) e [tasks/todo.md](tasks/todo.md).

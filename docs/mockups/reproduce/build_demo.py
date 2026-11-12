@@ -7,7 +7,7 @@ Reproduce from the repository root:
 
 Requires DejaVu Sans fonts (normally /usr/share/fonts/truetype/dejavu).
 Writes docs/mockups/demo-mini-app-v2.gif and docs/mockups/demo-preview-v2.png.
-Source screenshots and the earlier demo-mini-app.gif stay untouched.
+Source images stay untouched.
 """
 import hashlib
 import json
