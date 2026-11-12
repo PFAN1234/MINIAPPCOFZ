@@ -83,6 +83,19 @@ Funções auxiliares (`privado`, `security definer`, `stable`):
 
 Erros usam `raise exception` com mensagem em português e `errcode`: `28000` para não autenticado, `42501` para sem permissão, `P0002` para não encontrado e `23505` para conflito de id ou pendência já encerrada. Os casos de validação usam `22023`.
 
+## Realidade aumentada (migration `20261113090000_ra.sql`)
+
+Contrato completo em `docs/contrato-ra.md`.
+
+- `ra_referencial` (uma linha por obra): `sigla`, `revisao` e `coordenadas` (9 números de `getCoordinates()` do `.frag` de referência).
+- `ambiente_geometria` (uma por ambiente): `guid`, `contorno` (`[[x, z], ...]`, 3 ou mais pontos), `y_piso`, `y_teto` (maior que `y_piso`) e `origem`.
+- `ambiente_qr` (uma por ambiente): `parede` (aresta `i` do contorno, `>= 0`), `distancia_m` (`>= 0`), `altura_m` (0 a 5), `lado_m` (0,05 a 1) e `atualizado_por`.
+- `modelo.matriz`: nula (identidade) ou array de 16 números.
+- `foto.origem` (`normal`, `ra_limpa` ou `ra_modelo`; padrão `normal`) e `foto.ra` (jsonb; nulo quando `origem = 'normal'`).
+- RLS nas três tabelas novas: `select` para participantes da obra (`privado.eh_participante`) e admins (`privado.eh_admin`); sem política de escrita para clientes. O `service_role` escreve (seed) e lê `ambiente`.
+- `concluir_registro` (mesma assinatura) aceita `origem` e `ra` em cada item de `fotos`; ausentes valem `'normal'` e `null`. `origem` fora da lista ou `ra` com `origem = 'normal'` dão `22023`. `encerrar_pendencia` não muda.
+- RPCs de admin: `admin_listar_ra(p_obra uuid)`, `admin_definir_qr(p_ambiente, p_parede, p_distancia_m, p_altura_m, p_lado_m)` (exige geometria, `p_parede` dentro do contorno e `p_distancia_m` até o comprimento da parede) e `admin_remover_qr(p_ambiente)`.
+
 ## Seed da HTO
 
 `scripts/gerar_seed.py` lê `data/hto/ambientes.json` e escreve `supabase/seed/hto.sql`, idempotente com `on conflict ... do update`:

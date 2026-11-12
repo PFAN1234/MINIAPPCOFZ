@@ -134,3 +134,23 @@ describe('enviarRegistro', () => {
     expect(repo.eventos.at(-1)).toBe('concluir')
   })
 })
+
+describe('fotos da realidade aumentada', () => {
+  it('leva origem e dados do alinhamento só nas fotos da RA', async () => {
+    const r = rascunho(3)
+    const ra = {
+      par: r.fotos[2].id,
+      modelos: [{ sigla: 'ELT', revisao: 'R01', hash: 'abc' }],
+      alinhamento: 'cantos' as const,
+      pose: { posicao: [1, 2, 3] as [number, number, number], rumo: 0.5, fov: 60 },
+    }
+    r.fotos[1] = { ...r.fotos[1], origem: 'ra_limpa', ra }
+    r.fotos[2] = { ...r.fotos[2], origem: 'ra_modelo', ra: { ...ra, par: r.fotos[1].id } }
+    const repo = repoFalso()
+    await enviarRegistro(repo, r)
+    const enviado = repo.registros.get(r.id)!
+    expect(enviado.fotos[0]).toEqual({ id: r.fotos[0].id, largura: 10, altura: 10, bytes: 2 })
+    expect(enviado.fotos[1]).toMatchObject({ origem: 'ra_limpa', ra: { par: r.fotos[2].id, alinhamento: 'cantos' } })
+    expect(enviado.fotos[2]).toMatchObject({ origem: 'ra_modelo', ra: { par: r.fotos[1].id } })
+  })
+})

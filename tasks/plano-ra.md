@@ -124,3 +124,16 @@ Quatro ambientes da HTO, Android e iPhone: medir o erro em pontos conhecidos (ca
 ## Execução
 
 Conversa principal (Opus 5.5): contratos de cada fase, a conta do alinhamento e as revisões. Subagentes com contexto limpo: página de teste do RA0, scripts de vínculo e geometria, testes e documentação (Sonnet 5.5 ou Haiku 5.5, modelo definido na delegação). Cada fase ganha um `docs/contrato-ra<n>.md` antes de começar, como nas fases anteriores.
+
+## Andamento (2026-11-12)
+
+Uso e aplicação em `docs/ra.md`; contrato em `docs/contrato-ra.md`.
+
+- [x] RA0 (código): tela de teste do aparelho em `/ra-teste` (link `startapp=ra_teste`). Falta rodar em um Android e um iPhone dentro do Telegram.
+- [x] RA1 (código e dados da arquitetura): referencial do `ARQ.frag` R06 ajustado ao inventário do IFC pelas faces das paredes (erro de 3 mm); `scripts/gerar_geometria.py` liga 86 dos 87 ambientes da HTO ao IfcSpace (fica de fora o Jardim 2, sem área na planta); calibração do 1º pavimento derivada por votação; migration `20261113090000_ra.sql` e `supabase/seed/hto_geometria.sql`. Falta: aplicar no banco e conferir o modelo de elétrica (o `.frag` publicado não pôde ser lido desta sessão).
+- [x] RA2: `app/src/ra/` com alinhamento por dois cantos (piso, teto ou misto), ajuste fino e conferência do terceiro canto. A geometria fica no referencial do `ARQ.frag`, não em tabela por IfcSpace no app.
+- [x] RA3: par de fotos no Novo registro, fila offline, `foto.origem`/`foto.ra` e selo "RA" no histórico. A publicação no tópico não mudou: as duas fotos saem no álbum.
+- [x] RA4: cadastro e folha de impressão do QR em `/admin/obras/<slug>/ra`; leitura (`BarcodeDetector` ou `jsQR`) e pose no app; `startapp=amb_<slug>_<codigo>` abre o ambiente.
+- [ ] RA5: piloto em campo.
+
+Mudanças em relação ao plano: a RA abre como camada sobre o Novo registro (`?ra=1`), não em rota própria, para não perder o formulário; o pé-direito e o piso acabado da HTO (0,385 m e 2,60 m) valem para todos os ambientes e vêm de `data/hto/obra.json`; a detecção de passos pelo acelerômetro não foi feita.

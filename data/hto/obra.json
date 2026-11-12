@@ -58,5 +58,32 @@
       "Todos os ambientes entram na lista, inclusive áreas externas e circulações.",
       "Lista sem grupos: ordem alfabética natural com busca; 'categoria' fica só como metadado."
     ]
+  },
+  "ra": {
+    "inventario_ifc": "artifacts/validation/ifc/CE01-14PE01-ARQ-R05-inspection.json",
+    "pavimentos": {
+      "terreo": {
+        "ifc": ["TÉRREO", "PISCINA"],
+        "calibracao": {"escala": 22.677821011674272, "tx": -5800.472963677355, "ty": -3613.1408682403426}
+      },
+      "1pav": {
+        "ifc": ["1º PAV."],
+        "calibracao": null
+      }
+    },
+    "ifc_para_frag": {
+      "theta": -0.016167004574873148,
+      "tx": 197.0365965562527,
+      "ty": 333.84178410152947,
+      "dy": -1.19
+    },
+    "referencial": {
+      "sigla": "ARQ",
+      "revisao": "R06",
+      "coordenadas": [201.82966, -1.19, -327.13588, 1, 0, 0, 0, 1, 0]
+    },
+    "piso_acabado_m": 0.385,
+    "pe_direito_m": 2.6,
+    "tolerancia_marcador_m": 2.5
   }
 }

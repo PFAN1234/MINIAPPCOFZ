@@ -945,6 +945,18 @@ a.botao {
   border-radius: 999px;
 }
 
+.miniatura-ra {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  padding: 1px 6px;
+  color: var(--destaque-texto);
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--destaque);
+  border-radius: 999px;
+}
+
 .publicacao {
   font-size: 0.8rem;
   font-weight: 600;

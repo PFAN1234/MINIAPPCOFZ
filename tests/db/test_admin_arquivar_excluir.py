@@ -117,6 +117,7 @@ def popular(c, obra, amb, gestor, equipe):
     su(c, "insert into public.modelo (obra_id, sigla, caminho, bytes, hash) values (%s, 'ARQ', %s, 10, 'h')",
        (obra, f'{obra}/ARQ/{"b" * 16}.frag'))
     su(c, "insert into public.publicacao_modelo (obra_id, acao, sigla) values (%s, 'publicado', 'ARQ')", (obra,))
+    su(c, "insert into public.ra_referencial (obra_id, coordenadas) values (%s, '[0,0,0,0,0,0,0,0,0]')", (obra,))
     su(c, "insert into public.obra_config (obra_id, config) values (%s, '{\"status\": \"revisado\"}')", (obra,))
     for p in (f'{obra}/R01/terreo/planta.webp', f'{obra}/R01/terreo/planta-hd.webp',
               f'{obra}/R01/terreo/ambientes/amb0.webp'):

@@ -55,6 +55,7 @@ export default function ObraAdmin() {
           <Planta slug={d.obra.slug} pavimentos={d.pavimentos} />
           <Historico slug={d.obra.slug} />
           <Modelo3d slug={d.obra.slug} />
+          <RealidadeAumentada slug={d.obra.slug} />
           <Exportar slug={d.obra.slug} />
           <ArquivarExcluir obra={d.obra} />
         </article>
@@ -527,6 +528,22 @@ function Modelo3d({ slug }: { slug: string }) {
       </p>
       <Link className="adm-botao" to={`/obras/${slug}/modelos`}>
         Modelos 3D
+      </Link>
+    </section>
+  )
+}
+
+// --- Realidade aumentada ---------------------------------------------------------------------
+
+function RealidadeAumentada({ slug }: { slug: string }) {
+  return (
+    <section className="adm-secao" aria-labelledby="titulo-ra-obra">
+      <h2 id="titulo-ra-obra">Realidade aumentada</h2>
+      <p className="adm-dica">
+        QR code de cada ambiente: marque a posição na parede e imprima a folha A4 no tamanho exato.
+      </p>
+      <Link className="adm-botao" to={`/obras/${slug}/ra`}>
+        Realidade aumentada
       </Link>
     </section>
   )

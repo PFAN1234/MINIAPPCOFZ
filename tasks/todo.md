@@ -180,13 +180,15 @@ Verificação: sobreposição visual e controle independente de coordenadas; rec
 
 Plano: `tasks/plano-ra.md` (decisões de 2026-11-12: modelo ELT fornecido pelo usuário; só a "RA parada" dentro do Telegram; alinhamento por dois cantos e por QR; duas fotos por disparo, limpa e com o modelo).
 
-- [ ] Receber o IFC de elétrica (ELT) da HTO em `DOCS HTO/IFC/`.
-- [ ] RA0. Prova no aparelho real (Android e iPhone, dentro do Telegram): câmera, sensores, WebGL sobre vídeo, leitura de QR, ângulo de visão.
-- [ ] RA1. Dados: ELT convertido e publicado, matriz ELT → ARQ validada, vínculo ambiente ↔ IfcSpace, `ambiente_geometria`, `foto.origem` e `foto.ra`.
-- [ ] RA2. Tela de RA com alinhamento por dois cantos e ajuste fino.
-- [ ] RA3. Par de fotos no Novo registro, fila offline, publicação e histórico.
-- [ ] RA4. QR: cadastro e impressão no `/admin/`, detecção e pose no app.
-- [ ] RA5. Piloto em campo em quatro ambientes, medição do erro e `docs/ra.md`.
+- [x] Código das fases RA0 a RA4 (2026-11-12): tela de teste `/ra-teste`; geometria de 86 dos 87 ambientes no referencial do `ARQ.frag` (`scripts/gerar_geometria.py`, `data/hto/geometria.json`); migration `20261113090000_ra.sql`; tela de RA com dois cantos, QR, ajuste fino e par de fotos no registro; QR no `/admin/obras/<slug>/ra`. Uso e aplicação em `docs/ra.md`.
+- [ ] Aplicar no `miniappcofz-dev`: migration `20261113090000_ra.sql` e `supabase/seed/hto_geometria.sql`.
+- [ ] Conferir que o `ARQ.frag` publicado é o mesmo do repositório (hash `dffa24c612d76690`); se não for, refazer o ajuste do referencial.
+- [ ] Modelo de elétrica: conferir no visualizador e na RA se cai no lugar; se vier deslocado, gravar `modelo.matriz`.
+- [ ] RA0 no aparelho: `/ra-teste` em um Android e um iPhone, dentro do Telegram.
+- [ ] Conferir a cota do piso acabado e o pé-direito fora do Apto. 101 (hoje 0,385 m e 2,60 m para todos os ambientes).
+- [ ] Jardim 2 sem geometria (sem área na planta); Lobby e Circulação do 1º pavimento usam só o contorno externo (o IfcSpace tem furo).
+- [ ] Cadastrar e fixar os QRs dos ambientes do piloto.
+- [ ] RA5. Piloto em campo em quatro ambientes, medição do erro.
 
 Verificação: Vitest recupera poses sintéticas (< 1 cm, < 0,5°); e2e com câmera falsa salva o par de fotos; no aparelho, o contorno do Apto. 101 encaixa nas arestas reais. Dependência: 9 (federação validada e vínculo com o IfcSpace); o RA0 pode ser feito já.
 

@@ -1,17 +1,25 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { EstadoConsulta } from '../components/Estado.tsx'
-import { SeletorFotos } from '../components/SeletorFotos.tsx'
+import { MAX_FOTOS, SeletorFotos } from '../components/SeletorFotos.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
 import { useFotosEscolhidas } from '../components/useFotosEscolhidas.ts'
 import { useTelaCheia } from '../components/telaCheia.ts'
-import { useAmbiente } from '../dados/hooks.ts'
+import { useRepositorio } from '../dados/contexto.tsx'
+import { useAmbiente, useGeometria, useModelos } from '../dados/hooks.ts'
 import { criarRascunho } from '../dados/envio.ts'
 import { useFila } from '../offline/contexto.tsx'
 import type { AmbienteDetalhe, TipoRegistro } from '../dados/tipos.ts'
 import { disableClosingConfirmation, enableClosingConfirmation } from '../telegram.ts'
 import { registrarGuardaSaida } from '../util/guardaSaida.ts'
 import { capturadoEm } from '../util/imagem.ts'
+import { modeloComCache } from '../modelo/cacheModelo.ts'
+import type { ModeloFrag } from '../modelo/modelos.ts'
+import { recursos } from '../recursos.ts'
+import type { FotoRA } from '../ra/tipos.ts'
+
+// Three.js, That Open e a tela de RA ficam fora do pacote inicial.
+const TelaRA = lazy(() => import('../ra/TelaRA.tsx'))
 
 const MAX_LEGENDA = 1000
 
@@ -35,6 +43,31 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const [guardando, setGuardando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const saindo = useRef(false)
+
+  // Realidade aumentada: disponível quando o ambiente tem geometria e a obra tem modelo.
+  const repo = useRepositorio()
+  const [params, setParams] = useSearchParams()
+  const geometria = useGeometria(obra, ambiente, recursos.ra)
+  const modelos = useModelos(obra.slug, recursos.ra)
+  const temRA = recursos.ra && Boolean(geometria.data) && (modelos.data?.length ?? 0) > 0
+  const raAberta = temRA && params.get('ra') === '1'
+  const baixarModelo = useCallback(
+    (m: ModeloFrag) => modeloComCache(`${obra.slug}/${m.sigla}@${m.hash}`, () => repo.baixarModelo(obra.slug, m)),
+    [repo, obra.slug],
+  )
+  function alternarRA(aberta: boolean) {
+    const prox = new URLSearchParams(params)
+    if (aberta) prox.set('ra', '1')
+    else prox.delete('ra')
+    setParams(prox, { replace: true })
+  }
+  function receberDaRA(novas: FotoRA[]) {
+    adicionar(
+      novas.map((f) => f.arquivo),
+      novas,
+    )
+    alternarRA(false)
+  }
 
   const legendaLimpa = legenda.trim()
   const preparando = fotos.some((f) => f.estado === 'preparando')
@@ -125,6 +158,16 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
           <p className="campo-dica" role="status">
             {aviso}
           </p>
+          {temRA && (
+            <button
+              type="button"
+              className="botao botao-secundario botao-bloco"
+              disabled={guardando || MAX_FOTOS - fotos.length < 2}
+              onClick={() => alternarRA(true)}
+            >
+              Comparar com o modelo (RA)
+            </button>
+          )}
 
           <fieldset className="campo tipo-registro">
             <legend className="campo-rotulo">Tipo de registro</legend>
@@ -192,6 +235,21 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
           {guardando ? 'Guardando…' : 'Salvar registro'}
         </button>
       </form>
+      {raAberta && geometria.data && modelos.data && (
+        <Suspense fallback={null}>
+          <TelaRA
+            obra={obra}
+            pavimento={pavimento.nome}
+            ambiente={{ codigo: ambiente.codigo, nome: ambiente.nome_operacional }}
+            geometria={geometria.data}
+            modelos={modelos.data}
+            baixar={baixarModelo}
+            vagas={MAX_FOTOS - fotos.length}
+            onConcluir={receberDaRA}
+            onFechar={() => alternarRA(false)}
+          />
+        </Suspense>
+      )}
     </section>
   )
 }

@@ -94,6 +94,19 @@ O código (id) de um ambiente não muda depois de publicado: `registro` referenc
 
 Aplique o seed de preferência depois de confirmar as renomeações. Se ele for aplicado antes, o id novo provisório chega ao banco; quando o `manter_codigo` o troca pelo antigo, o seed seguinte o deixa inativo (todo ambiente da obra fora da lista atual fica com `ativo = false`), mas registros feitos nesse intervalo ficam presos ao id provisório.
 
+## Geometria dos ambientes para a RA
+
+`gerar_geometria.py` liga cada ambiente a um IfcSpace do inventário do IFC de arquitetura e grava o contorno no referencial do `ARQ.frag` (contrato em `docs/contrato-ra.md`). Configuração na chave `ra` de `data/<slug>/obra.json` (inventário, pavimento do app → pavimento do IFC, calibração PDF→IFC, transformação IFC→frag, referencial, `piso_acabado_m`, `pe_direito_m`, `tolerancia_marcador_m`). Não usa dependências além da biblioteca padrão e não altera `DOCS HTO/` nem `artifacts/`.
+
+```bash
+python3 scripts/gerar_geometria.py --obra hto   # grava data/hto/geometria.json e supabase/seed/hto_geometria.sql
+.venv/bin/pytest -q tests/test_geometria.py
+```
+
+O vínculo leva o marcador do ambiente ao IFC pela calibração do pavimento, procura o IfcSpace que o contém (ou o mais próximo dentro da tolerância) e só aceita se a área conferir (0,05 m² ou 1%). O que não fecha vai para `sem_vinculo` com o motivo; nada é forçado. Sem calibração documentada (1º pavimento), o script a deriva por votação de pares de área única e a grava em `calibracao`; sem maioria nítida, ele falha.
+
+O que conferir depois de rodar: o resumo no terminal (vinculados por pavimento, `sem_vinculo` e motivos, calibração derivada com pares concordantes e rms), os avisos de IfcSpace com furo (o contorno usa só o anel externo) e a revisão humana dos vínculos antes de liberar a RA. Contorno em sentido anti-horário pela fórmula do laço em (x, z). Aplicar o seed só depois da migration das tabelas `ra_referencial` e `ambiente_geometria` e do seed da obra.
+
 ## Instalação
 
 ```bash
