@@ -6,6 +6,7 @@ import {
   cortarTexto,
   criarHandler,
   formatarData,
+  nomeMostrado,
 } from "./handler.ts";
 
 const AGORA = new Date("2026-11-10T15:00:00Z");
@@ -659,4 +660,67 @@ Deno.test("aviso: obra arquivada não recebe aviso de pedido", async () => {
   assertEquals((await r.json()).avisos_enviados, 0);
   assertEquals(m.chamadas.length, 0);
   assertEquals(m.atualizacoes, []);
+});
+
+Deno.test("nome mostrado: nome de exibição, senão o do Telegram", () => {
+  assertEquals(
+    nomeMostrado({ nome: "Patricio", nome_exibicao: "CP PATRICIO" }),
+    "CP PATRICIO",
+  );
+  assertEquals(
+    nomeMostrado({ nome: "Patricio", nome_exibicao: null }),
+    "Patricio",
+  );
+  assertEquals(nomeMostrado({ nome: "Patricio" }), "Patricio");
+  assertEquals(nomeMostrado(null), null);
+});
+
+Deno.test("registro: autor pelo nome de exibição", async () => {
+  const t = tabelasBase();
+  t.usuario[0].nome_exibicao = "CP PATRICIO";
+  const m = montar({ publicacoes: [pub()], tabelas: t });
+  await rodar(m.handler);
+  const legenda = String(form(m.chamadas[0]).get("caption"));
+  assert(legenda.includes("\n👤 CP PATRICIO · 10/11 14:32\n"));
+  assertFalse(legenda.includes("Fulano"));
+});
+
+Deno.test("encerramento: quem encerrou pelo nome de exibição (escapado)", async () => {
+  const t = tabelasBase();
+  t.registro[0].tipo = "pendencia";
+  t.usuario[1].nome_exibicao = "SGT <B>";
+  t.encerramento = [{
+    id: "enc-1",
+    registro_id: "reg-1",
+    gestor_id: "u2",
+    observacao: null,
+    encerrado_em: "2026-11-11T12:05:00Z",
+  }];
+  t.foto = [{
+    id: "fe",
+    encerramento_id: "enc-1",
+    storage_path: "obra-1/reg-1/fe.jpg",
+    ordem: 0,
+  }];
+  const m = montar({
+    publicacoes: [pub({ id: 2, registro_id: null, encerramento_id: "enc-1" })],
+    tabelas: t,
+  });
+  await rodar(m.handler);
+  const legenda = String(form(m.chamadas[0]).get("caption"));
+  assert(legenda.includes("\n👤 SGT &lt;B&gt; · 11/11 09:05\n"));
+  assertFalse(legenda.includes("Gestora"));
+});
+
+Deno.test("aviso: nome de exibição e mantém o @username", async () => {
+  const t = tabelasBase();
+  t.usuario[0].nome_exibicao = "CP PATRICIO";
+  t.solicitacao_acesso = [pedido()];
+  const m = montar({ tabelas: t });
+  await rodar(m.handler);
+  assert(
+    String((m.chamadas[0].corpo as Linha).text).startsWith(
+      "🔑 <b>CP PATRICIO</b> (@fulano) pediu acesso",
+    ),
+  );
 });

@@ -7,6 +7,7 @@ import {
   MENSAGEM_COTA,
   type Armazenamento,
   type EncerramentoLocal,
+  type ObservacaoLocal,
   type RegistroLocal,
 } from './armazenamento.ts'
 
@@ -256,6 +257,78 @@ describe.each([
       expect(await a.listar('u1')).toHaveLength(1)
       expect(await a.lerFoto('r1', 'f1')).toBeDefined()
     }))
+})
+
+function observacao(id: string, usuarioId = 'u1', criadoEm = '2026-11-13T10:00:00.000Z'): ObservacaoLocal {
+  return {
+    id,
+    usuarioId,
+    obra: { id: 'o1', slug: 'hto', nome: 'HTO' },
+    texto: 'Chuva forte à tarde',
+    escritoEm: '2026-11-13T09:59:00.000Z',
+    criadoEm,
+    erro: null,
+  }
+}
+
+describe.each([
+  ['IndexedDB', () => abrirArmazenamento()],
+  ['memória', () => Promise.resolve(criarArmazenamentoMemoria())],
+])('armazenamento de observações (%s)', (_nome, abrir) => {
+  it('salva, lista por usuário em ordem de criação, atualiza o erro e remove sem mexer nos registros', async () => {
+    const a = await abrir()
+    try {
+      await a.salvar(registro('r1'), fotos())
+      await a.salvarObservacao(observacao('o2', 'u1', '2026-11-13T11:00:00.000Z'))
+      await a.salvarObservacao(observacao('o1'))
+      await a.salvarObservacao(observacao('o3', 'u2'))
+      expect((await a.listarObservacoes('u1')).map((o) => o.id)).toEqual(['o1', 'o2'])
+      expect(await a.listarObservacoes('u2')).toHaveLength(1)
+      // Observações não aparecem nas outras listas.
+      expect((await a.listar('u1')).map((r) => r.id)).toEqual(['r1'])
+      expect(await a.listarEncerramentos('u1')).toEqual([])
+
+      await a.salvarObservacao({ ...observacao('o1'), erro: { tipo: 'validacao', mensagem: 'Já emitido' } })
+      expect((await a.listarObservacoes('u1'))[0].erro?.mensagem).toBe('Já emitido')
+
+      await a.remover('o1')
+      expect((await a.listarObservacoes('u1')).map((o) => o.id)).toEqual(['o2'])
+      expect(await a.listar('u1')).toHaveLength(1)
+      expect(await a.lerFoto('r1', 'f1')).toBeDefined()
+    } finally {
+      a.fechar()
+    }
+  })
+})
+
+describe('IndexedDB: migração da versão 2 para a 3', () => {
+  it('preserva registros e encerramentos e cria o store de observações', async () => {
+    const v2 = await openDB('diario-obra', 2, {
+      upgrade(banco) {
+        const registros = banco.createObjectStore('registros', { keyPath: 'id' })
+        registros.createIndex('usuarioId', 'usuarioId')
+        const fotosStore = banco.createObjectStore('fotos', { keyPath: ['registroId', 'fotoId'] })
+        fotosStore.createIndex('registroId', 'registroId')
+        banco.createObjectStore('cache', { keyPath: 'usuarioId' })
+        const encerramentos = banco.createObjectStore('encerramentos', { keyPath: 'id' })
+        encerramentos.createIndex('usuarioId', 'usuarioId')
+      },
+    })
+    await v2.put('registros', registro('antigo'))
+    await v2.put('encerramentos', encerramento('enc'))
+    v2.close()
+
+    const a = await abrirArmazenamento()
+    try {
+      expect((await a.listar('u1')).map((r) => r.id)).toEqual(['antigo'])
+      expect((await a.listarEncerramentos('u1')).map((e) => e.id)).toEqual(['enc'])
+      expect(await a.listarObservacoes('u1')).toEqual([])
+      await a.salvarObservacao(observacao('nova'))
+      expect(await a.listarObservacoes('u1')).toHaveLength(1)
+    } finally {
+      a.fechar()
+    }
+  })
 })
 
 describe('IndexedDB: migração da versão 1 para a 2', () => {

@@ -263,3 +263,42 @@ export interface LinkAdmin {
   url: string
   expira_em: string
 }
+
+/** Observação do dia na obra (RPC `observacoes_do_dia`). */
+export interface Observacao {
+  id: string
+  /** Dia local (fuso da etapa), `AAAA-MM-DD`. */
+  data: string
+  texto: string
+  /** Hora do aparelho em que foi escrita (ISO). */
+  escrito_em: string
+  editado_em: string | null
+  /** `nome` já é o nome mostrado (de exibição ou do Telegram). */
+  autor: { id: string; nome: string }
+  /** Escrita pelo usuário da sessão. */
+  minha: boolean
+  /** O boletim do dia já foi emitido: não pode mais ser editada nem excluída. */
+  travada: boolean
+}
+
+/** Observações de hoje na obra, com o dia e o fuso da etapa. */
+export interface ObservacoesDoDia {
+  /** Hoje no fuso da etapa, `AAAA-MM-DD`. */
+  data: string
+  /** Fuso IANA da etapa (para mostrar as horas). */
+  fuso: string
+  /** O boletim de hoje já foi emitido: nada mais entra nem muda. */
+  travada: boolean
+  /** Por `escrito_em`. */
+  observacoes: Observacao[]
+}
+
+/** Dados de `salvar_observacao`: id novo cria; id existente edita o texto (só o autor). */
+export interface NovaObservacao {
+  /** Gerado no aparelho (chave de idempotência). */
+  id: string
+  obraId: string
+  texto: string
+  /** ISO, hora do aparelho. */
+  escritoEm: string
+}

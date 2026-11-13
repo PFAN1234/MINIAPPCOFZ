@@ -127,6 +127,13 @@ function linha(texto: string, html?: string) {
   return { texto, html: html ?? escaparHtml(texto) };
 }
 
+/** Nome mostrado de uma pessoa: o de exibição (definido pelo admin) ou o do Telegram. */
+export function nomeMostrado(
+  u: { nome?: string | null; nome_exibicao?: string | null } | null,
+): string | null {
+  return u?.nome_exibicao || u?.nome || null;
+}
+
 export function criarHandler(deps: Deps) {
   const { admin, telegram } = deps;
   const agora = deps.agora ?? (() => new Date());
@@ -222,7 +229,7 @@ export function criarHandler(deps: Deps) {
       : null;
     const autor = await um(
       "usuario",
-      "nome",
+      "nome, nome_exibicao",
       "id",
       encerramento ? encerramento.gestor_id : registro.autor_id,
     );
@@ -231,7 +238,7 @@ export function criarHandler(deps: Deps) {
     const quando = formatarData(
       encerramento ? encerramento.encerrado_em : registro.capturado_em,
     );
-    const nomeAutor = autor?.nome ?? "Usuário";
+    const nomeAutor = nomeMostrado(autor) ?? "Usuário";
     const rodape = linha(`👤 ${nomeAutor} · ${quando}`);
 
     let fotosLinhas;
@@ -478,8 +485,13 @@ export function criarHandler(deps: Deps) {
       const obra = porId.get(p.obra_id);
       if (!obra) continue;
       try {
-        const u = await um("usuario", "nome, username", "id", p.usuario_id);
-        const quem = `<b>${escaparHtml(u?.nome ?? "Alguém")}</b>${
+        const u = await um(
+          "usuario",
+          "nome, nome_exibicao, username",
+          "id",
+          p.usuario_id,
+        );
+        const quem = `<b>${escaparHtml(nomeMostrado(u) ?? "Alguém")}</b>${
           u?.username ? ` (@${escaparHtml(u.username)})` : ""
         }`;
         const url = escaparHtml(link(`acessos_${obra.slug}`));

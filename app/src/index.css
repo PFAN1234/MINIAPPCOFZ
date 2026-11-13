@@ -1661,3 +1661,152 @@ a.botao {
   background: var(--destaque);
   border-color: var(--destaque);
 }
+
+/* Boletim, parte 2: cartão "Observações do dia" na página da obra */
+.cartao-obs {
+  margin: 12px 0;
+  padding: 12px 14px 14px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+}
+
+.app-main section + .cartao-obs {
+  margin-top: 12px;
+}
+
+.cartao-obs-cabeca {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cartao-obs-titulo {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.cartao-obs-data {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cartao-obs-travada {
+  margin: 10px 0 0;
+}
+
+.cartao-obs-lista {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.obs-item {
+  padding: 10px 0;
+  border-top: 1px solid var(--borda-fraca);
+}
+
+.obs-item:first-child {
+  border-top: 0;
+}
+
+.obs-item:last-child {
+  padding-bottom: 0;
+}
+
+.obs-meta {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.obs-editada {
+  font-weight: 400;
+  font-style: italic;
+}
+
+.obs-texto {
+  margin: 2px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.obs-local .obs-texto {
+  color: var(--texto-suave);
+}
+
+.obs-local .publicacao {
+  display: block;
+  margin: 4px 0 0;
+}
+
+.obs-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.obs-acao,
+.obs-ver-todas {
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.obs-acao:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.obs-ver-todas {
+  width: 100%;
+  margin-top: 4px;
+  color: var(--link);
+}
+
+.obs-edicao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.cartao-obs-vazio {
+  margin: 10px 0 0;
+  color: var(--texto-suave);
+}
+
+.cartao-obs-vazio p {
+  margin: 0 0 8px;
+}
+
+.obs-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--borda-fraca);
+}
+
+.obs-form .campo-rotulo {
+  margin: 0;
+}
+
+.obs-salvar {
+  align-self: flex-end;
+  min-width: 120px;
+}

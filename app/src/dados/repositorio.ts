@@ -1,7 +1,10 @@
 import type {
   AmbienteDetalhe,
   CaminhoFoto,
+  NovaObservacao,
   NovoEncerramento,
+  Observacao,
+  ObservacoesDoDia,
   Participante,
   PendenciaDetalhe,
   PublicacaoProblema,
@@ -82,6 +85,12 @@ export interface Repositorio {
   criarLinkAdmin(): Promise<LinkAdmin>
   /** Nome e logo da organização militar (faixa de identidade do topo). */
   organizacao(): Promise<Organizacao>
+  /** Observações de hoje na obra (dia no fuso da etapa), com o estado de travada do dia. */
+  observacoesDoDia(obraId: string): Promise<ObservacoesDoDia>
+  /** Cria (id novo) ou edita o texto (id existente). Idempotente. Falhas sobem como `ErroEnvio`. */
+  salvarObservacao(dados: NovaObservacao): Promise<Observacao>
+  /** Só o autor e antes da emissão do boletim; id inexistente não é erro. Falhas sobem como `ErroEnvio`. */
+  excluirObservacao(id: string): Promise<void>
 }
 
 /**
@@ -93,11 +102,13 @@ export async function criarRepositorio(): Promise<Repositorio> {
   if (import.meta.env.VITE_DADOS === 'fixture') {
     const { criarRepositorioFixture } = await import('./fixture.ts')
     // `localStorage['fixture-admin'] = 'nao'` esconde o botão Administração;
-    // `localStorage['fixture-logo'] = <url>` dá um logo à organização (capturas de tela).
+    // `localStorage['fixture-logo'] = <url>` dá um logo à organização (capturas de tela);
+    // `localStorage['fixture-boletim'] = 'emitido'` simula o boletim de hoje já emitido.
     return criarRepositorioFixture({
       persistencia: localStorage,
       admin: localStorage.getItem('fixture-admin') !== 'nao',
       logo: localStorage.getItem('fixture-logo'),
+      boletimEmitido: localStorage.getItem('fixture-boletim') === 'emitido',
     })
   }
   const { criarRepositorioSupabase } = await import('./supabase.ts')
