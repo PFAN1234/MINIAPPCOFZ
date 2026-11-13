@@ -16,7 +16,7 @@ Ao fim de cada dia a etapa emite um boletim que compila tudo o que foi lançado 
 **Localização:** `etapa` ganha `latitude`, `longitude`, `endereco`, `fuso` (IANA, ex.: `America/Fortaleza`, preenchido pela resposta do Open-Meteo com `timezone=auto`) e `inmet_estacao` (código, ex.: `A305`). Preenchida no formulário da etapa (ver abaixo): endereço/CEP → geocodificação → pino no mapa para confirmar; a estação INMET é sugerida pela menor distância (lista de estações automáticas) e pode ser trocada.
 
 **Open-Meteo** (`api.open-meteo.com/v1/forecast`, `past_days=1`, `timezone=auto`): horário de `temperature_2m`, `relative_humidity_2m`, `apparent_temperature`, `precipitation`, `weather_code`, `cloud_cover`, `wind_speed_10m`, `wind_direction_10m`, `wind_gusts_10m`, `uv_index`. Testado em 2026-11-13 para a Av. Borges de Melo: responde com fuso `America/Fortaleza`.
-- É modelo, não medição: para 11/11/2026 o modelo deu 3,8 mm em chuvisco (0,1–0,5 mm/h de manhã) enquanto o boletim manual registrou sol. Regra: chuva < 0,2 mm/h não conta como "com chuva"; o INMET aparece ao lado como dado medido.
+- É modelo, não medição: para 11/11/2026 o modelo deu 3,8 mm em chuvisco (0,1–0,5 mm/h de manhã) enquanto o boletim manual registrou sol. Regra: chuva < 0,2 mm/h não conta como "com chuva"; o INMET aparece ao lado como dado medido e, quando disponível, prevalece na contagem de dias com chuva. Divergência entre as fontes aparece em destaque no boletim.
 - Plano gratuito é para uso não comercial (~1 chamada por etapa por dia); confirmar o enquadramento do órgão.
 
 **INMET** (`apitempo.inmet.gov.br`): dados horários da estação (UTC). Em 2026-11-13 a API não respondeu a partir do ambiente de desenvolvimento; a API atual exige token. Pendente: pedir o token ao INMET e guardar nos segredos das Edge Functions. Sem token ou sem resposta, o boletim sai só com o Open-Meteo e diz "INMET indisponível".
@@ -38,7 +38,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 
 ## Conteúdo do boletim
 
-1. Cabeçalho (logo e nome da OM, número, data de expedição, assunto, obra/serviço, local, responsáveis).
+1. Cabeçalho (logo da OM, linhas da OM, número, data de expedição, assunto, obra/serviço, local, responsáveis). O logo é o da OM cadastrado em `/admin/organizacao` (`organizacao.logo_path`, já existe); `organizacao` ganha `cabecalho` (linhas de subordinação, ex.: COMANDO DA AERONÁUTICA / DIRETORIA DE INFRAESTRUTURA DA AERONÁUTICA / COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)), editado na mesma tela.
 2. Dados da obra/serviço (administrativos + prazo).
 3. Condições meteorológicas.
 4. Indicadores (etapa e por obra):
@@ -60,6 +60,10 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 - Emitido = imutável. Retificação: o fiscal edita observações/correções no app, gera `-R1` com novo snapshot; o anterior fica no histórico como substituído.
 - Lançamentos que chegam depois da emissão (registro offline com `capturado_em` do dia já emitido): aparecem no boletim seguinte em "Lançamentos recebidos após a emissão" e o app sugere retificação ao fiscal.
 - Idempotente: `unique (etapa_id, data, revisao)`; nova tentativa não duplica número nem mensagem.
+
+## Prévia visual
+
+`docs/mockups/boletim-diario-v1.pdf` (e páginas em PNG): gerada por `docs/mockups/reproduce/boletim/` com o clima real do Open-Meteo de 11/11/2026 e registros, fotos, indicadores e INMET ilustrativos.
 
 ## Etapas de implementação
 
