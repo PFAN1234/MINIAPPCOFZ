@@ -332,6 +332,8 @@ export interface BoletimEmitido {
   pdf_path: string | null
   /** Já enviado ao grupo do Telegram da etapa. */
   publicado: boolean
+  /** Estado da publicação no Telegram (`publicacao_telegram.estado`); null = ainda não enfileirada. */
+  publicacao_estado: string | null
 }
 
 export type EstadoEmissao = 'pendente' | 'gerando' | 'emitido' | 'falhou'
@@ -345,6 +347,8 @@ export interface PedidoEmissao {
   tentativas: number
   erro: string | null
   atualizado_em: string
+  /** Número do boletim do pedido (devolvido por `admin_pedir_emissao`). */
+  numero?: string
 }
 
 export interface ListaBoletins {

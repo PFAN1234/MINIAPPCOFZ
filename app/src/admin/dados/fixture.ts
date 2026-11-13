@@ -351,6 +351,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       emitido_por_nome: por,
       pdf_path: `etapa-2a/${numero.replace(/\//g, '')}.pdf`,
       publicado,
+      publicacao_estado: publicado ? 'publicado' : 'pendente',
     }
   }
   const boletins: (BoletimEmitido & { etapa_id: string })[] = [
@@ -710,16 +711,17 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       }
       const doDia = boletins.filter((b) => b.etapa_id === e.id && b.data === data)
       const revisao = doDia.length === 0 ? 0 : Math.max(...doDia.map((b) => b.revisao)) + 1
+      const numeroDe = (r: number) => numeroBoletim(e.sigla as string, data, organizacao.nome) + (r > 0 ? `-R${r}` : '')
       const agora = new Date().toISOString()
       // Um pedido que falhou para a mesma revisão volta para a fila.
       const antigo = pedidos.find((p) => p.etapa_id === e.id && p.data === data && p.revisao === revisao)
       if (antigo) {
         Object.assign(antigo, { estado: 'pendente', tentativas: 0, erro: null, atualizado_em: agora })
-        return semEtapa(antigo)
+        return { ...semEtapa(antigo), numero: numeroDe(revisao) }
       }
       const novo = { id: ++sequenciaPedido, etapa_id: e.id, data, revisao, estado: 'pendente' as const, tentativas: 0, erro: null, atualizado_em: agora }
       pedidos.push(novo)
-      return semEtapa(novo)
+      return { ...semEtapa(novo), numero: numeroDe(revisao) }
     },
 
     async urlPdfBoletim(caminho) {

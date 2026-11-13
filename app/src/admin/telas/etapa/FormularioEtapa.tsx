@@ -4,9 +4,18 @@
  * nas RPCs (`admin_salvar_etapa`); aqui só o que poupa uma ida ao servidor.
  */
 import { useMemo, useState, type FormEvent } from 'react'
-import { Campo, Resultado, useAtrasado } from '../../componentes.tsx'
-import { useOrganizacao, useSalvarEtapa, useSugestoesEstacoes } from '../../dados/hooks.ts'
-import { FUSOS, type CamposEtapa, type DadosEtapa, type EstacaoSugerida, type EtapaDetalhe, type EtapaSalva } from '../../dados/tipos.ts'
+import { Campo, Resultado } from '../../componentes.tsx'
+import { useOrganizacao, useSalvarEtapa } from '../../dados/hooks.ts'
+import {
+  ESTACAO_PADRAO,
+  ESTACAO_RESERVA_PADRAO,
+  ESTACOES_OBSERVATORIO,
+  FUSOS,
+  type CamposEtapa,
+  type DadosEtapa,
+  type EtapaDetalhe,
+  type EtapaSalva,
+} from '../../dados/tipos.ts'
 import {
   CNPJ,
   coordenada,
@@ -24,7 +33,7 @@ import {
 
 const SLUG = /^[a-z0-9-]+$/
 const SIGLA = /^[A-Z0-9]{1,10}$/
-const ESTACAO = /^[A-Z][0-9]{3}$/
+const ESTACAO = /^[0-9]{3,6}$/
 
 function inteiro(texto: string): number | null {
   return /^-?\d{1,9}$/.test(texto.trim()) ? Number(texto) : null
@@ -40,8 +49,8 @@ interface Valores {
   latitude: string
   longitude: string
   fuso: string
-  inmet_estacao: string
-  inmet_estacao_reserva: string
+  estacao: string
+  estacao_reserva: string
   boletim_horario: string
   objeto: string
   local: string
@@ -66,8 +75,9 @@ function valoresDe(e: EtapaDetalhe | null): Valores {
     latitude: textoDecimal(e?.latitude),
     longitude: textoDecimal(e?.longitude),
     fuso: e?.fuso ?? 'America/Sao_Paulo',
-    inmet_estacao: e?.inmet_estacao ?? '',
-    inmet_estacao_reserva: e?.inmet_estacao_reserva ?? '',
+    // Na criação, Montese e, de reserva, Benfica.
+    estacao: e ? (e.estacao ?? '') : ESTACAO_PADRAO,
+    estacao_reserva: e ? (e.estacao_reserva ?? '') : ESTACAO_RESERVA_PADRAO,
     boletim_horario: e?.boletim_horario ?? '23:30',
     objeto: e?.objeto ?? '',
     local: e?.local ?? '',
@@ -110,10 +120,10 @@ function lerCampos(v: Valores): CamposEtapa {
     if (longitude! < -74 || longitude! > -28) falha('Longitude fora do Brasil: use um valor entre -74 e -28.')
   }
 
-  const principal = texto(v.inmet_estacao)
-  const reserva = texto(v.inmet_estacao_reserva)
+  const principal = texto(v.estacao)
+  const reserva = texto(v.estacao_reserva)
   for (const e of [principal, reserva]) {
-    if (e !== null && !ESTACAO.test(e)) falha('Código de estação do INMET inválido: uma letra e três dígitos, como A305.')
+    if (e !== null && !ESTACAO.test(e)) falha('Código de estação inválido: de 3 a 6 dígitos, como 8836.')
   }
   if (principal !== null && principal === reserva) falha('A estação de reserva precisa ser diferente da principal.')
 
@@ -144,8 +154,8 @@ function lerCampos(v: Valores): CamposEtapa {
     latitude,
     longitude,
     fuso: v.fuso,
-    inmet_estacao: principal,
-    inmet_estacao_reserva: reserva,
+    estacao: principal,
+    estacao_reserva: reserva,
     boletim_horario: v.boletim_horario,
     objeto: texto(v.objeto),
     local: texto(v.local),
@@ -197,8 +207,6 @@ export default function FormularioEtapa({ etapa, sucesso = null, onSalvo }: Prop
     if (latitude < -34 || latitude > 6 || longitude < -74 || longitude > -28) return null
     return { latitude, longitude }
   }, [v.latitude, v.longitude])
-  const pontoAtrasado = useAtrasado(ponto)
-  const estacoes = useSugestoesEstacoes(pontoAtrasado)
 
   function enviar(e: FormEvent) {
     e.preventDefault()
@@ -344,16 +352,16 @@ export default function FormularioEtapa({ etapa, sucesso = null, onSalvo }: Prop
             )}
           </Campo>
           <CampoEstacao
-            rotulo="Estação INMET"
-            valor={v.inmet_estacao}
-            sugestoes={estacoes.data ?? []}
-            onMudar={(x) => mudar('inmet_estacao', x)}
+            rotulo="Estação meteorológica"
+            dica="Estação do Observatório de Fortaleza copiada no boletim (tabela “Últimas 24 horas”)."
+            valor={v.estacao}
+            onMudar={(x) => mudar('estacao', x)}
           />
           <CampoEstacao
-            rotulo="Estação INMET de reserva"
-            valor={v.inmet_estacao_reserva}
-            sugestoes={estacoes.data ?? []}
-            onMudar={(x) => mudar('inmet_estacao_reserva', x)}
+            rotulo="Estação de reserva"
+            dica="Usada quando a principal está sem leitura nas últimas 3 horas."
+            valor={v.estacao_reserva}
+            onMudar={(x) => mudar('estacao_reserva', x)}
           />
         </div>
       </section>
@@ -469,49 +477,30 @@ export function MapaPrevia({ ponto }: { ponto: { latitude: number; longitude: nu
   )
 }
 
-// --- Estação do INMET ------------------------------------------------------------------------
+// --- Estação do Observatório ----------------------------------------------------------------
 
-function rotuloEstacao(e: EstacaoSugerida): string {
-  return `${e.codigo} · ${e.nome} (${e.uf}) · ${e.distancia_km.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`
-}
-
-/** Lista das estações mais próximas, ou o código digitado enquanto a tabela de estações está vazia. */
+/** Lista fixa das estações do Observatório de Fortaleza (mantém um código fora da lista, se já existir). */
 function CampoEstacao({
   rotulo,
+  dica,
   valor,
-  sugestoes,
   onMudar,
 }: {
   rotulo: string
+  dica: string
   valor: string
-  sugestoes: EstacaoSugerida[]
   onMudar: (v: string) => void
 }) {
-  if (sugestoes.length === 0) {
-    return (
-      <Campo rotulo={rotulo} dica="A lista de estações aparece depois da primeira coleta de clima.">
-        {(p) => (
-          <input
-            {...p}
-            value={valor}
-            onChange={(e) => onMudar(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
-            maxLength={4}
-            placeholder="A305"
-          />
-        )}
-      </Campo>
-    )
-  }
-  const fora = valor !== '' && !sugestoes.some((s) => s.codigo === valor)
+  const fora = valor !== '' && !ESTACOES_OBSERVATORIO.some((s) => s.codigo === valor)
   return (
-    <Campo rotulo={rotulo} dica="As estações operantes mais próximas da obra.">
+    <Campo rotulo={rotulo} dica={dica}>
       {(p) => (
         <select {...p} value={valor} onChange={(e) => onMudar(e.target.value)}>
           <option value="">Nenhuma</option>
           {fora && <option value={valor}>{valor} (atual)</option>}
-          {sugestoes.map((s) => (
+          {ESTACOES_OBSERVATORIO.map((s) => (
             <option key={s.codigo} value={s.codigo}>
-              {rotuloEstacao(s)}
+              {s.nome} ({s.codigo})
             </option>
           ))}
         </select>

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { useOrganizacao } from './dados/hooks.ts'
 import { CATEGORIAS, ROTULO_CATEGORIA } from './dados/tipos.ts'
 
@@ -104,16 +104,6 @@ export function SelectCategoria({
       ))}
     </select>
   )
-}
-
-/** Valor que só acompanha o original depois de `ms` sem mudar (evita uma consulta por tecla). */
-export function useAtrasado<T>(valor: T, ms = 400): T {
-  const [atrasado, setAtrasado] = useState(valor)
-  useEffect(() => {
-    const t = setTimeout(() => setAtrasado(valor), ms)
-    return () => clearTimeout(t)
-  }, [valor, ms])
-  return atrasado
 }
 
 /** Rótulo, controle e dica de um campo de formulário; `obrigatorio` marca o rótulo com um asterisco. */

@@ -1169,3 +1169,20 @@ textarea {
     overflow-x: auto;
   }
 }
+
+/* Boletins da etapa (prévia, emissão, pedidos e emitidos). */
+.adm-boletim-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.adm-boletim-acoes .adm-campo-form {
+  max-width: 220px;
+}
+
+.adm-selo-erro {
+  color: var(--adm-erro);
+  border-color: currentColor;
+}

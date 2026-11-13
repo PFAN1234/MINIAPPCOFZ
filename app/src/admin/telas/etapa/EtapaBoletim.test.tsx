@@ -79,36 +79,34 @@ describe('nova etapa: formulário em seções', () => {
     expect(screen.queryByTitle(/Mapa da obra/)).not.toBeInTheDocument()
   })
 
-  it('sem estações cadastradas, pede o código; com coordenadas, oferece as mais próximas', async () => {
+  it('estação principal e reserva: lista fixa do Observatório, com Montese e Benfica na criação', async () => {
     const user = userEvent.setup()
     renderizar('/nova-etapa')
-    const campo = await screen.findByRole('textbox', { name: 'Estação INMET' })
-    expect(screen.getAllByText('A lista de estações aparece depois da primeira coleta de clima.')).toHaveLength(2)
-    await user.type(campo, 'a30')
-    expect(campo).toHaveValue('A30')
-
-    await user.type(screen.getByLabelText('Latitude'), '-3,761')
-    await user.type(screen.getByLabelText('Longitude'), '-38,5297')
-    const lista = await screen.findByRole('combobox', { name: 'Estação INMET' })
-    const opcoes = within(lista).getAllByRole('option').map((o) => o.textContent ?? '')
-    expect(opcoes.slice(0, 2)).toEqual(['Nenhuma', 'A30 (atual)'])
-    expect(opcoes.slice(2).map((o) => o.slice(0, 4))).toEqual(['A305', 'A360', 'A347'])
-    expect(opcoes[2]).toMatch(/^A305 · FORTALEZA \(CE\) · \d+,\d km$/)
-    // o valor digitado, que não está na lista, continua disponível
-    expect(lista).toHaveValue('A30')
-    await user.selectOptions(lista, 'A305')
-    expect(lista).toHaveValue('A305')
+    const principal = await screen.findByRole('combobox', { name: 'Estação meteorológica' })
+    const reserva = screen.getByRole('combobox', { name: 'Estação de reserva' })
+    expect(principal).toHaveDisplayValue('Montese (8836)')
+    expect(reserva).toHaveDisplayValue('Benfica (9281)')
+    const opcoes = within(principal).getAllByRole('option').map((o) => o.textContent)
+    expect(opcoes).toHaveLength(12)
+    expect(opcoes[0]).toBe('Nenhuma')
+    expect(opcoes).toContain('Dom Lustosa (3318)')
+    expect(opcoes).toContain('Granja Lisboa (9282)')
+    await user.selectOptions(reserva, '8836')
+    await user.type(screen.getByLabelText('Slug'), '8a-etapa')
+    await user.type(screen.getByLabelText('Nome'), '8ª ETAPA')
+    await user.type(screen.getByLabelText('Sigla'), '8')
+    await user.type(screen.getByLabelText('Latitude'), '-3,7')
+    await user.type(screen.getByLabelText('Longitude'), '-38,5')
+    await user.click(screen.getByRole('button', { name: 'Criar etapa' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('A estação de reserva precisa ser diferente da principal.')
   })
 
-  it('sem sugestões (tabela vazia), mantém o campo de código', async () => {
+  it('código de estação fora da lista continua visível como "(atual)"', async () => {
     const repo = criarRepositorioAdminFixture()
-    vi.spyOn(repo, 'sugerirEstacoes').mockResolvedValue([])
-    const user = userEvent.setup()
-    renderizar('/nova-etapa', repo)
-    await user.type(await screen.findByLabelText('Latitude'), '-3,761')
-    await user.type(screen.getByLabelText('Longitude'), '-38,5297')
-    await new Promise((r) => setTimeout(r, 600))
-    expect(screen.getByRole('textbox', { name: 'Estação INMET' })).toBeInTheDocument()
+    const e = await repo.obterEtapa('2a-etapa')
+    await repo.salvarEtapa({ id: e.id, nome: e.nome, ordem: e.ordem, estacao: '1234' })
+    renderizar('/etapas/2a-etapa', repo)
+    expect(await screen.findByRole('combobox', { name: 'Estação meteorológica' })).toHaveDisplayValue('1234 (atual)')
   })
 
   it('aplica as máscaras de CNPJ e de valor e cria a etapa com todos os dados', async () => {
@@ -140,6 +138,8 @@ describe('nova etapa: formulário em seções', () => {
       latitude: -3.7,
       longitude: -38.5,
       fuso: 'America/Sao_Paulo',
+      estacao: '8836',
+      estacao_reserva: '9281',
       boletim_horario: '23:30',
       contratada_cnpj: '12.345.678/0001-95',
       valor_original: 79499000,
@@ -201,7 +201,7 @@ describe('página da etapa: cadastro', () => {
     renderizar('/etapas/3a-etapa', repo)
     const aviso = await screen.findByText(/^Faltam para o boletim:/)
     expect(aviso).toHaveTextContent(
-      'Faltam para o boletim: sigla, localização (latitude e longitude), estação do INMET, obra/serviço, local, contratante, contrato, contratada, CNPJ da contratada, número da OS, data da OS, vigência, valor original, área construída, responsáveis.',
+      'Faltam para o boletim: sigla, localização (latitude e longitude), estação meteorológica, obra/serviço, local, contratante, contrato, contratada, CNPJ da contratada, número da OS, data da OS, vigência, valor original, área construída, responsáveis.',
     )
     await user.type(screen.getByLabelText('Sigla'), '3')
     await user.type(screen.getByLabelText('Latitude'), '-3,7')
@@ -209,7 +209,7 @@ describe('página da etapa: cadastro', () => {
     await user.click(screen.getByRole('button', { name: 'Salvar etapa' }))
     expect(await screen.findByText('Etapa salva.')).toBeInTheDocument()
     expect(salvar).toHaveBeenCalledWith({ id: 'etapa-3a', nome: '3ª ETAPA', ordem: 3, sigla: '3', latitude: -3.7, longitude: -38.5 })
-    expect(await screen.findByText(/^Faltam para o boletim: estação do INMET/)).toBeInTheDocument()
+    expect(await screen.findByText(/^Faltam para o boletim: estação meteorológica/)).toBeInTheDocument()
     expect(screen.getByLabelText('Latitude')).toHaveValue('-3,7')
   })
 
