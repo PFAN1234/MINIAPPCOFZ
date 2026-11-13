@@ -265,3 +265,15 @@ Decisão de 2026-11-13: qualquer participante da obra (equipe ou gestor) encerra
 - [x] Mini App: formulário de encerramento para todos os participantes, sem a nota "Só gestores…"; fixture igual.
 - [x] Aplicado no `miniappcofz-dev` (2026-11-13).
 - [ ] Merge na main.
+
+## Boletim de Acompanhamento Diário
+
+Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa por dia, emissão automática com retificação (`-R1`), clima Open-Meteo + INMET, número `BA<sigla>/<YYMMDD>/<OM>` (ex.: `BA2/261111/COFZ`).
+
+- [ ] Migration: sigla, localização, fuso, estação INMET e dados administrativos da etapa; `etapa_aditivo`, `clima_dia`, `boletim`, bucket `boletins`, RLS e numeração.
+- [ ] Admin: dados administrativos, aditivos, localização no mapa e estação INMET sugerida.
+- [ ] Edge Function `coletar-clima` (Open-Meteo + INMET) com testes.
+- [ ] Snapshot do dia: indicadores, serviços e pendências, com testes de banco (inclui fuso e lançamento tardio).
+- [ ] Template HTML, PDF, envio ao grupo da etapa no Telegram.
+- [ ] Agendamento por etapa, retificação e tela "Boletins" no Mini App.
+- [ ] Externo: token do INMET; confirmar uso do Open-Meteo gratuito; coordenadas e dados administrativos da 2ª etapa.
