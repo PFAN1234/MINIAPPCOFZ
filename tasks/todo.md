@@ -268,12 +268,14 @@ Decisão de 2026-11-13: qualquer participante da obra (equipe ou gestor) encerra
 
 ## Boletim de Acompanhamento Diário
 
-Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa por dia, emissão automática com retificação (`-R1`), clima Open-Meteo + INMET, número `BA<sigla>/<YYMMDD>/<OM>` (ex.: `BA2/261111/COFZ`).
+Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa por dia, emissão automática com retificação (`-R1`), clima só do INMET (céu estimado pela radiação), número `BA<sigla>/<YYMMDD>/<OM>` (ex.: `BA2/261111/COFZ`), nome de exibição definido por admins, observações por obra escritas pelos participantes. Prévia: `docs/mockups/boletim-diario-v2.pdf`.
 
 - [ ] Migration: sigla, localização, fuso, estação INMET e dados administrativos da etapa; `etapa_aditivo`, `clima_dia`, `boletim`, bucket `boletins`, RLS e numeração.
 - [ ] Admin: cadastro da etapa com sigla, localização (mapa + estação INMET sugerida) e dados do contrato, editáveis depois; aditivos na página da etapa.
-- [ ] Edge Function `coletar-clima` (Open-Meteo + INMET) com testes.
+- [ ] Página Pessoas no admin e nome de exibição no Mini App, no Telegram e nos boletins.
+- [ ] Cartão Observações do dia na página da obra (com fila offline e trava após a emissão).
+- [ ] Edge Function `coletar-clima` (INMET, estação reserva, céu pela radiação) com testes; acesso ao INMET a partir de `sa-east-1`.
 - [ ] Snapshot do dia: indicadores, serviços e pendências, com testes de banco (inclui fuso e lançamento tardio).
 - [ ] Template HTML, PDF, envio ao grupo da etapa no Telegram.
 - [ ] Agendamento por etapa, retificação e tela "Boletins" no Mini App.
-- [ ] Externo: token do INMET; confirmar uso do Open-Meteo gratuito; coordenadas e dados administrativos da 2ª etapa.
+- [ ] Externo: token do INMET; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.

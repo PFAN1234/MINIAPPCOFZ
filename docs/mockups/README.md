@@ -2,9 +2,9 @@
 
 ## Boletim de Acompanhamento Diário (2026-11-13)
 
-Prévia do boletim `BA2/261111/COFZ` em A4: [PDF](boletim-diario-v1.pdf) · páginas [1](boletim-diario-v1-p-1.png), [2](boletim-diario-v1-p-2.png), [3](boletim-diario-v1-p-3.png), [4](boletim-diario-v1-p-4.png). Plano: `tasks/plano-boletim.md`.
+Prévia v2 do boletim `BA2/261111/COFZ` em A4: [PDF](boletim-diario-v2.pdf) · páginas [1](boletim-diario-v2-p-1.png), [2](boletim-diario-v2-p-2.png), [3](boletim-diario-v2-p-3.png), [4](boletim-diario-v2-p-4.png). Plano: `tasks/plano-boletim.md`.
 
-Cabeçalho no modelo da CO-FZ com o logo da OM; dados da obra/serviço e prazo decorrido; clima por manhã/tarde com modelo e INMET lado a lado e gráfico hora a hora; indicadores; serviços, pendências abertas e encerradas (antes/depois) com fotos; observações e responsáveis. O clima é o real do Open-Meteo para 11/11/2026 no endereço da obra; registros, fotos (marcadores cinza), indicadores e INMET são ilustrativos.
+Cabeçalho no modelo da CO-FZ com o logo da OM; dados da obra/serviço e prazo decorrido; clima só do INMET por manhã/tarde, com céu estimado pela radiação e gráfico hora a hora; indicadores; serviços, pendências abertas e encerradas (antes/depois) com fotos; observações por obra; responsáveis. Nomes no formato de exibição (ex.: `CP PATRICIO`). Todos os dados são ilustrativos; fotos são marcadores cinza. A v1 (Open-Meteo + INMET) está no histórico do Git.
 
 Para reproduzir: `python3 docs/mockups/reproduce/boletim/gerar.py && node docs/mockups/reproduce/boletim/render.js` (gera `boletim.html` e `boletim.pdf` na mesma pasta; Playwright com o Chromium pré-instalado).
 

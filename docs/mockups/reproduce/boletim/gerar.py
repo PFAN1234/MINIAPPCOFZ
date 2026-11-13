@@ -5,11 +5,39 @@ import pathlib
 AQUI = pathlib.Path(__file__).parent
 LOGO = base64.b64encode((AQUI / "logo.png").read_bytes()).decode()
 
-# Open-Meteo real, 11/11/2026, ponto -3.761, -38.530 (America/Fortaleza), 06h..18h
+import math
+
+# INMET ilustrativo (estação automática A305), 11/11/2026, horário de Fortaleza, 06h..18h
+LAT, LON, FUSO_H = -3.76, -38.53, -3
 HORAS = list(range(6, 19))
-TEMP = [25.6, 25.8, 28.1, 29.0, 29.1, 30.3, 31.0, 30.7, 30.3, 30.2, 29.2, 28.4, 27.9]
-CHUVA = [0.0, 0.8, 0.3, 0.2, 0.5, 0.2, 0.1, 0, 0, 0, 0, 0, 0]
-CHUVA_INMET = [0.0] * 13  # ilustrativo
+TEMP = [25.2, 26.0, 27.6, 28.7, 29.5, 30.4, 31.1, 31.4, 30.2, 27.4, 27.0, 27.6, 27.3]
+CHUVA = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1.2, 0.4, 0, 0]
+RAZAO = [0.55, 0.70, 0.78, 0.82, 0.80, 0.74, 0.70, 0.60, 0.45, 0.18, 0.22, 0.50, 0.60]
+
+
+def ceu_limpo(hora):
+    """Radiação global de céu limpo (modelo de Haurwitz) na hora que termina em `hora`, kJ/m²."""
+    dia = 315  # 11/11
+    decl = math.radians(23.45) * math.sin(math.radians(360 / 365 * (284 + dia)))
+    total = 0.0
+    for k in range(6):  # média em passos de 10 min
+        t = hora - 1 + (k + 0.5) / 6
+        solar = t + (LON / 15 - FUSO_H)  # hora solar aproximada
+        ang = math.radians(15 * (solar - 12))
+        lat = math.radians(LAT)
+        cosz = math.sin(lat) * math.sin(decl) + math.cos(lat) * math.cos(decl) * math.cos(ang)
+        if cosz > 0:
+            total += 1098 * cosz * math.exp(-0.057 / cosz)
+    return total / 6 * 3.6
+
+
+LIMPO = [ceu_limpo(h + 1) for h in HORAS]
+RAD = [l * r for l, r in zip(LIMPO, RAZAO)]
+
+
+def ceu(i0, i1):
+    k = sum(RAD[i0:i1]) / sum(LIMPO[i0:i1])
+    return ("ensolarado" if k >= 0.75 else "parcialmente nublado" if k >= 0.45 else "nublado"), k
 
 
 def br(x, casas=1):
@@ -17,11 +45,13 @@ def br(x, casas=1):
 
 
 def grafico():
-    w, h = 690, 166
-    esq, dir_, top, base = 38, 40, 24, 146
+    w, h = 690, 226
+    esq, dir_ = 38, 48
+    top, base = 24, 132          # temperatura + chuva
+    rtop, rbase = 162, 210       # radiação
     larg = (w - esq - dir_) / (len(HORAS) - 1)
-    tmin, tmax = 24, 32
-    cmax = 2.0
+    tmin, tmax, cmax = 24, 32, 2.0
+    rmax = 3600
 
     def x(i):
         return esq + i * larg
@@ -32,36 +62,44 @@ def grafico():
     def yc(c):
         return base - c / cmax * (base - top)
 
-    partes = []
+    def yr(r):
+        return rbase - r / rmax * (rbase - rtop)
+
+    p = []
     for t in range(tmin, tmax + 1, 2):
-        y = yt(t)
-        partes.append(f'<line x1="{esq}" y1="{y:.1f}" x2="{w-dir_}" y2="{y:.1f}" class="grade"/>')
-        partes.append(f'<text x="{esq-6}" y="{y+3.5:.1f}" class="eixo" text-anchor="end">{t}°</text>')
+        p.append(f'<line x1="{esq}" y1="{yt(t):.1f}" x2="{w-dir_}" y2="{yt(t):.1f}" class="grade"/>')
+        p.append(f'<text x="{esq-6}" y="{yt(t)+3.5:.1f}" class="eixo" text-anchor="end">{t}°</text>')
     for c in (0.5, 1.0, 1.5, 2.0):
-        partes.append(f'<text x="{w-dir_+6}" y="{yc(c)+3.5:.1f}" class="eixo">{br(c)}</text>')
-    # faixa da manhã / tarde
-    partes.append(f'<line x1="{x(6):.1f}" y1="{top}" x2="{x(6):.1f}" y2="{base}" class="divisor"/>')
-    partes.append(f'<text x="{x(3):.1f}" y="{top-2}" class="periodo" text-anchor="middle">MANHÃ</text>')
-    partes.append(f'<text x="{x(9):.1f}" y="{top-2}" class="periodo" text-anchor="middle">TARDE</text>')
+        p.append(f'<text x="{w-dir_+6}" y="{yc(c)+3.5:.1f}" class="eixo">{br(c)}</text>')
+    p.append(f'<text x="{esq-6}" y="{top-12}" class="eixo" text-anchor="end">°C</text>')
+    p.append(f'<text x="{w-dir_+6}" y="{top-12}" class="eixo">mm</text>')
+    p.append(f'<line x1="{x(6):.1f}" y1="{top}" x2="{x(6):.1f}" y2="{rbase}" class="divisor"/>')
+    p.append(f'<text x="{x(3):.1f}" y="{top-2}" class="periodo" text-anchor="middle">MANHÃ</text>')
+    p.append(f'<text x="{x(9):.1f}" y="{top-2}" class="periodo" text-anchor="middle">TARDE</text>')
     bw = larg * 0.5
     for i, c in enumerate(CHUVA):
         if c > 0:
-            cls = "chuva" if c >= 0.2 else "chuva fraca"
-            partes.append(
-                f'<rect x="{x(i)-bw/2:.1f}" y="{yc(c):.1f}" width="{bw:.1f}" height="{base-yc(c):.1f}" class="{cls}" rx="1.5"/>'
-            )
+            p.append(f'<rect x="{x(i)-bw/2:.1f}" y="{yc(c):.1f}" width="{bw:.1f}" height="{base-yc(c):.1f}" class="chuva" rx="1.5"/>')
+            p.append(f'<text x="{x(i):.1f}" y="{yc(c)-4:.1f}" class="rotulo azul" text-anchor="middle">{br(c)}</text>')
     pts = " ".join(f"{x(i):.1f},{yt(t):.1f}" for i, t in enumerate(TEMP))
-    partes.append(f'<polyline points="{pts}" class="temp"/>')
+    p.append(f'<polyline points="{pts}" class="temp"/>')
     for i, t in enumerate(TEMP):
-        partes.append(f'<circle cx="{x(i):.1f}" cy="{yt(t):.1f}" r="2.4" class="ponto"/>')
+        p.append(f'<circle cx="{x(i):.1f}" cy="{yt(t):.1f}" r="2.4" class="ponto"/>')
     imax = TEMP.index(max(TEMP))
-    partes.append(f'<text x="{x(imax):.1f}" y="{yt(TEMP[imax])-7:.1f}" class="rotulo" text-anchor="middle">{br(TEMP[imax])} °C</text>')
+    p.append(f'<text x="{x(imax):.1f}" y="{yt(TEMP[imax])-7:.1f}" class="rotulo" text-anchor="middle">{br(TEMP[imax])} °C</text>')
     for i, hh in enumerate(HORAS):
-        partes.append(f'<text x="{x(i):.1f}" y="{base+14}" class="eixo" text-anchor="middle">{hh:02d}h</text>')
-    partes.append(f'<line x1="{esq}" y1="{base}" x2="{w-dir_}" y2="{base}" class="base"/>')
-    partes.append(f'<text x="{esq-6}" y="{top-12}" class="eixo" text-anchor="end">°C</text>')
-    partes.append(f'<text x="{w-dir_+6}" y="{top-12}" class="eixo">mm/h</text>')
-    return f'<svg viewBox="0 0 {w} {h}" width="100%" class="grafico">{"".join(partes)}</svg>'
+        p.append(f'<text x="{x(i):.1f}" y="{base+13}" class="eixo" text-anchor="middle">{hh:02d}h</text>')
+    p.append(f'<line x1="{esq}" y1="{base}" x2="{w-dir_}" y2="{base}" class="base"/>')
+    # radiação: medida (área) × céu limpo (tracejado)
+    area = f"{x(0):.1f},{rbase} " + " ".join(f"{x(i):.1f},{yr(r):.1f}" for i, r in enumerate(RAD)) + f" {x(len(RAD)-1):.1f},{rbase}"
+    p.append(f'<polygon points="{area}" class="rad"/>')
+    lp = " ".join(f"{x(i):.1f},{yr(r):.1f}" for i, r in enumerate(LIMPO))
+    p.append(f'<polyline points="{lp}" class="limpo"/>')
+    p.append(f'<line x1="{esq}" y1="{rbase}" x2="{w-dir_}" y2="{rbase}" class="base"/>')
+    p.append(f'<text x="{esq}" y="{rtop-8}" class="periodo">RADIAÇÃO SOLAR (kJ/m² por hora) · área = medida · tracejado = céu limpo</text>')
+    for r in (0, 1800, 3600):
+        p.append(f'<text x="{w-dir_+6}" y="{yr(r)+3.5:.1f}" class="eixo">{r:,}</text>'.replace(",", "."))
+    return f'<svg viewBox="0 0 {w} {h}" width="100%" class="grafico">{"".join(p)}</svg>'
 
 
 CAMERA = (
@@ -86,36 +124,36 @@ def foto(rotulo, tom=0):
 
 SERVICOS = [
     ("BLOCO DE ALOJAMENTO", [
-        ("Térreo › Apto. 101", "08:14", "3S João Felipe",
+        ("Térreo › Apto. 101", "08:14", "3S JOÃO FELIPE",
          "Assentamento de porcelanato 60×60 no piso do quarto; cerca de 70% concluído.", 2),
-        ("1º pavimento › Circulação norte", "09:40", "Cb Almeida",
+        ("1º pavimento › Circulação norte", "09:40", "CB ALMEIDA",
          "Instalação de eletrocalhas e passagem de cabos da rede de dados entre os eixos 3 e 8.", 2),
-        ("Térreo › Salão de eventos", "14:05", "3S João Felipe",
+        ("Térreo › Salão de eventos", "14:05", "3S JOÃO FELIPE",
          "Aplicação da 1ª demão de massa corrida no forro de gesso.", 1),
     ]),
     ("BLOCO DIDÁTICO", [
-        ("Térreo › Sala de aula 03", "10:22", "2S Ribeiro",
+        ("Térreo › Sala de aula 03", "10:22", "2S RIBEIRO",
          "Execução de reboco interno nas paredes leste e sul.", 2),
-        ("Cobertura › Eixos 4 a 7", "15:48", "2S Ribeiro",
+        ("Cobertura › Eixos 4 a 7", "15:48", "2S RIBEIRO",
          "Montagem da estrutura metálica da cobertura; terças instaladas até o eixo 6.", 1),
     ]),
 ]
 
 ABERTAS = [
-    ("BLOCO DE ALOJAMENTO › Térreo › Banheiro Apto. 104", "09:02", "3S João Felipe",
+    ("BLOCO DE ALOJAMENTO › Térreo › Banheiro Apto. 104", "09:02", "3S JOÃO FELIPE",
      "Caimento do piso do box invertido; água acumula junto à porta."),
-    ("BLOCO DE ALOJAMENTO › 1º pavimento › Apto. 211", "11:30", "Cb Almeida",
+    ("BLOCO DE ALOJAMENTO › 1º pavimento › Apto. 211", "11:30", "CB ALMEIDA",
      "Esquadria da janela com folga e sem vedação de silicone no lado externo."),
-    ("BLOCO DIDÁTICO › Térreo › Laboratório 1", "15:12", "2S Ribeiro",
+    ("BLOCO DIDÁTICO › Térreo › Laboratório 1", "15:12", "2S RIBEIRO",
      "Eletroduto aparente fora do projeto na parede norte."),
-    ("BLOCO DE ALOJAMENTO › Térreo › Circulação sul", "16:40", "3S João Felipe",
+    ("BLOCO DE ALOJAMENTO › Térreo › Circulação sul", "16:40", "3S JOÃO FELIPE",
      "Fissura no reboco acima da porta corta-fogo PCF-02."),
 ]
 
 ENCERRADAS = [
-    ("BLOCO DE ALOJAMENTO › Térreo › Apto. 108", "aberta em 03/11 (8 dias)", "3S João Felipe", "13:20",
+    ("BLOCO DE ALOJAMENTO › Térreo › Apto. 108", "aberta em 03/11 (8 dias)", "3S JOÃO FELIPE", "13:20",
      "Rejunte falhado no piso do quarto.", "Rejunte refeito em toda a área; conferido com a contratada."),
-    ("BLOCO DIDÁTICO › Térreo › Sala de aula 01", "aberta em 06/11 (5 dias)", "2S Ribeiro", "16:05",
+    ("BLOCO DIDÁTICO › Térreo › Sala de aula 01", "aberta em 06/11 (5 dias)", "2S RIBEIRO", "16:05",
      "Tomada da bancada sem espelho e com fiação exposta.", "Espelho instalado e circuito identificado no quadro QD-T1."),
 ]
 
@@ -165,6 +203,10 @@ def kpi(valor, rotulo, cls=""):
     return f'<div class="kpi {cls}"><div class="v">{valor}</div><div class="r">{rotulo}</div></div>'
 
 
+CEU_M, K_M = ceu(0, 6)
+CEU_T, K_T = ceu(6, 12)
+K_M, K_T = round(K_M * 100), round(K_T * 100)
+
 html = f"""<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><title>Boletim BA2/261111/COFZ</title>
 <style>
@@ -200,7 +242,7 @@ h3.obra {{ font-size: 10.5pt; margin: 10px 0 4px; letter-spacing: .03em; border-
 table.met {{ width: 100%; border-collapse: collapse; font-size: 9.8pt; margin-top: 4px; }}
 table.met th, table.met td {{ border: 1px solid #555; padding: 3px 5px; text-align: center; }}
 table.met th {{ background: #d9d9d9; font-size: 8.8pt; }}
-table.met td:first-child {{ text-align: left; font-weight: bold; }}
+table.met td:first-child {{ text-align: left; font-weight: bold; white-space: nowrap; }}
 .sub {{ font-size: 9pt; color: #333; padding-left: 26px; margin-top: -2px; }}
 .resumo {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }}
 .resumo div {{ border: 1px solid #999; padding: 4px 6px; font-size: 9.2pt; line-height: 1.25; }}
@@ -216,7 +258,12 @@ table.met td:first-child {{ text-align: left; font-weight: bold; }}
 .grafico .ponto {{ fill: #c0392b; }}
 .grafico .rotulo {{ font-size: 9.5px; fill: #c0392b; font-weight: bold; }}
 .grafico .chuva {{ fill: #3d6fb0; }}
-.grafico .chuva.fraca {{ fill: #a9c1e0; }}
+.grafico .rad {{ fill: #f2c14e; opacity: .55; }}
+.grafico .limpo {{ fill: none; stroke: #b8860b; stroke-width: 1.4; stroke-dasharray: 4 3; }}
+.grafico .rotulo.azul {{ fill: #3d6fb0; }}
+.obs-obra {{ font-size: 10pt; margin: 2px 0 8px; }}
+.obs-obra .item {{ display: grid; grid-template-columns: 150px 1fr; gap: 8px; padding: 3px 0; border-bottom: 1px dotted #bbb; }}
+.obs-obra .quem {{ color: #444; font-size: 9pt; }}
 .leg {{ font-family: "Liberation Sans", sans-serif; font-size: 8.5pt; color: #333; display: flex; gap: 14px; justify-content: center; }}
 .leg i {{ display: inline-block; width: 12px; height: 8px; margin-right: 4px; vertical-align: middle; }}
 .fonte {{ font-size: 8.5pt; color: #444; margin-top: 3px; }}
@@ -239,7 +286,7 @@ table.obras tr.total td {{ font-weight: bold; background: #f0f0f0; }}
 .reg-cab {{ display: flex; justify-content: space-between; gap: 8px; font-size: 10pt; }}
 .reg-cab span {{ color: #444; font-size: 9pt; white-space: nowrap; }}
 .registro p, .pend p {{ margin: 3px 0 5px; font-size: 10pt; text-align: justify; }}
-.fotos {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }}
+.fotos {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }}
 .foto {{ margin: 0; }}
 .foto .img {{ aspect-ratio: 4 / 3; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,.85); font-family: "Liberation Sans", sans-serif; font-size: 8pt; letter-spacing: .1em; text-transform: uppercase; gap: 2px; }}
 .foto figcaption {{ font-size: 8.5pt; color: #444; margin-top: 2px; }}
@@ -287,22 +334,21 @@ table.obras tr.total td {{ font-weight: bold; background: #f0f0f0; }}
 </div>
 
 <h2><span>2.</span>CONDIÇÕES METEOROLÓGICAS</h2>
-<div class="sub">Ponto da obra −3,7610, −38,5297 · horário de Fortaleza (UTC−3)</div>
+<div class="sub">INMET · estação automática A305 Fortaleza (a 6 km da obra) · horário de Fortaleza (UTC−3)</div>
 <table class="met">
-<tr><th>PERÍODO</th><th>CONDIÇÃO</th><th>TEMPERATURA</th><th>UMIDADE</th><th>CHUVA<br>(modelo)</th><th>CHUVA<br>(INMET)</th><th>VENTO / RAJADA</th></tr>
-<tr><td>MANHÃ (6h–12h)</td><td>Chuvisco fraco</td><td>25,6 – 30,3 °C</td><td>62 – 84%</td><td>2,0 mm</td><td>0,0 mm</td><td>15 / 52 km/h</td></tr>
-<tr><td>TARDE (12h–18h)</td><td>Sol</td><td>28,4 – 31,0 °C</td><td>60 – 73%</td><td>0,1 mm</td><td>0,0 mm</td><td>20 / 53 km/h</td></tr>
+<tr><th>PERÍODO</th><th>CONDIÇÃO</th><th>TEMPERATURA</th><th>UMIDADE</th><th>CHUVA</th><th>VENTO / RAJADA</th><th>RADIAÇÃO*<br><small>% do céu limpo</small></th></tr>
+<tr><td>MANHÃ (6h–12h)</td><td>Sem chuva · {CEU_M}</td><td>25,2 – 30,4 °C</td><td>62 – 84%</td><td>0,0 mm</td><td>14 / 38 km/h</td><td>{K_M}%</td></tr>
+<tr><td>TARDE (12h–18h)</td><td>Chuva · {CEU_T}</td><td>27,0 – 31,4 °C</td><td>58 – 82%</td><td>1,6 mm<br><small>15h–17h</small></td><td>18 / 47 km/h</td><td>{K_T}%</td></tr>
 </table>
 <div class="resumo">
-  <div>Temperatura do dia<b>24,7 – 31,0 °C</b>sensação até 34,8 °C</div>
-  <div>Umidade relativa<b>74% média</b>mínima 60%</div>
-  <div>Chuva em 24 h<b>0,0 mm medido</b>modelo 3,8 mm</div>
-  <div>Vento<b>até 21 km/h · E</b>rajada 53 km/h · UV 8,9</div>
+  <div>Temperatura do dia<b>24,6 – 31,4 °C</b>ponto de orvalho 22,8 °C</div>
+  <div>Umidade relativa<b>73% média</b>mínima 58%</div>
+  <div>Chuva em 24 h<b>1,6 mm</b>2 h com chuva</div>
+  <div>Vento<b>até 19 km/h · E</b>rajada 47 km/h · 1009 hPa</div>
 </div>
-<div class="alerta"><b>Fontes divergentes:</b> o modelo indica chuvisco pela manhã (2,0 mm), mas a estação INMET A305 não registrou chuva. Dia contado como <b>sem chuva</b> (prevalece o dado medido).</div>
 {grafico()}
-<div class="leg"><span><i style="background:#c0392b;height:2px"></i>Temperatura</span><span><i style="background:#3d6fb0"></i>Chuva ≥ 0,2 mm/h</span><span><i style="background:#a9c1e0"></i>Chuva &lt; 0,2 mm/h (desprezada)</span></div>
-<div class="fonte">Fontes: Open-Meteo (modelo, no ponto da obra), obtido em 11/11/2026 23:25 · INMET, estação automática A305 Fortaleza (medido).</div>
+<div class="leg"><span><i style="background:#c0392b;height:2px"></i>Temperatura</span><span><i style="background:#3d6fb0"></i>Chuva (mm na hora)</span><span><i style="background:#f2c14e"></i>Radiação medida</span><span><i style="border-top:2px dashed #b8860b;height:0"></i>Céu limpo (calculado)</span></div>
+<div class="fonte">* Céu estimado pela radiação solar medida em relação à de um dia de céu limpo no mesmo local e horário (≥ 75% ensolarado; 45–75% parcialmente nublado; &lt; 45% nublado). Fonte: INMET, dados brutos da estação, obtidos em 11/11/2026 23:25 e convertidos de UTC.</div>
 
 <h2><span>3.</span>INDICADORES</h2>
 <div class="grupo">Pendências no dia</div>
@@ -321,8 +367,8 @@ table.obras tr.total td {{ font-weight: bold; background: #f0f0f0; }}
 <div class="grupo">Atividade e clima</div>
 <div class="kpis3">
   <div class="linha"><b>11</b> registros de serviço · <b>34</b> fotos<br><b>12</b> ambientes com lançamento · <b>5</b> pessoas</div>
-  <div class="linha">Dias com chuva<br><b>1</b> em novembro · <b>71</b> desde a OS</div>
-  <div class="linha">Chuva acumulada<br><b>6,2 mm</b> em novembro</div>
+  <div class="linha">Dias com chuva<br><b>2</b> em novembro · <b>71</b> desde a OS</div>
+  <div class="linha">Chuva acumulada<br><b>7,8 mm</b> em novembro</div>
 </div>
 <table class="obras">
 <tr><th>OBRA</th><th>SERVIÇOS NO DIA</th><th>PEND. ABERTAS NO DIA</th><th>PEND. ENCERRADAS NO DIA</th><th>ABERTAS AO FIM DO DIA</th><th>ABERTAS &gt; 15 DIAS</th></tr>
@@ -341,13 +387,23 @@ table.obras tr.total td {{ font-weight: bold; background: #f0f0f0; }}
 <div class="sec">{encerradas_html()}</div>
 
 <h2><span>7.</span>OBSERVAÇÕES</h2>
-<div class="sec"><div class="obs">Sem observações. (Preenchidas pelo fiscal em uma retificação, quando houver.)</div></div>
+<div class="sec">
+<h3 class="obra">BLOCO DE ALOJAMENTO</h3>
+<div class="obs-obra">
+  <div class="item"><span class="quem">10:15 · CP PATRICIO</span><span>Visita técnica da fiscalização da SOP-CE ao 1º pavimento, sem ressalvas.</span></div>
+  <div class="item"><span class="quem">17:40 · 3S JOÃO FELIPE</span><span>Efetivo reduzido na frente de pisos (8 de 12 oficiais) por falta de transporte da contratada.</span></div>
+</div>
+<h3 class="obra">BLOCO DIDÁTICO</h3>
+<div class="obs-obra">
+  <div class="item"><span class="quem">14:30 · 2S RIBEIRO</span><span>Concretagem da laje do eixo 7 adiada para 13/11 por indisponibilidade da bomba; chuva das 15h às 17h suspendeu o reboco externo.</span></div>
+</div>
+</div>
 
-<h2><span>8.</span>RESPONSÁVEIS</h2>
+<div style="break-inside: avoid"><h2><span>8.</span>RESPONSÁVEIS</h2>
 <div class="sec">
   <div class="assin"><div>3S JOÃO FELIPE<br>Fiscal da obra</div></div>
   <div class="emissao">Emitido automaticamente pelo Fiscal Bot em 11/11/2026 às 23:30 (horário de Fortaleza), com os lançamentos de 11/11/2026. Retificações: nenhuma. Lançamentos deste dia recebidos após a emissão entram no boletim seguinte.</div>
-</div>
+</div></div>
 </body></html>
 """
 
