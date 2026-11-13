@@ -6,7 +6,7 @@ const repo = criarRepositorioFixture()
 describe('repositório fixture', () => {
   it('geometria da RA traz contornoPagina com os mesmos cantos do contorno, de 0 a 1', async () => {
     const g = await repo.obterGeometria({ id: 'o', slug: 'hto' }, { id: 'a', codigo: 'terreo-apto-101' })
-    const pagina = (g as unknown as { contornoPagina?: [number, number][] }).contornoPagina
+    const pagina = g?.contornoPagina
     expect(pagina).toHaveLength(g!.contorno.length)
     for (const [x, y] of pagina!) {
       expect(x).toBeGreaterThanOrEqual(0)
