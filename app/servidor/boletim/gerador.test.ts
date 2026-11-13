@@ -66,6 +66,7 @@ function cenario(pedidos: PedidoReivindicado[], snapshot: Snapshot) {
     segredoInterno: vi.fn(async () => 'segredo'),
     reivindicar: vi.fn(async () => pedidos),
     snapshot: vi.fn(async (_e: string, data: string) => ({ ...structuredClone(snapshot), data })),
+    snapshotDoBoletim: vi.fn<FonteBoletim["snapshotDoBoletim"]>(async () => structuredClone(snapshot)),
     concluir: vi.fn(async (...args: [number, Snapshot, string]) => ({ boletim_id: 'b1', numero: args[0] > 0 ? 'N' : '' })),
     falhar: vi.fn(async () => undefined),
     climaAnterior: vi.fn<FonteBoletim['climaAnterior']>(async () => null),
@@ -104,7 +105,7 @@ function cenario(pedidos: PedidoReivindicado[], snapshot: Snapshot) {
 
 describe('fila de emissão', async () => {
   const snapshot = await lerSnapshotExemplo()
-  const pedido: PedidoReivindicado = { id: 7, etapa_id: 'e1', data: '2026-11-13', revisao: 0, numero: 'BA2/261113/COFZ' }
+  const pedido: PedidoReivindicado = { id: 7, etapa_id: 'e1', data: '2026-11-13', revisao: 0, numero: 'BA2/261113/COFZ', base_boletim_id: null, edicao: null }
 
   it('emite: envia PDF e clima ao bucket e conclui com o snapshot inteiro e o clima', async () => {
     const c = cenario([pedido], snapshot)
@@ -147,7 +148,7 @@ describe('fila de emissão', async () => {
   })
 
   describe('dia antigo (retificação)', () => {
-    const antigo: PedidoReivindicado = { id: 9, etapa_id: 'e1', data: '2026-11-10', revisao: 1, numero: 'BA2/261110/COFZ-R1' }
+    const antigo: PedidoReivindicado = { id: 9, etapa_id: 'e1', data: '2026-11-10', revisao: 1, numero: 'BA2/261110/COFZ-R1', base_boletim_id: null, edicao: null }
     const anterior = {
       numero: 'BA2/261110/COFZ',
       clima: {
@@ -217,6 +218,37 @@ describe('fila de emissão', async () => {
     })
   })
 
+  describe('retificação com base e edição', () => {
+    const servicos = snapshot.obras[0]!.servicos
+    const comBase: PedidoReivindicado = {
+      id: 11,
+      etapa_id: 'e1',
+      data: '2026-11-13',
+      revisao: 1,
+      numero: 'BA2/261113/COFZ-R1',
+      base_boletim_id: 'base-1',
+      edicao: { textos: { [`servico:${servicos[0]!.id}`]: '  Legenda editada  ' }, ocultos: [`servico:${servicos[1]!.id}`] },
+    }
+
+    it('usa o snapshot do boletim de base com a edição, reaproveita o clima e não lê o snapshot do dia', async () => {
+      const c = cenario([comBase], snapshot)
+      c.fonte.climaAnterior.mockResolvedValueOnce({
+        numero: 'BA2/261113/COFZ',
+        clima: { fonte: 'Observatório', estacao: { codigo: '8836', nome: 'Montese' }, leitura: '23:20', copiado_em: '2026-11-14T02:30:00.000Z', imagem_path: 'e1/BA2261113COFZ-clima.png' },
+      })
+      const r = await processarFila(c.fonte, c.deps)
+      expect(r[0].ok).toBe(true)
+      expect(c.fonte.snapshotDoBoletim).toHaveBeenCalledWith('base-1')
+      expect(c.fonte.snapshot).not.toHaveBeenCalled()
+      expect(c.deps.capturarClima).not.toHaveBeenCalled()
+      expect(c.fonte.climaAnterior).toHaveBeenCalledWith(snapshot.etapa.id, '2026-11-13')
+      const final = c.fonte.concluir.mock.calls[0][1]
+      expect(final.obras[0]!.servicos[0]!.legenda).toBe('Legenda editada')
+      expect(final.obras[0]!.servicos.map((x) => x.id)).not.toContain(servicos[1]!.id)
+      expect(final.clima).toMatchObject({ reaproveitado_de: 'BA2/261113/COFZ', imagem_path: 'e1/BA2261113COFZ-R1-clima.png' })
+    })
+  })
+
   it('fila vazia: não abre o navegador', async () => {
     const c = cenario([], snapshot)
     expect(await processarFila(c.fonte, c.deps)).toEqual([])
@@ -251,7 +283,7 @@ describe('fila de emissão', async () => {
     const c = cenario([], snapshot)
     const souAdmin = vi.fn(async () => true)
     const snap = vi.fn(async () => structuredClone(snapshot))
-    const ctx = { fonte: c.fonte, deps: c.deps, acesso: vi.fn(() => ({ souAdmin, snapshot: snap })) }
+    const ctx = { fonte: c.fonte, deps: c.deps, acesso: vi.fn(() => ({ souAdmin, snapshot: snap, boletim: vi.fn() })) }
     const url = 'https://exemplo/api/previa-boletim?etapa=2a-etapa&data=2026-11-13'
     expect((await tratarPrevia(new Request(url), ctx)).status).toBe(401)
     const com = (u: string) => new Request(u, { headers: { Authorization: 'Bearer jwt' } })
@@ -272,5 +304,45 @@ describe('fila de emissão', async () => {
     snap.mockRejectedValueOnce(new ErroRpc('admin_boletim_snapshot: Etapa não encontrada', 'P0002'))
     const nao = await tratarPrevia(com(url), ctx)
     expect([nao.status, await nao.json()]).toEqual([404, { erro: 'Etapa não encontrada' }])
+  })
+
+  it('POST /api/previa-boletim: aplica a edição ao snapshot do boletim e reaproveita o clima', async () => {
+    const c = cenario([], snapshot)
+    const id = '123e4567-e89b-42d3-a456-426614174000'
+    const souAdmin = vi.fn(async () => true)
+    const boletim = vi.fn(async () => ({ snapshot: structuredClone(snapshot) }))
+    const ctx = { fonte: c.fonte, deps: c.deps, acesso: vi.fn(() => ({ souAdmin, snapshot: vi.fn(), boletim })) }
+    const post = (corpo: unknown, auth = 'Bearer jwt') =>
+      new Request('https://exemplo/api/previa-boletim', {
+        method: 'POST',
+        headers: { Authorization: auth, 'Content-Type': 'application/json' },
+        body: typeof corpo === 'string' ? corpo : JSON.stringify(corpo),
+      })
+    const edicao = { textos: { [`servico:${snapshot.obras[0]!.servicos[0]!.id}`]: 'Texto da prévia' } }
+
+    expect((await tratarPrevia(post({ boletim_id: id, edicao }, ''), ctx)).status).toBe(401)
+    const r = await tratarPrevia(post({ boletim_id: id, edicao }), ctx)
+    expect(r.status).toBe(200)
+    expect(r.headers.get('content-type')).toBe('application/pdf')
+    expect(boletim).toHaveBeenCalledWith(id)
+    expect(c.htmls[0]).toContain('PRÉVIA — sem número')
+    expect(c.htmls[0]).toContain('Texto da prévia')
+    expect(c.deps.capturarClima).not.toHaveBeenCalled()
+    expect(c.fonte.concluir).not.toHaveBeenCalled()
+    expect(c.enviados.size).toBe(0)
+
+    const invalidos: unknown[] = ['{não é json', { edicao }, { boletim_id: 'x', edicao }, { boletim_id: id }, { boletim_id: id, edicao: { textos: { a: 1 } } }, { boletim_id: id, edicao: { outra: [] } }]
+    for (const corpo of invalidos) {
+      const e = await tratarPrevia(post(corpo), ctx)
+      expect(e.status).toBe(400)
+      expect(typeof ((await e.json()) as { erro: string }).erro).toBe('string')
+    }
+    expect(boletim).toHaveBeenCalledTimes(1)
+
+    souAdmin.mockResolvedValueOnce(false)
+    expect((await tratarPrevia(post({ boletim_id: id, edicao }), ctx)).status).toBe(403)
+    boletim.mockRejectedValueOnce(new ErroRpc('admin_boletim: Boletim não encontrado', 'P0002'))
+    const nao = await tratarPrevia(post({ boletim_id: id, edicao }), ctx)
+    expect([nao.status, await nao.json()]).toEqual([404, { erro: 'Boletim não encontrado' }])
   })
 })
