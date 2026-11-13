@@ -12,7 +12,12 @@ import {
 } from '../dados/envio.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import type { FotoPreparada } from '../util/imagem.ts'
-import type { Armazenamento, EncerramentoLocal, RegistroLocal } from './armazenamento.ts'
+import type {
+  Armazenamento,
+  EncerramentoLocal,
+  ObservacaoLocal,
+  RegistroLocal,
+} from './armazenamento.ts'
 
 export type EstadoItem = 'aguardando' | 'enviando' | 'erro'
 export interface ItemFila {
@@ -26,10 +31,16 @@ export interface ItemEncerramento {
   estado: EstadoItem
   progresso: Progresso | null
 }
+/** Observação do dia guardada no aparelho; entra na mesma fila (sem fotos, sem progresso). */
+export interface ItemObservacao {
+  observacao: ObservacaoLocal
+  estado: EstadoItem
+}
 export interface EstadoFila {
   carregada: boolean
   itens: ItemFila[] // do usuário atual, por criadoEm decrescente (mais recente primeiro)
   encerramentos: ItemEncerramento[] // idem, só os encerramentos
+  observacoes: ItemObservacao[] // idem, só as observações
   sincronizando: boolean
   /** Última falha transitória (rede ou sessão), para a barra; null depois de um envio bem-sucedido. */
   semConexao: boolean
@@ -47,6 +58,14 @@ export interface NovoEncerramentoLocal {
   /** Legenda da pendência (para a lista). */
   legenda: string
 }
+export interface NovaObservacaoLocal {
+  /** Gerado no aparelho; o mesmo em toda tentativa. */
+  id: string
+  obra: { id: string; slug: string; nome: string }
+  texto: string
+  /** ISO, hora do aparelho. */
+  escritoEm: string
+}
 export interface Fila {
   obterEstado(): EstadoFila // referência estável até a próxima mudança (useSyncExternalStore)
   assinar(fn: () => void): () => void
@@ -54,8 +73,10 @@ export interface Fila {
   adicionar(n: NovoLocal): Promise<void>
   /** Idem para o encerramento de uma pendência (mesma fila, mesma ordem de criação). */
   adicionarEncerramento(n: NovoEncerramentoLocal): Promise<void>
+  /** Idem para uma observação do dia. */
+  adicionarObservacao(n: NovaObservacaoLocal): Promise<void>
   sincronizar(): Promise<void>
-  tentarDeNovo(id: string): Promise<void> // limpa `erro`, grava e sincroniza (registro ou encerramento)
+  tentarDeNovo(id: string): Promise<void> // limpa `erro`, grava e sincroniza (qualquer item)
   descartar(id: string): Promise<void> // ignorado se o item estiver enviando
   /** Carrega os itens, liga os gatilhos e devolve a função que os desliga. */
   iniciar(): () => void
@@ -86,10 +107,13 @@ export function criarFila(o: {
   aoEnviar?: (r: RegistroLocal) => Promise<void>
   /** Idem, depois de cada encerramento enviado. */
   aoEncerrar?: (e: EncerramentoLocal) => Promise<void>
+  /** Idem, depois de cada observação enviada. */
+  aoObservar?: (o: ObservacaoLocal) => Promise<void>
 }): Fila {
-  const { repo, armazenamento, usuarioId, aoEnviar, aoEncerrar } = o
+  const { repo, armazenamento, usuarioId, aoEnviar, aoEncerrar, aoObservar } = o
   const itens = new Map<string, ItemFila>()
   const encerramentos = new Map<string, ItemEncerramento>()
+  const observacoes = new Map<string, ItemObservacao>()
   const ouvintes = new Set<() => void>()
   let carregada = false
   let sincronizando = false
@@ -111,6 +135,9 @@ export function criarFila(o: {
       encerramentos: [...encerramentos.values()].sort((a, b) =>
         b.encerramento.criadoEm.localeCompare(a.encerramento.criadoEm),
       ),
+      observacoes: [...observacoes.values()].sort((a, b) =>
+        b.observacao.criadoEm.localeCompare(a.observacao.criadoEm),
+      ),
       sincronizando,
       semConexao,
       persistente: armazenamento.persistente,
@@ -128,6 +155,8 @@ export function criarFila(o: {
     if (atual) itens.set(id, { ...atual, ...mudanca })
     const enc = encerramentos.get(id)
     if (enc) encerramentos.set(id, { ...enc, ...mudanca })
+    const obs = observacoes.get(id)
+    if (obs && mudanca.estado) observacoes.set(id, { ...obs, estado: mudanca.estado })
   }
 
   function limparTemporizador(): void {
@@ -157,6 +186,7 @@ export function criarFila(o: {
         largura: f.largura,
         altura: f.altura,
         bytes: f.bytes,
+        ...(f.origem ? { origem: f.origem, ra: f.ra } : {}),
       })
     }
     return {
@@ -305,9 +335,70 @@ export function criarFila(o: {
     }
   }
 
+  async function marcarErroObservacao(
+    obs: ObservacaoLocal,
+    tipo: TipoErroEnvio,
+    mensagem: string,
+  ): Promise<void> {
+    const comErro: ObservacaoLocal = { ...obs, erro: { tipo, mensagem } }
+    try {
+      await armazenamento.salvarObservacao(comErro)
+    } catch {
+      // Segue com o erro só na memória; na próxima carga o item tenta de novo.
+    }
+    observacoes.set(obs.id, { observacao: comErro, estado: 'erro' })
+    publicar()
+  }
+
+  /**
+   * Mesmo roteiro de `enviarItem`, para uma observação (só a RPC, com o mesmo id em toda
+   * tentativa). O 22023 do dia já emitido (e os demais erros definitivos) param o item.
+   */
+  async function enviarItemObservacao(
+    obs: ObservacaoLocal,
+    falhou: { transitorio: boolean },
+  ): Promise<boolean> {
+    trocar(obs.id, { estado: 'enviando' })
+    publicar()
+    try {
+      await repo.salvarObservacao({
+        id: obs.id,
+        obraId: obs.obra.id,
+        texto: obs.texto,
+        escritoEm: obs.escritoEm,
+      })
+      await armazenamento.remover(obs.id)
+      try {
+        await aoObservar?.(obs)
+      } catch {
+        // Falha ao invalidar consultas não pode quebrar a fila.
+      }
+      observacoes.delete(obs.id)
+      indiceAtraso = 0
+      semConexao = false
+      publicar()
+      return false
+    } catch (erro) {
+      if (
+        erro instanceof ErroEnvio &&
+        !TIPOS_TRANSITORIOS.includes(erro.tipo) &&
+        erro.tipo !== 'desconhecido'
+      ) {
+        await marcarErroObservacao(obs, erro.tipo, erro.message)
+        return false
+      }
+      const bloqueia = !(erro instanceof ErroEnvio && erro.tipo === 'desconhecido')
+      falhou.transitorio = true
+      trocar(obs.id, { estado: 'aguardando' })
+      if (bloqueia) semConexao = true
+      publicar()
+      return bloqueia
+    }
+  }
+
   async function rodada(): Promise<void> {
     const falhou = { transitorio: false }
-    // Registros e encerramentos na mesma ordem de criação.
+    // Registros, encerramentos e observações na mesma ordem de criação.
     const fila: { id: string; criadoEm: string }[] = [
       ...[...itens.values()]
         .filter((i) => i.estado === 'aguardando' && i.registro.erro === null)
@@ -315,6 +406,9 @@ export function criarFila(o: {
       ...[...encerramentos.values()]
         .filter((i) => i.estado === 'aguardando' && i.encerramento.erro === null)
         .map((i) => ({ id: i.encerramento.id, criadoEm: i.encerramento.criadoEm })),
+      ...[...observacoes.values()]
+        .filter((i) => i.estado === 'aguardando' && i.observacao.erro === null)
+        .map((i) => ({ id: i.observacao.id, criadoEm: i.observacao.criadoEm })),
     ].sort((a, b) => a.criadoEm.localeCompare(b.criadoEm))
     for (const { id } of fila) {
       if (parado) return
@@ -326,8 +420,14 @@ export function criarFila(o: {
         continue
       }
       const enc = encerramentos.get(id)
-      if (!enc || enc.estado !== 'aguardando') continue
-      if (await enviarItemEncerramento(enc.encerramento, falhou)) break
+      if (enc) {
+        if (enc.estado !== 'aguardando') continue
+        if (await enviarItemEncerramento(enc.encerramento, falhou)) break
+        continue
+      }
+      const obs = observacoes.get(id)
+      if (!obs || obs.estado !== 'aguardando') continue
+      if (await enviarItemObservacao(obs.observacao, falhou)) break
     }
     if (falhou.transitorio && !repetir && !parado) agendarNovaTentativa()
   }
@@ -375,6 +475,12 @@ export function criarFila(o: {
           })
         }
       }
+      const salvasObs = await armazenamento.listarObservacoes(usuarioId)
+      for (const obs of salvasObs) {
+        if (!observacoes.has(obs.id)) {
+          observacoes.set(obs.id, { observacao: obs, estado: obs.erro ? 'erro' : 'aguardando' })
+        }
+      }
     } catch {
       // Sem leitura do aparelho: segue só com o que está na memória.
     }
@@ -407,6 +513,7 @@ export function criarFila(o: {
           largura: f.largura,
           altura: f.altura,
           bytes: f.bytes,
+          ...(f.origem ? { origem: f.origem, ra: f.ra } : {}),
         })),
         erro: null,
       }
@@ -446,9 +553,34 @@ export function criarFila(o: {
       void sincronizar()
     },
 
+    async adicionarObservacao({ id, obra, texto, escritoEm }) {
+      const observacao: ObservacaoLocal = {
+        id,
+        usuarioId,
+        obra: { id: obra.id, slug: obra.slug, nome: obra.nome },
+        texto,
+        escritoEm,
+        criadoEm: new Date().toISOString(),
+        erro: null,
+      }
+      await armazenamento.salvarObservacao(observacao)
+      observacoes.set(id, { observacao, estado: 'aguardando' })
+      publicar()
+      void sincronizar()
+    },
+
     sincronizar,
 
     async tentarDeNovo(id) {
+      const obs = observacoes.get(id)
+      if (obs && obs.estado === 'erro') {
+        const observacao: ObservacaoLocal = { ...obs.observacao, erro: null }
+        await armazenamento.salvarObservacao(observacao)
+        observacoes.set(id, { observacao, estado: 'aguardando' })
+        publicar()
+        await sincronizar()
+        return
+      }
       const enc = encerramentos.get(id)
       if (enc && enc.estado === 'erro') {
         const encerramento: EncerramentoLocal = { ...enc.encerramento, erro: null }
@@ -468,11 +600,12 @@ export function criarFila(o: {
     },
 
     async descartar(id) {
-      const item = itens.get(id) ?? encerramentos.get(id)
+      const item = itens.get(id) ?? encerramentos.get(id) ?? observacoes.get(id)
       if (!item || item.estado === 'enviando') return
       await armazenamento.remover(id)
       itens.delete(id)
       encerramentos.delete(id)
+      observacoes.delete(id)
       publicar()
     },
 

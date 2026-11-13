@@ -47,11 +47,11 @@ describe('entrada', () => {
     expect(e.pegarToken()).toBeNull()
   })
 
-  it('link válido abre a sessão e mostra as obras', async () => {
+  it('link válido abre a sessão e mostra as etapas', async () => {
     const repo = criarRepositorioAdminFixture({ sessao: false })
     const trocar = vi.spyOn(repo, 'entrarComToken')
     renderizar('/', repo, 'fixture')
-    expect(await screen.findByRole('heading', { name: 'Obras' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Etapas' })).toBeInTheDocument()
     expect(trocar).toHaveBeenCalledTimes(1)
     expect(trocar).toHaveBeenCalledWith('fixture')
   })
@@ -74,7 +74,7 @@ describe('entrada', () => {
     expect(script.getAttribute('data-onauth')).toBe('onTelegramAuth(user)')
     const dados = { id: 1, first_name: 'Ana', auth_date: 1, hash: 'h' }
     window.onTelegramAuth!(dados)
-    expect(await screen.findByRole('heading', { name: 'Obras' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Etapas' })).toBeInTheDocument()
     expect(widget).toHaveBeenCalledWith(dados)
     // o widget sai da página e o retorno global é limpo
     expect(window.onTelegramAuth).toBeUndefined()
@@ -83,14 +83,16 @@ describe('entrada', () => {
   it('quem não é admin vê acesso negado', async () => {
     renderizar('/', criarRepositorioAdminFixture({ admin: false }))
     expect(await screen.findByRole('heading', { name: 'Acesso negado' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Obras' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Etapas' })).not.toBeInTheDocument()
   })
 
   it('Sair volta para a tela de entrada', async () => {
     const usuario = userEvent.setup()
     renderizar()
     await usuario.click(await screen.findByRole('button', { name: 'Sair' }))
-    expect(await screen.findByRole('heading', { name: 'Administração do Diário da obra' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Administração do Fiscal Bot' })).toBeInTheDocument()
+    // a tela de entrada mostra o nome da OM (RPC `organizacao()` também sem sessão)
+    expect(screen.getByTestId('identidade-om')).toHaveTextContent('CO-FZ')
   })
 })
 
@@ -110,7 +112,8 @@ describe('obras', () => {
   it('cria obra, valida o slug e inclui pavimento', async () => {
     const usuario = userEvent.setup()
     renderizar()
-    await usuario.click(await screen.findByRole('link', { name: 'Nova obra' }))
+    await usuario.click(await screen.findByRole('link', { name: 'Nova obra em 3ª ETAPA' }))
+    expect(screen.getByLabelText('Etapa')).toHaveDisplayValue('3ª ETAPA')
     await usuario.type(screen.getByLabelText(/Slug/), 'Obra X')
     await usuario.type(screen.getByLabelText('Nome'), 'Obra Nova')
     await usuario.click(screen.getByRole('button', { name: 'Criar obra' }))
@@ -120,6 +123,7 @@ describe('obras', () => {
     await usuario.type(screen.getByLabelText(/Slug/), 'obra-nova')
     await usuario.click(screen.getByRole('button', { name: 'Criar obra' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Obra Nova' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '3ª ETAPA' })).toHaveAttribute('href', '/etapas/3a-etapa')
     expect(screen.getByRole('heading', { name: 'Modelo 3D' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Planta (PDF)' })).toBeInTheDocument()
     expect(screen.getByText('Nenhum pavimento.')).toBeInTheDocument()

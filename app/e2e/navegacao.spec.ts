@@ -135,13 +135,15 @@ test.describe('fora do Telegram', () => {
     await page.getByRole('link', { name: /^HTO\b/ }).click()
     await expect(page.getByRole('heading', { name: 'HTO', level: 1 })).toBeVisible()
 
+    // A obra abre na planta; a lista de ambientes fica na segunda aba.
+    await page.getByRole('tab', { name: 'Lista' }).click()
     await page.getByRole('link', { name: /^Apto\. 101\b/ }).click()
     await expect(page).toHaveURL(/\/obras\/hto\/ambientes\/terreo-apto-101$/)
     await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
     await expect(page.getByText(/23,88\s*m²/)).toBeVisible()
 
     await page.getByRole('button', { name: 'Voltar' }).click()
-    await expect(page).toHaveURL(/\/obras\/hto$/)
+    await expect(page).toHaveURL(/\/obras\/hto\?aba=lista$/)
     await expect(page.getByRole('heading', { name: 'HTO', level: 1 })).toBeVisible()
   })
 
@@ -151,7 +153,9 @@ test.describe('fora do Telegram', () => {
     await expect(pino).toBeVisible()
 
     // Com a planta inteira na tela, o pino do Despensa (vizinho) cobre o do Apto. 101.
-    // Aproxima com a roda do mouse, centrada no pino, antes de tocar.
+    // Aproxima com a roda do mouse, centrada no pino, antes de tocar. O cartão de observações
+    // fica acima da planta: rola até o pino para a roda cair sobre a planta.
+    await pino.scrollIntoViewIfNeeded()
     const caixa = await pino.boundingBox()
     if (!caixa) throw new Error('Pino "Apto. 101" sem posição na tela')
     await page.mouse.move(caixa.x + caixa.width / 2, caixa.y + caixa.height / 2)
@@ -196,13 +200,14 @@ test.describe('Telegram simulado', () => {
     expect(await page.evaluate(() => window.__tg.visivel)).toBe(true)
     await expect(page.getByRole('button', { name: 'Voltar' })).toHaveCount(0)
 
+    await page.getByRole('tab', { name: 'Lista' }).click()
     await page.getByRole('link', { name: /^Apto\. 101\b/ }).click()
     await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Voltar' })).toHaveCount(0)
     expect(await page.evaluate(() => window.__tg.handlers())).toBe(1)
 
     await page.evaluate(() => window.__tg.disparar())
-    await expect(page).toHaveURL(/\/obras\/hto$/)
+    await expect(page).toHaveURL(/\/obras\/hto\?aba=lista$/)
     await expect(page.getByRole('heading', { name: 'HTO', level: 1 })).toBeVisible()
   })
 })

@@ -41,7 +41,8 @@ class Obra:
         self.id = uuid.uuid4()
         self.slug = f'pl-{uuid.uuid4().hex[:8]}'
         with sessao(c.dsn, papel=None) as cur:
-            cur.execute('insert into public.obra (id, slug, nome) values (%s, %s, %s)', (self.id, self.slug, 'Obra planta'))
+            cur.execute('insert into public.obra (id, slug, nome, etapa_id) values (%s, %s, %s, %s)',
+                        (self.id, self.slug, 'Obra planta', c.etapa))
             for ordem, (codigo, nome) in enumerate((('terreo', 'Térreo'), ('1pav', '1º pavimento')), start=1):
                 cur.execute('insert into public.pavimento (obra_id, codigo, nome, ordem) values (%s, %s, %s, %s)',
                             (self.id, codigo, nome, ordem))

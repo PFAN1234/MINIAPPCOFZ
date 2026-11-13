@@ -1,5 +1,6 @@
 // Edge Function publish-outbox: publica no tópico do Telegram os registros e encerramentos
-// pendentes e avisa os pedidos de acesso. Acionada pelo cron e pelos gatilhos do banco.
+// pendentes, envia ao grupo da etapa os boletins emitidos (PDF) e avisa os pedidos de acesso.
+// Acionada pelo cron e pelos gatilhos do banco.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { criarSegredos } from "../_shared/segredo.ts";
 import { criarClienteTelegram } from "../_shared/telegram.ts";

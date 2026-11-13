@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { Abas } from '../components/Abas.tsx'
 import { AbaPlanta } from '../components/AbaPlanta.tsx'
+import { CartaoObservacoes } from '../components/CartaoObservacoes.tsx'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { IconeChevron, IconeCubo } from '../components/Icones.tsx'
@@ -85,6 +86,7 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
           </Link>
         )}
       </div>
+      <CartaoObservacoes obra={obra} />
     </>
   )
 

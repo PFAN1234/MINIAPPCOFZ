@@ -23,23 +23,29 @@ interface Mensagem {
   is_topic_message?: boolean;
   from?: { id: number; is_bot?: boolean };
   sender_chat?: { id: number };
-  chat: { id: number; type: string; is_forum?: boolean };
+  chat: { id: number; type: string; is_forum?: boolean; title?: string };
 }
 
-const BOTAO = "Abrir Diário da obra";
+const BOTAO = "Abrir Fiscal Bot";
 
 const TEXTOS = {
   inicio:
-    "Olá! O Diário da obra registra serviços e pendências com fotos, direto do canteiro, e publica cada registro no tópico da obra.\n\nToque no botão abaixo para abrir o app.",
+    "Olá! O Fiscal Bot registra serviços e pendências com fotos, direto do canteiro, e publica cada registro no tópico da obra.\n\nToque no botão abaixo para abrir o app.",
   vinculado: (nome: string) =>
-    `Tópico vinculado à obra ${nome}. Os registros do Diário da obra serão publicados aqui.`,
+    `Tópico vinculado à obra ${nome}. Os registros do Fiscal Bot serão publicados aqui.`,
   foraDoTopico: "Use este comando dentro do tópico da obra.",
   soAdminVincular: "Só administradores do grupo podem vincular a obra.",
   soAdminFixar: "Só administradores do grupo podem fixar o botão.",
   naoEncontrada: (slug: string) => `Obra “${slug}” não encontrada.`,
   uso: "Uso: /vincular_obra <slug> (ex.: /vincular_obra hto)",
+  etapaVinculada: (nome: string) =>
+    `Grupo vinculado à etapa ${nome}. Agora vincule cada tópico à sua obra com /vincular_obra <slug>, dentro do tópico.`,
+  foraDoGrupo: "Use este comando no grupo da etapa (supergrupo com tópicos).",
+  soAdminVincularEtapa: "Só administradores do grupo podem vincular a etapa.",
+  etapaNaoEncontrada: (slug: string) => `Etapa “${slug}” não encontrada.`,
+  usoEtapa: "Uso: /vincular_etapa <slug> (ex.: /vincular_etapa 2a-etapa)",
   botaoFixado:
-    "📋 <b>Diário da obra</b>\nToque no botão para registrar serviços e pendências da obra.",
+    "📋 <b>Fiscal Bot</b>\nToque no botão para registrar serviços e pendências da obra.",
   semPermissaoFixar: "Preciso da permissão de fixar mensagens.",
 };
 
@@ -140,7 +146,8 @@ export function criarHandler(deps: Deps) {
       p_chat: m.chat.id,
       p_thread: m.message_thread_id,
     });
-    // 22023: recusa com mensagem para o grupo (ex.: obra arquivada no site de administração).
+    // 22023: recusa com mensagem para o grupo (ex.: obra arquivada no site de administração,
+    // etapa sem grupo ou com outro grupo).
     if (error?.code === "22023") {
       await responder(m, error.message);
       return;
@@ -152,6 +159,40 @@ export function criarHandler(deps: Deps) {
       return;
     }
     await responder(m, TEXTOS.vinculado(obra.nome ?? alvo));
+  }
+
+  /** Grupo da etapa: só em supergrupo, só administrador, em qualquer tópico. */
+  async function aoVincularEtapa(m: Mensagem, slug: string) {
+    if (m.chat.type !== "supergroup") {
+      await responder(m, TEXTOS.foraDoGrupo);
+      return;
+    }
+    if (!(await ehAdministrador(m))) {
+      await responder(m, TEXTOS.soAdminVincularEtapa);
+      return;
+    }
+    const alvo = slug.split(" ")[0].toLowerCase();
+    if (alvo === "") {
+      await responder(m, TEXTOS.usoEtapa);
+      return;
+    }
+    const { data, error } = await deps.admin.rpc("vincular_etapa", {
+      p_slug: alvo,
+      p_chat: m.chat.id,
+      p_titulo: m.chat.title ?? null,
+    });
+    // 22023: recusa com mensagem para o grupo (etapa arquivada, grupo de outra etapa...).
+    if (error?.code === "22023") {
+      await responder(m, error.message);
+      return;
+    }
+    if (error) throw new Error(`vincular_etapa: ${error.message}`);
+    const etapa = data as { id?: string; nome?: string } | null;
+    if (!etapa || !etapa.id) {
+      await responder(m, TEXTOS.etapaNaoEncontrada(alvo));
+      return;
+    }
+    await responder(m, TEXTOS.etapaVinculada(etapa.nome ?? alvo));
   }
 
   async function aoFixar(m: Mensagem) {
@@ -193,18 +234,22 @@ export function criarHandler(deps: Deps) {
       allowed_updates: ["message"],
     });
     const privados = await telegram.chamar("setMyCommands", {
-      commands: [{ command: "start", description: "Abrir o Diário da obra" }],
+      commands: [{ command: "start", description: "Abrir o Fiscal Bot" }],
       scope: { type: "all_private_chats" },
     });
     const admins = await telegram.chamar("setMyCommands", {
       commands: [
+        {
+          command: "vincular_etapa",
+          description: "Vincular este grupo a uma etapa",
+        },
         {
           command: "vincular_obra",
           description: "Vincular este tópico a uma obra",
         },
         {
           command: "fixar_botao",
-          description: "Fixar o botão do Diário da obra",
+          description: "Fixar o botão do Fiscal Bot",
         },
       ],
       scope: { type: "all_chat_administrators" },
@@ -228,6 +273,8 @@ export function criarHandler(deps: Deps) {
     switch (cmd.comando) {
       case "start":
         return await aoIniciar(m);
+      case "vincular_etapa":
+        return await aoVincularEtapa(m, cmd.argumento);
       case "vincular_obra":
         return await aoVincular(m, cmd.argumento);
       case "fixar_botao":

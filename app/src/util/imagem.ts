@@ -1,4 +1,5 @@
 /** Preparo das fotos no cliente: orientação, redução e recodificação em JPEG. */
+import type { DadosRA, OrigemFoto } from '../ra/tipos.ts'
 
 export interface FotoPreparada {
   id: string
@@ -6,6 +7,9 @@ export interface FotoPreparada {
   largura: number
   altura: number
   bytes: number
+  /** Só nas fotos tiradas na realidade aumentada. */
+  origem?: Exclude<OrigemFoto, 'normal'>
+  ra?: DadosRA
 }
 
 export const LADO_MAXIMO_PADRAO = 1920
@@ -104,7 +108,7 @@ async function paraJpeg(
  */
 export async function prepararFoto(
   arquivo: File,
-  opcoes: { ladoMaximo?: number; qualidade?: number } = {},
+  opcoes: { ladoMaximo?: number; qualidade?: number; id?: string } = {},
 ): Promise<FotoPreparada> {
   const { ladoMaximo = LADO_MAXIMO_PADRAO, qualidade = QUALIDADE_PADRAO } = opcoes
   try {
@@ -114,7 +118,7 @@ export async function prepararFoto(
       const { largura, altura } = dimensoesAlvo(dec.largura, dec.altura, ladoMaximo)
       const blob = await paraJpeg(dec.fonte, largura, altura, qualidade)
       if (blob.size === 0) throw new Error('JPEG vazio')
-      return { id: crypto.randomUUID(), blob, largura, altura, bytes: blob.size }
+      return { id: opcoes.id ?? crypto.randomUUID(), blob, largura, altura, bytes: blob.size }
     } finally {
       dec.liberar()
     }

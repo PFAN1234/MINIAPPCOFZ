@@ -127,6 +127,6 @@ def test_scripts_exigem_obra(script, capsys):
 def test_seed_usa_nome_da_configuracao():
     obra = {"slug": "hto", "nome": "Hotel de Trânsito d'Oficiais"}
     sql = seed_mod.gerar(DADOS, obra=obra)
-    assert "values ('hto', 'Hotel de Trânsito d''Oficiais')" in sql
+    assert "values ('hto', 'Hotel de Trânsito d''Oficiais', (select e.id from public.etapa e where e.slug = '2a-etapa'))" in sql
     with pytest.raises(ValueError, match="cofz"):
         seed_mod.gerar(DADOS, obra={"slug": "cofz", "nome": "COFZ"})

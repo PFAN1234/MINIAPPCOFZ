@@ -61,9 +61,15 @@ def literal(valor) -> str:
     raise TypeError(f"tipo sem literal SQL: {type(valor).__name__}")
 
 
+# Obra nova entra na etapa padrão (a das obras existentes na migration das etapas); obra que já
+# existe mantém a etapa que tem.
+ETAPA_PADRAO = "2a-etapa"
+
+
 def _insert_obra(slug: str, nome: str) -> str:
     return (
-        f"insert into public.obra (slug, nome) values ({literal(slug)}, {literal(nome)}) "
+        f"insert into public.obra (slug, nome, etapa_id) values ({literal(slug)}, {literal(nome)}, "
+        f"(select e.id from public.etapa e where e.slug = {literal(ETAPA_PADRAO)})) "
         "on conflict (slug) do update set nome = excluded.nome;"
     )
 

@@ -108,6 +108,9 @@ def test_authenticated_nao_le_as_tabelas_direto(cenario, tabela):
 # --- Obras ---------------------------------------------------------------------------------------
 
 def salvar_obra(c, usuario, dados):
+    """Sem `id` (criação), a obra vai para a etapa do cenário (etapa_id é obrigatório ao criar)."""
+    if 'id' not in dados and 'etapa_id' not in dados:
+        dados = {**dados, 'etapa_id': str(c.etapa)}
     return rpc(c, usuario, 'select public.admin_salvar_obra(%s::jsonb)', (json.dumps(dados),))
 
 

@@ -2,4 +2,6 @@
 export const recursos = {
   /** Botão "Novo registro" (fase 4). */
   novoRegistro: true,
+  /** Realidade aumentada no registro de fotos (plano em `tasks/plano-ra.md`). */
+  ra: true,
 }

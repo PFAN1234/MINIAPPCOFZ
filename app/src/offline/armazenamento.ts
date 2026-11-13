@@ -5,7 +5,7 @@
  */
 import { openDB, type DBSchema, type IDBPDatabase, type IDBPTransaction } from 'idb'
 import type { TipoErroEnvio } from '../dados/erros.ts'
-import type { TipoRegistro } from '../dados/tipos.ts'
+import type { FotoEnviada, TipoRegistro } from '../dados/tipos.ts'
 
 export interface RegistroLocal {
   id: string // = Rascunho.id
@@ -16,7 +16,7 @@ export interface RegistroLocal {
   legenda: string
   capturadoEm: string // ISO
   criadoEm: string // ISO; ordem da fila
-  fotos: { id: string; largura: number; altura: number; bytes: number }[] // na ordem escolhida
+  fotos: FotoEnviada[] // na ordem escolhida
   /** Falha definitiva; enquanto não for nula, a fila não tenta sozinha. */
   erro: { tipo: TipoErroEnvio; mensagem: string } | null
 }
@@ -38,6 +38,18 @@ export interface EncerramentoLocal {
   observacao: string
   criadoEm: string // ISO; ordem da fila
   fotos: { id: string; largura: number; altura: number; bytes: number }[]
+  /** Falha definitiva; enquanto não for nula, a fila não tenta sozinha. */
+  erro: { tipo: TipoErroEnvio; mensagem: string } | null
+}
+
+/** Observação do dia ainda não enviada (sem fotos). */
+export interface ObservacaoLocal {
+  id: string // gerado no cliente; o mesmo em toda tentativa (a RPC é idempotente)
+  usuarioId: string
+  obra: { id: string; slug: string; nome: string }
+  texto: string
+  escritoEm: string // ISO, hora do aparelho
+  criadoEm: string // ISO; ordem da fila
   /** Falha definitiva; enquanto não for nula, a fila não tenta sozinha. */
   erro: { tipo: TipoErroEnvio; mensagem: string } | null
 }
@@ -71,13 +83,16 @@ export interface Armazenamento {
   atualizar(r: RegistroLocal): Promise<void>
   listar(usuarioId: string): Promise<RegistroLocal[]> // por criadoEm crescente
   lerFoto(registroId: string, fotoId: string): Promise<ArrayBuffer | undefined>
-  remover(id: string): Promise<void> // registro (ou encerramento) e fotos numa transação
+  remover(id: string): Promise<void> // registro, encerramento ou observação (e fotos) numa transação
   lerCache(usuarioId: string): Promise<CacheSalvo | undefined>
   salvarCache(usuarioId: string, c: CacheSalvo): Promise<void>
   /** Grava o encerramento e as fotos numa transação só. Lança ErroArmazenamento. */
   salvarEncerramento(e: EncerramentoLocal, fotos: { id: string; dados: ArrayBuffer }[]): Promise<void>
   atualizarEncerramento(e: EncerramentoLocal): Promise<void>
   listarEncerramentos(usuarioId: string): Promise<EncerramentoLocal[]> // por criadoEm crescente
+  /** Grava a observação (ou atualiza, por exemplo, o `erro`). Lança ErroArmazenamento. */
+  salvarObservacao(o: ObservacaoLocal): Promise<void>
+  listarObservacoes(usuarioId: string): Promise<ObservacaoLocal[]> // por criadoEm crescente
   /** Apaga o cache de consultas dos outros usuários; os registros deles ficam. */
   limparCachesExceto(usuarioId: string): Promise<void>
   fechar(): void
@@ -95,6 +110,7 @@ export function criarArmazenamentoMemoria(): Armazenamento {
   const registros = new Map<string, RegistroLocal>()
   const fotos = new Map<string, ArrayBuffer>()
   const encerramentos = new Map<string, EncerramentoLocal>()
+  const observacoes = new Map<string, ObservacaoLocal>()
   const caches = new Map<string, CacheSalvo>()
   const chave = (r: string, f: string) => `${r}/${f}`
 
@@ -120,6 +136,15 @@ export function criarArmazenamentoMemoria(): Armazenamento {
         .sort(porCriadoEm)
         .map((e) => structuredClone(e))
     },
+    async salvarObservacao(o) {
+      observacoes.set(o.id, structuredClone(o))
+    },
+    async listarObservacoes(usuarioId) {
+      return [...observacoes.values()]
+        .filter((o) => o.usuarioId === usuarioId)
+        .sort(porCriadoEm)
+        .map((o) => structuredClone(o))
+    },
     async listar(usuarioId) {
       return [...registros.values()]
         .filter((r) => r.usuarioId === usuarioId)
@@ -132,6 +157,7 @@ export function criarArmazenamentoMemoria(): Armazenamento {
     async remover(id) {
       registros.delete(id)
       encerramentos.delete(id)
+      observacoes.delete(id)
       for (const k of [...fotos.keys()]) if (k.startsWith(`${id}/`)) fotos.delete(k)
     },
     async lerCache(usuarioId) {
@@ -150,6 +176,7 @@ export function criarArmazenamentoMemoria(): Armazenamento {
 interface EsquemaDb extends DBSchema {
   registros: { key: string; value: RegistroLocal; indexes: { usuarioId: string } }
   encerramentos: { key: string; value: EncerramentoLocal; indexes: { usuarioId: string } }
+  observacoes: { key: string; value: ObservacaoLocal; indexes: { usuarioId: string } }
   fotos: {
     key: [string, string]
     value: { registroId: string; fotoId: string; dados: ArrayBuffer }
@@ -247,6 +274,18 @@ function criarArmazenamentoIdb(db: IDBPDatabase<EsquemaDb>): Armazenamento {
       const lista = await db.getAllFromIndex('encerramentos', 'usuarioId', usuarioId)
       return lista.sort(porCriadoEm)
     },
+    async salvarObservacao(o) {
+      pedirPersistencia()
+      try {
+        await db.put('observacoes', o)
+      } catch (erro) {
+        throw erroDeGravacao(erro)
+      }
+    },
+    async listarObservacoes(usuarioId) {
+      const lista = await db.getAllFromIndex('observacoes', 'usuarioId', usuarioId)
+      return lista.sort(porCriadoEm)
+    },
     async atualizar(r) {
       try {
         await db.put('registros', r)
@@ -265,10 +304,11 @@ function criarArmazenamentoIdb(db: IDBPDatabase<EsquemaDb>): Armazenamento {
     },
 
     async remover(id) {
-      const tx = db.transaction(['registros', 'encerramentos', 'fotos'], 'readwrite')
+      const tx = db.transaction(['registros', 'encerramentos', 'observacoes', 'fotos'], 'readwrite')
       const concluida = tx.done
       await tx.objectStore('registros').delete(id)
       await tx.objectStore('encerramentos').delete(id)
+      await tx.objectStore('observacoes').delete(id)
       const indice = tx.objectStore('fotos').index('registroId')
       let cursor = await indice.openCursor(IDBKeyRange.only(id))
       while (cursor) {
@@ -307,7 +347,7 @@ function criarArmazenamentoIdb(db: IDBPDatabase<EsquemaDb>): Armazenamento {
 export async function abrirArmazenamento(): Promise<Armazenamento> {
   if (typeof indexedDB === 'undefined') return criarArmazenamentoMemoria()
   try {
-    const db = await openDB<EsquemaDb>('diario-obra', 2, {
+    const db = await openDB<EsquemaDb>('diario-obra', 3, {
       upgrade(banco, versaoAnterior) {
         if (versaoAnterior < 1) {
           const registros = banco.createObjectStore('registros', { keyPath: 'id' })
@@ -320,6 +360,11 @@ export async function abrirArmazenamento(): Promise<Armazenamento> {
         if (versaoAnterior < 2) {
           const encerramentos = banco.createObjectStore('encerramentos', { keyPath: 'id' })
           encerramentos.createIndex('usuarioId', 'usuarioId')
+        }
+        // Versão 3 (boletim): observações do dia, sem fotos.
+        if (versaoAnterior < 3) {
+          const observacoes = banco.createObjectStore('observacoes', { keyPath: 'id' })
+          observacoes.createIndex('usuarioId', 'usuarioId')
         }
       },
     })

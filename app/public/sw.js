@@ -1,5 +1,5 @@
 /**
- * Service worker: app offline (precache), plantas e fotos assinadas.
+ * Service worker: app offline (precache), plantas e fotos assinadas, logo da organização.
  *
  * Versão atual do app: derivada do nome do cache `app-<versao>` existente, em
  * vez de uma variável em memória (que se perde quando o navegador encerra o
@@ -11,6 +11,9 @@ const CACHE_PLANTAS = 'plantas-v1'
 const CACHE_FOTOS = 'fotos-v1'
 const CACHE_MODELOS = 'modelos-v1' // .frag guardados pelo app (src/modelo/cacheModelo.ts), por hash
 const LIMITE_FOTOS = 300
+/** Logo da OM (bucket público `organizacao`): nome novo a cada troca, basta guardar os últimos. */
+const CACHE_LOGO = 'organizacao-v1'
+const LIMITE_LOGOS = 3
 const TIMEOUT_NAVEGACAO_MS = 4000
 const MSG_VERIFICAR = 'verificar-atualizacao'
 const CACHE_EXTERNOS = 'externos-v1'
@@ -66,6 +69,10 @@ function ehFoto(url) {
   return url.includes('/storage/v1/object/sign/fotos/')
 }
 
+function ehLogo(url) {
+  return url.includes('/storage/v1/object/public/organizacao/')
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
@@ -87,7 +94,7 @@ self.addEventListener('activate', (event) => {
       await Promise.all(
         nomes
           .filter((n) => n.startsWith(PREFIXO_APP) && n !== atual)
-          .concat(nomes.filter((n) => !n.startsWith(PREFIXO_APP) && ![CACHE_PLANTAS, CACHE_FOTOS, CACHE_MODELOS, CACHE_EXTERNOS].includes(n)))
+          .concat(nomes.filter((n) => !n.startsWith(PREFIXO_APP) && ![CACHE_PLANTAS, CACHE_FOTOS, CACHE_MODELOS, CACHE_EXTERNOS, CACHE_LOGO].includes(n)))
           .map((n) => caches.delete(n)),
       )
       await self.clients.claim()
@@ -158,12 +165,14 @@ async function scriptExterno(req) {
   return (await cache.match(SCRIPT_TELEGRAM)) ?? rede
 }
 
-async function limitarFotos(cache) {
+/** Mantém só as `limite` entradas mais recentes (a ordem de `keys()` é a de inserção). */
+async function limitarCache(cache, limite) {
   const chaves = await cache.keys()
-  const excesso = chaves.length - LIMITE_FOTOS
+  const excesso = chaves.length - limite
   for (let i = 0; i < excesso; i++) await cache.delete(chaves[i])
 }
 
+/** `limite`: quantas imagens o cache guarda no máximo (sem limite se omitido). */
 async function imagem(req, nomeCache, limite) {
   const cache = await caches.open(nomeCache)
   const chave = chaveDe(req.url)
@@ -174,7 +183,7 @@ async function imagem(req, nomeCache, limite) {
   const r = await fetch(req.url, { mode: 'cors', credentials: 'omit' })
   if (r.status === 200) {
     await cache.put(chave, r.clone())
-    if (limite) await limitarFotos(cache)
+    if (limite) await limitarCache(cache, limite)
   }
   return r
 }
@@ -197,8 +206,9 @@ self.addEventListener('fetch', (event) => {
   if (ehDoAdmin(req, url)) return
   if (/\/(storage\/v1\/object\/upload|rest|auth|functions)\//.test(url.pathname)) return
 
-  if (ehPlanta(req.url)) return void event.respondWith(imagem(req, CACHE_PLANTAS, false))
-  if (ehFoto(req.url)) return void event.respondWith(imagem(req, CACHE_FOTOS, true))
+  if (ehPlanta(req.url)) return void event.respondWith(imagem(req, CACHE_PLANTAS))
+  if (ehFoto(req.url)) return void event.respondWith(imagem(req, CACHE_FOTOS, LIMITE_FOTOS))
+  if (ehLogo(req.url)) return void event.respondWith(imagem(req, CACHE_LOGO, LIMITE_LOGOS))
   if (url.origin + url.pathname === SCRIPT_TELEGRAM) return void event.respondWith(scriptExterno(req))
   if (url.origin !== self.location.origin) return
 

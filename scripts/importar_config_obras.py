@@ -43,7 +43,7 @@ def carregar_obra(slug: str) -> dict:
 
 def config_da_obra(obra: dict) -> dict:
     """``obra.json`` → config de ``obra_config`` (sem slug/nome; pavimentos só com codigo/pdf/pagina)."""
-    config = {k: v for k, v in obra.items() if k not in ("slug", "nome")}
+    config = {k: v for k, v in obra.items() if k not in ("slug", "nome", "ra")}  # "ra": só scripts/gerar_geometria.py
     if "pavimentos" in config:
         config["pavimentos"] = [
             {k: p[k] for k in CAMPOS_PAVIMENTO if k in p} for p in config["pavimentos"]

@@ -4,6 +4,7 @@ import { dentroDoTelegram } from '../telegram.ts'
 import { useVoltar } from '../telegramBack.ts'
 import { podeSair } from '../util/guardaSaida.ts'
 import { FaixaDoTopo } from './faixaDoTopo.ts'
+import { FaixaIdentidade } from './FaixaIdentidade.tsx'
 import { IconeVoltar } from './Icones.tsx'
 
 /** A partir de quantas letras o título diminui. Nome longo quebra a linha, nunca vira reticências. */
@@ -31,7 +32,8 @@ interface Props {
 }
 
 /**
- * Topo azul de cada tela, emendado com o cabeçalho do Telegram (também azul). Dentro do
+ * Topo azul de cada tela, emendado com o cabeçalho do Telegram (também azul), com a faixa de
+ * identidade (logo e nome da OM, "Fiscal Bot") no alto. Dentro do
  * Telegram, quem volta é o BackButton nativo (ver `Layout` e `telegramBack.ts`); fora dele, o
  * "Voltar" fica aqui. A faixa de envio e de sem sinal vem logo abaixo, nunca acima do azul.
  */
@@ -55,6 +57,7 @@ export function TopoTela({ titulo, subtitulo, sobretitulo, voltar, lista = false
   return (
     <div className="topo">
       <header className={lista ? 'topo-tela topo-lista' : 'topo-tela'}>
+        <FaixaIdentidade />
         {comVoltar && (
           <button type="button" className="topo-voltar" onClick={aoVoltar}>
             <IconeVoltar tamanho={24} />

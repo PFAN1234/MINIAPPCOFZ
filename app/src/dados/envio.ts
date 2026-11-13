@@ -82,7 +82,13 @@ export async function enviarRegistro(
     tipo: r.tipo,
     legenda: r.legenda,
     capturadoEm: r.capturadoEm,
-    fotos: r.fotos.map((f) => ({ id: f.id, largura: f.largura, altura: f.altura, bytes: f.bytes })),
+    fotos: r.fotos.map((f) => ({
+      id: f.id,
+      largura: f.largura,
+      altura: f.altura,
+      bytes: f.bytes,
+      ...(f.origem ? { origem: f.origem, ra: f.ra } : {}),
+    })),
   })
 }
 

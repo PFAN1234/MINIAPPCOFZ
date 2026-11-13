@@ -32,11 +32,12 @@ describe('arquivar e excluir obra (fixture)', () => {
     expect(await screen.findByText(/Obra arquivada em/)).toBeInTheDocument()
     expect((await repo.obterObra('cofz')).obra.arquivada_em).not.toBeNull()
 
-    await user.click(screen.getByRole('link', { name: '← Obras' }))
+    await user.click(screen.getByRole('link', { name: '← Etapas' }))
     const arquivadas = await screen.findByRole('table', { name: 'Obras arquivadas' })
     expect(within(arquivadas).getByRole('link', { name: 'COFZ' })).toBeInTheDocument()
+    expect(within(arquivadas).getByRole('link', { name: '2ª ETAPA' })).toBeInTheDocument()
     expect(within(arquivadas).getByText('Arquivada')).toBeInTheDocument()
-    expect(within(screen.getByRole('table', { name: 'Obras ativas' })).queryByText('COFZ')).not.toBeInTheDocument()
+    expect(within(screen.getByRole('table', { name: 'Obras de 2ª ETAPA' })).queryByText('COFZ')).not.toBeInTheDocument()
 
     await user.click(within(arquivadas).getByRole('link', { name: 'COFZ' }))
     await user.click(await screen.findByRole('button', { name: 'Desarquivar obra' }))

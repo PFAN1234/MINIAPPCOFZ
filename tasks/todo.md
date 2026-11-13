@@ -176,6 +176,22 @@ Diagnóstico existente preservado em `docs/validacao-hto.md` e `artifacts/valida
 
 Verificação: sobreposição visual e controle independente de coordenadas; recorte não contém ambientes vizinhos inteiros; carregamento sob demanda sem enviar o IFC completo ao celular. Dependência: 8.
 
+## 10. Realidade aumentada no registro de fotos
+
+Plano: `tasks/plano-ra.md` (decisões de 2026-11-12: modelo ELT fornecido pelo usuário; só a "RA parada" dentro do Telegram; alinhamento por dois cantos e por QR; duas fotos por disparo, limpa e com o modelo).
+
+- [x] Código das fases RA0 a RA4 (2026-11-12): tela de teste `/ra-teste`; geometria de 86 dos 87 ambientes no referencial do `ARQ.frag` (`scripts/gerar_geometria.py`, `data/hto/geometria.json`); migration `20261113090000_ra.sql`; tela de RA com dois cantos, QR, ajuste fino e par de fotos no registro; QR no `/admin/obras/<slug>/ra`. Uso e aplicação em `docs/ra.md`.
+- [ ] Aplicar no `miniappcofz-dev`: migration `20261113090000_ra.sql` e `supabase/seed/hto_geometria.sql` (a chave secreta não executa DDL; colar os dois arquivos, nessa ordem, no SQL Editor do Supabase).
+- [x] ARQ publicado conferido (2026-11-13): R06, hash `497ec6abd4af7884`, mesmas coordenadas e geometria do `.frag` usado no ajuste do referencial.
+- [x] Modelo de elétrica conferido (2026-11-13): ELT R03 cai no lugar só com a coordenação automática, sem `modelo.matriz` (mediana de 2,6 cm entre as descidas de eletroduto e as faces das paredes).
+- [ ] RA0 no aparelho: `/ra-teste` em um Android e um iPhone, dentro do Telegram.
+- [ ] Conferir a cota do piso acabado e o pé-direito fora do Apto. 101 (hoje 0,385 m e 2,60 m para todos os ambientes).
+- [ ] Jardim 2 sem geometria (sem área na planta); Lobby e Circulação do 1º pavimento usam só o contorno externo (o IfcSpace tem furo).
+- [ ] Cadastrar e fixar os QRs dos ambientes do piloto.
+- [ ] RA5. Piloto em campo em quatro ambientes, medição do erro.
+
+Verificação: Vitest recupera poses sintéticas (< 1 cm, < 0,5°); e2e com câmera falsa salva o par de fotos; no aparelho, o contorno do Apto. 101 encaixa nas arestas reais. Dependência: 9 (federação validada e vínculo com o IfcSpace); o RA0 pode ser feito já.
+
 ## Site de administração
 
 Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
@@ -225,6 +241,51 @@ Plano: `tasks/plano-visual.md` (decisões de 2026-11-12). Prancha de design com 
 - [ ] V5. Conferência com a prancha, contraste e toque, teste no Telegram real (Android e iPhone), limpeza do CSS antigo.
 
 Verificação: em cada fase, typecheck, lint, Vitest e e2e verdes e capturas 390×844 (Mini App) e 1440×900 (admin) comparadas com a prancha.
+
+## Etapas e organização
+
+Contrato: `docs/contrato-etapas.md`. Decisões de 2026-11-12: o app passa a se chamar Fiscal Bot; cada etapa do campus tem suas obras e um grupo do Telegram (um tópico por obra), ligado com `/vincular_etapa <slug>`; seletor de etapa na tela inicial do Mini App; logo e nome da OM em todas as telas, configurados no site; obras existentes na "2ª ETAPA"; arquivar etapa vale para todas as obras dela; excluir etapa apaga as obras e pede o nome digitado.
+
+- [x] Banco: migration `20261112180000_etapas.sql` (`etapa`, `obra.etapa_id`, `organizacao`, bucket `organizacao`, RPCs `admin_*_etapa`, `organizacao`, `vincular_etapa`) e testes de banco.
+- [x] Edge Functions: `/vincular_etapa` no `bot-webhook`, ação `excluir_etapa` na `admin-excluir-obra`, textos "Fiscal Bot".
+- [x] Site: etapas (criar, editar, arquivar, excluir, grupo do Telegram), obra dentro da etapa, página Organização (nome e logo), barra do topo com logo.
+- [x] Mini App: nome Fiscal Bot, faixa com logo e nome da OM em todas as telas, seletor de etapa na tela inicial.
+- [x] Aplicar no `miniappcofz-dev` (2026-11-12): migration (a "2ª ETAPA" herdou o grupo das 3 obras), deploy de `bot-webhook`, `publish-outbox` e `admin-excluir-obra`, comandos do bot reconfigurados.
+- [x] Merge na main (PR #21, 2026-11-12) e app novo publicado pela Vercel.
+- [x] Logo da CO-FZ enviado em `/admin/organizacao`; a prévia do logo no site deixou de vazar da caixa (2026-11-13).
+- [ ] Usuário: trocar o nome do bot e do Mini App no BotFather para Fiscal Bot (o `/vincular_etapa 2a-etapa` não é necessário: a etapa herdou o grupo).
+
+Verificação: testes de banco (arquivar etapa bloqueia acesso e publicação; excluir etapa exige o nome), Deno, Vitest e Playwright (criar etapa e obra, arquivar, excluir digitando o nome, trocar logo; seletor de etapa no Mini App).
+
+## Encerrar pendência pela equipe
+
+Decisão de 2026-11-13: qualquer participante da obra (equipe ou gestor) encerra pendência, com as mesmas fotos de comprovação. Antes só o gestor. Obra ou etapa arquivada continua bloqueando.
+
+- [x] Banco: migration `20261113120000_encerrar_pendencia_equipe.sql` (`encerrar_pendencia` confere `privado.eh_participante` no lugar de `eh_gestor`; `encerramento.gestor_id` mantém o nome e guarda quem encerrou) e testes de banco.
+- [x] Mini App: formulário de encerramento para todos os participantes, sem a nota "Só gestores…"; fixture igual.
+- [x] Aplicado no `miniappcofz-dev` (2026-11-13).
+- [ ] Merge na main.
+
+## Boletim de Acompanhamento Diário
+
+Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa por dia, emissão automática com retificação (`-R1`), clima só do INMET (céu estimado pela radiação), número `BA<sigla>/<YYMMDD>/<OM>` (ex.: `BA2/261111/COFZ`), nome de exibição definido por admins, observações por obra escritas pelos participantes. Prévia: `docs/mockups/boletim-diario-v2.pdf`. Contrato da parte 1 (banco e site de administração): `docs/contrato-boletim.md`.
+
+- [x] Migration `20261113150000_boletim_base.sql`: sigla, localização, fuso, estações INMET, horário de emissão e dados do contrato da etapa; `etapa_aditivo`, `etapa_responsavel`, `usuario.nome_exibicao`, `organizacao.cabecalho`, `observacao`, `inmet_estacao`, `clima_dia`, `boletim`, bucket `boletins`, RLS e numeração (`tests/db/test_boletim_base.py`; 547 testes de banco passando).
+- [x] Migration aplicada no `miniappcofz-dev` em 2026-11-13, junto com o merge (as 31 funções novas ou alteradas conferidas por hash com o repositório; 2ª etapa com sigla 2, fuso de Fortaleza e o número `BA2/261113/COFZ`).
+- [ ] Preencher pelo site os dados da 2ª etapa (14 campos faltando: localização, estação INMET, contrato e responsáveis) e os nomes de exibição.
+- [x] Admin: cadastro da etapa com sigla, localização (mapa + estação INMET sugerida), fuso, horário de emissão e dados do contrato, editáveis depois; responsáveis e aditivos na página da etapa; linhas do cabeçalho em Organização (Vitest e e2e passando).
+- [x] Página Pessoas no admin (nome de exibição).
+- [x] Nome de exibição no Mini App e nas publicações do Telegram (migration `20261114090000_nome_exibicao_mini_app.sql` aplicada no `miniappcofz-dev` em 2026-11-13, conferida por hash; `publish-outbox` versão 4 publicada).
+- [x] Cartão Observações do dia na página da obra (com fila offline e trava após a emissão).
+- [x] Clima pelo Observatório de Fortaleza: imagem da linha da estação Montese (reserva Benfica) na tabela "Últimas 24 horas", copiada na emissão, com fonte e horários; `estacao`/`estacao_reserva` (8836/9281) com lista fixa no cadastro da etapa.
+- [x] Migration `20261114120000_boletim_emissao.sql`: fila `boletim_emissao`, `boletim_snapshot` (indicadores, serviços, pendências, fuso, lançamentos tardios), agendamento por cron a cada 5 min, retificação, `admin_listar_boletins`/`admin_pedir_emissao` (575 testes de banco passando). **Não aplicada no banco remoto.**
+- [x] Gerador na Vercel (`app/api/gerar-boletim.ts`, `app/api/previa-boletim.ts`, `app/servidor/boletim/`): HTML no modelo da CO-FZ, PDF com Chromium, fotos reduzidas, upload ao bucket; `publish-outbox` envia o PDF ao grupo da etapa (Deno: 143 testes). **`publish-outbox` novo ainda não publicado.**
+- [x] Site: seção Boletins na página da etapa (emitidos, pedidos, pré-visualizar, emitir agora/retificação); Vitest 577, e2e 48.
+- [ ] Produção: aplicar a migration (conferir hashes), publicar o `publish-outbox`, criar no Vault `url_gerador_boletim` = `https://<domínio>/api/gerar-boletim`; na Vercel, `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (Production), Node ≥ 22.17, memória das funções ≥ 2 GB, novo deploy; conferir na Vercel real que o `includeFiles` leva o Chromium e testar uma prévia.
+- [ ] Retificação de dia antigo sai sem clima (o Observatório só cobre 24 h); avaliar reaproveitar a imagem do boletim anterior.
+- [ ] Botão para reenviar ao Telegram um boletim cuja publicação falhou.
+- [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
+- [ ] Externo: avisar o Observatório/IPPLAN do uso dos dados; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.
 
 ## Organização de pastas e consolidação do repositório
 

@@ -43,7 +43,6 @@ describe('Detalhe da pendência', () => {
     expect(screen.getByRole('button', { name: /Abrir foto 2 de 2/ })).toBeInTheDocument()
 
     expect(screen.getByText('Comprovação da correção')).toBeInTheDocument()
-    expect(screen.getByText('Acesso de gestor')).toBeInTheDocument()
     const encerrar = screen.getByRole('button', { name: 'Encerrar pendência' })
     expect(encerrar).toBeDisabled()
     const obs = screen.getByLabelText('Observação')
@@ -63,7 +62,7 @@ describe('Detalhe da pendência', () => {
     expect(await screen.findByRole('dialog')).toHaveTextContent('Foto 2 de 2')
   })
 
-  it('aberta, como equipe: sem formulário e com a nota', async () => {
+  it('aberta, como equipe: também mostra o formulário de encerramento', async () => {
     const base = criarRepositorioFixture()
     renderizarApp(ABERTA, {
       ...base,
@@ -72,11 +71,9 @@ describe('Detalhe da pendência', () => {
         return d ? { ...d, papel: 'equipe' } : d
       },
     })
-    expect(
-      await screen.findByText('Só gestores da obra podem encerrar pendências.'),
-    ).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Encerrar pendência' })).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Observação')).not.toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Encerrar pendência' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Observação')).toBeInTheDocument()
+    expect(screen.queryByText(/Só gestores/)).not.toBeInTheDocument()
   })
 
   it('resolvida: mostra a resolução, o gestor e a publicação, sem formulário', async () => {

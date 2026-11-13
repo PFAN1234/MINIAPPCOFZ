@@ -12,7 +12,9 @@ const JWT_COMUM = "jwt-de-usuario-comum";
 const OBRA_ID = "11111111-2222-4333-8444-555555555555";
 const OUTRA_OBRA = "99999999-2222-4333-8444-555555555555";
 const EXCLUSAO = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+const EXCLUSAO_2 = "bbbbbbbb-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const NOME = "HTO Torre";
+const ETAPA = "2ª ETAPA";
 const RESUMO = { registros: 3, arquivos: { fotos: 2 } };
 
 type Arquivos = Record<string, string[]>;
@@ -100,9 +102,9 @@ function montar(
         return opts.registrarErro ? erro("banco fora") : ok(null);
       }
       if (nome === "admin_exclusao_para_limpar") {
-        return args.p_id === EXCLUSAO
-          ? ok(OBRA_ID)
-          : erro("Exclusão não encontrada", "P0002");
+        if (args.p_id === EXCLUSAO) return ok(OBRA_ID);
+        if (args.p_id === EXCLUSAO_2) return ok(OUTRA_OBRA);
+        return erro("Exclusão não encontrada", "P0002");
       }
       return erro("rpc?");
     },
@@ -125,6 +127,26 @@ function montar(
           );
         }
         return ok({ exclusao_id: EXCLUSAO, obra_id: OBRA_ID, resumo: RESUMO });
+      }
+      if (nome === "admin_excluir_etapa") {
+        if (jwt !== JWT_ADMIN) return erro("Apenas admins", "42501");
+        if (args.p_slug === "vazia") {
+          return ok({ etapa_id: OBRA_ID, exclusoes: [], resumo: {} });
+        }
+        if (args.p_slug !== "2a-etapa") {
+          return erro("Etapa não encontrada", "P0002");
+        }
+        if ((args.p_confirmacao as string).trim() !== ETAPA) {
+          return erro(
+            `Para excluir, digite exatamente o nome da etapa: ${ETAPA}`,
+            "22023",
+          );
+        }
+        return ok({
+          etapa_id: OBRA_ID,
+          exclusoes: [EXCLUSAO, EXCLUSAO_2],
+          resumo: RESUMO,
+        });
       }
       return erro("rpc?");
     },
@@ -382,6 +404,81 @@ Deno.test("limpar: não admin 403, exclusão inexistente 404, id inválido 400",
     assertEquals(r.status, 400);
     assertEquals(m.rpcs, []);
   }
+});
+
+const EXCLUIR_ETAPA = {
+  acao: "excluir_etapa",
+  slug: "2a-etapa",
+  confirmacao: ETAPA,
+};
+
+Deno.test("excluir_etapa: apaga no banco como o admin e limpa os arquivos de cada obra", async () => {
+  const m = montar(arquivosDaObra());
+  const r = await m.handler(pedir(EXCLUIR_ETAPA));
+  assertEquals(r.status, 200);
+  assertEquals(await r.json(), {
+    exclusoes: [
+      {
+        exclusao_id: EXCLUSAO,
+        removidos: { fotos: 250, plantas: 5, originais: 1, modelos: 0 },
+        pendente: false,
+        erro: null,
+      },
+      {
+        exclusao_id: EXCLUSAO_2,
+        removidos: { fotos: 1, plantas: 1, originais: 0, modelos: 0 },
+        pendente: false,
+        erro: null,
+      },
+    ],
+    pendente: false,
+    erro: null,
+  });
+  assertEquals(m.rpcs[0], {
+    jwt: JWT_ADMIN,
+    nome: "admin_excluir_etapa",
+    args: { p_slug: "2a-etapa", p_confirmacao: ETAPA },
+  });
+  assertEquals(m.storage.restantes("fotos"), []);
+  assertEquals(m.storage.restantes("plantas"), []);
+});
+
+Deno.test("excluir_etapa: etapa sem obras não toca no Storage", async () => {
+  const m = montar(arquivosDaObra());
+  const r = await m.handler(pedir({ ...EXCLUIR_ETAPA, slug: "vazia" }));
+  assertEquals(r.status, 200);
+  assertEquals(await r.json(), { exclusoes: [], pendente: false, erro: null });
+  assertEquals(m.storage.chamadas.list.length, 0);
+  assertEquals(m.storage.chamadas.remove.length, 0);
+});
+
+Deno.test("excluir_etapa: falha no Storage de uma obra deixa pendente sem parar as outras", async () => {
+  const m = montar(arquivosDaObra(), { falharRemover: "plantas" });
+  const r = await m.handler(pedir(EXCLUIR_ETAPA));
+  assertEquals(r.status, 200);
+  const corpo = await r.json();
+  assertEquals(corpo.pendente, true);
+  assertMatch(corpo.erro, /2 obra\(s\)/);
+  assertEquals(corpo.exclusoes.map((x: { pendente: boolean }) => x.pendente), [
+    true,
+    true,
+  ]);
+  // As fotos das duas obras saíram mesmo com a falha nas plantas.
+  assertEquals(m.storage.restantes("fotos"), []);
+});
+
+Deno.test("excluir_etapa: confirmação errada 400, não admin 403, inexistente 404, corpo inválido 400", async () => {
+  const m = montar(arquivosDaObra());
+  let r = await m.handler(pedir({ ...EXCLUIR_ETAPA, confirmacao: "2a etapa" }));
+  assertEquals(r.status, 400);
+  assertMatch((await r.json()).erro, /nome da etapa/);
+  r = await m.handler(pedir(EXCLUIR_ETAPA, { jwt: JWT_COMUM }));
+  assertEquals(r.status, 403);
+  r = await m.handler(pedir({ ...EXCLUIR_ETAPA, slug: "outra" }));
+  assertEquals(r.status, 404);
+  r = await m.handler(pedir({ acao: "excluir_etapa", slug: "2a-etapa" }));
+  assertEquals(r.status, 400);
+  assertEquals(m.storage.chamadas.remove.length, 0);
 });
 
 Deno.test("método e corpo inválidos", async () => {

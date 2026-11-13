@@ -159,7 +159,7 @@ Deno.test("configurar: setWebhook e setMyCommands nos dois escopos", async () =>
   assertEquals(chamadas[2].corpo.scope, { type: "all_chat_administrators" });
   assertEquals(
     (chamadas[2].corpo.commands as { command: string }[]).map((c) => c.command),
-    ["vincular_obra", "fixar_botao"],
+    ["vincular_etapa", "vincular_obra", "fixar_botao"],
   );
 });
 
@@ -212,7 +212,7 @@ Deno.test("/start no privado envia o botão do app", async () => {
   assertEquals(m.corpo.chat_id, 7);
   assertEquals(m.corpo.reply_markup, {
     inline_keyboard: [[{
-      text: "Abrir Diário da obra",
+      text: "Abrir Fiscal Bot",
       url: `https://t.me/${BOT}/diario`,
     }]],
   });
@@ -344,10 +344,130 @@ Deno.test("/vincular_obra com sucesso (e @bot no comando)", async () => {
   const [m] = enviadas(chamadas);
   assertEquals(
     m.corpo.text,
-    "Tópico vinculado à obra HTO. Os registros do Diário da obra serão publicados aqui.",
+    "Tópico vinculado à obra HTO. Os registros do Fiscal Bot serão publicados aqui.",
   );
   assertEquals(m.corpo.chat_id, CHAT);
   assertEquals(m.corpo.message_thread_id, THREAD);
+});
+
+Deno.test("/vincular_etapa fora de supergrupo", async () => {
+  for (
+    const chat of [{ id: 7, type: "private" }, { id: CHAT, type: "group" }]
+  ) {
+    const { handler, chamadas, rpcs } = montar();
+    await update(handler, {
+      message_id: 1,
+      text: "/vincular_etapa 2a-etapa",
+      chat,
+      from: { id: 7 },
+    });
+    assertEquals(
+      enviadas(chamadas)[0].corpo.text,
+      "Use este comando no grupo da etapa (supergrupo com tópicos).",
+    );
+    assertEquals(rpcs.length, 0);
+  }
+});
+
+Deno.test("/vincular_etapa por quem não é administrador", async () => {
+  const { handler, chamadas, rpcs } = montar({
+    respostas: { getChatMember: status("member") },
+  });
+  await update(handler, noTopico("/vincular_etapa 2a-etapa"));
+  assertEquals(
+    enviadas(chamadas)[0].corpo.text,
+    "Só administradores do grupo podem vincular a etapa.",
+  );
+  assertEquals(rpcs.length, 0);
+});
+
+Deno.test("/vincular_etapa sem argumento mostra o uso", async () => {
+  const { handler, chamadas, rpcs } = montar({
+    respostas: { getChatMember: status("administrator") },
+  });
+  await update(handler, noTopico("/vincular_etapa"));
+  assertEquals(
+    enviadas(chamadas)[0].corpo.text,
+    "Uso: /vincular_etapa <slug> (ex.: /vincular_etapa 2a-etapa)",
+  );
+  assertEquals(rpcs.length, 0);
+});
+
+Deno.test("/vincular_etapa com slug inexistente", async () => {
+  const { handler, chamadas, rpcs } = montar({
+    respostas: { getChatMember: status("creator") },
+    obra: null,
+  });
+  await update(handler, noTopico("/vincular_etapa XYZ"));
+  assertEquals(rpcs[0], {
+    nome: "vincular_etapa",
+    args: { p_slug: "xyz", p_chat: CHAT, p_titulo: null },
+  });
+  assertEquals(
+    enviadas(chamadas)[0].corpo.text,
+    "Etapa “xyz” não encontrada.",
+  );
+});
+
+Deno.test("/vincular_etapa recusada pelo banco mostra a mensagem", async () => {
+  const msg =
+    "A etapa “2ª ETAPA” já está vinculada a outro grupo. Desvincule o grupo no site de administração antes de vincular este.";
+  const { handler, chamadas } = montar({
+    respostas: { getChatMember: status("creator") },
+    rpcErro: { message: msg, code: "22023" },
+  });
+  const r = await update(handler, noTopico("/vincular_etapa 2a-etapa"));
+  assertEquals(r.status, 200);
+  assertEquals(enviadas(chamadas)[0].corpo.text, msg);
+});
+
+Deno.test("/vincular_etapa com sucesso no tópico Geral, com o título do grupo", async () => {
+  const { handler, chamadas, rpcs } = montar({
+    respostas: { getChatMember: status("administrator") },
+    obra: { id: "e1", nome: "2ª ETAPA", slug: "2a-etapa" },
+  });
+  const r = await update(handler, {
+    message_id: 4,
+    text: `/vincular_etapa@${BOT} 2a-etapa`,
+    chat: {
+      id: CHAT,
+      type: "supergroup",
+      is_forum: true,
+      title: "Obras 2ª etapa",
+    },
+    from: { id: 7 },
+  });
+  assertEquals(r.status, 200);
+  assertEquals(rpcs, [{
+    nome: "vincular_etapa",
+    args: { p_slug: "2a-etapa", p_chat: CHAT, p_titulo: "Obras 2ª etapa" },
+  }]);
+  const [m] = enviadas(chamadas);
+  assertEquals(
+    m.corpo.text,
+    "Grupo vinculado à etapa 2ª ETAPA. Agora vincule cada tópico à sua obra com /vincular_obra <slug>, dentro do tópico.",
+  );
+  assertEquals(m.corpo.chat_id, CHAT);
+  assert(!("message_thread_id" in m.corpo));
+});
+
+Deno.test("/vincular_etapa dentro de um tópico responde no tópico", async () => {
+  const { handler, chamadas } = montar({
+    respostas: { getChatMember: status("administrator") },
+    obra: { id: "e1", nome: "2ª ETAPA" },
+  });
+  await update(handler, noTopico("/vincular_etapa 2a-etapa"));
+  assertEquals(enviadas(chamadas)[0].corpo.message_thread_id, THREAD);
+});
+
+Deno.test("/vincular_obra sem a etapa vinculada mostra a mensagem do banco", async () => {
+  const msg = "Vincule antes a etapa: /vincular_etapa 2a-etapa";
+  const { handler, chamadas } = montar({
+    respostas: { getChatMember: status("creator") },
+    rpcErro: { message: msg, code: "22023" },
+  });
+  await update(handler, noTopico("/vincular_obra hto"));
+  assertEquals(enviadas(chamadas)[0].corpo.text, msg);
 });
 
 Deno.test("/fixar_botao: envia no tópico e fixa sem notificar", async () => {
@@ -362,7 +482,7 @@ Deno.test("/fixar_botao: envia no tópico e fixa sem notificar", async () => {
   ]);
   assertEquals(
     chamadas[1].corpo.text,
-    "📋 <b>Diário da obra</b>\nToque no botão para registrar serviços e pendências da obra.",
+    "📋 <b>Fiscal Bot</b>\nToque no botão para registrar serviços e pendências da obra.",
   );
   assertEquals(chamadas[1].corpo.parse_mode, "HTML");
   assertEquals(chamadas[1].corpo.message_thread_id, THREAD);
@@ -424,6 +544,8 @@ Deno.test("erro interno (RPC com erro ou exceção) → 200", async () => {
     });
     const r = await update(handler, noTopico("/vincular_obra hto"));
     assertEquals(r.status, 200);
+    const r2 = await update(handler, noTopico("/vincular_etapa 2a-etapa"));
+    assertEquals(r2.status, 200);
   }
 });
 

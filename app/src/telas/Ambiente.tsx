@@ -6,7 +6,7 @@ import { ListaRegistros } from '../components/ListaRegistros.tsx'
 import { OndeFica } from '../components/OndeFica.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
 import { useAvisoDaRota } from '../components/useAvisoDaRota.ts'
-import { useAmbiente, useRegistros } from '../dados/hooks.ts'
+import { useAmbiente, useGeometria, useModelos, useRegistros } from '../dados/hooks.ts'
 import type { AmbienteDetalhe } from '../dados/tipos.ts'
 import { useRegistrosLocais } from '../offline/contexto.tsx'
 import { recursos } from '../recursos.ts'
@@ -38,6 +38,11 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const aba = params.get('aba') === 'pendencias' ? 'pendencias' : 'historico'
   const area = formatarArea(ambiente.area_m2)
   const destaque = params.get('registro')
+  // RA: só aparece quando o ambiente tem geometria e a obra tem modelo publicado.
+  const comRA = recursos.ra && recursos.novoRegistro && ambiente.ativo
+  const geometria = useGeometria(obra, ambiente, comRA)
+  const modelos = useModelos(obra.slug, comRA)
+  const temRA = comRA && Boolean(geometria.data) && (modelos.data?.length ?? 0) > 0
 
   return (
     <section aria-labelledby="titulo-ambiente">
@@ -72,6 +77,15 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
           onClick={() => navigate(`/obras/${obra.slug}/ambientes/${ambiente.codigo}/novo`)}
         >
           Novo registro
+        </button>
+      )}
+      {temRA && (
+        <button
+          type="button"
+          className="botao botao-secundario botao-bloco"
+          onClick={() => navigate(`/obras/${obra.slug}/ambientes/${ambiente.codigo}/novo?ra=1`)}
+        >
+          Comparar com o modelo (RA)
         </button>
       )}
       <Abas

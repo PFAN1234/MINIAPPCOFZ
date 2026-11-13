@@ -1,4 +1,4 @@
-# Diário da obra (app)
+# Fiscal Bot (app)
 
 Telegram Mini App em React + Vite + TypeScript. Backend: Supabase. Hospedagem: Vercel (Root Directory = `app`).
 
@@ -17,7 +17,7 @@ Para navegar sem Supabase, com os dados de teste da HTO (`data/hto/*.json`) e as
 VITE_DADOS=fixture npm run dev     # ou: VITE_DADOS=fixture npm run build && npm run preview
 ```
 
-O modo fixture inclui a HTO, uma segunda obra vazia e alguns registros de exemplo. As imagens saem de `/__plantas/<revisao>/<pavimento>/...`, servidas por um plugin do Vite (`vite.config.ts`) em dev e preview. Sem `VITE_DADOS=fixture` o build de produção **não** contém a fixture nem os JSON de teste.
+O modo fixture inclui a organização "CO-FZ" (sem logo; `localStorage['fixture-logo'] = <url>` põe um), duas etapas ("2ª ETAPA", com a HTO e uma segunda obra vazia, e "3ª ETAPA", com uma obra vazia) e alguns registros de exemplo. As imagens saem de `/__plantas/<revisao>/<pavimento>/...`, servidas por um plugin do Vite (`vite.config.ts`) em dev e preview. Sem `VITE_DADOS=fixture` o build de produção **não** contém a fixture nem os JSON de teste.
 
 Funciona em navegador comum (sem Telegram): `src/telegram.ts` devolve valores neutros quando `window.Telegram` não existe.
 
@@ -30,7 +30,7 @@ Funciona em navegador comum (sem Telegram): `src/telegram.ts` devolve valores ne
 | `VITE_DADOS` | Opcional. `fixture` usa dados de teste em vez do Supabase |
 | `VITE_TELEGRAM_BOT` | Site de administração: nome do bot (sem `@`) para o Telegram Login Widget |
 
-Em modo Supabase, sem sessão (o login pelo Telegram chega na fase 6), o app mostra "Abra o Diário da obra pelo Telegram".
+Em modo Supabase, sem sessão (o login pelo Telegram chega na fase 6), o app mostra "Abra o Fiscal Bot pelo Telegram".
 
 ## Site de administração (`/admin/`)
 
@@ -42,9 +42,42 @@ VITE_DADOS=fixture npm run dev     # abre http://localhost:5173/admin/ (HTO e CO
 
 Na fixture o usuário de teste é admin; `localStorage['fixture-admin'] = 'nao'` simula quem não é (no site, "Acesso negado"; no Mini App, o botão Administração some). O teste `e2e/admin.spec.ts` roda o site em modo fixture num viewport de computador.
 
+## Observações do dia (página da obra)
+
+Cartão acima dos ambientes (`components/CartaoObservacoes.tsx`; contrato em `docs/contrato-boletim.md`, parte 2): lista de hoje no fuso da etapa (`HH:MM · NOME`, com o nome de exibição), "Adicionar observação" pela mesma fila do modo sem sinal (`offline/fila.ts`, store `observacoes` do IndexedDB, versão 3), editar e excluir as próprias só com conexão, e o aviso de dia travado depois da emissão do boletim. Na fixture, a HTO tem duas observações de hoje (uma de `CP PATRICIO`, a pessoa com nome de exibição) e `localStorage['fixture-boletim'] = 'emitido'` simula o boletim de hoje já emitido.
+
+## Gerador do boletim (`api/` e `servidor/`)
+
+Funções Node da Vercel no mesmo projeto (Root Directory `app`): `api/gerar-boletim.ts` (POST com `x-segredo-interno`; processa a fila `boletim_emissao`) e `api/previa-boletim.ts` (GET `?etapa=<slug>&data=AAAA-MM-DD` com `Authorization: Bearer <JWT do admin>`; PDF "PRÉVIA — sem número", sem gravar nada). O código fica em `servidor/boletim/` (`template.ts`, `clima.ts`, `fotos.ts`, `pdf.ts`, `gerador.ts`, `http.ts`, `supabase.ts`), fora do bundle do Vite: nenhuma entrada HTML o importa, e o `tsc -b` o confere pelo `tsconfig.servidor.json` (ESM do Node, imports relativos com `.js`, como a Vercel executa). Contrato em `docs/contrato-boletim.md` (parte 3); visão geral em `docs/admin.md`.
+
+- **Chromium**: na Vercel, `@sparticuz/chromium` 153 com `playwright-core` 1.63 (a mesma versão do `@playwright/test`, Chromium 153); fora dela, `PW_CHROMIUM` ou o Chromium do `npx playwright install chromium`.
+- **Fotos**: `sharp` (binário pré-compilado para Linux x64, o ambiente das funções da Vercel; suporte oficial da Vercel) reduz a 1000 px no lado maior, JPEG 75%.
+- **Fontes**: Tinos e Arimo (`@fontsource`, mesmas métricas da Liberation Serif/Sans e Times/Arial) embutidas no HTML, porque o Chromium da Vercel não tem fontes do sistema.
+- **`vercel.json`**: `functions` com 2048 MB e `maxDuration` 300 s (gerador) e 90 s (prévia), `includeFiles` com o binário do Chromium e as fontes; a regra geral do SPA é `/((?!api/).*)`, para `/api/*` chegar às funções. Com Fluid compute (padrão), a memória vale a do painel (Settings → Functions); conferir que está em 2 GB ou mais.
+
+### Configurar (produção)
+
+1. Vercel → Settings → Environment Variables (Production): `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (chave secreta `sb_secret_...`; sem prefixo `VITE_`, nunca vão ao navegador). Ver `.env.example`.
+2. Supabase: aplicar a migration da parte 3 e criar no Vault o segredo `url_gerador_boletim` com a URL completa do gerador (`https://<domínio do app>/api/gerar-boletim`). O `segredo_interno` é o mesmo do `publish-outbox`.
+3. Novo deploy do app. Conferir: no site, a prévia de hoje abre o PDF; "Emitir agora" põe o pedido na fila e, em até alguns segundos, o boletim aparece na lista e vai ao grupo da etapa.
+
+### Testar localmente
+
+```bash
+npx vitest run servidor                 # template, clima (cópia gravada da página), fotos, fila, HTTP, vercel.json
+npm run boletim:exemplo -- /tmp/boletim # PDF de exemplo com a captura real do Observatório
+npm run boletim:exemplo -- /tmp/boletim --sem-rede   # com a cópia reduzida gravada (__fixtures__)
+npm run boletim:exemplo -- /tmp/boletim --previa     # sem número, com a marca de prévia
+```
+
+O exemplo usa `servidor/boletim/__fixtures__/snapshot-exemplo.json` (formato do contrato), fotos de teste geradas na hora e o logo da prévia v2; grava o PDF e a imagem do clima na pasta. Os testes que abrem o Chromium são pulados quando ele não está instalado (job `app` do CI) e rodam no job `e2e`, na imagem do Playwright. A cópia reduzida da página (`__fixtures__/observatorio-reduzida.html`: tabela "Últimas 24 horas" com Benfica 9281, Montese 8836 e Mucuripe 9137, o CSS mínimo e uma tabela de outra seção antes) mantém os testes sem rede; se o Observatório mudar o layout, refaça a cópia e ajuste `clima.ts`.
+
+Para chamar as funções localmente, use `vercel dev` (o `vite dev` não serve `/api`); no modo fixture, o site não chama o gerador (a prévia e "Abrir PDF" devolvem um PDF mínimo).
+
 ## Estrutura
 
 - `src/admin/`: site de administração (telas, `dados/` com repositório Supabase e fixture próprios).
+- `api/` e `servidor/`: funções da Vercel e gerador do boletim (Node, fora do bundle do Vite).
 - `src/dados/`: tipos, interface `Repositorio`, implementações `supabase.ts` e `fixture.ts`, contexto e hooks (react-query).
 - `src/telas/`: telas das rotas; `src/components/`: layout, barra inferior, estados de carregamento/erro/vazio.
 - `src/util/`: ordenação natural, busca sem acento e conversão de coordenadas dos marcadores.
@@ -61,6 +94,7 @@ Os valores reais ficam em `.env.local` (ignorado pelo Git) e nas variáveis de a
 - `npm test`: Vitest (`vitest run`)
 - `npm run build`: build de produção em `dist/`
 - `npm run test:e2e`: testes ponta a ponta (Playwright)
+- `npm run boletim:exemplo -- <pasta>`: PDF de exemplo do boletim
 
 ## Testes de ponta a ponta
 

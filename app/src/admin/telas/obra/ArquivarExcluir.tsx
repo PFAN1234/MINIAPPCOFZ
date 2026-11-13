@@ -15,7 +15,7 @@ export interface AvisoObras {
   tipo: 'ok' | 'aviso'
 }
 
-const data = (iso: string) => new Date(iso).toLocaleString('pt-BR')
+export const data = (iso: string) => new Date(iso).toLocaleString('pt-BR')
 
 export function AvisoArquivada({ arquivadaEm }: { arquivadaEm: string }) {
   return (
@@ -85,7 +85,8 @@ function Arquivar({ obra }: { obra: ObraAdmin['obra'] }) {
   )
 }
 
-function linhasResumo(r: ResumoObra): string[] {
+/** Linhas do alerta "Será apagado de vez" (também na exclusão da etapa, com a soma das obras). */
+export function linhasResumo(r: ResumoObra): string[] {
   const n = (v: number, um: string, varios: string) => `${v.toLocaleString('pt-BR')} ${v === 1 ? um : varios}`
   const arquivos = Object.values(r.arquivos ?? {}).reduce((s, v) => s + (v ?? 0), 0)
   return [
@@ -118,7 +119,7 @@ function Excluir({ obra }: { obra: ObraAdmin['obra'] }) {
         const estado: AvisoObras = r.pendente
           ? {
               tipo: 'aviso',
-              aviso: `Obra ${obra.nome} excluída, mas parte dos arquivos ficou no Storage (${r.erro ?? 'erro ao remover'}). Use "Tentar de novo" em Exclusões.`,
+              aviso: `Obra ${obra.nome} excluída, mas parte dos arquivos ficou no Storage (${r.erro ?? 'erro ao remover'}). Use "Tentar de novo" em Obras excluídas.`,
             }
           : { tipo: 'ok', aviso: `Obra ${obra.nome} excluída, com todos os dados e arquivos.` }
         void navegar('/', { state: estado })

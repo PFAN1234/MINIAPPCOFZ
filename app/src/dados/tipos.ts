@@ -1,4 +1,5 @@
 /** Tipos do domínio usados pelo app (independentes da origem dos dados). */
+import type { DadosRA, OrigemFoto } from '../ra/tipos.ts'
 
 /** Marcador normalizado na página do PDF (0 a 1, origem no canto superior esquerdo). */
 export interface Marcador {
@@ -13,6 +14,26 @@ export interface ObraResumo {
   id: string
   slug: string
   nome: string
+}
+
+/** Etapa de implantação do campus: agrupa obras (e tem um grupo do Telegram). */
+export interface Etapa {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+}
+
+/** Obra da tela inicial (`listarObras`), com a etapa a que pertence. */
+export interface ObraDaLista extends ObraResumo {
+  etapa: Etapa
+}
+
+/** Identidade da organização militar (RPC `organizacao`). */
+export interface Organizacao {
+  nome: string
+  /** URL pública do logo no bucket `organizacao`; `null` se não houver logo. */
+  logo_url: string | null
 }
 
 export interface ImagemPlanta {
@@ -93,6 +114,8 @@ export interface FotoRegistro {
   path: string
   largura: number
   altura: number
+  /** `ra_limpa` e `ra_modelo` são o par tirado na realidade aumentada. */
+  origem?: OrigemFoto
 }
 
 export interface RegistroResumo {
@@ -112,6 +135,16 @@ export interface RegistroResumo {
   publicacao: EstadoPublicacao | null
 }
 
+/** Dados de uma foto na conclusão do registro; `origem` e `ra` só nas fotos da realidade aumentada. */
+export interface FotoEnviada {
+  id: string
+  largura: number
+  altura: number
+  bytes: number
+  origem?: Exclude<OrigemFoto, 'normal'>
+  ra?: DadosRA
+}
+
 export interface NovoRegistro {
   id: string
   ambienteId: string
@@ -120,7 +153,7 @@ export interface NovoRegistro {
   /** ISO. */
   capturadoEm: string
   /** Na ordem escolhida. */
-  fotos: { id: string; largura: number; altura: number; bytes: number }[]
+  fotos: FotoEnviada[]
 }
 
 export interface CaminhoFoto {
@@ -148,6 +181,9 @@ export interface ObraDisponivel {
   nome: string
   /** Estado do pedido mais recente; `null` se nunca pediu. */
   solicitacao: 'pendente' | 'recusada' | null
+  etapa_id: string
+  etapa_nome: string
+  etapa_ordem: number
 }
 
 /** Pedido de acesso pendente, visto pelo gestor da obra. */
@@ -226,4 +262,43 @@ export interface PublicacaoProblema {
 export interface LinkAdmin {
   url: string
   expira_em: string
+}
+
+/** Observação do dia na obra (RPC `observacoes_do_dia`). */
+export interface Observacao {
+  id: string
+  /** Dia local (fuso da etapa), `AAAA-MM-DD`. */
+  data: string
+  texto: string
+  /** Hora do aparelho em que foi escrita (ISO). */
+  escrito_em: string
+  editado_em: string | null
+  /** `nome` já é o nome mostrado (de exibição ou do Telegram). */
+  autor: { id: string; nome: string }
+  /** Escrita pelo usuário da sessão. */
+  minha: boolean
+  /** O boletim do dia já foi emitido: não pode mais ser editada nem excluída. */
+  travada: boolean
+}
+
+/** Observações de hoje na obra, com o dia e o fuso da etapa. */
+export interface ObservacoesDoDia {
+  /** Hoje no fuso da etapa, `AAAA-MM-DD`. */
+  data: string
+  /** Fuso IANA da etapa (para mostrar as horas). */
+  fuso: string
+  /** O boletim de hoje já foi emitido: nada mais entra nem muda. */
+  travada: boolean
+  /** Por `escrito_em`. */
+  observacoes: Observacao[]
+}
+
+/** Dados de `salvar_observacao`: id novo cria; id existente edita o texto (só o autor). */
+export interface NovaObservacao {
+  /** Gerado no aparelho (chave de idempotência). */
+  id: string
+  obraId: string
+  texto: string
+  /** ISO, hora do aparelho. */
+  escritoEm: string
 }

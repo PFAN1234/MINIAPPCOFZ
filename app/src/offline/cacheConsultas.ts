@@ -2,7 +2,11 @@
 import { dehydrate, hydrate, type DehydratedState, type QueryClient } from '@tanstack/react-query'
 import type { Armazenamento } from './armazenamento.ts'
 
-export const VERSAO_CACHE = 1
+/**
+ * Sobe sempre que o formato de uma consulta guardada muda: o cache antigo é descartado ao abrir.
+ * 2: obras com `etapa` (etapas, 2026-11-12).
+ */
+export const VERSAO_CACHE = 2
 export const IDADE_MAXIMA_MS = 7 * 24 * 60 * 60_000
 const ATRASO_GRAVACAO_MS = 1000
 const FORA_DO_CACHE = ['sessao', 'usuario', 'obras-disponiveis', 'solicitacoes']

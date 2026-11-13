@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
-import type { ConfigObra, DadosObra, PavimentoResumo } from './tipos.ts'
+import type { ConfigObra, DadosAditivo, DadosEtapa, DadosObra, PavimentoResumo, QrAmbiente } from './tipos.ts'
 
 export function useObrasAdmin() {
   const repo = useRepositorioAdmin()
@@ -45,6 +45,150 @@ export function useSalvarConfig(slug: string) {
 export function useExportarObra() {
   const repo = useRepositorioAdmin()
   return useMutation({ mutationFn: (slug: string) => repo.exportarObra(slug) })
+}
+
+// --- Etapas ------------------------------------------------------------------------------------
+
+export function useEtapas() {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'etapas'], queryFn: () => repo.listarEtapas() })
+}
+
+/** Etapas e obras andam juntas (contagens, etapa de cada obra): relê tudo do admin. */
+export function useSalvarEtapa() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (d: DadosEtapa) => repo.salvarEtapa(d), onSuccess: invalidar })
+}
+
+/** Cadastro completo da etapa (`admin_obter_etapa`): aditivos, responsáveis, prazo e o que falta. */
+export function useEtapa(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'etapa', slug], queryFn: () => repo.obterEtapa(slug) })
+}
+
+export function useSalvarAditivo() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (d: DadosAditivo) => repo.salvarAditivo(d), onSuccess: invalidar })
+}
+
+export function useRemoverAditivo() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (id: string) => repo.removerAditivo(id), onSuccess: invalidar })
+}
+
+export function useDefinirResponsaveis(etapaId: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({
+    mutationFn: (lista: { usuario_id: string; funcao: string }[]) => repo.definirResponsaveis(etapaId, lista),
+    onSuccess: invalidar,
+  })
+}
+
+// --- Boletins ----------------------------------------------------------------------------------
+
+/** Boletins e pedidos da etapa; enquanto houver pedido na fila ou gerando, relê a cada 10 s. */
+export function useBoletins(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({
+    queryKey: ['admin', 'boletins', slug],
+    queryFn: () => repo.listarBoletins(slug),
+    refetchInterval: (q) =>
+      q.state.data?.pedidos.some((p) => p.estado === 'pendente' || p.estado === 'gerando') ? 10_000 : false,
+  })
+}
+
+export function usePedirEmissao(slug: string) {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: string) => repo.pedirEmissao(slug, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'boletins', slug] }),
+  })
+}
+
+export function useUrlPdfBoletim() {
+  const repo = useRepositorioAdmin()
+  return useMutation({ mutationFn: (caminho: string) => repo.urlPdfBoletim(caminho) })
+}
+
+export function usePreviaBoletim(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useMutation({ mutationFn: (data: string) => repo.previaBoletim(slug, data) })
+}
+
+// --- Pessoas -----------------------------------------------------------------------------------
+
+export function usePessoas() {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'pessoas'], queryFn: () => repo.listarPessoas() })
+}
+
+/** Os nomes aparecem também nos responsáveis das etapas: relê tudo do admin. */
+export function useDefinirNomeExibicao() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({
+    mutationFn: (p: { id: string; nome: string | null }) => repo.definirNomeExibicao(p.id, p.nome),
+    onSuccess: invalidar,
+  })
+}
+
+export function useArquivarEtapa(slug: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (arquivada: boolean) => repo.arquivarEtapa(slug, arquivada), onSuccess: invalidar })
+}
+
+export function useDesvincularEtapa(slug: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: () => repo.desvincularEtapa(slug), onSuccess: invalidar })
+}
+
+export function useResumoEtapa(slug: string, ativo: boolean) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'resumo-etapa', slug], queryFn: () => repo.resumoEtapa(slug), enabled: ativo })
+}
+
+export function useExcluirEtapa(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useMutation({ mutationFn: (confirmacao: string) => repo.excluirEtapa(slug, confirmacao) })
+}
+
+// --- Organização -------------------------------------------------------------------------------
+
+/**
+ * Nome e logo da OM. Fora do prefixo `admin`: vale também na tela de entrada e não sai ao
+ * trocar de sessão. Sem novas tentativas: quem usa cai para só "Fiscal Bot" se falhar.
+ */
+export function useOrganizacao() {
+  const repo = useRepositorioAdmin()
+  return useQuery({
+    queryKey: ['organizacao'],
+    queryFn: () => repo.obterOrganizacao(),
+    retry: false,
+    staleTime: 5 * 60_000,
+  })
+}
+
+/** Envia o logo novo (se houver) e grava nome e logo. */
+export function useSalvarOrganizacao() {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (d: { nome: string; logo: Blob | null; logo_path: string | null; cabecalho?: string[] }) => {
+      const caminho = d.logo ? await repo.enviarLogo(d.logo) : d.logo_path
+      return repo.salvarOrganizacao({ nome: d.nome, logo_path: caminho, cabecalho: d.cabecalho })
+    },
+    onSuccess: (org) => {
+      qc.setQueryData(['organizacao'], org)
+      return qc.invalidateQueries({ queryKey: ['organizacao'] })
+    },
+  })
 }
 
 export function useAdmins() {
@@ -111,6 +255,26 @@ export function useRetirarModelo(slug: string) {
   const repo = useRepositorioAdmin()
   const invalidar = useInvalidarObras()
   return useMutation({ mutationFn: (sigla: string) => repo.retirarModelo(slug, sigla), onSuccess: invalidar })
+}
+
+export function useAmbientesRA(obraId: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'ra', obraId], queryFn: () => repo.listarRA(obraId) })
+}
+
+export function useDefinirQr() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({
+    mutationFn: (p: { ambienteId: string; qr: QrAmbiente }) => repo.definirQr(p.ambienteId, p.qr),
+    onSuccess: invalidar,
+  })
+}
+
+export function useRemoverQr() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (ambienteId: string) => repo.removerQr(ambienteId), onSuccess: invalidar })
 }
 
 export function useArquivarObra(slug: string) {
