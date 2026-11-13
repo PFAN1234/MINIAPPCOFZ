@@ -313,3 +313,11 @@ Plano: `tasks/plano-organizacao-pastas.md` (decisões de 2026-11-12; registrado 
 - [ ] Fase 4 (após estabilização das entregas de UI): organizar `app/src/` em `miniapp/` e `shared/` (mantendo `admin/` isolado) e validar `precache-manifest.json`.
 
 Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests/db`, `pytest -q tests/db`, Deno (`fmt`/`lint`/`check`/`test`) e `app/` (`typecheck`, `lint`, `test`, `build`, `build:fixture`, `test:e2e`) verdes.
+
+## Equipe de serviço e abas de etapa
+
+- [x] Contrato `docs/contrato-servico.md`; banco (tabela `servico`, RPCs, snapshot), boletim (seção 8) e aviso no grupo; Mini App (abas de etapa, Equipe de serviço, sem "Últimos registros") (PR #35, merge).
+- [x] Produção: migração `20261116090000_equipe_servico` aplicada e registrada; `publish-outbox` publicada.
+- [ ] Usuário: cadastrar latitude e longitude da 2ª ETAPA no site (sem elas o check-in é recusado).
+- [ ] Usuário: testar check-in e check-out no celular e conferir o aviso no grupo.
+
