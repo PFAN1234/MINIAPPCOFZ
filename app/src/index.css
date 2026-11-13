@@ -1849,20 +1849,29 @@ a.botao {
 
 .topo-ao-lado .atalho {
   flex: none;
+  color: var(--texto);
+  text-decoration: none;
 }
 
 /* Início: linha de cada obra, com barrinhas e botão Gestão */
 .obra-linha {
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px 12px;
-  padding: 6px 14px;
+  gap: 8px;
+  padding: 6px 12px 6px 14px;
+}
+
+.obra-linha .atalho {
+  flex: none;
+  min-height: 32px;
+  padding: 0 10px;
+  gap: 6px;
+  font-size: 0.85rem;
 }
 
 .obra-linha-nome {
-  flex: 1 1 140px;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   min-width: 0;

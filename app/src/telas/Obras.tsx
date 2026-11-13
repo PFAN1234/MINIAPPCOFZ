@@ -133,6 +133,7 @@ function LinhaObra({ obra, resumo }: { obra: ObraDaLista; resumo: ResumoObra | u
       <Link className="obra-linha-nome lista-titulo" to={`/obras/${obra.slug}`}>
         {obra.nome}
       </Link>
+      {gestor && <BotaoGestao obra={obra} />}
       {resumo && (
         <span className="barrinhas">
           <Barrinha tipo="servicos" n={resumo.servicos} texto={textoServicos(resumo.servicos)} />
@@ -140,7 +141,6 @@ function LinhaObra({ obra, resumo }: { obra: ObraDaLista; resumo: ResumoObra | u
           <Barrinha tipo="resolvidas" n={resumo.resolvidas} texto={textoPendenciasResolvidas(resumo.resolvidas)} />
         </span>
       )}
-      {gestor && <BotaoGestao obra={obra} />}
     </li>
   )
 }
