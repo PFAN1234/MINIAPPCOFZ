@@ -1,7 +1,20 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/gerar-boletim.ts": {
+      "memory": 2048,
+      "maxDuration": 300,
+      "includeFiles": "node_modules/{@sparticuz/chromium/bin/**,@fontsource/tinos/files/tinos-latin-*.woff2,@fontsource/arimo/files/arimo-latin-*.woff2}"
+    },
+    "api/previa-boletim.ts": {
+      "memory": 2048,
+      "maxDuration": 90,
+      "includeFiles": "node_modules/{@sparticuz/chromium/bin/**,@fontsource/tinos/files/tinos-latin-*.woff2,@fontsource/arimo/files/arimo-latin-*.woff2}"
+    }
+  },
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/admin/(.*)", "destination": "/admin.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

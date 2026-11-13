@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { ListaRegistros } from '../components/ListaRegistros.tsx'
+import { SeletorEtapa } from '../components/SeletorEtapa.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
 import type { ObraDisponivel } from '../dados/tipos.ts'
 import {
@@ -15,7 +16,8 @@ import {
   useSouAdmin,
 } from '../dados/hooks.ts'
 import { abrirLink } from '../telegram.ts'
-import { useRegistrosLocais } from '../offline/contexto.tsx'
+import { useRegistrosLocais, useUsuarioId } from '../offline/contexto.tsx'
+import { etapasDasObras, useEtapaEscolhida } from '../util/etapas.ts'
 import { useOnline } from '../util/online.ts'
 import { normalizarTexto } from '../util/busca.ts'
 import { textoPendencias } from '../util/formato.ts'
@@ -30,9 +32,17 @@ export default function Obras() {
   const [busca, setBusca] = useState('')
   const online = useOnline()
   const disponiveis = useObrasDisponiveis()
-  const outras = online ? (disponiveis.data ?? []) : []
+  const todasOutras = useMemo(() => (online ? (disponiveis.data ?? []) : []), [online, disponiveis.data])
   // Só afirma que não há obras depois de saber se há outras para pedir acesso.
   const outrasConhecidas = !online || !disponiveis.isPending
+
+  // Uma etapa por vez: a lista, a busca e "Outras obras" seguem a escolhida.
+  const etapas = useMemo(
+    () => etapasDasObras(obras.data ?? [], todasOutras),
+    [obras.data, todasOutras],
+  )
+  const [etapa, escolherEtapa] = useEtapaEscolhida(useUsuarioId(), etapas)
+  const outras = etapa ? todasOutras.filter((o) => o.etapa_id === etapa.id) : todasOutras
 
   const porObra = useMemo(() => {
     const m = new Map<string, number>()
@@ -42,10 +52,27 @@ export default function Obras() {
 
   return (
     <>
-      <TopoTela lista titulo="Obras" idTitulo="titulo-obras" />
+      <TopoTela
+        lista
+        titulo="Obras"
+        idTitulo="titulo-obras"
+        subtitulo={etapas.length === 1 ? etapas[0].nome : undefined}
+      >
+        {etapas.length > 1 && etapa && (
+          <SeletorEtapa
+            etapas={etapas}
+            valor={etapa.id}
+            onMudar={(id) => {
+              escolherEtapa(id)
+              setBusca('')
+            }}
+          />
+        )}
+      </TopoTela>
       <section aria-labelledby="titulo-obras">
         <EstadoConsulta consulta={obras}>
-          {(lista) => {
+          {(todas) => {
+            const lista = etapa ? todas.filter((o) => o.etapa?.id === etapa.id) : todas
             if (lista.length === 0) {
               if (!outrasConhecidas) return <EstadoCarregando />
               if (outras.length > 0) return null

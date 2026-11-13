@@ -3,12 +3,23 @@ import type {
   Bucket,
   ConfigObra,
   DadosEditorPlanta,
+  DadosAditivo,
+  DadosEtapa,
+  Aditivo,
+  ListaBoletins,
+  PedidoEmissao,
+  EtapaDetalhe,
+  Pessoa,
+  Responsavel,
   DadosModelos,
   DadosObra,
   DadosWidget,
   Exclusao,
   EstadoSessao,
+  EtapaLista,
+  EtapaSalva,
   ObraAdmin,
+  Organizacao,
   ObraLista,
   ModeloAdmin,
   AmbienteRA,
@@ -18,7 +29,9 @@ import type {
   Publicacao,
   RegistroModelo,
   ResultadoExclusao,
+  ResultadoExclusaoEtapa,
   ResultadoPublicacao,
+  ResumoEtapa,
   ResumoObra,
   UsuarioApp,
 } from './tipos.ts'
@@ -33,6 +46,50 @@ export interface RepositorioAdmin {
   sair(): Promise<void>
   /** Só na fixture: entra sem Telegram (desenvolvimento e e2e). */
   entrarModoTeste?(): Promise<void>
+
+  /** Etapas (ativas e arquivadas) por `ordem, nome`, com as contagens de obras. */
+  listarEtapas(): Promise<EtapaLista[]>
+  /** Cria (sem `id`; slug ou sigla repetidos são recusados) ou edita (com `id`; chave ausente mantém, `null` apaga). */
+  salvarEtapa(dados: DadosEtapa): Promise<EtapaSalva>
+  /** `admin_obter_etapa`: cadastro completo, aditivos, responsáveis, prazo e o que falta para o boletim. */
+  obterEtapa(slug: string): Promise<EtapaDetalhe>
+  /** Cria ou edita (com `id`) um aditivo; número repetido na etapa é recusado. */
+  salvarAditivo(dados: DadosAditivo): Promise<Aditivo>
+  removerAditivo(id: string): Promise<void>
+  /** Substitui os responsáveis da etapa, na ordem da lista (vazia = nenhum). */
+  definirResponsaveis(etapaId: string, lista: { usuario_id: string; funcao: string }[]): Promise<Responsavel[]>
+
+  /** `admin_listar_boletins`: emitidos e pedidos ainda não emitidos (pendentes, gerando, com falha). */
+  listarBoletins(slug: string): Promise<ListaBoletins>
+  /**
+   * `admin_pedir_emissao`: pede a emissão do boletim da data ("AAAA-MM-DD"); se já houver boletim
+   * na data, é uma retificação. Data futura ou pedido em andamento para a data são recusados.
+   */
+  pedirEmissao(slug: string, data: string): Promise<PedidoEmissao>
+  /** URL (assinada, de curta duração) do PDF de um boletim no bucket `boletins`. */
+  urlPdfBoletim(caminho: string): Promise<string>
+  /** Gerador (`/api/previa-boletim`): PDF da prévia, sem número e sem gravar nada. */
+  previaBoletim(slug: string, data: string): Promise<Blob>
+
+  /** Pessoas que já abriram o Mini App, com nome de exibição e participações nas obras. */
+  listarPessoas(): Promise<Pessoa[]>
+  /** Normaliza (maiúsculas, espaços); texto vazio ou null tira o nome de exibição. */
+  definirNomeExibicao(usuarioId: string, nome: string | null): Promise<{ id: string; nome: string; nome_exibicao: string | null }>
+  /** Arquiva (true) ou desarquiva (false) a etapa; devolve `arquivada_em`. Não mexe no arquivamento das obras. */
+  arquivarEtapa(slug: string, arquivada: boolean): Promise<string | null>
+  /** Desliga o grupo do Telegram da etapa e os tópicos das obras dela. */
+  desvincularEtapa(slug: string): Promise<void>
+  /** Obras e contagens do que a exclusão da etapa apaga. */
+  resumoEtapa(slug: string): Promise<ResumoEtapa>
+  /** Edge Function `admin-excluir-obra` (ação `excluir_etapa`): apaga a etapa e todas as obras dela. Irreversível. */
+  excluirEtapa(slug: string, confirmacao: string): Promise<ResultadoExclusaoEtapa>
+
+  /** Nome e logo da organização militar (RPC `organizacao()`, também sem sessão). */
+  obterOrganizacao(): Promise<Organizacao>
+  /** `logo_path` null tira o logo; se vier, precisa já estar no bucket `organizacao`. `cabecalho` ausente mantém; `[]` limpa. */
+  salvarOrganizacao(dados: { nome: string; logo_path: string | null; cabecalho?: string[] }): Promise<Organizacao>
+  /** Envia o logo ao bucket `organizacao` (PNG, JPEG ou WebP, até 1 MB) e devolve o caminho. */
+  enviarLogo(arquivo: Blob): Promise<string>
 
   listarObras(): Promise<ObraLista[]>
   obterObra(slug: string): Promise<ObraAdmin>

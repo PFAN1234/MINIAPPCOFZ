@@ -153,7 +153,9 @@ test.describe('fora do Telegram', () => {
     await expect(pino).toBeVisible()
 
     // Com a planta inteira na tela, o pino do Despensa (vizinho) cobre o do Apto. 101.
-    // Aproxima com a roda do mouse, centrada no pino, antes de tocar.
+    // Aproxima com a roda do mouse, centrada no pino, antes de tocar. O cartão de observações
+    // fica acima da planta: rola até o pino para a roda cair sobre a planta.
+    await pino.scrollIntoViewIfNeeded()
     const caixa = await pino.boundingBox()
     if (!caixa) throw new Error('Pino "Apto. 101" sem posição na tela')
     await page.mouse.move(caixa.x + caixa.width / 2, caixa.y + caixa.height / 2)

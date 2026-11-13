@@ -91,11 +91,13 @@ describe('fixture: pendências e encerramento', () => {
 })
 
 describe('fixture: gestão', () => {
-  it('lista participantes com gestores primeiro e só para gestor', async () => {
+  it('lista participantes com gestores primeiro e só para gestor (pelo nome mostrado)', async () => {
     const repo = criarRepositorioFixture()
     const lista = await repo.listarParticipantes(OBRA)
     expect(lista.map((p) => [p.nome, p.papel])).toEqual([
       ['Você (teste)', 'gestor'],
+      // Nome de exibição definido pelo admin (o do Telegram é "Patricio Ferreira").
+      ['CP PATRICIO', 'equipe'],
       ['João Lima', 'equipe'],
       ['Marcos Teixeira', 'equipe'],
     ])

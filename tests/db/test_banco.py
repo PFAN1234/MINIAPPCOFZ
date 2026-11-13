@@ -254,14 +254,25 @@ def encerrar(c, usuario, rid_pend, eid=None, obs='Corrigido', fotos=1):
         return eid, cur.fetchone()
 
 
-def test_encerrar_por_equipe_da_42501(cenario):
+def test_encerrar_fora_da_obra_da_42501(cenario):
     c = cenario
     pend, _ = concluir(c, c.equipe_a, c.amb_a, tipo='pendencia')
     with pytest.raises(errors.InsufficientPrivilege):
-        encerrar(c, c.equipe_a, pend)
-    with pytest.raises(errors.InsufficientPrivilege):
         encerrar(c, c.gestor_b, pend)  # gestor de outra obra
     assert contar(c.dsn, 'encerramento', registro_id=pend) == 0
+
+
+def test_encerrar_por_equipe_resolve(cenario):
+    # Qualquer participante da obra encerra pendência, não só gestor (2026-11-13).
+    c = cenario
+    pend, _ = concluir(c, c.equipe_a, c.amb_a, tipo='pendencia')
+    eid, linha = encerrar(c, c.equipe_a, pend)
+    assert linha[0] == eid
+    with sessao(c.dsn, c.gestor_a) as cur:
+        cur.execute('select situacao from public.registro where id = %s', (pend,))
+        assert cur.fetchone() == ('resolvida',)
+        cur.execute('select gestor_id from public.encerramento where id = %s', (eid,))
+        assert cur.fetchone() == (c.equipe_a,)
 
 
 def test_encerrar_por_gestor_resolve(cenario):

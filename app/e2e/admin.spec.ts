@@ -3,15 +3,20 @@ import { expect, test } from '@playwright/test'
 // Site de administração: layout de computador, sem Telegram.
 test.use({ viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false })
 
-test('abre /admin/, lista as obras, cria uma obra e edita o pavimento', async ({ page }) => {
+test('abre /admin/, lista as etapas e obras, cria uma obra e edita o pavimento', async ({ page }) => {
   await page.goto('/admin/')
-  await expect(page.getByRole('heading', { name: 'Obras' })).toBeVisible()
+  await expect(page).toHaveTitle('Fiscal Bot · Administração')
+  await expect(page.getByRole('heading', { level: 1, name: 'Etapas' })).toBeVisible()
+  await expect(page.getByRole('banner')).toContainText('CO-FZ')
+  await expect(page.getByRole('banner')).toContainText('Fiscal Bot · Administração')
+  await expect(page.getByText('Diário da obra')).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'HTO' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'COFZ' })).toBeVisible()
   // nada do Mini App nesta página
   await expect(page.getByRole('link', { name: 'Pendências' })).toHaveCount(0)
 
-  await page.getByRole('link', { name: 'Nova obra' }).click()
+  await page.getByRole('link', { name: 'Nova obra em 2ª ETAPA' }).click()
+  await expect(page.getByRole('combobox', { name: 'Etapa' })).toHaveValue('etapa-2a')
   await page.getByLabel('Slug').fill('obra-e2e')
   await page.getByLabel('Nome').fill('Obra E2E')
   await page.getByRole('button', { name: 'Criar obra' }).click()
@@ -28,7 +33,7 @@ test('abre /admin/, lista as obras, cria uma obra e edita o pavimento', async ({
   await page.getByRole('button', { name: 'Salvar pavimentos' }).click()
   await expect(page.getByText('Pavimentos salvos.')).toBeVisible()
 
-  await page.getByRole('link', { name: '← Obras' }).click()
+  await page.getByRole('link', { name: '← Etapas' }).click()
   const linha = page.getByRole('row', { name: /Obra E2E/ })
   await expect(linha).toContainText('obra-e2e')
   await expect(linha).toContainText('Pavimento térreo')

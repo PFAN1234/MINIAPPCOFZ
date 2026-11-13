@@ -118,7 +118,7 @@ A barra inferior continua com Início, Registros e Pendências. "Pendências" na
   - "Observação": opcional, até 1000 caracteres, placeholder "Descreva a correção".
   - Nota "Acesso de gestor", com ícone.
   - Botão "Encerrar pendência", com confirmação.
-- **Aberta e equipe:** nota "Só gestores da obra podem encerrar pendências."
+- **Aberta e equipe:** nota "Só gestores da obra podem encerrar pendências." (Substituído em 2026-11-13: qualquer participante encerra; ver `tasks/todo.md`, "Encerrar pendência pela equipe".)
 - **Envio pela fila offline** (mesma decisão da fase 5, "volta na hora"):
   - novo tipo de item na fila, `encerramento`, com `id` gerado no cliente, `registroId`, `obraId`, observação e fotos guardadas no IndexedDB;
   - o envio sobe as fotos para `<obra_id>/<registro_id>/<foto_id>.jpg` e chama `encerrar_pendencia(p_id, p_registro_id, p_observacao, p_fotos)`;

@@ -129,19 +129,22 @@ def sessao(dsn, usuario=None, papel='authenticated'):
 
 
 class Cenario:
-    """Duas obras (A e B) com usuários e ambientes. Ids novos a cada teste."""
+    """Uma etapa com duas obras (A e B), usuários e ambientes. Ids novos a cada teste."""
 
     def __init__(self, dsn):
         self.dsn = dsn
         u = uuid.uuid4
-        self.obra_a, self.obra_b = u(), u()
+        self.etapa, self.obra_a, self.obra_b = u(), u(), u()
         self.gestor_a, self.equipe_a, self.gestor_b, self.sem_obra = u(), u(), u(), u()
         self.amb_a, self.amb_a2, self.amb_b = u(), u(), u()
         sufixo = uuid.uuid4().hex[:8]
         with sessao(dsn, papel=None) as cur:
+            # Etapa própria do cenário (sem grupo do Telegram), com as duas obras.
+            cur.execute('insert into public.etapa (id, slug, nome) values (%s, %s, %s)',
+                        (self.etapa, f'etapa-{sufixo}', f'Etapa {sufixo}'))
             for obra, nome in ((self.obra_a, 'a'), (self.obra_b, 'b')):
-                cur.execute('insert into public.obra (id, slug, nome) values (%s, %s, %s)',
-                            (obra, f'{nome}-{sufixo}', f'Obra {nome}'))
+                cur.execute('insert into public.obra (id, slug, nome, etapa_id) values (%s, %s, %s, %s)',
+                            (obra, f'{nome}-{sufixo}', f'Obra {nome}', self.etapa))
             for i, uid in enumerate((self.gestor_a, self.equipe_a, self.gestor_b, self.sem_obra)):
                 cur.execute('insert into auth.users (id, email) values (%s, %s)', (uid, f'{uid}@teste.invalid'))
                 cur.execute('insert into public.usuario (id, telegram_id, nome) values (%s, %s, %s)',

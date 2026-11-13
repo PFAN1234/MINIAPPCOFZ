@@ -291,6 +291,64 @@ Segredos: `SUPABASE_SECRET_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY`), `SUPABASE_PUBL
 3. Segredos: `supabase secrets set SUPABASE_SECRET_KEY=...` (se ainda não existir) e, se o projeto usa as chaves novas, `SUPABASE_PUBLISHABLE_KEY=...`; `ALLOWED_ORIGINS` precisa incluir o domínio do site (o mesmo da `admin-sessao`).
 4. Redeploy de `bot-webhook` (mostra no tópico a mensagem de obra arquivada) e `publish-outbox` (sem aviso de pedido de obra arquivada), **depois** da migration: o `publish-outbox` novo filtra pela coluna `arquivada_em`.
 
+## Etapas e organização
+
+Contrato: `docs/contrato-etapas.md`. O campus é implantado em etapas; cada etapa agrupa obras e tem um grupo do Telegram, com um tópico por obra. O app passou a se chamar **Fiscal Bot**.
+
+### Banco e Storage (`20261112180000_etapas.sql`)
+
+- `etapa` (slug, nome, ordem, grupo do Telegram, arquivada) e `obra.etapa_id` obrigatório. A migration cria a "2ª ETAPA" (`2a-etapa`) e põe nela todas as obras existentes; se as obras vinculadas usavam um grupo só, a etapa herda esse grupo.
+- Obra "ativa" passou a ser obra não arquivada **e** etapa não arquivada: arquivar a etapa tira todas as obras dela do Mini App e para as publicações, sem mexer no arquivamento de cada obra. Desarquivar recoloca na fila o que ficou pendente.
+- `organizacao` (linha única: nome e logo) e bucket público `organizacao` (1 MB, PNG/JPEG/WebP; só admin grava). Leitura pela RPC `organizacao()`, aberta também para `anon`.
+- RPCs do site: `admin_listar_etapas`, `admin_salvar_etapa`, `admin_arquivar_etapa`, `admin_desvincular_etapa`, `admin_resumo_etapa`, `admin_excluir_etapa` (confirmação = nome da etapa; uma linha em `obra_excluida` por obra, com `etapa_nome`) e `admin_salvar_organizacao`. `admin_salvar_obra` recebe `etapa_id` (obrigatório ao criar; ao mover para etapa de outro grupo, o tópico da obra é desvinculado).
+- RPC do bot: `vincular_etapa(slug, chat, título)`; `vincular_obra` agora exige que a etapa da obra esteja vinculada ao mesmo grupo.
+
+### Telegram
+
+1. No grupo da etapa, um admin do grupo envia `/vincular_etapa <slug da etapa>` (ex.: `/vincular_etapa 2a-etapa`).
+2. Em cada tópico, `/vincular_obra <slug da obra>`, como antes. Obra de outra etapa ou etapa sem grupo: o bot recusa e explica.
+3. Para trocar o grupo de uma etapa: "Desvincular grupo" na página da etapa e `/vincular_etapa` no grupo novo (as obras precisam ser vinculadas de novo nos tópicos).
+
+### Site
+
+`/` lista as etapas com as obras de cada uma; `/etapas/<slug>` edita nome e ordem, mostra o grupo, arquiva e exclui (alerta com as obras e contagens, confirmação digitando o nome); `/organizacao` troca o nome da OM e o logo. A exclusão da etapa passa pela Edge Function `admin-excluir-obra` (ação `excluir_etapa`), que limpa o Storage de cada obra; o que sobrar aparece em "Obras excluídas" com "Tentar de novo".
+
+### Aplicar num projeto
+
+1. Aplicar a migration `20261112180000_etapas.sql` (cria o bucket `organizacao`).
+2. Publicar `bot-webhook`, `publish-outbox` e `admin-excluir-obra`.
+3. Reconfigurar os comandos do bot (a ação de configuração do `bot-webhook`, como na fase 6), para `/vincular_etapa` aparecer no menu dos admins de grupo.
+4. No BotFather, trocar o nome do bot e do Mini App para Fiscal Bot (opcional, só exibição).
+5. No site, `/admin/organizacao`: enviar o logo; no grupo da 2ª etapa, `/vincular_etapa 2a-etapa` (se a etapa não herdou o grupo).
+
+## Boletim: cadastro da etapa e pessoas
+
+Contrato: `docs/contrato-boletim.md` (parte 1, banco e site). Os dados abaixo alimentam o Boletim de Acompanhamento Diário (geração e emissão na seção seguinte). As RPCs são as `admin_*` do contrato (`admin_obter_etapa`, `admin_salvar_etapa`, `admin_salvar_aditivo`, `admin_remover_aditivo`, `admin_definir_responsaveis`, `admin_listar_pessoas`, `admin_definir_nome_exibicao`); no site, o `RepositorioAdmin` ganhou os métodos de mesmo nome (`obterEtapa`, `salvarAditivo`, ...), com a fixture reproduzindo as validações, o `prazo` e o `faltando`.
+
+- **Pessoas** (`/pessoas`, entre "Etapas" e "Organização"): tabela com o nome de exibição (campo + Salvar na própria linha; aparece em maiúsculas enquanto se digita), o nome do Telegram, o @username, as obras com o papel e o selo "admin". A busca acha por qualquer um dos nomes. Sem nome de exibição, vale o do Telegram ("usa o nome do Telegram"); o campo vazio tira o nome.
+- **Etapa** (`/nova-etapa` e `/etapas/<slug>`): o mesmo formulário, em três seções.
+  - *Identificação*: nome, slug, ordem e **sigla**, com a prévia "Número do boletim: BA2/261111/COFZ" (data de hoje e nome da OM).
+  - *Localização*: endereço; latitude e longitude (colar "−3.7610, −38.5297" em qualquer dos dois campos preenche os dois), com mapa de prévia (`iframe` do OpenStreetMap, sem chave de API) e o link "abrir no mapa"; fuso horário (rótulos como "Fortaleza (UTC−3)"); estação meteorológica e reserva (seletores com a lista fixa das 11 estações do Observatório de Riscos Climáticos de Fortaleza, campos `estacao`/`estacao_reserva`; na criação, Montese `8836` e Benfica `9281`; desde a parte 3 do contrato, no lugar das estações do INMET); horário de emissão.
+  - *Dados do contrato*: obra/serviço, local, contratante, contrato, contratada, CNPJ (com máscara), OS (número e data), vigência, valor original (R$ com máscara) e área construída.
+  - Na criação, sigla, latitude, longitude e fuso são obrigatórios. Na edição, só os campos alterados são enviados (campo esvaziado apaga; a sigla não pode ser apagada).
+- Na página da etapa, além do formulário: o aviso **"Faltam para o boletim: …"** (a partir de `faltando`), **Responsáveis** (escolher pessoas, função, subir/descer, remover; mostra o nome de exibição) e **Aditivos** (tabela, adicionar, editar, remover; mostra término original, prazo dos aditivos, término atual e valor atual). Aditivo com prazo ou valor negativo é supressão.
+- **Etapas** (`/`): cada etapa mostra a sigla e, se `faltando > 0`, o selo "cadastro incompleto".
+- **Organização** (`/organizacao`): "Linhas do cabeçalho do boletim" (até 4 linhas, adicionar/remover/reordenar), com prévia do cabeçalho (logo, linhas e nome da OM).
+
+Formatos de exibição: datas `dd/mm/aaaa`, valores `R$ 79.499.000,00`, área `86.102,17 m²`, coordenadas com 4 casas e vírgula decimal (`app/src/admin/formato.ts`).
+
+Mapa: o site não define Content-Security-Policy (`vercel.json`, `index.html` e `admin.html` não têm), então o `iframe` de `https://www.openstreetmap.org` funciona sem ajuste. Se uma CSP for adicionada, incluir `frame-src https://www.openstreetmap.org`.
+
+## Boletim: geração, emissão e envio
+
+Contrato: `docs/contrato-boletim.md` (parte 3). O banco agenda e guarda (`boletim_emissao`, `boletim`, migration `20261114120000_boletim_emissao.sql`); o PDF sai de duas funções da Vercel no mesmo projeto do app; o `publish-outbox` envia o PDF ao grupo da etapa.
+
+- **Gerador** (`app/api/gerar-boletim.ts`, POST com `x-segredo-interno`): chamado por `privado.disparar_gerador()` (pg_cron a cada 5 min e pedidos do site). Responde 202 e, em segundo plano, reivindica até 2 pedidos (`reivindicar_emissoes`) e, para cada um: `boletim_snapshot`, cópia do clima, fotos (bucket `fotos`, reduzidas a 1000 px, JPEG 75%), logo, HTML (`app/servidor/boletim/template.ts`, layout da prévia v2), PDF no Chromium, envio de `<etapa_id>/<número sem barras>.pdf` e `...-clima.png` ao bucket `boletins` e `concluir_emissao`. Erro → `falhar_emissao` (nova tentativa em 5, 10, 20… min; depois de 8, "falhou").
+- **Clima**: imagem da linha da estação (principal; reserva se a leitura tiver mais de 3 h ou a linha não existir) na tabela "Últimas 24 horas" de `https://observatorio.fortaleza.ce.gov.br/riscos-climaticos/estacoes-meteorologicas`, com a legenda da fonte, da hora da leitura e da cópia. Sem nenhuma, "Dados meteorológicos indisponíveis (Observatório de Fortaleza)". Como a tabela cobre só as 24 h até a cópia, o clima entra no boletim do dia (ou do dia anterior até as 6 h); retificação de dia antigo sai sem clima.
+- **Prévia** (`app/api/previa-boletim.ts`, GET `?etapa=<slug>&data=AAAA-MM-DD` com o JWT do admin): confere `sou_admin`, lê `admin_boletim_snapshot` e devolve o PDF com a marca "PRÉVIA — sem número", sem gravar nada.
+- **Site** (página da etapa, seção **Boletins**): boletins emitidos (número, data, emitido em, por — "automático" quando foi o agendamento —, situação no Telegram e "Abrir PDF" por URL assinada de 5 min do bucket `boletins`), pedidos não emitidos (na fila, gerando, falhou, com tentativas e erro; a lista se atualiza a cada 10 s enquanto houver pedido em andamento), "Pré-visualizar" e "Emitir agora" / "Emitir retificação" para uma data até hoje (no fuso da etapa), com confirmação que mostra o número (`-R<n>` na retificação) e se o PDF vai ao grupo do Telegram. `RepositorioAdmin`: `listarBoletins`, `pedirEmissao`, `urlPdfBoletim`, `previaBoletim` (Supabase e fixture; na fixture a 2ª etapa tem três boletins e um pedido que falhou, e a prévia é um PDF mínimo).
+- **Configuração**: na Vercel, `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (sem `VITE_`); `app/vercel.json` dá 2 GB e 300 s ao gerador (90 s à prévia), leva o Chromium do `@sparticuz/chromium` e tira `/api/*` das reescritas do SPA. No Vault, `url_gerador_boletim` = `https://<domínio do app>/api/gerar-boletim`. Como configurar e testar: `app/README.md` ("Gerador do boletim").
+
 ## Realidade aumentada (QR)
 
 Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra, ao lado de "Modelos 3D"). Cadastra a posição do QR de cada ambiente e imprime a folha A4 que o Mini App lê para alinhar o modelo 3D com a obra. Contrato de dados em `docs/contrato-ra.md`; código em `app/src/admin/telas/ra/` e `app/src/admin/ra/` (`qr.ts`, `geometria.ts`).

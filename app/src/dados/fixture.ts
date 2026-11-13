@@ -7,6 +7,8 @@ import ambientesJson from '../../../data/hto/ambientes.json'
 import plantasJson from '../../../data/hto/plantas.json'
 import geometriaJson from '../../../data/hto/geometria.json'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
+import { nomeMostrado } from './nome.ts'
+import { dataNoFuso, formatarDia } from '../util/fuso.ts'
 import { baixarModeloLocal, listarModelosLocais } from '../modelo/modelos.ts'
 import type { Repositorio } from './repositorio.ts'
 import type {
@@ -19,11 +21,17 @@ import type {
   LinkAdmin,
   FotoRegistro,
   ImagemPlanta,
+  NovaObservacao,
   NovoEncerramento,
   NovoRegistro,
+  Etapa,
+  Observacao,
+  ObservacoesDoDia,
+  ObraDaLista,
   ObraDetalhe,
   ObraDisponivel,
   ObraResumo,
+  Organizacao,
   PapelObra,
   Participante,
   Pavimento,
@@ -40,7 +48,25 @@ const ID_HTO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 const ID_AURORA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e02'
 
 const ID_DEMONSTRACAO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e03'
+const ID_ALOJAMENTOS = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e04'
 const ID_PEDIDO_MARIA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4f01'
+
+/** Etapas da fixture: as obras atuais na 2ª, uma obra simples na 3ª (testes do seletor). */
+export const ETAPA_2: Etapa = {
+  id: '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4b02',
+  slug: '2a-etapa',
+  nome: '2ª ETAPA',
+  ordem: 2,
+}
+export const ETAPA_3: Etapa = {
+  id: '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4b03',
+  slug: '3a-etapa',
+  nome: '3ª ETAPA',
+  ordem: 3,
+}
+
+/** Como a linha padrão de `organizacao` no banco: "CO-FZ", sem logo. */
+const NOME_ORGANIZACAO = 'CO-FZ'
 
 /** Obra em que o usuário de teste está no grupo do Telegram, mas sem acesso. */
 const OBRA_DEMONSTRACAO: ObraResumo = {
@@ -60,16 +86,26 @@ const PEDIDO_MARIA: SolicitacaoAcesso = {
 const ID_USUARIO = 'usuario-teste'
 const ID_MARCOS = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a02'
 const ID_JOAO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a03'
+const ID_PATRICIO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a04'
+
+/**
+ * Pessoa com nome de exibição (definido pelo admin no site): o app mostra `CP PATRICIO`, e não o
+ * nome do Telegram. As demais pessoas da fixture não têm nome de exibição e aparecem pelo do Telegram.
+ */
+const PATRICIO = { nome: 'Patricio Ferreira', nome_exibicao: 'CP PATRICIO' }
+const NOME_PATRICIO = nomeMostrado(PATRICIO)!
 
 const PARTICIPANTES_BASE: (Participante & { papel_inicial: PapelObra })[] = [
   { usuario_id: ID_USUARIO, nome: 'Você (teste)', username: 'voce', papel: 'gestor', papel_inicial: 'gestor', desde: '2026-10-20T12:00:00Z' },
   { usuario_id: ID_MARCOS, nome: 'Marcos Teixeira', username: 'marcos', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-22T14:30:00Z' },
   { usuario_id: ID_JOAO, nome: 'João Lima', username: 'joao', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-25T09:10:00Z' },
+  { usuario_id: ID_PATRICIO, nome: NOME_PATRICIO, username: 'patricio', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-26T11:00:00Z' },
 ]
 
-const OBRAS: ObraResumo[] = [
-  { id: ID_HTO, slug: 'hto', nome: 'HTO' },
-  { id: ID_AURORA, slug: 'aurora', nome: 'Residencial Aurora' },
+const OBRAS: ObraDaLista[] = [
+  { id: ID_HTO, slug: 'hto', nome: 'HTO', etapa: ETAPA_2 },
+  { id: ID_AURORA, slug: 'aurora', nome: 'Residencial Aurora', etapa: ETAPA_2 },
+  { id: ID_ALOJAMENTOS, slug: 'alojamentos', nome: 'Bloco de Alojamentos', etapa: ETAPA_3 },
 ]
 
 interface DetalheJson {
@@ -279,8 +315,8 @@ const REGISTROS: RegistroResumo[] = [
   r(2, 'servico', null, 'terreo-apto-101', 'Juliana Prado', '2026-11-06T17:05:00Z', 'Contrapiso do quarto concluído e curado.', 'publicado', 1),
   r(3, 'pendencia', 'aberta', 'terreo-apto-102', 'Marcos Teixeira', '2026-11-08T11:40:00Z', 'Mancha de infiltração na parede do banheiro.', 'pendente', 1),
   r(4, 'servico', null, 'terreo-administracao', 'Juliana Prado', '2026-11-07T14:10:00Z', 'Instalação do forro de gesso finalizada.', 'incerto', 3),
-  r(5, 'pendencia', 'aberta', '1pav-circulacao', 'Rafael Nogueira', '2026-11-05T09:30:00Z', 'Guarda-corpo com fixação folgada.', 'falhou', 1),
-  r(6, 'pendencia', 'resolvida', 'terreo-circulacao-sul', 'Rafael Nogueira', '2026-11-03T15:45:00Z', 'Rejunte irregular no piso, já refeito.', 'publicado', 1),
+  r(5, 'pendencia', 'aberta', '1pav-circulacao', NOME_PATRICIO, '2026-11-05T09:30:00Z', 'Guarda-corpo com fixação folgada.', 'falhou', 1),
+  r(6, 'pendencia', 'resolvida', 'terreo-circulacao-sul', NOME_PATRICIO, '2026-11-03T15:45:00Z', 'Rejunte irregular no piso, já refeito.', 'publicado', 1),
 ]
 
 function porRecente(a: RegistroResumo, b: RegistroResumo): number {
@@ -305,7 +341,7 @@ function ambientesComContagem(registros: RegistroResumo[]): Ambiente[] {
 function obraPorSlug(slug: string): ObraResumo {
   const obra = OBRAS.find((o) => o.slug === slug)
   if (!obra) throw new Error('Obra não encontrada.')
-  return obra
+  return { id: obra.id, slug: obra.slug, nome: obra.nome }
 }
 
 /** `<obra_id>/<revisao>/<pavimento>/...` vira `/__plantas/<revisao>/<pavimento>/...`. */
@@ -328,6 +364,55 @@ function inteiroPositivo(v: unknown): boolean {
 
 const CHAVE_SERVIDOR = 'fixture-servidor'
 
+/** Fuso da 2ª etapa (a da HTO), como no banco. */
+const FUSO_FIXTURE = 'America/Fortaleza'
+const MENSAGEM_SO_AUTOR = 'Só o autor pode alterar a observação'
+
+/** Observação guardada no "servidor" da fixture. */
+interface ObservacaoSalva {
+  id: string
+  obraId: string
+  autorId: string
+  autorNome: string
+  data: string
+  texto: string
+  escrito_em: string
+  editado_em: string | null
+}
+
+/**
+ * Duas observações de hoje na HTO (uma de CP PATRICIO, outra do usuário de teste), com horas
+ * do próprio dia no fuso da etapa (Fortaleza, UTC−3), antes de agora sempre que possível.
+ */
+function observacoesBase(agora = Date.now()): ObservacaoSalva[] {
+  const data = dataNoFuso(new Date(agora), FUSO_FIXTURE)
+  const inicio = Date.parse(`${data}T00:00:00-03:00`)
+  const hora = (atrasoMs: number, minimoMs: number) =>
+    new Date(Math.max(inicio + minimoMs, agora - atrasoMs)).toISOString()
+  return [
+    {
+      id: '00000000-0000-4000-8000-000000000501',
+      obraId: ID_HTO,
+      autorId: ID_PATRICIO,
+      autorNome: NOME_PATRICIO,
+      data,
+      texto: 'Concretagem da laje do 1º pavimento liberada pela fiscalização.',
+      escrito_em: hora(3 * 3_600_000, 60_000),
+      editado_em: null,
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000502',
+      obraId: ID_HTO,
+      autorId: ID_USUARIO,
+      autorNome: AUTOR_FIXTURE,
+      data,
+      texto: 'Equipe de elétrica reduzida hoje; retomada prevista para amanhã.',
+      escrito_em: hora(3_600_000, 120_000),
+      editado_em: null,
+    },
+  ]
+}
+
 interface EstadoSalvo {
   registros: RegistroResumo[]
   /** caminho no bucket `fotos` -> data URL */
@@ -344,6 +429,8 @@ interface EstadoSalvo {
   removidos: string[]
   /** Estado atual das publicações com problema, por id da publicação. */
   publicacoes: Record<string, EstadoPublicacao>
+  /** Observações das obras (as de exemplo entram na primeira carga). */
+  observacoes: ObservacaoSalva[]
 }
 
 function blobParaDataUrl(blob: Blob): Promise<string> {
@@ -382,6 +469,7 @@ function carregarEstado(persistencia: Storage | null): EstadoSalvo {
           e.publicacoes && typeof e.publicacoes === 'object'
             ? e.publicacoes
             : { ...ESTADO_INICIAL_PUBLICACOES },
+        observacoes: Array.isArray(e.observacoes) ? e.observacoes : observacoesBase(),
       }
     }
   } catch {
@@ -396,6 +484,7 @@ function carregarEstado(persistencia: Storage | null): EstadoSalvo {
     papeis: {},
     removidos: [],
     publicacoes: { ...ESTADO_INICIAL_PUBLICACOES },
+    observacoes: observacoesBase(),
   }
 }
 
@@ -404,6 +493,10 @@ export function criarRepositorioFixture(
     persistencia?: Storage | null
     /** O usuário de teste é admin do Mini App (mostra o botão Administração)? Padrão: não. */
     admin?: boolean
+    /** URL do logo da organização. Padrão: sem logo, como no banco recém-migrado. */
+    logo?: string | null
+    /** O boletim de hoje da 2ª etapa já foi emitido (observações de hoje travadas)? Padrão: não. */
+    boletimEmitido?: boolean
   } = {},
 ): Repositorio {
   const persistencia = opcoes.persistencia ?? null
@@ -427,6 +520,7 @@ export function criarRepositorioFixture(
   const papeis = salvo.papeis
   const removidos = salvo.removidos
   const publicacoes = salvo.publicacoes
+  const observacoes = salvo.observacoes
 
   function persistir(): void {
     if (!persistencia) return
@@ -440,6 +534,7 @@ export function criarRepositorioFixture(
         papeis,
         removidos,
         publicacoes,
+        observacoes,
       }
       persistencia.setItem(CHAVE_SERVIDOR, JSON.stringify(estado))
     } catch {
@@ -502,6 +597,35 @@ export function criarRepositorioFixture(
     }
   }
 
+  const hoje = () => dataNoFuso(new Date(), FUSO_FIXTURE)
+  /** Como `privado.boletim_emitido`: só o dia de hoje pode estar emitido na fixture. */
+  const diaTravado = (data: string) => opcoes.boletimEmitido === true && data === hoje()
+
+  function exigirDiaAberto(data: string): void {
+    if (diaTravado(data)) {
+      falhaValidacao(`O boletim de ${formatarDia(data)} já foi emitido; a correção é feita por retificação`)
+    }
+  }
+
+  function exigirObra(obraId: string): void {
+    if (!OBRAS.some((o) => o.id === obraId)) {
+      throw new ErroEnvio('permissao', 'Sem permissão nesta obra')
+    }
+  }
+
+  function observacaoPublica(o: ObservacaoSalva): Observacao {
+    return {
+      id: o.id,
+      data: o.data,
+      texto: o.texto,
+      escrito_em: o.escrito_em,
+      editado_em: o.editado_em,
+      autor: { id: o.autorId, nome: o.autorNome },
+      minha: o.autorId === ID_USUARIO,
+      travada: diaTravado(o.data),
+    }
+  }
+
   function publicacaoProblema(id: number): PublicacaoProblema {
     const base = PUBLICACOES_BASE.find((p) => p.id === id)
     if (!base) throw new ErroEnvio('nao_encontrado', 'Publicação não encontrada.')
@@ -549,7 +673,11 @@ export function criarRepositorioFixture(
     },
 
     async listarObras() {
-      return OBRAS.map((o) => ({ ...o }))
+      return OBRAS.map((o) => ({ ...o, etapa: { ...o.etapa } }))
+    },
+
+    async organizacao(): Promise<Organizacao> {
+      return { nome: NOME_ORGANIZACAO, logo_url: opcoes.logo || null }
     },
 
     async obterObra(slug): Promise<ObraDetalhe> {
@@ -624,7 +752,15 @@ export function criarRepositorioFixture(
     },
 
     async obrasDisponiveis(): Promise<ObraDisponivel[]> {
-      return [{ ...OBRA_DEMONSTRACAO, solicitacao: pedidos[ID_DEMONSTRACAO] ?? null }]
+      return [
+        {
+          ...OBRA_DEMONSTRACAO,
+          solicitacao: pedidos[ID_DEMONSTRACAO] ?? null,
+          etapa_id: ETAPA_2.id,
+          etapa_nome: ETAPA_2.nome,
+          etapa_ordem: ETAPA_2.ordem,
+        },
+      ]
     },
 
     async solicitarAcesso(obraId) {
@@ -681,7 +817,8 @@ export function criarRepositorioFixture(
       if (!UUID.test(d.id) || !UUID.test(d.registroId)) falhaValidacao('Identificadores obrigatórios')
       const registro = todos().find((x) => x.id === d.registroId && x.tipo === 'pendencia')
       if (!registro) throw new ErroEnvio('nao_encontrado', 'Pendência não encontrada.')
-      exigirGestor(registro.obra.id)
+      // Qualquer participante da obra (equipe ou gestor) encerra; no fixture só a HTO tem participação.
+      if (registro.obra.id !== ID_HTO) throw new ErroEnvio('permissao', 'Você não participa desta obra.')
 
       const existente = todosEncerramentos().find((e) => e.id === d.id)
       if (existente) {
@@ -796,6 +933,70 @@ export function criarRepositorioFixture(
     async localizarRegistro(id): Promise<RegistroLocalizado | null> {
       const reg = todos().find((x) => x.id === id)
       return reg ? { slug: reg.obra.slug, codigo: reg.ambiente.codigo, tipo: reg.tipo } : null
+    },
+
+    async observacoesDoDia(obraId): Promise<ObservacoesDoDia> {
+      exigirObra(obraId)
+      const data = hoje()
+      return {
+        data,
+        fuso: FUSO_FIXTURE,
+        travada: diaTravado(data),
+        observacoes: observacoes
+          .filter((o) => o.obraId === obraId && o.data === data)
+          .sort((a, b) => a.escrito_em.localeCompare(b.escrito_em) || a.id.localeCompare(b.id))
+          .map(observacaoPublica),
+      }
+    },
+
+    async salvarObservacao(d: NovaObservacao) {
+      exigirRede()
+      if (typeof d.id !== 'string' || !UUID.test(d.id)) falhaValidacao('Identificador da observação inválido')
+      const texto = String(d.texto ?? '').replace(/^\s+|\s+$/g, '')
+      if (texto.length < 1 || texto.length > 1000) {
+        falhaValidacao('A observação deve ter de 1 a 1000 caracteres')
+      }
+      const existente = observacoes.find((o) => o.id === d.id)
+      if (!existente) {
+        exigirObra(d.obraId)
+        const escrito = Date.parse(d.escritoEm)
+        if (Number.isNaN(escrito)) falhaValidacao('Data e hora da observação inválidas')
+        if (escrito > Date.now() + 5 * 60_000) {
+          falhaValidacao('A hora da observação está no futuro; confira o relógio do aparelho')
+        }
+        const data = dataNoFuso(new Date(escrito), FUSO_FIXTURE)
+        exigirDiaAberto(data)
+        const nova: ObservacaoSalva = {
+          id: d.id,
+          obraId: d.obraId,
+          autorId: ID_USUARIO,
+          autorNome: AUTOR_FIXTURE,
+          data,
+          texto,
+          escrito_em: new Date(escrito).toISOString(),
+          editado_em: null,
+        }
+        observacoes.push(nova)
+        persistir()
+        return observacaoPublica(nova)
+      }
+      if (existente.autorId !== ID_USUARIO) throw new ErroEnvio('permissao', MENSAGEM_SO_AUTOR)
+      if (existente.texto === texto) return observacaoPublica(existente) // reenvio idempotente
+      exigirDiaAberto(existente.data)
+      existente.texto = texto
+      existente.editado_em = new Date().toISOString()
+      persistir()
+      return observacaoPublica(existente)
+    },
+
+    async excluirObservacao(id) {
+      exigirRede()
+      const i = observacoes.findIndex((o) => o.id === id)
+      if (i < 0) return
+      if (observacoes[i].autorId !== ID_USUARIO) throw new ErroEnvio('permissao', MENSAGEM_SO_AUTOR)
+      exigirDiaAberto(observacoes[i].data)
+      observacoes.splice(i, 1)
+      persistir()
     },
 
     async concluirRegistro(d: NovoRegistro) {

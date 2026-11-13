@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App.tsx'
 import { RepositorioProvider } from './dados/contexto.tsx'
-import { criarRepositorioFixture } from './dados/fixture.ts'
+import { criarRepositorioFixture, ETAPA_2 } from './dados/fixture.ts'
 import type { Repositorio } from './dados/repositorio.ts'
 import { recursos } from './recursos.ts'
 
@@ -170,7 +170,7 @@ describe('sessão e recursos', () => {
   it('sem sessão no modo Supabase pede para abrir pelo Telegram', async () => {
     renderizar('/', { ...criarRepositorioFixture(), temSessao: async () => false })
     expect(
-      await screen.findByText('Abra o Diário da obra pelo Telegram'),
+      await screen.findByText('Abra o Fiscal Bot pelo Telegram'),
     ).toBeInTheDocument()
   })
 
@@ -195,7 +195,15 @@ describe('acesso às obras', () => {
     const repo: Repositorio = {
       ...criarRepositorioFixture(),
       obrasDisponiveis: async () => [
-        { id: 'o1', slug: 'x', nome: 'Obra X', solicitacao: 'recusada' },
+        {
+          id: 'o1',
+          slug: 'x',
+          nome: 'Obra X',
+          solicitacao: 'recusada',
+          etapa_id: ETAPA_2.id,
+          etapa_nome: ETAPA_2.nome,
+          etapa_ordem: ETAPA_2.ordem,
+        },
       ],
       solicitarAcesso: () =>
         Promise.reject(new Error('Pedido recusado recentemente. Fale com o gestor da obra.')),

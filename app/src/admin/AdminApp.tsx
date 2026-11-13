@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { NavLink, Route, Routes } from 'react-router'
-import { Carregando, Erro, mensagemDe } from './componentes.tsx'
+import { Carregando, Erro, IdentidadeOM, mensagemDe } from './componentes.tsx'
 import { useRepositorioAdmin } from './dados/contexto.tsx'
 import type { Entrada } from './entrada.ts'
 import type { EstadoSessao, UsuarioSessao } from './dados/tipos.ts'
@@ -9,6 +9,9 @@ import Admins from './telas/Admins.tsx'
 import { AcessoNegado, Entrar } from './telas/Entrar.tsx'
 import ObraAdmin, { NovaObra } from './telas/ObraAdmin.tsx'
 import ObrasAdmin from './telas/ObrasAdmin.tsx'
+import EtapaAdmin, { NovaEtapa } from './telas/etapa/EtapaAdmin.tsx'
+import Organizacao from './telas/Organizacao.tsx'
+import Pessoas from './telas/Pessoas.tsx'
 import EditorPlanta from './telas/planta/EditorPlanta.tsx'
 import ModelosObra from './telas/modelo/ModelosObra.tsx'
 import PlantaObra from './telas/planta/PlantaObra.tsx'
@@ -66,11 +69,15 @@ export default function AdminApp({ entrada }: { entrada: Entrada }) {
     <Layout usuario={estado.usuario} onSair={() => void sair()}>
       <Routes>
         <Route index element={<ObrasAdmin />} />
+        <Route path="nova-etapa" element={<NovaEtapa />} />
+        <Route path="etapas/:slug" element={<EtapaAdmin />} />
         <Route path="nova-obra" element={<NovaObra />} />
         <Route path="obras/:slug" element={<ObraAdmin />} />
         <Route path="obras/:slug/planta" element={<PlantaObra />} />
         <Route path="obras/:slug/planta/:pavimento" element={<EditorPlanta />} />
         <Route path="obras/:slug/modelos" element={<ModelosObra />} />
+        <Route path="pessoas" element={<Pessoas />} />
+        <Route path="organizacao" element={<Organizacao />} />
         <Route path="obras/:slug/ra" element={<RaObra />} />
         <Route path="admins" element={<Admins />} />
         <Route path="*" element={<p>Página não encontrada.</p>} />
@@ -83,11 +90,13 @@ function Layout({ usuario, onSair, children }: { usuario: UsuarioSessao; onSair:
   return (
     <div className="adm-pagina">
       <header className="adm-topo">
-        <span className="adm-marca">Diário da obra · Administração</span>
+        <IdentidadeOM />
         <nav aria-label="Principal" className="adm-nav">
           <NavLink to="/" end>
-            Obras
+            Etapas
           </NavLink>
+          <NavLink to="/pessoas">Pessoas</NavLink>
+          <NavLink to="/organizacao">Organização</NavLink>
           <NavLink to="/admins">Admins</NavLink>
         </nav>
         <span className="adm-usuario">{usuario.nome}</span>

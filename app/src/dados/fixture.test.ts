@@ -4,11 +4,28 @@ import { criarRepositorioFixture, urlLocalDaImagem } from './fixture.ts'
 const repo = criarRepositorioFixture()
 
 describe('repositório fixture', () => {
-  it('lista duas obras, a segunda vazia', async () => {
+  it('lista três obras em duas etapas; só a HTO tem ambientes', async () => {
     const obras = await repo.listarObras()
-    expect(obras.map((o) => o.slug)).toEqual(['hto', 'aurora'])
+    expect(obras.map((o) => [o.slug, o.etapa.nome])).toEqual([
+      ['hto', '2ª ETAPA'],
+      ['aurora', '2ª ETAPA'],
+      ['alojamentos', '3ª ETAPA'],
+    ])
     const vazia = await repo.obterObra('aurora')
     expect(vazia.ambientes).toEqual([])
+    expect((await repo.obterObra('alojamentos')).obra).toEqual({
+      id: obras[2].id,
+      slug: 'alojamentos',
+      nome: 'Bloco de Alojamentos',
+    })
+  })
+
+  it('organização "CO-FZ" sem logo por padrão; com logo quando pedido', async () => {
+    expect(await repo.organizacao()).toEqual({ nome: 'CO-FZ', logo_url: null })
+    expect(await criarRepositorioFixture({ logo: '/logo.png' }).organizacao()).toEqual({
+      nome: 'CO-FZ',
+      logo_url: '/logo.png',
+    })
   })
 
   it('HTO tem 2 pavimentos com planta, 87 ambientes e 3 pendências abertas', async () => {
@@ -51,7 +68,7 @@ describe('fixture: acesso', () => {
   it('há uma obra disponível e um pedido pendente da Maria na HTO', async () => {
     const r = criarRepositorioFixture()
     const [demo] = await r.obrasDisponiveis()
-    expect(demo).toMatchObject({ nome: 'Obra Demonstração', solicitacao: null })
+    expect(demo).toMatchObject({ nome: 'Obra Demonstração', solicitacao: null, etapa_nome: '2ª ETAPA' })
     expect((await r.obterObra('hto')).papel).toBe('gestor')
     const pedidos = await r.listarSolicitacoes((await r.obterObra('hto')).obra.id)
     expect(pedidos.map((p) => p.username)).toEqual(['maria'])

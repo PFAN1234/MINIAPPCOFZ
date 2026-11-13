@@ -1,10 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorio } from './contexto.tsx'
-import type { FiltroRegistros, PapelObra } from './tipos.ts'
+import type { FiltroRegistros, NovaObservacao, PapelObra } from './tipos.ts'
 
 export function useObras() {
   const repo = useRepositorio()
   return useQuery({ queryKey: ['obras'], queryFn: () => repo.listarObras() })
+}
+
+/**
+ * Nome e logo da organização militar, para a faixa de identidade do topo. Entra no cache
+ * guardado no aparelho (vale sem sinal); em erro, a faixa mostra só "Fiscal Bot".
+ */
+export function useOrganizacao() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['organizacao'], queryFn: () => repo.organizacao(), staleTime: 5 * 60_000 })
 }
 
 export function useObra(slug: string) {
@@ -202,5 +211,31 @@ export function useGeometria(
     queryKey: ['geometria', obra?.id, ambiente?.id],
     queryFn: () => repo.obterGeometria(obra!, ambiente!),
     enabled: habilitado && Boolean(obra && ambiente),
+  })
+}
+
+/** Observações de hoje na obra; entra no cache guardado no aparelho (aparece sem sinal). */
+export function useObservacoesDoDia(obraId: string) {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['observacoes', obraId],
+    queryFn: () => repo.observacoesDoDia(obraId),
+  })
+}
+
+/** Editar (texto novo, mesmo id) ou excluir uma observação; exigem conexão. */
+export function useAlterarObservacao(obraId: string) {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    // Sem sinal a falha aparece na hora (os botões já ficam desabilitados), em vez de esperar a rede.
+    networkMode: 'always',
+    mutationFn: (
+      acao: { tipo: 'editar'; dados: NovaObservacao } | { tipo: 'excluir'; id: string },
+    ) =>
+      acao.tipo === 'editar'
+        ? repo.salvarObservacao(acao.dados).then(() => undefined)
+        : repo.excluirObservacao(acao.id),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['observacoes', obraId] }),
   })
 }

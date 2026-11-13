@@ -24,8 +24,17 @@ describe('Gestão', () => {
     const participantes = (await screen.findAllByRole('combobox', { name: /^Papel de / })).map(
       (c) => c.getAttribute('aria-label'),
     )
-    expect(participantes).toEqual(['Papel de Você (teste)', 'Papel de João Lima', 'Papel de Marcos Teixeira'])
+    expect(participantes).toEqual([
+      'Papel de Você (teste)',
+      'Papel de CP PATRICIO',
+      'Papel de João Lima',
+      'Papel de Marcos Teixeira',
+    ])
     expect(screen.getByText('@marcos')).toBeInTheDocument()
+    // O nome de exibição aparece no lugar do nome do Telegram; o @username continua.
+    expect(screen.getByText('CP PATRICIO')).toBeInTheDocument()
+    expect(screen.getByText('@patricio')).toBeInTheDocument()
+    expect(screen.queryByText('Patricio Ferreira')).not.toBeInTheDocument()
     expect(await screen.findByText('Incerta: pode ter sido publicada')).toBeInTheDocument()
     expect(screen.getByText('Falhou')).toBeInTheDocument()
   })

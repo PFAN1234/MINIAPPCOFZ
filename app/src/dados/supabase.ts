@@ -1,6 +1,8 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import { entrarComTelegram } from './login.ts'
+import { nomeMostrado } from './nome.ts'
+import { FUSO_PADRAO, dataNoFuso } from '../util/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
 import type { ModeloFrag } from '../modelo/modelos.ts'
 import { dentroDoTelegram, idUsuarioTelegram, initData } from '../telegram.ts'
@@ -14,11 +16,17 @@ import type {
   FotoRegistro,
   ImagemPlanta,
   Marcador,
+  NovaObservacao,
   NovoEncerramento,
   NovoRegistro,
+  Etapa,
+  Observacao,
+  ObservacoesDoDia,
+  ObraDaLista,
   ObraDetalhe,
   ObraDisponivel,
   ObraResumo,
+  Organizacao,
   PapelObra,
   Participante,
   Pavimento,
@@ -50,6 +58,22 @@ export function criarClienteSupabase(opcoes?: SupabaseClientOptions<'public'>): 
     )
   }
   return createClient(url, chave, opcoes)
+}
+
+/** URL pública do logo no bucket (público) `organizacao`. */
+export function urlPublicaLogo(logoPath: string): string {
+  const base = String(import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '')
+  const caminho = logoPath.split('/').map(encodeURIComponent).join('/')
+  return `${base}/storage/v1/object/public/organizacao/${caminho}`
+}
+
+function mapearEtapa(l: Linha | null | undefined): Etapa {
+  return {
+    id: String(l?.id ?? ''),
+    slug: String(l?.slug ?? ''),
+    nome: String(l?.nome ?? ''),
+    ordem: Number(l?.ordem ?? 0),
+  }
 }
 
 function checar<T>(resposta: { data: T | null; error: { message: string } | null }): T {
@@ -120,8 +144,23 @@ function mapearAmbiente(
 
 const MENSAGEM_JA_ENCERRADA = 'Esta pendência já foi encerrada.'
 
+/** Linha de `observacoes_do_dia` (ou o retorno de `salvar_observacao`) no tipo do app. */
+function mapearObservacao(l: Linha, padrao: { minha: boolean; travada: boolean }): Observacao {
+  const autor = (l.autor as Linha | null) ?? {}
+  return {
+    id: String(l.id),
+    data: String(l.data),
+    texto: String(l.texto),
+    escrito_em: String(l.escrito_em),
+    editado_em: l.editado_em ? String(l.editado_em) : null,
+    autor: { id: String(autor.id ?? ''), nome: nomeMostrado(autor) ?? 'Autor desconhecido' },
+    minha: typeof l.minha === 'boolean' ? l.minha : padrao.minha,
+    travada: typeof l.travada === 'boolean' ? l.travada : padrao.travada,
+  }
+}
+
 const COLUNAS_REGISTRO =
-  'id, tipo, situacao, legenda, capturado_em, recebido_em, autor:usuario(nome), '
+  'id, tipo, situacao, legenda, capturado_em, recebido_em, autor:usuario(nome, nome_exibicao), '
 
 const COLUNAS_AMBIENTE =
   'id, codigo, pavimento_id, nome_operacional, nome_planta, categoria, area_m2, marcadores, ativo'
@@ -201,7 +240,7 @@ export function criarRepositorioSupabase(
         tipo: l.tipo as RegistroResumo['tipo'],
         situacao: (l.situacao as RegistroResumo['situacao']) ?? null,
         legenda: String(l.legenda),
-        autor: String((l.autor as Linha | null)?.nome ?? 'Autor desconhecido'),
+        autor: nomeMostrado(l.autor as Linha | null) ?? 'Autor desconhecido',
         capturado_em: String(l.capturado_em),
         recebido_em: String(l.recebido_em),
         ambiente: {
@@ -305,9 +344,36 @@ export function criarRepositorioSupabase(
     },
 
     async listarObras() {
-      return checar(
-        await cliente.from('obra').select('id, slug, nome').order('ordem').order('nome'),
-      ) as ObraResumo[]
+      const linhas = checar(
+        await cliente
+          .from('obra')
+          .select('id, slug, nome, etapa(id, slug, nome, ordem)')
+          .order('ordem')
+          .order('nome'),
+      ) as Linha[]
+      return linhas.map(
+        (l): ObraDaLista => ({
+          id: String(l.id),
+          slug: String(l.slug),
+          nome: String(l.nome),
+          etapa: mapearEtapa(l.etapa as Linha | null),
+        }),
+      )
+    },
+
+    async organizacao(): Promise<Organizacao> {
+      try {
+        const { data, error } = await cliente.rpc('organizacao')
+        if (error) throw error
+        const l = (Array.isArray(data) ? data[0] : data) as Linha | null
+        const logo = typeof l?.logo_path === 'string' && l.logo_path ? l.logo_path : null
+        return {
+          nome: typeof l?.nome === 'string' ? l.nome : '',
+          logo_url: logo ? urlPublicaLogo(logo) : null,
+        }
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
     },
 
     async obterObra(slug): Promise<ObraDetalhe> {
@@ -449,7 +515,7 @@ export function criarRepositorioSupabase(
           .maybeSingle(),
         cliente
           .from('encerramento')
-          .select('id, observacao, encerrado_em, gestor:usuario(nome)')
+          .select('id, observacao, encerrado_em, gestor:usuario(nome, nome_exibicao)')
           .eq('registro_id', id)
           .maybeSingle(),
       ])
@@ -470,7 +536,7 @@ export function criarRepositorioSupabase(
           id: encId,
           observacao: encLinha.observacao ? String(encLinha.observacao) : null,
           encerrado_em: String(encLinha.encerrado_em),
-          gestor: String((encLinha.gestor as Linha | null)?.nome ?? 'Gestor desconhecido'),
+          gestor: nomeMostrado(encLinha.gestor as Linha | null) ?? 'Gestor desconhecido',
           fotos,
           publicacao: ((checar(pub) as Linha | null)?.estado as EstadoPublicacao) ?? null,
         }
@@ -658,6 +724,9 @@ export function criarRepositorioSupabase(
             slug: String(l.slug),
             nome: String(l.nome),
             solicitacao: l.solicitacao === 'pendente' || l.solicitacao === 'recusada' ? l.solicitacao : null,
+            etapa_id: String(l.etapa_id ?? ''),
+            etapa_nome: String(l.etapa_nome ?? ''),
+            etapa_ordem: Number(l.etapa_ordem ?? 0),
           }),
         )
       } catch (e) {
@@ -717,6 +786,47 @@ export function criarRepositorioSupabase(
       ) as unknown as { tipo: RegistroLocalizado['tipo']; ambiente: { codigo: string }; obra: { slug: string } } | null
       if (!linha) return null
       return { slug: linha.obra.slug, codigo: linha.ambiente.codigo, tipo: linha.tipo }
+    },
+
+    async observacoesDoDia(obraId): Promise<ObservacoesDoDia> {
+      const [dados, obraLinha] = await Promise.all([
+        chamar('observacoes_do_dia', { p_obra: exigirUuid(obraId, 'obra') }),
+        cliente.from('obra').select('etapa_id, etapa(fuso)').eq('id', obraId).maybeSingle(),
+      ])
+      const observacoes = ((dados ?? []) as Linha[]).map((l) =>
+        mapearObservacao(l, { minha: false, travada: false }),
+      )
+      const obra = (obraLinha.error ? null : obraLinha.data) as Linha | null
+      const fusoEtapa = (obra?.etapa as Linha | null)?.fuso
+      const fuso = typeof fusoEtapa === 'string' && fusoEtapa ? fusoEtapa : FUSO_PADRAO
+      const data = observacoes[0]?.data ?? dataNoFuso(new Date(), fuso)
+      let travada = observacoes[0]?.travada ?? false
+      // Sem observações a RPC não diz se o dia travou: confere se já há boletim da etapa no dia.
+      if (observacoes.length === 0 && obra?.etapa_id) {
+        const { count, error } = await cliente
+          .from('boletim')
+          .select('id', { count: 'exact', head: true })
+          .eq('etapa_id', String(obra.etapa_id))
+          .eq('data', data)
+        travada = !error && (count ?? 0) > 0
+      }
+      return { data, fuso, travada, observacoes }
+    },
+
+    async salvarObservacao(d: NovaObservacao) {
+      const dados = await chamar('salvar_observacao', {
+        p: {
+          id: exigirUuid(d.id, 'observação'),
+          obra_id: exigirUuid(d.obraId, 'obra'),
+          texto: d.texto,
+          escrito_em: d.escritoEm,
+        },
+      })
+      return mapearObservacao(dados as Linha, { minha: true, travada: false })
+    },
+
+    async excluirObservacao(id) {
+      await chamar('excluir_observacao', { p_id: exigirUuid(id, 'observação') })
     },
 
     async concluirRegistro(d: NovoRegistro) {

@@ -1,0 +1,203 @@
+// @vitest-environment node
+import sharp from 'sharp'
+import type { Browser } from 'playwright-core'
+import { describe, expect, it, vi } from 'vitest'
+import { fotoDeTeste, lerSnapshotExemplo } from './exemplo.js'
+import { prepararFotos, reduzirFoto, tipoDaImagem } from './fotos.js'
+import { caminhosDoBoletim, climaCabeNoDia, processarFila, type Dependencias } from './gerador.js'
+import { tratarGerar, tratarPrevia } from './http.js'
+import { ErroRpc, type FonteBoletim } from './supabase.js'
+import type { PedidoReivindicado, Snapshot } from './tipos.js'
+
+describe('fotos', () => {
+  it('reduz para no máximo 1000 px no lado maior, em JPEG, sem ampliar', async () => {
+    const grande = await sharp({ create: { width: 3000, height: 2000, channels: 3, background: '#888' } }).png().toBuffer()
+    const m = await sharp(await reduzirFoto(grande)).metadata()
+    expect([m.format, m.width, m.height]).toEqual(['jpeg', 1000, 667])
+    const pequena = await sharp({ create: { width: 400, height: 300, channels: 3, background: '#888' } }).jpeg().toBuffer()
+    expect((await sharp(await reduzirFoto(pequena)).metadata()).width).toBe(400)
+  })
+
+  it('foto que não baixa ou não abre vira null, sem derrubar as outras', async () => {
+    const aviso = vi.fn()
+    const mapa = await prepararFotos(
+      ['a.jpg', 'b.jpg', 'c.jpg', 'a.jpg'],
+      async (c) => {
+        if (c === 'b.jpg') throw new Error('404')
+        if (c === 'c.jpg') return new Uint8Array([1, 2, 3])
+        return fotoDeTeste(c, 0)
+      },
+      { aviso },
+    )
+    expect(mapa.size).toBe(3)
+    expect(mapa.get('a.jpg')).toMatch(/^data:image\/jpeg;base64,\/9j\//)
+    expect(mapa.get('b.jpg')).toBeNull()
+    expect(mapa.get('c.jpg')).toBeNull()
+    expect(aviso).toHaveBeenCalledTimes(2)
+  })
+
+  it('reconhece o tipo do logo', () => {
+    expect(tipoDaImagem(new Uint8Array([0x89, 0x50, 0x4e, 0x47]))).toBe('image/png')
+    expect(tipoDaImagem(new Uint8Array([0xff, 0xd8, 0xff]))).toBe('image/jpeg')
+  })
+})
+
+describe('regras do gerador', () => {
+  it('caminhos no bucket boletins', () => {
+    expect(caminhosDoBoletim('e1', 'BA2/261113/COFZ-R1')).toEqual({
+      pdf: 'e1/BA2261113COFZ-R1.pdf',
+      clima: 'e1/BA2261113COFZ-R1-clima.png',
+    })
+  })
+
+  it('o clima só vale para o dia (ou para o anterior até as 6 h)', () => {
+    const f = 'America/Fortaleza'
+    expect(climaCabeNoDia('2026-11-13', new Date('2026-11-14T02:30:00Z'), f)).toBe(true) // 23:30 do dia
+    expect(climaCabeNoDia('2026-11-13', new Date('2026-11-14T05:30:00Z'), f)).toBe(true) // 02:30 do dia seguinte
+    expect(climaCabeNoDia('2026-11-13', new Date('2026-11-14T10:00:00Z'), f)).toBe(false) // 07:00 do dia seguinte
+    expect(climaCabeNoDia('2026-11-10', new Date('2026-11-14T02:30:00Z'), f)).toBe(false)
+  })
+})
+
+/** Fonte em memória (banco + Storage) e dependências sem Chromium. */
+function cenario(pedidos: PedidoReivindicado[], snapshot: Snapshot) {
+  const enviados = new Map<string, { bytes: Uint8Array; tipo: string }>()
+  const fonte = {
+    segredoInterno: vi.fn(async () => 'segredo'),
+    reivindicar: vi.fn(async () => pedidos),
+    snapshot: vi.fn(async (_e: string, data: string) => ({ ...structuredClone(snapshot), data })),
+    concluir: vi.fn(async (...args: [number, Snapshot, string]) => ({ boletim_id: 'b1', numero: args[0] > 0 ? 'N' : '' })),
+    falhar: vi.fn(async () => undefined),
+    baixar: vi.fn(async (bucket: string, caminho: string) => {
+      if (bucket === 'organizacao') return new Uint8Array([0x89, 0x50, 0x4e, 0x47])
+      return fotoDeTeste(caminho, 1)
+    }),
+    enviar: vi.fn(async (bucket: string, caminho: string, bytes: Uint8Array, tipo: string) => {
+      enviados.set(`${bucket}/${caminho}`, { bytes, tipo })
+    }),
+  } satisfies FonteBoletim
+  const navegador = { close: vi.fn(async () => undefined) } as unknown as Browser
+  const htmls: string[] = []
+  const deps: Dependencias = {
+    abrirNavegador: vi.fn(async () => navegador),
+    capturarClima: vi.fn(async () => ({
+      clima: {
+        fonte: 'Observatório',
+        estacao: { codigo: '8836', nome: 'Montese' },
+        leitura: '23:20',
+        copiado_em: '2026-11-14T02:30:00.000Z',
+        imagem_path: null,
+      },
+      imagem: Buffer.from('png-do-clima'),
+    })),
+    gerarPdf: vi.fn(async (_n: Browser, html: string) => {
+      htmls.push(html)
+      return Buffer.from('%PDF-falso')
+    }),
+    agora: () => new Date('2026-11-14T02:30:00Z'),
+    log: vi.fn(),
+  }
+  return { fonte, deps, enviados, htmls, navegador }
+}
+
+describe('fila de emissão', async () => {
+  const snapshot = await lerSnapshotExemplo()
+  const pedido: PedidoReivindicado = { id: 7, etapa_id: 'e1', data: '2026-11-13', revisao: 0, numero: 'BA2/261113/COFZ' }
+
+  it('emite: envia PDF e clima ao bucket e conclui com o snapshot inteiro e o clima', async () => {
+    const c = cenario([pedido], snapshot)
+    const r = await processarFila(c.fonte, c.deps)
+    expect(r).toEqual([{ id: 7, numero: 'BA2/261113/COFZ', ok: true }])
+    expect(c.fonte.reivindicar).toHaveBeenCalledWith(2)
+    expect(c.fonte.snapshot).toHaveBeenCalledWith('e1', '2026-11-13')
+    expect([...c.enviados.keys()]).toEqual(['boletins/e1/BA2261113COFZ-clima.png', 'boletins/e1/BA2261113COFZ.pdf'])
+    expect(c.enviados.get('boletins/e1/BA2261113COFZ.pdf')?.tipo).toBe('application/pdf')
+    const [id, final, caminho] = c.fonte.concluir.mock.calls[0]
+    expect([id, caminho]).toEqual([7, 'e1/BA2261113COFZ.pdf'])
+    expect(final.tardios).toEqual(snapshot.tardios)
+    expect(final.obras).toEqual(snapshot.obras)
+    expect(final.clima).toMatchObject({ estacao: { codigo: '8836' }, imagem_path: 'e1/BA2261113COFZ-clima.png' })
+    expect(c.htmls[0]).toContain('BA2/261113/COFZ')
+    expect(c.htmls[0]).toContain('data:image/png;base64,')
+    expect(c.fonte.baixar).toHaveBeenCalledWith('fotos', 'exemplo/foto-01.jpg')
+    expect(c.fonte.baixar).toHaveBeenCalledWith('organizacao', 'logo-0123456789abcdef.png')
+    expect(c.navegador.close).toHaveBeenCalledTimes(1)
+  })
+
+  it('clima indisponível: conclui sem imagem do clima', async () => {
+    const c = cenario([pedido], snapshot)
+    c.deps.capturarClima = vi.fn(async () => ({ clima: { indisponivel: true as const, motivo: 'fora do ar' }, imagem: null }))
+    await processarFila(c.fonte, c.deps)
+    expect([...c.enviados.keys()]).toEqual(['boletins/e1/BA2261113COFZ.pdf'])
+    expect(c.fonte.concluir.mock.calls[0][1].clima).toEqual({ indisponivel: true, motivo: 'fora do ar' })
+  })
+
+  it('erro num pedido → falhar_emissao e segue para o próximo', async () => {
+    const segundo = { ...pedido, id: 8, data: '2026-11-12', numero: 'BA2/261112/COFZ' }
+    const c = cenario([pedido, segundo], snapshot)
+    c.fonte.snapshot.mockRejectedValueOnce(new ErroRpc('boletim_snapshot: A etapa não tem sigla', '22023'))
+    const r = await processarFila(c.fonte, c.deps)
+    expect(r.map((x) => x.ok)).toEqual([false, true])
+    expect(c.fonte.falhar).toHaveBeenCalledWith(7, 'boletim_snapshot: A etapa não tem sigla')
+    // boletim de dia anterior: não copia o clima de hoje
+    expect(c.deps.capturarClima).not.toHaveBeenCalled()
+    expect(c.fonte.concluir.mock.calls[0][1].clima).toMatchObject({ indisponivel: true })
+  })
+
+  it('fila vazia: não abre o navegador', async () => {
+    const c = cenario([], snapshot)
+    expect(await processarFila(c.fonte, c.deps)).toEqual([])
+    expect(c.deps.abrirNavegador).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/gerar-boletim: confere o segredo interno e processa em segundo plano', async () => {
+    const c = cenario([pedido], snapshot)
+    const fundo: Promise<unknown>[] = []
+    const ctx = { fonte: c.fonte, deps: c.deps, aoFundo: (p: Promise<unknown>) => fundo.push(p) }
+    const url = 'https://exemplo/api/gerar-boletim'
+    expect((await tratarGerar(new Request(url, { method: 'POST' }), ctx)).status).toBe(401)
+    const errado = new Request(url, { method: 'POST', headers: { 'x-segredo-interno': 'outro' } })
+    expect((await tratarGerar(errado, ctx)).status).toBe(401)
+    expect((await tratarGerar(new Request(url), ctx)).status).toBe(405)
+    expect(fundo).toHaveLength(0)
+    const certo = await tratarGerar(new Request(url, { method: 'POST', headers: { 'x-segredo-interno': 'segredo' } }), ctx)
+    expect(certo.status).toBe(202)
+    expect(await certo.json()).toEqual({ aceito: true })
+    await Promise.all(fundo)
+    expect(c.fonte.concluir).toHaveBeenCalledTimes(1)
+  })
+
+  it('segredo ausente no banco: recusa', async () => {
+    const c = cenario([pedido], snapshot)
+    c.fonte.segredoInterno.mockResolvedValue(null as unknown as string)
+    const req = new Request('https://exemplo/api/gerar-boletim', { method: 'POST', headers: { 'x-segredo-interno': 'segredo' } })
+    expect((await tratarGerar(req, { fonte: c.fonte, deps: c.deps, aoFundo: () => undefined })).status).toBe(401)
+  })
+
+  it('GET /api/previa-boletim: só admin; devolve o PDF sem número e sem gravar nada', async () => {
+    const c = cenario([], snapshot)
+    const souAdmin = vi.fn(async () => true)
+    const snap = vi.fn(async () => structuredClone(snapshot))
+    const ctx = { fonte: c.fonte, deps: c.deps, acesso: vi.fn(() => ({ souAdmin, snapshot: snap })) }
+    const url = 'https://exemplo/api/previa-boletim?etapa=2a-etapa&data=2026-11-13'
+    expect((await tratarPrevia(new Request(url), ctx)).status).toBe(401)
+    const com = (u: string) => new Request(u, { headers: { Authorization: 'Bearer jwt' } })
+    expect((await tratarPrevia(com('https://exemplo/api/previa-boletim?etapa=2a-etapa&data=13/11'), ctx)).status).toBe(400)
+
+    const r = await tratarPrevia(com(url), ctx)
+    expect(r.status).toBe(200)
+    expect(r.headers.get('content-type')).toBe('application/pdf')
+    expect(Buffer.from(await r.arrayBuffer()).toString()).toBe('%PDF-falso')
+    expect(ctx.acesso).toHaveBeenCalledWith('jwt')
+    expect(snap).toHaveBeenCalledWith('2a-etapa', '2026-11-13')
+    expect(c.htmls[0]).toContain('PRÉVIA — sem número')
+    expect(c.enviados.size).toBe(0)
+    expect(c.fonte.concluir).not.toHaveBeenCalled()
+
+    souAdmin.mockResolvedValueOnce(false)
+    expect((await tratarPrevia(com(url), ctx)).status).toBe(403)
+    snap.mockRejectedValueOnce(new ErroRpc('admin_boletim_snapshot: Etapa não encontrada', 'P0002'))
+    const nao = await tratarPrevia(com(url), ctx)
+    expect([nao.status, await nao.json()]).toEqual([404, { erro: 'Etapa não encontrada' }])
+  })
+})

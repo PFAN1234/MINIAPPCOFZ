@@ -56,6 +56,12 @@ export interface ObraLista {
   config_atualizada_em: string | null
   /** Obra arquivada (some do Mini App e não publica no Telegram); null se ativa. */
   arquivada_em: string | null
+  /** Etapa da obra (`obra.etapa_id`, sempre preenchido no banco). */
+  etapa_id: string
+  etapa_slug: string
+  etapa_nome: string
+  /** Etapa arquivada: vale como obra arquivada, sem mexer no `arquivada_em` da obra. */
+  etapa_arquivada_em: string | null
 }
 
 export interface PavimentoAdmin extends PavimentoResumo {
@@ -74,20 +80,332 @@ export interface ConfigObra {
   [chave: string]: unknown
 }
 
+/** Etapa embutida em `admin_obter_obra`. */
+export interface EtapaDaObra {
+  id: string
+  slug: string
+  nome: string
+  arquivada_em: string | null
+  telegram_vinculado: boolean
+}
+
 export interface ObraAdmin {
-  obra: { id: string; slug: string; nome: string; ordem: number; telegram_vinculado: boolean; arquivada_em: string | null }
+  obra: {
+    id: string
+    slug: string
+    nome: string
+    ordem: number
+    telegram_vinculado: boolean
+    arquivada_em: string | null
+    /** null só se o servidor ainda não tiver as etapas. */
+    etapa: EtapaDaObra | null
+  }
   pavimentos: PavimentoAdmin[]
   config: ConfigObra | null
   config_atualizada_em: string | null
   config_atualizada_por: string | null
 }
 
-/** Criação (sem `id`, com `slug`) ou edição (com `id`; o slug não muda). */
+/**
+ * Criação (sem `id`, com `slug` e `etapa_id`) ou edição (com `id`; o slug não muda; `etapa_id`,
+ * se vier, move a obra de etapa).
+ */
 export interface DadosObra {
   id?: string
   slug?: string
   nome: string
   ordem: number
+  etapa_id?: string
+}
+
+// --- Etapas e organização: RPCs em supabase/migrations/20261112180000_etapas.sql ----------------
+
+/** Uma etapa do campus (`admin_listar_etapas`), com as contagens de obras. */
+export interface EtapaLista {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+  arquivada_em: string | null
+  /** A etapa tem grupo do Telegram (`/vincular_etapa <slug>`). */
+  telegram_vinculado: boolean
+  /** Título do grupo na hora do vínculo (null se não registrado). */
+  telegram_chat_titulo: string | null
+  obras: number
+  obras_arquivadas: number
+  /** Forma o número do boletim (`BA<sigla>/…`); null na etapa que ainda não tem. */
+  sigla: string | null
+  /** Quantos campos do cadastro do boletim estão vazios (0 = completo). */
+  faltando: number
+}
+
+// --- Boletim: cadastro da etapa e pessoas (contrato: docs/contrato-boletim.md) -------------------
+
+/** Fusos do Brasil aceitos pelo banco (`etapa.fuso`), com o rótulo mostrado no site. */
+export const FUSOS: { valor: string; rotulo: string }[] = [
+  { valor: 'America/Noronha', rotulo: 'Fernando de Noronha (UTC−2)' },
+  { valor: 'America/Belem', rotulo: 'Belém (UTC−3)' },
+  { valor: 'America/Fortaleza', rotulo: 'Fortaleza (UTC−3)' },
+  { valor: 'America/Recife', rotulo: 'Recife (UTC−3)' },
+  { valor: 'America/Araguaina', rotulo: 'Araguaína (UTC−3)' },
+  { valor: 'America/Maceio', rotulo: 'Maceió (UTC−3)' },
+  { valor: 'America/Bahia', rotulo: 'Salvador (UTC−3)' },
+  { valor: 'America/Sao_Paulo', rotulo: 'São Paulo / Brasília (UTC−3)' },
+  { valor: 'America/Campo_Grande', rotulo: 'Campo Grande (UTC−4)' },
+  { valor: 'America/Cuiaba', rotulo: 'Cuiabá (UTC−4)' },
+  { valor: 'America/Santarem', rotulo: 'Santarém (UTC−3)' },
+  { valor: 'America/Porto_Velho', rotulo: 'Porto Velho (UTC−4)' },
+  { valor: 'America/Boa_Vista', rotulo: 'Boa Vista (UTC−4)' },
+  { valor: 'America/Manaus', rotulo: 'Manaus (UTC−4)' },
+  { valor: 'America/Eirunepe', rotulo: 'Eirunepé (UTC−5)' },
+  { valor: 'America/Rio_Branco', rotulo: 'Rio Branco (UTC−5)' },
+]
+
+/** Nomes dos campos em `admin_obter_etapa.faltando`, como aparecem no aviso do site. */
+export const ROTULO_FALTANDO: Record<string, string> = {
+  sigla: 'sigla',
+  localizacao: 'localização (latitude e longitude)',
+  estacao: 'estação meteorológica',
+  objeto: 'obra/serviço',
+  local: 'local',
+  contratante: 'contratante',
+  contrato: 'contrato',
+  contratada: 'contratada',
+  contratada_cnpj: 'CNPJ da contratada',
+  os_numero: 'número da OS',
+  os_data: 'data da OS',
+  vigencia_meses: 'vigência',
+  valor_original: 'valor original',
+  area_construida_m2: 'área construída',
+  responsaveis: 'responsáveis',
+}
+
+/** Campos do cadastro da etapa que não são identidade (`etapa.*`, todos opcionais no banco). */
+export interface CamposEtapa {
+  sigla: string | null
+  endereco: string | null
+  latitude: number | null
+  longitude: number | null
+  fuso: string
+  /** Código da estação do Observatório de Fortaleza (`ESTACOES_OBSERVATORIO`). */
+  estacao: string | null
+  estacao_reserva: string | null
+  /** "HH:MM", hora local da emissão automática. */
+  boletim_horario: string
+  objeto: string | null
+  local: string | null
+  contratante: string | null
+  contrato: string | null
+  contratada: string | null
+  contratada_cnpj: string | null
+  os_numero: string | null
+  /** "AAAA-MM-DD". */
+  os_data: string | null
+  vigencia_meses: number | null
+  valor_original: number | null
+  area_construida_m2: number | null
+}
+
+export interface Aditivo {
+  id: string
+  etapa_id: string
+  numero: string
+  /** "AAAA-MM-DD". */
+  data: string
+  /** Acréscimo em dias (negativo = supressão). */
+  prazo_dias: number
+  /** Acréscimo em reais (negativo = supressão). */
+  valor: number
+  descricao: string | null
+}
+
+export interface DadosAditivo {
+  id?: string
+  etapa_id: string
+  numero: string
+  data: string
+  prazo_dias: number
+  valor: number
+  descricao: string | null
+}
+
+export interface Responsavel {
+  usuario_id: string
+  nome: string
+  nome_exibicao: string | null
+  funcao: string
+  ordem: number
+}
+
+export interface PrazoEtapa {
+  termino_original: string
+  prazo_aditivos_dias: number
+  termino_atual: string
+  /** Valor original mais os aditivos; null sem valor original. */
+  valor_atual: number | null
+}
+
+/** `admin_obter_etapa`: a etapa inteira, com aditivos, responsáveis, prazo e o que falta. */
+export interface EtapaDetalhe extends CamposEtapa {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+  arquivada_em: string | null
+  telegram_vinculado: boolean
+  telegram_chat_titulo: string | null
+  aditivos: Aditivo[]
+  responsaveis: Responsavel[]
+  /** Só com `os_data` e `vigencia_meses`. */
+  prazo: PrazoEtapa | null
+  /** Campos vazios entre os que o boletim usa (nomes em `ROTULO_FALTANDO`). */
+  faltando: string[]
+}
+
+/**
+ * Criação (sem `id`, com `slug`; `sigla`, `latitude`, `longitude` e `fuso` obrigatórios) ou edição
+ * (com `id`): chave ausente mantém o valor, `null` apaga (menos `fuso`, `boletim_horario` e `sigla`).
+ */
+export type DadosEtapa = Partial<{ [K in keyof CamposEtapa]: CamposEtapa[K] | null }> & {
+  id?: string
+  slug?: string
+  nome: string
+  ordem: number
+}
+
+/** Devolvido ao salvar: a etapa como em `admin_obter_etapa`. */
+export type EtapaSalva = EtapaDetalhe
+
+export interface ParticipacaoPessoa {
+  obra_slug: string
+  obra_nome: string
+  etapa_nome: string
+  papel: string
+}
+
+/** `admin_listar_pessoas`. */
+export interface Pessoa {
+  id: string
+  nome: string
+  nome_exibicao: string | null
+  username: string | null
+  telegram_id: number
+  eh_admin: boolean
+  participacoes: ParticipacaoPessoa[]
+}
+
+export const NOME_EXIBICAO_MAX = 60
+
+/**
+ * Estações meteorológicas do Observatório de Riscos Climáticos de Fortaleza (lista fixa, só no
+ * site; o gerador do boletim tem a mesma lista em `servidor/boletim/estacoes.ts`).
+ */
+export const ESTACOES_OBSERVATORIO: { codigo: string; nome: string }[] = [
+  { codigo: '3318', nome: 'Dom Lustosa' },
+  { codigo: '8642', nome: 'Centro' },
+  { codigo: '8836', nome: 'Montese' },
+  { codigo: '8869', nome: 'Vila Velha' },
+  { codigo: '9134', nome: 'Conjunto Esperança' },
+  { codigo: '9137', nome: 'Mucuripe' },
+  { codigo: '9169', nome: 'Messejana' },
+  { codigo: '9242', nome: 'Guararapes' },
+  { codigo: '9249', nome: 'Jangurussu' },
+  { codigo: '9281', nome: 'Benfica' },
+  { codigo: '9282', nome: 'Granja Lisboa' },
+]
+
+/** Padrão na criação da etapa (Montese e, de reserva, Benfica). */
+export const ESTACAO_PADRAO = '8836'
+export const ESTACAO_RESERVA_PADRAO = '9281'
+
+/** Boletim emitido (`admin_listar_boletins`). */
+export interface BoletimEmitido {
+  id: string
+  /** "AAAA-MM-DD". */
+  data: string
+  revisao: number
+  numero: string
+  emitido_em: string
+  /** null = emissão automática. */
+  emitido_por_nome: string | null
+  /** Caminho no bucket `boletins`. */
+  pdf_path: string | null
+  /** Já enviado ao grupo do Telegram da etapa. */
+  publicado: boolean
+  /** Estado da publicação no Telegram (`publicacao_telegram.estado`); null = ainda não enfileirada. */
+  publicacao_estado: string | null
+}
+
+export type EstadoEmissao = 'pendente' | 'gerando' | 'emitido' | 'falhou'
+
+/** Pedido de emissão ainda não emitido (na fila, gerando ou com falha). */
+export interface PedidoEmissao {
+  id: number
+  data: string
+  revisao: number
+  estado: EstadoEmissao
+  tentativas: number
+  erro: string | null
+  atualizado_em: string
+  /** Número do boletim do pedido (devolvido por `admin_pedir_emissao`). */
+  numero?: string
+}
+
+export interface ListaBoletins {
+  /** Mais recentes primeiro. */
+  boletins: BoletimEmitido[]
+  pedidos: PedidoEmissao[]
+}
+
+/** O que a exclusão da etapa apaga (`admin_resumo_etapa`): as obras e a soma das contagens. */
+export interface ResumoEtapa {
+  obras: { slug: string; nome: string }[]
+  total: ResumoObra
+}
+
+/** Resposta da Edge Function `admin-excluir-obra`, ação `excluir_etapa`. */
+export interface ResultadoExclusaoEtapa {
+  exclusoes: { exclusao_id: string; removidos: Partial<Record<BucketObra, number>>; pendente: boolean; erro: string | null }[]
+  /** Parte dos arquivos ficou no Storage (tentar de novo em "Obras excluídas"). */
+  pendente: boolean
+  erro: string | null
+}
+
+/** Identidade da organização militar (RPC `organizacao()`). */
+export interface Organizacao {
+  nome: string
+  /** Caminho no bucket público `organizacao`; null = sem logo. */
+  logo_path: string | null
+  /** URL pública do logo (montada pelo repositório); null sem logo. */
+  logo_url: string | null
+  /** Linhas de subordinação acima do nome no boletim (até 4); vazio = nenhuma. */
+  cabecalho: string[]
+}
+
+export const CABECALHO_LINHAS_MAX = 4
+export const CABECALHO_LINHA_MAX = 100
+
+export const NOME_OM_MAX = 80
+/** Limite do bucket `organizacao` (1 MB). */
+export const LOGO_MAX_BYTES = 1024 * 1024
+/** Tipos aceitos pelo bucket `organizacao` e a extensão do caminho de cada um. */
+export const TIPOS_LOGO: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
+/** Caminho do logo no bucket: `logo-<16 hex>.<png|jpg|webp>` (nome novo a cada troca). */
+export const CAMINHO_LOGO = /^logo-[0-9a-f]{16}\.(png|jpg|webp)$/
+
+/** Confere o arquivo do logo antes de enviar; devolve a mensagem de erro ou null. */
+export function problemaDoLogo(arquivo: { type: string; size: number }): string | null {
+  if (!(arquivo.type in TIPOS_LOGO)) return 'O logo precisa ser PNG, JPEG ou WebP.'
+  if (arquivo.size > LOGO_MAX_BYTES) return 'O logo pode ter no máximo 1 MB.'
+  return null
+}
+
+/** Caminho novo para o logo, com a extensão do tipo. */
+export function novoCaminhoLogo(tipo: string): string {
+  const bytes = new Uint8Array(8)
+  crypto.getRandomValues(bytes)
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
+  return `logo-${hex}.${TIPOS_LOGO[tipo] ?? 'png'}`
 }
 
 export interface ObraSalva {
@@ -239,6 +557,8 @@ export interface Exclusao {
   arquivos_removidos_em: string | null
   arquivos_removidos: Partial<Record<BucketObra, number>> | null
   arquivos_erro: string | null
+  /** Nome da etapa, quando a obra saiu junto com ela. */
+  etapa_nome?: string | null
 }
 
 /** Modelo 3D (.frag) publicado de uma disciplina (tabela `modelo`). */
