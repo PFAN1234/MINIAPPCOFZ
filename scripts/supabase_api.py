@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Banco de produção pela API de gerenciamento do Supabase, lendo os arquivos do disco.
 
-O token de acesso não fica em variável nem em arquivo: é um segredo de rede do ambiente do
-Claude Code, que o proxy põe no cabeçalho das chamadas a api.supabase.com.
+No Claude Code na nuvem, o token é um segredo de rede que o proxy põe no cabeçalho das chamadas a
+api.supabase.com. Na máquina local, lê SUPABASE_ACCESS_TOKEN do ambiente ou do `.env` (ignorado pelo Git).
 
 Uso:
   python3 scripts/supabase_api.py pendentes              # migrations do repositório ainda não aplicadas
@@ -10,6 +10,7 @@ Uso:
   python3 scripts/supabase_api.py sql "<consulta>"       # roda SQL e imprime o resultado em JSON
 """
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -21,11 +22,22 @@ RAIZ = Path(__file__).resolve().parent.parent
 MIGRATIONS = RAIZ / "supabase" / "migrations"
 
 
+def token() -> str:
+    if os.environ.get("SUPABASE_ACCESS_TOKEN"):
+        return os.environ["SUPABASE_ACCESS_TOKEN"]
+    env = RAIZ / ".env"
+    if env.exists():
+        for linha in env.read_text(encoding="utf-8").splitlines():
+            if linha.startswith("SUPABASE_ACCESS_TOKEN="):
+                return linha.split("=", 1)[1].strip().strip("\"'")
+    return "proxy-injected"
+
+
 def sql(consulta: str):
     req = urllib.request.Request(
         URL,
         data=json.dumps({"query": consulta}).encode(),
-        headers={"Content-Type": "application/json", "Authorization": "Bearer proxy-injected"},
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {token()}"},
         method="POST",
     )
     try:
