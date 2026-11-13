@@ -29,7 +29,7 @@ function renderizar(rotas: string[], topo = <TopoTela titulo="HTO" />) {
   return render(
     <MemoryRouter initialEntries={rotas} initialIndex={rotas.length - 1}>
       <Routes>
-        <Route index element={<TopoTela lista titulo="Obras" />} />
+        <Route index element={<TopoTela titulo="Obras" />} />
         <Route path="obras/hto" element={topo} />
       </Routes>
     </MemoryRouter>,
@@ -41,6 +41,19 @@ afterEach(() => {
 })
 
 describe('TopoTela', () => {
+  it('o título diminui conforme o número de letras, sem reticências', () => {
+    const tamanho = (titulo: string) => {
+      const { unmount } = renderizar(['/obras/hto'], <TopoTela titulo={titulo} />)
+      const valor = screen.getByRole('heading', { level: 1 }).getAttribute('data-tamanho')
+      unmount()
+      return valor
+    }
+    expect(tamanho('Obras')).toBeNull()
+    expect(tamanho('Pendências')).toBe('medio')
+    expect(tamanho('Administração')).toBe('longo')
+    expect(tamanho('Teste da realidade aumentada')).toBe('muito-longo')
+  })
+
   it('mostra o título como h1, com o sobretítulo e o subtítulo', () => {
     renderizar(['/obras/hto'], <TopoTela titulo="HTO" sobretitulo="Obras" subtitulo="Térreo" />)
     expect(screen.getByRole('heading', { level: 1, name: 'HTO' })).toBeInTheDocument()
@@ -75,7 +88,7 @@ describe('TopoTela', () => {
     render(
       <MemoryRouter>
         <FaixaDoTopo.Provider value={<div role="status">1 registro aguardando envio</div>}>
-          <TopoTela lista titulo="Obras" />
+          <TopoTela titulo="Obras" />
         </FaixaDoTopo.Provider>
       </MemoryRouter>,
     )
@@ -95,18 +108,19 @@ describe('TopoTela: faixa de identidade', () => {
     )
   }
 
-  it('com logo: OM à esquerda, logo decorativo (alt vazio) de 40 px no centro e "Fiscal Bot" à direita, acima do título', () => {
+  it('com logo: brasão decorativo (alt vazio) de 52 px, com a OM e "Fiscal Bot" ao lado, antes do título e na mesma linha', () => {
     const { container } = comOrganizacao({ nome: 'CO-FZ', logo_url: 'https://exemplo.test/logo.png' })
-    const faixa = screen.getByTestId('faixa-identidade')
+    const marca = screen.getByTestId('faixa-identidade')
     const logo = container.querySelector('img')!
     expect(logo).toHaveAttribute('src', 'https://exemplo.test/logo.png')
     expect(logo).toHaveAttribute('alt', '')
-    expect(logo).toHaveAttribute('height', '40')
-    expect([...faixa.children].map((filho) => filho.textContent)).toEqual(['CO-FZ', '', 'Fiscal Bot'])
-    expect(faixa).toHaveTextContent('CO-FZ')
-    expect(faixa).toHaveTextContent('Fiscal Bot')
-    const cabecalho = screen.getByRole('heading', { level: 1, name: 'HTO' }).closest('header')!
-    expect(cabecalho.firstElementChild).toBe(faixa)
+    expect(logo).toHaveAttribute('height', '52')
+    expect(marca.firstElementChild).toBe(logo)
+    expect([...marca.lastElementChild!.children].map((filho) => filho.textContent)).toEqual(['CO-FZ', 'Fiscal Bot'])
+    const titulo = screen.getByRole('heading', { level: 1, name: 'HTO' })
+    const faixa = titulo.closest('header')!.firstElementChild!
+    expect(faixa.firstElementChild).toBe(marca)
+    expect(faixa).toContainElement(titulo)
   })
 
   it('logo que não carrega some, e os textos ficam', () => {
@@ -140,10 +154,11 @@ describe('TopoTela: faixa de identidade', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('a versão do app aparece no pé do topo em todas as telas', async () => {
+  it('a versão do app aparece na faixa do topo, depois do título, em todas as telas', async () => {
     const { unmount } = renderizarApp('/')
     await screen.findByRole('link', { name: /^HTO/ })
     const versao = screen.getByRole('button', { name: /^Versão do app: / })
+    expect(versao.parentElement).toHaveClass('topo-faixa')
     expect(versao.parentElement!.lastElementChild).toBe(versao)
     unmount()
     renderizarApp('/obras/hto')
