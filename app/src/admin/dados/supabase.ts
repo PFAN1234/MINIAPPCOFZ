@@ -68,6 +68,8 @@ export function boletimDe(l: LinhaBoletim): BoletimEmitido {
     pdf_path: l.pdf_path == null ? null : String(l.pdf_path),
     publicado: l.publicado === true,
     publicacao_estado: l.publicacao_estado == null ? null : String(l.publicacao_estado),
+    publicacao_erro: l.publicacao_erro == null ? null : String(l.publicacao_erro),
+    publicacao_tentativas: Number(l.publicacao_tentativas ?? 0),
   }
 }
 
@@ -405,6 +407,10 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
         }
         throw e
       }
+    },
+
+    async reenviarBoletim(slug, boletimId) {
+      await rpc('admin_reenviar_boletim', { p_slug: slug, p_boletim: boletimId })
     },
 
     async urlPdfBoletim(caminho) {

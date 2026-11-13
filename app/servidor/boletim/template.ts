@@ -229,10 +229,13 @@ export function secaoClima(s: Snapshot, imagem: string | null): string {
   const reserva = s.etapa.estacao_reserva === c.estacao.codigo && s.etapa.estacao !== c.estacao.codigo
   const copia = dataHoraBr(new Date(c.copiado_em), FUSO_OBSERVATORIO)
   const leitura = c.leitura ? `leitura das ${escapar(c.leitura)}, ` : ''
+  const reaproveitada = c.reaproveitado_de
+    ? ` — reaproveitada do boletim ${escapar(c.reaproveitado_de)}, pois o Observatório só mostra as últimas 24 horas`
+    : ''
   return `${titulo}
 <div class="clima">
 <img src="${imagem}" alt="Linha da estação ${escapar(nome)} na tabela Últimas 24 horas do Observatório">
-<div class="fonte">Fonte: ${escapar(FONTE_CLIMA)}, estação ${escapar(nome)} (${escapar(c.estacao.codigo)}${reserva ? ', reserva' : ''}) — ${leitura}cópia de ${escapar(copia)} (horário de Fortaleza). Últimas 24 horas até a cópia: temperatura, umidade, chuva acumulada, vento (médio, rumo e rajada) e índice UV.</div>
+<div class="fonte">Fonte: ${escapar(FONTE_CLIMA)}, estação ${escapar(nome)} (${escapar(c.estacao.codigo)}${reserva ? ', reserva' : ''}) — ${leitura}cópia de ${escapar(copia)} (horário de Fortaleza)${reaproveitada}. Últimas 24 horas até a cópia: temperatura, umidade, chuva acumulada, vento (médio, rumo e rajada) e índice UV.</div>
 </div>`
 }
 

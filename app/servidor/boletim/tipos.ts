@@ -134,16 +134,20 @@ export interface IndicadoresSnapshot {
 }
 
 /** O que o gerador grava em `clima`. */
+export type ClimaComDados = {
+  fonte: string
+  estacao: { codigo: string; nome: string }
+  /** "HH:MM" da leitura no fuso de Fortaleza (null se a página não disser). */
+  leitura: string | null
+  copiado_em: string
+  /** Caminho da imagem no bucket `boletins` (null na prévia, que não grava nada). */
+  imagem_path: string | null
+  /** Número do boletim de onde o clima foi reaproveitado (retificação de dia antigo). */
+  reaproveitado_de?: string
+}
+
 export type ClimaSnapshot =
-  | {
-      fonte: string
-      estacao: { codigo: string; nome: string }
-      /** "HH:MM" da leitura no fuso de Fortaleza (null se a página não disser). */
-      leitura: string | null
-      copiado_em: string
-      /** Caminho da imagem no bucket `boletins` (null na prévia, que não grava nada). */
-      imagem_path: string | null
-    }
+  | ClimaComDados
   | { indisponivel: true; motivo: string }
 
 export interface Snapshot {

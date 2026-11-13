@@ -334,6 +334,10 @@ export interface BoletimEmitido {
   publicado: boolean
   /** Estado da publicação no Telegram (`publicacao_telegram.estado`); null = ainda não enfileirada. */
   publicacao_estado: string | null
+  /** Último erro do envio ao Telegram (`publicacao_telegram.erro`). */
+  publicacao_erro: string | null
+  /** Tentativas de envio já feitas. */
+  publicacao_tentativas: number
 }
 
 export type EstadoEmissao = 'pendente' | 'gerando' | 'emitido' | 'falhou'

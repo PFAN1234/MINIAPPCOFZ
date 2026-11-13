@@ -703,7 +703,7 @@ def test_listar_boletins(cenario):
     assert [(x['id'], x['revisao'], x['publicado'], x['publicacao_estado']) for x in r['boletins']] == [
         (str(b2), 1, False, 'falhou'), (str(b1), 0, True, 'publicado'), (str(b0), 0, False, None)]
     assert set(r['boletins'][0]) == {'id', 'data', 'revisao', 'numero', 'emitido_em', 'emitido_por_nome', 'pdf_path',
-                                     'publicado', 'publicacao_estado'}
+                                     'publicado', 'publicacao_estado', 'publicacao_erro', 'publicacao_tentativas'}
     assert (r['boletins'][0]['emitido_por_nome'], r['boletins'][0]['pdf_path']) == ('CP PATRICIO', 'x.pdf')
     assert r['boletins'][1]['emitido_por_nome'] is None
     assert [(x['data'], x['revisao'], x['estado']) for x in r['pedidos']] == [

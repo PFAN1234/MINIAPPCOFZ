@@ -264,7 +264,7 @@ Decisão de 2026-11-13: qualquer participante da obra (equipe ou gestor) encerra
 - [x] Banco: migration `20261113120000_encerrar_pendencia_equipe.sql` (`encerrar_pendencia` confere `privado.eh_participante` no lugar de `eh_gestor`; `encerramento.gestor_id` mantém o nome e guarda quem encerrou) e testes de banco.
 - [x] Mini App: formulário de encerramento para todos os participantes, sem a nota "Só gestores…"; fixture igual.
 - [x] Aplicado no `miniappcofz-dev` (2026-11-13).
-- [ ] Merge na main.
+- [x] Merge na main (2026-11-13).
 
 ## Boletim de Acompanhamento Diário
 
@@ -284,8 +284,9 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [x] Produção (2026-11-13, PR #26): migration aplicada (21 funções conferidas por hash), cron `agendar-boletins` ativo, `publish-outbox` versão 5 publicado, Vault `url_gerador_boletim` = `https://miniappcofz.vercel.app/api/gerar-boletim`, `SUPABASE_URL` criado na Vercel (Production).
 - [x] Vercel: `SUPABASE_SECRET_KEY` (Production, Sensitive) criada pelo usuário e redeploy feito; banco → gerador responde 202 (pg_net), gerador lê o segredo interno do banco.
 - [ ] Testar "Pré-visualizar" no site (confirma o Chromium na função) e acompanhar a primeira emissão automática da 2ª etapa (23:30, horário de Fortaleza).
-- [ ] Retificação de dia antigo sai sem clima (o Observatório só cobre 24 h); avaliar reaproveitar a imagem do boletim anterior.
-- [ ] Botão para reenviar ao Telegram um boletim cuja publicação falhou.
+- [x] Retificação de dia antigo reaproveita o clima do boletim anterior do mesmo dia (imagem copiada para o arquivo da retificação; legenda "reaproveitada do boletim <número>"); sem anterior, sai sem clima (2026-11-13).
+- [x] Botão "Reenviar ao Telegram" no site para publicação `falhou` ou `incerto` (com confirmação), erro do envio na tabela; migration `20261114150000_boletim_reenvio_clima.sql` (`admin_reenviar_boletim`, `admin_listar_boletins` com erro e tentativas, `boletim_clima_anterior`) (2026-11-13; testes de banco 584, Vitest 590, e2e 48).
+- [x] Migration `20261114150000_boletim_reenvio_clima.sql` aplicada no `miniappcofz-dev` (2026-11-13; as 3 funções conferidas por hash, `boletim_clima_anterior` só para `service_role`) e merge na main.
 - [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
 - [ ] Externo: avisar o Observatório/IPPLAN do uso dos dados; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.
 

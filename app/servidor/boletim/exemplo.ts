@@ -54,6 +54,9 @@ export async function gerarExemplo(o: OpcoesExemplo) {
   const snapshot = await lerSnapshotExemplo()
   const paths = new Map<string, number>()
   const fonte = {
+    async climaAnterior() {
+      return null
+    },
     async baixar(bucket: string, caminho: string): Promise<Uint8Array> {
       if (bucket === 'organizacao') return readFile(LOGO_PREVIA)
       if (!paths.has(caminho)) paths.set(caminho, paths.size)

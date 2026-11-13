@@ -66,6 +66,11 @@ export interface RepositorioAdmin {
    * na data, é uma retificação. Data futura ou pedido em andamento para a data são recusados.
    */
   pedirEmissao(slug: string, data: string): Promise<PedidoEmissao>
+  /**
+   * `admin_reenviar_boletim`: recoloca na fila o envio ao Telegram de um boletim cuja publicação
+   * falhou ou ficou incerta. Já publicado ou envio em andamento são recusados.
+   */
+  reenviarBoletim(slug: string, boletimId: string): Promise<void>
   /** URL (assinada, de curta duração) do PDF de um boletim no bucket `boletins`. */
   urlPdfBoletim(caminho: string): Promise<string>
   /** Gerador (`/api/previa-boletim`): PDF da prévia, sem número e sem gravar nada. */

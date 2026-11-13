@@ -113,6 +113,22 @@ describe('template do boletim', () => {
     expect(texto(montarHtml(s, opcoes({ climaImagem: 'data:image/png;base64,CLIMA' })))).toContain('estação Benfica (9281, reserva)')
   })
 
+  it('clima reaproveitado: a legenda diz de qual boletim veio', () => {
+    const s = snapshot()
+    s.clima = {
+      fonte: 'Observatório',
+      estacao: { codigo: '8836', nome: 'Montese' },
+      leitura: '23:20',
+      copiado_em: '2026-11-14T02:30:00Z',
+      imagem_path: null,
+      reaproveitado_de: 'BA2/261113/COFZ <x>',
+    }
+    const t = texto(montarHtml(s, opcoes({ climaImagem: 'data:image/png;base64,CLIMA' })))
+    expect(t).toContain(
+      'cópia de 13/11/2026 às 23:30 (horário de Fortaleza) — reaproveitada do boletim BA2/261113/COFZ &lt;x>, pois o Observatório só mostra as últimas 24 horas. Últimas 24 horas',
+    )
+  })
+
   it('clima indisponível: aviso do Observatório com o motivo', () => {
     const s = snapshot()
     s.clima = { indisponivel: true, motivo: 'leitura da estação 8836 com mais de 3 h' }

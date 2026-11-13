@@ -61,6 +61,26 @@ describe('repositório Supabase: boletins', () => {
     expect(assinar).toHaveBeenCalledWith('e/x.pdf', 300)
   })
 
+  it('lê publicacao_erro e publicacao_tentativas (padrão: null e 0)', () => {
+    const [a, b] = listaBoletinsDe([
+      { id: 'a', data: '2026-11-13', numero: 'N', emitido_em: 'x', publicacao_erro: 'chat not found', publicacao_tentativas: 3 },
+      { id: 'b', data: '2026-11-13', numero: 'N', emitido_em: 'x' },
+    ]).boletins
+    expect([a.publicacao_erro, a.publicacao_tentativas]).toEqual(['chat not found', 3])
+    expect([b.publicacao_erro, b.publicacao_tentativas]).toEqual([null, 0])
+  })
+
+  it('reenviar chama admin_reenviar_boletim; erro vira mensagem', async () => {
+    const { cliente, falso } = clienteFalso(() => ({ data: { boletim_id: 'b1', publicacao_estado: 'pendente' }, error: null }))
+    await criarRepositorioAdminSupabase(cliente).reenviarBoletim('2a-etapa', 'b1')
+    expect(falso.rpc).toHaveBeenCalledWith('admin_reenviar_boletim', { p_slug: '2a-etapa', p_boletim: 'b1' })
+    const { cliente: ruim } = clienteFalso(() => ({
+      data: null,
+      error: { code: '22023', message: 'Este boletim já foi publicado no grupo' },
+    }))
+    await expect(criarRepositorioAdminSupabase(ruim).reenviarBoletim('2a-etapa', 'b1')).rejects.toThrow('já foi publicado')
+  })
+
   it('pedido repetido (23505) vira mensagem em português', async () => {
     const { cliente } = clienteFalso(() => ({
       data: null,

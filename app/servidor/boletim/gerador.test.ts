@@ -68,7 +68,9 @@ function cenario(pedidos: PedidoReivindicado[], snapshot: Snapshot) {
     snapshot: vi.fn(async (_e: string, data: string) => ({ ...structuredClone(snapshot), data })),
     concluir: vi.fn(async (...args: [number, Snapshot, string]) => ({ boletim_id: 'b1', numero: args[0] > 0 ? 'N' : '' })),
     falhar: vi.fn(async () => undefined),
+    climaAnterior: vi.fn<FonteBoletim['climaAnterior']>(async () => null),
     baixar: vi.fn(async (bucket: string, caminho: string) => {
+      if (bucket === 'boletins') return new Uint8Array(Buffer.from('png-anterior'))
       if (bucket === 'organizacao') return new Uint8Array([0x89, 0x50, 0x4e, 0x47])
       return fotoDeTeste(caminho, 1)
     }),
@@ -142,6 +144,77 @@ describe('fila de emissão', async () => {
     // boletim de dia anterior: não copia o clima de hoje
     expect(c.deps.capturarClima).not.toHaveBeenCalled()
     expect(c.fonte.concluir.mock.calls[0][1].clima).toMatchObject({ indisponivel: true })
+  })
+
+  describe('dia antigo (retificação)', () => {
+    const antigo: PedidoReivindicado = { id: 9, etapa_id: 'e1', data: '2026-11-10', revisao: 1, numero: 'BA2/261110/COFZ-R1' }
+    const anterior = {
+      numero: 'BA2/261110/COFZ',
+      clima: {
+        fonte: 'Observatório',
+        estacao: { codigo: '8836', nome: 'Montese' },
+        leitura: '23:20',
+        copiado_em: '2026-11-11T02:30:00.000Z',
+        imagem_path: 'e1/BA2261110COFZ-clima.png',
+      },
+    }
+    const motivoAtual = 'boletim de data anterior; o Observatório só mostra as últimas 24 horas'
+
+    it('reaproveita o clima do boletim anterior: imagem do bucket, novo imagem_path e novo upload', async () => {
+      const c = cenario([antigo], snapshot)
+      c.fonte.climaAnterior.mockResolvedValueOnce(anterior)
+      await processarFila(c.fonte, c.deps)
+      expect(c.fonte.climaAnterior).toHaveBeenCalledWith(snapshot.etapa.id, '2026-11-10')
+      expect(c.fonte.baixar).toHaveBeenCalledWith('boletins', 'e1/BA2261110COFZ-clima.png')
+      expect(c.deps.capturarClima).not.toHaveBeenCalled()
+      expect(c.enviados.get('boletins/e1/BA2261110COFZ-R1-clima.png')?.bytes.toString()).toBe('png-anterior')
+      expect(c.fonte.concluir.mock.calls[0][1].clima).toEqual({
+        ...anterior.clima,
+        imagem_path: 'e1/BA2261110COFZ-R1-clima.png',
+        reaproveitado_de: 'BA2/261110/COFZ',
+      })
+      expect(c.htmls[0]).toContain('reaproveitada do boletim BA2/261110/COFZ')
+    })
+
+    it('sem boletim anterior com clima: indisponível com o motivo novo', async () => {
+      const c = cenario([antigo], snapshot)
+      await processarFila(c.fonte, c.deps)
+      expect(c.fonte.concluir.mock.calls[0][1].clima).toEqual({
+        indisponivel: true,
+        motivo: `${motivoAtual} e nenhum boletim desse dia tem o clima copiado`,
+      })
+    })
+
+    it('falha no download: indisponível, registra no log e gera o PDF', async () => {
+      const c = cenario([antigo], snapshot)
+      c.fonte.climaAnterior.mockResolvedValueOnce(anterior)
+      const base = c.fonte.baixar.getMockImplementation()!
+      c.fonte.baixar.mockImplementation(async (b: string, p: string) => {
+        if (b === 'boletins') throw new Error('404')
+        return base(b, p)
+      })
+      const r = await processarFila(c.fonte, c.deps)
+      expect(r[0].ok).toBe(true)
+      expect(c.fonte.concluir.mock.calls[0][1].clima).toEqual({ indisponivel: true, motivo: motivoAtual })
+      expect(c.deps.log).toHaveBeenCalledWith(expect.stringContaining('não reaproveitado: 404'))
+      expect(c.htmls).toHaveLength(1)
+    })
+
+    it('falha na consulta: indisponível, registra no log e gera o PDF', async () => {
+      const c = cenario([antigo], snapshot)
+      c.fonte.climaAnterior.mockRejectedValueOnce(new Error('rpc caiu'))
+      const r = await processarFila(c.fonte, c.deps)
+      expect(r[0].ok).toBe(true)
+      expect(c.fonte.concluir.mock.calls[0][1].clima).toEqual({ indisponivel: true, motivo: motivoAtual })
+      expect(c.deps.log).toHaveBeenCalledWith(expect.stringContaining('rpc caiu'))
+      expect(c.htmls).toHaveLength(1)
+    })
+
+    it('dia atual não consulta o clima anterior', async () => {
+      const c = cenario([pedido], snapshot)
+      await processarFila(c.fonte, c.deps)
+      expect(c.fonte.climaAnterior).not.toHaveBeenCalled()
+    })
   })
 
   it('fila vazia: não abre o navegador', async () => {
