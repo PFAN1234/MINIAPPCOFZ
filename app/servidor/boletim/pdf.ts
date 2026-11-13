@@ -10,12 +10,21 @@ export function ehServerless(env: NodeJS.ProcessEnv = process.env): boolean {
   return Boolean(env.VERCEL || env.AWS_LAMBDA_FUNCTION_NAME || env.AWS_EXECUTION_ENV)
 }
 
+/**
+ * Argumentos do Chromium serverless sem `--single-process`: nesse modo, fechar um contexto
+ * derruba o navegador inteiro, e o boletim fecha o contexto da captura do clima antes de abrir o
+ * do PDF ("Target page, context or browser has been closed").
+ */
+export function argsServerless(args: readonly string[]): string[] {
+  return args.filter((a) => a !== '--single-process')
+}
+
 export async function abrirNavegador(): Promise<Browser> {
   if (ehServerless()) {
     const { default: Chromium } = await import('@sparticuz/chromium')
     // Sem WebGL: o boletim não precisa e a inicialização fica mais leve.
     Chromium.setGraphicsMode = false
-    return chromium.launch({ executablePath: await Chromium.executablePath(), args: Chromium.args, headless: true })
+    return chromium.launch({ executablePath: await Chromium.executablePath(), args: argsServerless(Chromium.args), headless: true })
   }
   const executavel = process.env.PW_CHROMIUM || process.env.CHROMIUM_PATH
   return chromium.launch({ headless: true, ...(executavel ? { executablePath: executavel } : {}) })

@@ -5,13 +5,22 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { chromiumDisponivel } from './__fixtures__/navegador.js'
 import { gerarExemplo } from './exemplo.js'
-import { ehServerless } from './pdf.js'
+import { argsServerless, ehServerless } from './pdf.js'
 
 describe('Chromium', () => {
   it('usa o @sparticuz/chromium só em ambiente serverless', () => {
     expect(ehServerless({ VERCEL: '1' })).toBe(true)
     expect(ehServerless({ AWS_LAMBDA_FUNCTION_NAME: 'f' })).toBe(true)
     expect(ehServerless({})).toBe(false)
+  })
+
+  it('tira o --single-process dos argumentos serverless (fechar um contexto derrubava o navegador)', async () => {
+    const { default: Chromium } = await import('@sparticuz/chromium')
+    expect(Chromium.args).toContain('--single-process')
+    const args = argsServerless(Chromium.args)
+    expect(args).not.toContain('--single-process')
+    expect(args).toContain('--no-sandbox')
+    expect(args).toHaveLength(Chromium.args.length - 1)
   })
 })
 
