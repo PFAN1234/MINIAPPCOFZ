@@ -13,7 +13,7 @@ Ao fim de cada dia a etapa emite um boletim que compila tudo o que foi lançado 
 
 ## Clima
 
-**Localização:** `etapa` ganha `latitude`, `longitude`, `endereco`, `fuso` (IANA, ex.: `America/Fortaleza`, preenchido pela resposta do Open-Meteo com `timezone=auto`) e `inmet_estacao` (código, ex.: `A305`). No site de admin: endereço/CEP → geocodificação → pino no mapa para confirmar; a estação INMET é sugerida pela menor distância (lista de estações automáticas) e pode ser trocada.
+**Localização:** `etapa` ganha `latitude`, `longitude`, `endereco`, `fuso` (IANA, ex.: `America/Fortaleza`, preenchido pela resposta do Open-Meteo com `timezone=auto`) e `inmet_estacao` (código, ex.: `A305`). Preenchida no formulário da etapa (ver abaixo): endereço/CEP → geocodificação → pino no mapa para confirmar; a estação INMET é sugerida pela menor distância (lista de estações automáticas) e pode ser trocada.
 
 **Open-Meteo** (`api.open-meteo.com/v1/forecast`, `past_days=1`, `timezone=auto`): horário de `temperature_2m`, `relative_humidity_2m`, `apparent_temperature`, `precipitation`, `weather_code`, `cloud_cover`, `wind_speed_10m`, `wind_direction_10m`, `wind_gusts_10m`, `uv_index`. Testado em 2026-11-13 para a Av. Borges de Melo: responde com fuso `America/Fortaleza`.
 - É modelo, não medição: para 11/11/2026 o modelo deu 3,8 mm em chuvisco (0,1–0,5 mm/h de manhã) enquanto o boletim manual registrou sol. Regra: chuva < 0,2 mm/h não conta como "com chuva"; o INMET aparece ao lado como dado medido.
@@ -30,7 +30,9 @@ Ao fim de cada dia a etapa emite um boletim que compila tudo o que foi lançado 
 
 ## Dados administrativos da etapa
 
-Novos campos em `etapa` (editados no admin): objeto (texto da obra/serviço), local, contratante, contrato, contratada, CNPJ, OS nº, data de assinatura da OS, vigência original (meses), valor original, área total construída, responsáveis (fiscais). Tabela `etapa_aditivo` (número, data, acréscimo de prazo em dias, acréscimo de valor) → vigência e valor atualizados.
+Preenchidos **no cadastro da etapa** (decisão de 2026-11-13): o formulário de criação/edição do site de admin (`/admin/etapas/<slug>`, RPC `admin_salvar_etapa`), que hoje tem nome e ordem, ganha as seções "Identificação" (sigla), "Localização" e "Dados do contrato". Tudo pode ser corrigido depois na mesma página. Sigla e localização são obrigatórias para criar a etapa (sem elas não há número nem clima); os demais campos podem ficar em branco e saem como "—" no boletim, com aviso na página da etapa enquanto faltarem. A 2ª etapa, que já existe, é completada pela edição.
+
+Novos campos em `etapa`: objeto (texto da obra/serviço), local, contratante, contrato, contratada, CNPJ, OS nº, data de assinatura da OS, vigência original (meses), valor original, área total construída, responsáveis (fiscais). Tabela `etapa_aditivo` (número, data, acréscimo de prazo em dias, acréscimo de valor), lançada na página da etapa à medida que os aditivos saem → vigência e valor atualizados.
 
 Calculados: data de término prevista, dias decorridos desde a OS, % do prazo decorrido, dias restantes.
 
@@ -62,7 +64,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 ## Etapas de implementação
 
 1. Migration: campos da etapa (sigla, localização, fuso, estação INMET, dados administrativos), `etapa_aditivo`, `clima_dia`, `boletim`, bucket `boletins`, RLS (leitura para participantes da etapa; escrita só por service_role e RPC de retificação); função `numero_boletim(etapa, data, revisao)`.
-2. Admin: formulário de dados administrativos, aditivos, localização com mapa e sugestão de estação INMET.
+2. Admin: formulário de cadastro/edição da etapa com sigla, localização (mapa e estação INMET sugerida) e dados do contrato; `admin_salvar_etapa` valida e grava; lista de aditivos na página da etapa.
 3. `coletar-clima` (Open-Meteo + INMET) e testes Deno com respostas gravadas.
 4. RPC/consulta do snapshot do dia (indicadores, serviços, pendências) + testes de banco.
 5. Template HTML do boletim + geração do PDF + bucket + envio ao Telegram.
