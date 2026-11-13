@@ -11,6 +11,7 @@ import {
   initData,
   parametroInicial,
   ready,
+  telaCheia,
   themeParams,
   type TelegramWebApp,
 } from './telegram'
@@ -188,5 +189,52 @@ describe('cores do Telegram', () => {
     expect(() => aplicarCoresTelegram()).not.toThrow()
     expect(app.setBackgroundColor).toHaveBeenCalledOnce()
     expect(app.setBottomBarColor).toHaveBeenCalledOnce()
+  })
+})
+
+describe('tela cheia', () => {
+  function webApp(versao: number, platform: string) {
+    const app = {
+      ...criarWebApp(),
+      platform,
+      isVersionAtLeast: (minima: string) => versao >= Number(minima),
+      disableVerticalSwipes: vi.fn(),
+      requestFullscreen: vi.fn(),
+    }
+    window.Telegram = { WebApp: app }
+    return app
+  }
+
+  it.each([
+    { versao: 7.6, platform: 'ios', trava: false, cheia: false },
+    { versao: 7.7, platform: 'ios', trava: true, cheia: false },
+    { versao: 8.0, platform: 'ios', trava: true, cheia: true },
+    { versao: 8.0, platform: 'android', trava: true, cheia: true },
+    { versao: 8.0, platform: 'android_x', trava: true, cheia: true },
+    { versao: 8.0, platform: 'tdesktop', trava: true, cheia: false },
+    { versao: 8.0, platform: 'macos', trava: true, cheia: false },
+    { versao: 8.0, platform: 'weba', trava: true, cheia: false },
+  ])('versão $versao em $platform: trava=$trava, tela cheia=$cheia', ({ versao, platform, trava, cheia }) => {
+    const app = webApp(versao, platform)
+    telaCheia()
+    if (trava) expect(app.disableVerticalSwipes).toHaveBeenCalledOnce()
+    else expect(app.disableVerticalSwipes).not.toHaveBeenCalled()
+    if (cheia) expect(app.requestFullscreen).toHaveBeenCalledOnce()
+    else expect(app.requestFullscreen).not.toHaveBeenCalled()
+  })
+
+  it('sem window.Telegram ou sem os métodos, não lança erro', () => {
+    expect(() => telaCheia()).not.toThrow()
+    window.Telegram = { WebApp: { ...criarWebApp(), platform: 'ios', isVersionAtLeast: () => true } }
+    expect(() => telaCheia()).not.toThrow()
+  })
+
+  it('erro na trava não impede a tela cheia', () => {
+    const app = webApp(8.0, 'ios')
+    app.disableVerticalSwipes.mockImplementation(() => {
+      throw new Error('WebAppMethodUnsupported')
+    })
+    expect(() => telaCheia()).not.toThrow()
+    expect(app.requestFullscreen).toHaveBeenCalledOnce()
   })
 })

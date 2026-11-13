@@ -42,10 +42,10 @@ textarea {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--seguro-base);
 }
 
-/* Sem padding em cima: o topo azul de cada tela (TopoTela) encosta no cabeçalho do Telegram. */
+/* Sem padding em cima: o topo azul de cada tela (TopoTela) vai até o alto da tela (tela cheia) ou encosta no cabeçalho do Telegram. */
 .app-main {
   flex: 1;
   padding: 0 16px 16px;
@@ -63,7 +63,7 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: env(safe-area-inset-top) 16px 16px;
+  padding: var(--seguro-topo) 16px 16px;
   color: var(--texto-no-azul);
   background: var(--azul);
 }
@@ -403,8 +403,8 @@ a.botao {
   left: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  height: calc(72px + env(safe-area-inset-bottom));
-  padding-bottom: env(safe-area-inset-bottom);
+  height: calc(72px + var(--seguro-base));
+  padding-bottom: var(--seguro-base);
   background: var(--superficie);
   border-top: 2px solid var(--azul);
 }
@@ -1093,8 +1093,8 @@ a.botao {
   flex-direction: column;
   color: #fff;
   background: var(--azul);
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: var(--seguro-topo);
+  padding-bottom: var(--seguro-base);
 }
 
 .visualizador-topo,
@@ -1260,7 +1260,7 @@ a.botao {
 
 .aviso-fixo {
   position: fixed;
-  top: 8px;
+  top: calc(8px + var(--seguro-topo));
   right: 12px;
   left: 12px;
   z-index: 50;
