@@ -321,3 +321,11 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [ ] Usuário: cadastrar latitude e longitude da 2ª ETAPA no site (sem elas o check-in é recusado).
 - [ ] Usuário: testar check-in e check-out no celular e conferir o aviso no grupo.
 
+
+## Início, tela da obra e Registros (contrato: `docs/contrato-inicio-registros.md`)
+
+- [x] Banco: `resumo_obras()` e `autores_registros()` (migração `20261117090000`, aplicada e registrada em produção).
+- [x] Início: abas de etapa ao lado de "OBRAS"; por obra, Gestão (gestor) ao lado do nome e 3 barrinhas (serviços, abertas, resolvidas).
+- [x] Obra: Pendências no topo, prévia 3D só com ARQ (abre o visualizador), Observações por último.
+- [x] Registros: filtros por etapa, obra, tipo (serviços/abertas/resolvidas), pessoa e período; aba Pendências removida (`/pendencias` → `/registros?tipo=abertas`).
+- [ ] Usuário: conferir no celular o início, a prévia do modelo e os filtros de Registros.
