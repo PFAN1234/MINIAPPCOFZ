@@ -275,7 +275,7 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [ ] Preencher pelo site os dados da 2ª etapa (14 campos faltando: localização, estação INMET, contrato e responsáveis) e os nomes de exibição.
 - [x] Admin: cadastro da etapa com sigla, localização (mapa + estação INMET sugerida), fuso, horário de emissão e dados do contrato, editáveis depois; responsáveis e aditivos na página da etapa; linhas do cabeçalho em Organização (Vitest e e2e passando).
 - [x] Página Pessoas no admin (nome de exibição).
-- [x] Nome de exibição no Mini App e nas publicações do Telegram (migration `20261114090000_nome_exibicao_mini_app.sql`, ainda não aplicada no `miniappcofz-dev`; `publish-outbox` a publicar).
+- [x] Nome de exibição no Mini App e nas publicações do Telegram (migration `20261114090000_nome_exibicao_mini_app.sql` aplicada no `miniappcofz-dev` em 2026-11-13, conferida por hash; `publish-outbox` versão 4 publicada).
 - [x] Cartão Observações do dia na página da obra (com fila offline e trava após a emissão).
 - [ ] Edge Function `coletar-clima` (INMET, estação reserva, céu pela radiação) com testes; acesso ao INMET a partir de `sa-east-1`.
 - [ ] Snapshot do dia: indicadores, serviços e pendências, com testes de banco (inclui fuso e lançamento tardio).
