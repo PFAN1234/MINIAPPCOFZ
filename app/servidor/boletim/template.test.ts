@@ -169,4 +169,38 @@ describe('template do boletim', () => {
     expect(r).toContain('Página <span class="pageNumber"></span> de <span class="totalPages"></span>')
     expect(rodapeHtml(null)).toContain(MARCA_PREVIA)
   })
+
+  describe('equipe de serviço na seção 8', () => {
+    const comEquipe = (equipe: Snapshot['equipe_servico']) => ({ ...snapshot(), equipe_servico: equipe })
+
+    it('snapshot antigo (sem o campo): nada muda', () => {
+      const html = montarHtml(snapshot(), opcoes())
+      expect(html).not.toContain('<table class="equipe">')
+      expect(texto(html)).not.toContain('Nenhum check-in')
+    })
+
+    it('lista vazia: aviso de que assinam os cadastrados', () => {
+      const html = montarHtml(comEquipe([]), opcoes())
+      expect(html).not.toContain('<table class="equipe">')
+      expect(texto(html)).toContain('Nenhum check-in de serviço neste dia; assinam os responsáveis cadastrados na etapa.')
+    })
+
+    it('tabela Militar | Entrada | Saída no fuso, com "em serviço" e "não registrada"', () => {
+      const html = montarHtml(
+        comEquipe([
+          { nome: 'CP PATRICIO', entrada_em: '2026-11-13T11:05:00Z', saida_em: '2026-11-13T20:30:00Z', saida_automatica: false },
+          { nome: '3S <JOÃO>', entrada_em: '2026-11-13T12:00:00Z', saida_em: null, saida_automatica: false },
+          { nome: 'CB X', entrada_em: '2026-11-12T20:00:00Z', saida_em: '2026-11-13T20:00:00Z', saida_automatica: true },
+        ]),
+        opcoes(),
+      )
+      expect(html).toContain('<th>Militar</th><th>Entrada</th><th>Saída</th>')
+      const t = texto(html)
+      expect(t).toContain('CP PATRICIO 13/11 08:05 13/11 17:30') // fuso do snapshot: Fortaleza (-3)
+      expect(t).toContain('13/11 09:00 em serviço')
+      expect(html).toContain('3S &lt;JOÃO&gt;')
+      expect(t).toContain('CB X 12/11 17:00 não registrada')
+      expect(t.indexOf('Militar Entrada Saída')).toBeLessThan(t.indexOf('Emitido pelo Fiscal Bot'))
+    })
+  })
 })

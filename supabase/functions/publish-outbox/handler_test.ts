@@ -1030,3 +1030,95 @@ Deno.test("boletim e registro na mesma rodada", async () => {
   assertEquals((await r.json()).publicadas, 2);
   assertEquals(m.chamadas.map((c) => c.metodo), ["sendPhoto", "sendDocument"]);
 });
+
+// --- Serviço (check-in e check-out) -------------------------------------------------------------
+
+const ETAPA_SERVICO = { ...ETAPA, fuso: "America/Manaus" };
+const SERVICO = {
+  id: "serv-1",
+  etapa_id: "etapa-1",
+  usuario_id: "u1",
+  entrada_em: "2026-11-13T11:05:00Z",
+  saida_em: "2026-11-13T21:30:00Z",
+};
+
+const pubServico = (evento: "entrada" | "saida", extra = {}) => ({
+  id: 8,
+  obra_id: null,
+  registro_id: null,
+  encerramento_id: null,
+  boletim_id: null,
+  servico_id: "serv-1",
+  servico_evento: evento,
+  tentativas: 1,
+  ...extra,
+});
+
+function tabelasServico(
+  etapa: Linha = ETAPA_SERVICO,
+  servico: Linha[] = [SERVICO],
+) {
+  return { ...tabelasBase(), etapa: [etapa], servico } as Tabelas;
+}
+
+Deno.test("serviço: entrada avisa no grupo (Geral) com a hora no fuso da etapa", async () => {
+  const m = montar({
+    publicacoes: [pubServico("entrada")],
+    tabelas: tabelasServico(),
+    respostas: [{ tipo: "ok", resultado: { message_id: 950 } }],
+  });
+  const r = await rodar(m.handler);
+  assertEquals((await r.json()).publicadas, 1);
+  assertEquals(m.chamadas.length, 1);
+  assertEquals(m.chamadas[0].metodo, "sendMessage");
+  assertEquals(m.chamadas[0].corpo as Linha, {
+    chat_id: -1009,
+    text: "🟢 <b>Fulano</b> entrou de serviço às 07:05 · 2ª ETAPA",
+    parse_mode: "HTML",
+  });
+  assertEquals(m.finalizacoes[0].p_estado, "publicado");
+  assertEquals(m.finalizacoes[0].p_message_ids, [950]);
+});
+
+Deno.test("serviço: saída usa saida_em, escapa nome e etapa e prefere o nome de exibição", async () => {
+  const t = tabelasServico({ ...ETAPA_SERVICO, nome: "Etapa <A> & B" });
+  t.usuario = [{ id: "u1", nome: "Fulano", nome_exibicao: "CB <X>" }];
+  const m = montar({
+    publicacoes: [pubServico("saida")],
+    tabelas: t,
+    respostas: [{ tipo: "ok", resultado: { message_id: 951 } }],
+  });
+  await rodar(m.handler);
+  assertEquals(
+    (m.chamadas[0].corpo as Linha).text,
+    "🔴 <b>CB &lt;X&gt;</b> saiu do serviço às 17:30 · Etapa &lt;A&gt; &amp; B",
+  );
+});
+
+Deno.test("serviço: etapa sem grupo → pendente em 15 min, sem chamar o Telegram", async () => {
+  const m = montar({
+    publicacoes: [pubServico("entrada")],
+    tabelas: tabelasServico({ ...ETAPA_SERVICO, telegram_chat_id: null }),
+  });
+  const r = await rodar(m.handler);
+  assertEquals((await r.json()).pendentes, 1);
+  assertEquals(m.chamadas.length, 0);
+  assertEquals(m.finalizacoes, [{
+    p_id: 8,
+    p_estado: "pendente",
+    p_message_ids: null,
+    p_erro: "Etapa sem grupo vinculado.",
+    p_proxima: new Date(AGORA.getTime() + 15 * 60_000).toISOString(),
+  }]);
+});
+
+Deno.test("serviço: não encontrado → falhou, sem chamar o Telegram", async () => {
+  const m = montar({
+    publicacoes: [pubServico("entrada")],
+    tabelas: tabelasServico(ETAPA_SERVICO, []),
+  });
+  await rodar(m.handler);
+  assertEquals(m.chamadas.length, 0);
+  assertEquals(m.finalizacoes[0].p_estado, "falhou");
+  assertEquals(m.finalizacoes[0].p_erro, "Serviço não encontrado.");
+});
