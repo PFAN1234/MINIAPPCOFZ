@@ -20,6 +20,8 @@ import type {
   ObraDisponivel,
   Organizacao,
   RegistroLocalizado,
+  Relatorios,
+  ResultadoExclusaoBoletim,
   RegistroResumo,
   ResumoObra,
   SolicitacaoAcesso,
@@ -91,6 +93,14 @@ export interface Repositorio {
   souAdmin(): Promise<boolean>
   /** Link de uso único (2 min) para abrir o site de administração já com a sessão. */
   criarLinkAdmin(): Promise<LinkAdmin>
+  /** Aba Relatórios: situação de hoje por etapa e boletins emitidos. */
+  relatorios(): Promise<Relatorios>
+  /** URL assinada (5 min) do PDF de um boletim. */
+  urlPdfBoletim(caminho: string): Promise<string>
+  /** Admin: pede a emissão agora (nova revisão se já houver boletim no dia). Falhas sobem como `ErroEnvio`. */
+  emitirBoletim(slug: string, data: string): Promise<void>
+  /** Admin: exclui o dia inteiro do boletim (revisões, PDFs e mensagem no grupo). */
+  excluirBoletim(id: string): Promise<ResultadoExclusaoBoletim>
   /** Nome e logo da organização militar (faixa de identidade do topo). */
   organizacao(): Promise<Organizacao>
   /** Observações de hoje na obra (dia no fuso da etapa), com o estado de travada do dia. */

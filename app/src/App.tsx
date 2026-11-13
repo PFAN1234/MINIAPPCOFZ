@@ -15,6 +15,7 @@ import Obras from './telas/Obras.tsx'
 import PendenciaDetalhe from './telas/PendenciaDetalhe.tsx'
 import Pendencias from './telas/Pendencias.tsx'
 import Registros from './telas/Registros.tsx'
+import Relatorios from './telas/Relatorios.tsx'
 
 // Tela de teste da realidade aumentada (RA0): fora do pacote inicial.
 const DiagnosticoRA = lazy(() => import('./ra/DiagnosticoRA.tsx'))
@@ -30,6 +31,7 @@ export default function App() {
             <Route index element={<Obras />} />
             <Route path="registros" element={<Registros />} />
             <Route path="pendencias" element={<Navigate replace to="/registros?tipo=abertas" />} />
+            <Route path="relatorios" element={<Relatorios />} />
             <Route path="obras/:slug" element={<Obra />} />
             <Route path="obras/:slug/acessos" element={<Acessos />} />
             <Route path="obras/:slug/modelo" element={<Modelo />} />

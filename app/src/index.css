@@ -1990,3 +1990,15 @@ a.botao {
   background: color-mix(in srgb, var(--superficie) 85%, transparent);
   border-radius: 999px;
 }
+
+/* Relatórios: boletins diários */
+.relatorio-secao { margin: 16px 0 8px; font-size: 1rem; }
+.relatorio-titulo { margin: 0 0 4px; font-size: 1rem; }
+.relatorio-dica { font-size: 0.875rem; font-weight: 400; color: var(--texto-suave, var(--texto)); }
+.relatorio-lista { padding: 0; list-style: none; }
+.relatorio-linha-topo { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.relatorio-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.relatorio-acoes .botao { margin: 0; }
+.relatorio-erro { margin-top: 8px; font-size: 0.875rem; color: var(--erro); }
+.relatorio-aviso { padding: 10px 12px; margin: 0 0 12px; font-size: 0.875rem; background: var(--bg-secundario); border: 1px solid var(--borda); border-radius: 10px; }
+.botao-perigo { color: #fff; background: var(--erro); }

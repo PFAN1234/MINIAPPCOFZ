@@ -12,12 +12,20 @@ function renderizar(rota: string) {
 }
 
 describe('BarraInferior', () => {
-  it('só tem Início e Registros, e marca o da tela atual com aria-current="page"', () => {
+  it('tem Início, Registros e Relatórios, e marca o da tela atual com aria-current="page"', () => {
     renderizar('/registros')
-    expect(screen.getAllByRole('link')).toHaveLength(2)
+    expect(screen.getAllByRole('link')).toHaveLength(3)
     expect(screen.queryByRole('link', { name: /Pendências/ })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Registros' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('tem a aba Relatórios ao lado de Registros, e ela marca a rota atual', () => {
+    renderizar('/relatorios')
+    const rotulos = screen.getAllByRole('link').map((l) => l.textContent)
+    expect(rotulos.slice(0, 3)).toEqual(['Início', 'Registros', 'Relatórios'])
+    expect(screen.getByRole('link', { name: 'Relatórios' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Relatórios' })).toHaveAttribute('href', '/relatorios')
   })
 
   it('o Início só fica ativo na raiz', () => {

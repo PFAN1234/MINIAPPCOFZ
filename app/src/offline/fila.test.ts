@@ -81,6 +81,18 @@ function criarRepoFalso() {
     async criarLinkAdmin() {
       throw new Error('n/a')
     },
+    async relatorios() {
+      return { admin: false, etapas: [], boletins: [] }
+    },
+    async urlPdfBoletim() {
+      throw new Error('n/a')
+    },
+    async emitirBoletim() {
+      throw new Error('n/a')
+    },
+    async excluirBoletim() {
+      throw new Error('n/a')
+    },
     async baixarModelo() {
       throw new Error('n/a')
     },

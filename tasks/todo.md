@@ -343,3 +343,9 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Edge Function `admin-excluir-obra` (v3 em produção): ação `excluir_boletim` apaga a mensagem no grupo (`deleteMessage`) e os PDFs/PNG do bucket `boletins`.
 - [x] Relatórios: botão "Excluir" em cada boletim, com confirmação e aviso se a mensagem não puder ser apagada (limite de 48 h do Telegram). O agendador pode reemitir o dia de hoje.
 - [ ] Usuário: testar a exclusão de um boletim no site.
+
+## Mini app: aba Relatórios
+
+- [x] Banco: RPC `listar_relatorios()` (etapas do usuário com o boletim/pedido de hoje e registros do dia; boletins emitidos), aplicada em produção.
+- [x] Mini app: aba Relatórios na barra inferior: cartão "Hoje" por etapa, lista dos emitidos com Abrir PDF; admin: Emitir agora / Emitir revisão e Excluir (dia inteiro, com a mensagem no grupo).
+- [ ] Usuário: testar a aba no Telegram (abrir PDF, emitir e excluir como admin).
