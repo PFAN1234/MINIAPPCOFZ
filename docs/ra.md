@@ -7,9 +7,9 @@ Plano: `tasks/plano-ra.md`. Contrato de dados: `docs/contrato-ra.md`. Cadastro e
 1. No ambiente, toca em **Comparar com o modelo (RA)** (também aparece dentro do Novo registro). O botão só existe quando o ambiente tem geometria e a obra tem modelo 3D publicado.
 2. **Abrir câmera.** O Telegram pede a câmera e, no iPhone, o sensor de movimento.
 3. **Alinhar**, sem sair do lugar:
-   - por cantos: tocar em um canto do ambiente na imagem, dizer na planta qual canto é e se está no piso ou no teto; repetir com outro canto;
+   - por cantos: apontar a mira (fixa no centro da imagem) para um canto do ambiente e tocar em **Marcar canto**; dizer na planta qual canto é e se está no piso ou no teto; repetir com outro canto. Tocar na imagem não marca canto. Quando a planta do cômodo está cadastrada, a folha mostra a planta real com os cantos numerados e uma miniatura fica no canto da tela. Enquanto não há alinhamento, a malha de procura mostra o piso estimado pela inclinação do celular;
    - por QR, quando o ambiente tem um cadastrado: **Usar o QR do ambiente** e apontar para ele.
-4. **Ajuste fino:** arrastar para os lados gira o modelo, arrastar para cima e para baixo sobe e desce, pinça corrige o tamanho (ângulo de visão da câmera, guardado no aparelho). O contorno amarelo do ambiente deve encaixar nas arestas reais. **Conferir canto** mede o erro num terceiro canto.
+4. **Ajuste fino:** arrastar para os lados gira o modelo, arrastar para cima e para baixo sobe e desce, pinça corrige o tamanho (ângulo de visão da câmera, guardado no aparelho). O contorno amarelo do ambiente deve encaixar nas arestas reais. A malha (chip **Malha**) mostra onde o sistema acha que estão piso, paredes e teto; ela não enxerga o ambiente e não sai na foto com o modelo. **Conferir canto** aponta a mira para um terceiro canto e mede o erro (**Conferir este canto**).
 5. **Disparar.** Cada disparo gera duas fotos: a limpa e a com o modelo e a faixa de identificação. **Usar N fotos** leva o par ao registro; o limite de 10 fotos continua valendo.
 6. Se andar, **Alinhar de novo**.
 

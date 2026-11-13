@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPonteiro } from 'react'
 import type { ModeloFrag } from '../modelo/modelos.ts'
+import { marcadorParaPixel } from '../util/coordenadas.ts'
 import { abrirCamera, capturarPar, fecharCamera } from './camera.ts'
 import { cantoNoMundo, qrEDoAmbiente, qrNoMundo, type GeometriaAmbiente, type Plano } from './geometria.ts'
 import { criarLeitorQr } from './leitorQr.ts'
@@ -33,6 +34,14 @@ interface Pendente {
   para: 'primeiro' | 'segundo' | 'conferir'
 }
 
+export interface PlantaRA {
+  url?: string
+  pagina_pt: [number, number]
+  recorte_pt: [number, number, number, number]
+  largura: number
+  altura: number
+}
+
 export interface PropsTelaRA {
   obra: { slug: string; nome: string }
   pavimento: string
@@ -42,6 +51,8 @@ export interface PropsTelaRA {
   baixar: (m: ModeloFrag) => Promise<ArrayBuffer>
   /** Quantas fotos ainda cabem no registro (cada disparo usa duas). */
   vagas: number
+  /** Recorte da planta com o cômodo, para a folha de escolha dos cantos e a miniatura. */
+  planta?: PlantaRA | null
   onConcluir: (fotos: FotoRA[]) => void
   onFechar: () => void
 }
@@ -63,7 +74,7 @@ function resolver(base: Base, g: GeometriaAmbiente, fov: number, aspecto: number
 
 /** Tela de realidade aumentada: câmera ao vivo, modelo sobreposto, alinhamento e captura. */
 export default function TelaRA(props: PropsTelaRA) {
-  const { obra, pavimento, ambiente, geometria, modelos, baixar, vagas, onConcluir, onFechar } = props
+  const { obra, pavimento, ambiente, geometria, modelos, baixar, vagas, planta, onConcluir, onFechar } = props
   const palco = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -82,7 +93,10 @@ export default function TelaRA(props: PropsTelaRA) {
   const [base, setBase] = useState<Base | null>(null)
   const [ajuste, setAjuste] = useState({ rumo: 0, altura: 0 })
   const [fov, setFov] = useState(fovGuardado)
-  const [primeiro, setPrimeiro] = useState<{ toque: Toque; canto: number } | null>(null)
+  const [primeiro, setPrimeiro] = useState<{
+    toque: Toque
+    canto: number
+  } | null>(null)
   const [pendente, setPendente] = useState<Pendente | null>(null)
   const [plano, setPlano] = useState<Plano>('piso')
   const [conferindo, setConferindo] = useState(false)
@@ -94,6 +108,7 @@ export default function TelaRA(props: PropsTelaRA) {
     const referencia = geometria.referencial?.sigla ?? 'ARQ'
     return new Set(modelos.some((m) => m.sigla !== referencia) ? [referencia] : [])
   })
+  const [malha, setMalha] = useState(true)
   const [fotos, setFotos] = useState<FotoRA[]>([])
   const [capturando, setCapturando] = useState(false)
   const [aviso, setAviso] = useState('')
@@ -114,6 +129,10 @@ export default function TelaRA(props: PropsTelaRA) {
     p.posicao.y += ajuste.altura
     poseAtual.current = p
   }, [base, ajuste, fov, geometria])
+
+  useEffect(() => {
+    motor.current?.definirMalha(malha)
+  }, [malha, fase])
 
   useEffect(() => {
     opacidadeAtual.current = opacidade
@@ -157,7 +176,8 @@ export default function TelaRA(props: PropsTelaRA) {
         m.posicionar(poseAtual.current, o.atual(), fovAtual.current)
         m.renderizar()
       } else {
-        m.limpar()
+        m.posicionarProcura(o.atual(), fovAtual.current)
+        m.renderizar()
       }
     }
     quadro = requestAnimationFrame(desenhar)
@@ -187,6 +207,7 @@ export default function TelaRA(props: PropsTelaRA) {
       setFase('alinhar')
       await m.carregar(modelos, baixar, setCarga)
       m.definirVisiveis(new Set(modelos.filter((x) => !desligados.has(x.sigla)).map((x) => x.sigla)))
+      m.definirMalha(malha)
       setCarga('')
     } catch (e) {
       setMensagem(e instanceof Error && e.message ? e.message : 'Não foi possível abrir a realidade aumentada.')
@@ -207,7 +228,11 @@ export default function TelaRA(props: PropsTelaRA) {
 
   function escolherCanto(indice: number) {
     if (!pendente) return
-    const toque: Toque = { ndc: pendente.ndc, q: pendente.q, alvo: cantoNoMundo(geometria, indice, plano) }
+    const toque: Toque = {
+      ndc: pendente.ndc,
+      q: pendente.q,
+      alvo: cantoNoMundo(geometria, indice, plano),
+    }
     setPendente(null)
     if (pendente.para === 'primeiro') {
       setPrimeiro({ toque, canto: indice })
@@ -247,7 +272,10 @@ export default function TelaRA(props: PropsTelaRA) {
         if (lido && !qrEDoAmbiente(lido.texto, obra.slug, ambiente.codigo)) {
           setAviso('Este QR é de outro ambiente.')
         } else if (lido) {
-          const nova: Base = { tipo: 'qr', leitura: { cantos: lido.cantos, q } }
+          const nova: Base = {
+            tipo: 'qr',
+            leitura: { cantos: lido.cantos, q },
+          }
           if (resolver(nova, geometria, fovAtual.current, aspecto.current)) {
             setAviso('')
             setAjuste({ rumo: 0, altura: 0 })
@@ -273,17 +301,20 @@ export default function TelaRA(props: PropsTelaRA) {
   const ponteiros = useRef(new Map<number, { x: number; y: number; x0: number; y0: number }>())
   const pinca = useRef<{ distancia: number; fov: number } | null>(null)
 
-  function ndcDoEvento(e: EventoPonteiro): Ponto2 {
-    const r = e.currentTarget.getBoundingClientRect()
-    return [((e.clientX - r.left) / r.width) * 2 - 1, 1 - ((e.clientY - r.top) / r.height) * 2]
-  }
-
   function aoBaixar(e: EventoPonteiro<HTMLDivElement>) {
     e.currentTarget.setPointerCapture?.(e.pointerId)
-    ponteiros.current.set(e.pointerId, { x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY })
+    ponteiros.current.set(e.pointerId, {
+      x: e.clientX,
+      y: e.clientY,
+      x0: e.clientX,
+      y0: e.clientY,
+    })
     if (ponteiros.current.size === 2) {
       const [p, q] = [...ponteiros.current.values()]
-      pinca.current = { distancia: Math.hypot(p.x - q.x, p.y - q.y), fov: fovAtual.current }
+      pinca.current = {
+        distancia: Math.hypot(p.x - q.x, p.y - q.y),
+        fov: fovAtual.current,
+      }
     }
   }
 
@@ -313,7 +344,6 @@ export default function TelaRA(props: PropsTelaRA) {
   }
 
   function aoSoltar(e: EventoPonteiro<HTMLDivElement>) {
-    const p = ponteiros.current.get(e.pointerId)
     ponteiros.current.delete(e.pointerId)
     if (ponteiros.current.size < 2 && pinca.current) {
       pinca.current = null
@@ -323,15 +353,14 @@ export default function TelaRA(props: PropsTelaRA) {
         // Sem armazenamento: o ajuste vale só para esta sessão.
       }
     }
-    if (!p || !orientacao.current || pendente || lendoQr) return
-    const parado = Math.hypot(e.clientX - p.x0, e.clientY - p.y0) < 8
-    if (!parado) return
+  }
+
+  /** A mira fica no centro: o raio do centro não depende do ângulo de visão. */
+  function marcarCanto() {
+    if (!orientacao.current || pendente || lendoQr) return
     const q = orientacao.current.atual()
-    if (fase === 'alinhar') {
-      setPendente({ ndc: ndcDoEvento(e), q, para: primeiro ? 'segundo' : 'primeiro' })
-    } else if (fase === 'pronto' && conferindo) {
-      setPendente({ ndc: ndcDoEvento(e), q, para: 'conferir' })
-    }
+    if (fase === 'alinhar') setPendente({ ndc: [0, 0], q, para: primeiro ? 'segundo' : 'primeiro' })
+    else if (fase === 'pronto' && conferindo) setPendente({ ndc: [0, 0], q, para: 'conferir' })
   }
 
   const disparar = useCallback(async () => {
@@ -344,7 +373,7 @@ export default function TelaRA(props: PropsTelaRA) {
       const par = await capturarPar({
         video: video.current,
         canvas3d: canvas.current,
-        renderizar: () => m.renderizar(),
+        renderizar: () => m.renderizar({ semMalha: true }),
         opacidade: opacidadeAtual.current,
         aspectoTela: aspecto.current,
         faixa: [
@@ -356,7 +385,11 @@ export default function TelaRA(props: PropsTelaRA) {
       const idModelo = crypto.randomUUID()
       const dados = (parId: string): FotoRA['ra'] => ({
         par: parId,
-        modelos: visiveis.map((v) => ({ sigla: v.sigla, revisao: v.revisao, hash: v.hash })),
+        modelos: visiveis.map((v) => ({
+          sigla: v.sigla,
+          revisao: v.revisao,
+          hash: v.hash,
+        })),
         alinhamento: base.tipo,
         pose: {
           posicao: [pose.posicao.x, pose.posicao.y, pose.posicao.z].map((n) => Math.round(n * 1000) / 1000) as [
@@ -370,11 +403,22 @@ export default function TelaRA(props: PropsTelaRA) {
         ...(erroCm === null ? {} : { erro_cm: erroCm }),
       })
       const carimbo = agora.getTime()
-      const arquivo = (blob: Blob, nome: string) => new File([blob], nome, { type: 'image/jpeg', lastModified: carimbo })
+      const arquivo = (blob: Blob, nome: string) =>
+        new File([blob], nome, { type: 'image/jpeg', lastModified: carimbo })
       setFotos((atuais) => [
         ...atuais,
-        { id: idLimpa, arquivo: arquivo(par.limpa, `ra-${carimbo}-limpa.jpg`), origem: 'ra_limpa', ra: dados(idModelo) },
-        { id: idModelo, arquivo: arquivo(par.comModelo, `ra-${carimbo}-modelo.jpg`), origem: 'ra_modelo', ra: dados(idLimpa) },
+        {
+          id: idLimpa,
+          arquivo: arquivo(par.limpa, `ra-${carimbo}-limpa.jpg`),
+          origem: 'ra_limpa',
+          ra: dados(idModelo),
+        },
+        {
+          id: idModelo,
+          arquivo: arquivo(par.comModelo, `ra-${carimbo}-modelo.jpg`),
+          origem: 'ra_modelo',
+          ra: dados(idLimpa),
+        },
       ])
       setAviso('')
     } catch (e) {
@@ -389,10 +433,10 @@ export default function TelaRA(props: PropsTelaRA) {
       ? lendoQr
         ? 'Aponte para o QR do ambiente'
         : primeiro
-          ? `Canto ${primeiro.canto + 1} marcado. Sem sair do lugar, toque em outro canto do ambiente`
-          : 'Fique parado e toque em um canto do ambiente (encontro das paredes com o piso ou o teto)'
+          ? `Canto ${primeiro.canto + 1} marcado. Sem sair do lugar, aponte para outro canto`
+          : 'Aponte a mira para um canto do ambiente (encontro das paredes com o piso ou o teto) e toque em Marcar canto'
       : conferindo
-        ? 'Toque em um terceiro canto para conferir'
+        ? 'Aponte a mira para um terceiro canto e toque em Conferir este canto'
         : 'Arraste para girar ou subir o modelo; pinça ajusta o tamanho'
 
   return (
@@ -409,6 +453,9 @@ export default function TelaRA(props: PropsTelaRA) {
             onPointerUp={aoSoltar}
             onPointerCancel={(e) => ponteiros.current.delete(e.pointerId)}
           />
+        )}
+        {((fase === 'alinhar' && !lendoQr) || (fase === 'pronto' && conferindo)) && (
+          <div className="ra-mira" data-testid="ra-mira" aria-hidden="true" />
         )}
       </div>
 
@@ -431,8 +478,8 @@ export default function TelaRA(props: PropsTelaRA) {
         <div className="ra-cartao">
           <h2>Comparar com o modelo</h2>
           <p>
-            A câmera mostra o modelo por cima do ambiente. Escolha um ponto para ficar, alinhe o modelo e tire as
-            fotos sem sair do lugar. Se andar, alinhe de novo.
+            A câmera mostra o modelo por cima do ambiente. Escolha um ponto para ficar, alinhe o modelo e tire as fotos
+            sem sair do lugar. Se andar, alinhe de novo.
           </p>
           <p>Cada foto entra no registro duas vezes: limpa e com o modelo.</p>
           <button type="button" className="botao botao-bloco" onClick={() => void comecar()}>
@@ -464,7 +511,22 @@ export default function TelaRA(props: PropsTelaRA) {
           </p>
           {carga && <p className="ra-nota">{carga}</p>}
           {semSensor && (
-            <p className="ra-nota">Este aparelho não informa a orientação: mantenha o celular parado depois de alinhar.</p>
+            <p className="ra-nota">
+              Este aparelho não informa a orientação: mantenha o celular parado depois de alinhar.
+            </p>
+          )}
+          {fase === 'alinhar' && !lendoQr && (
+            <>
+              <p className="ra-nota">Malha no piso estimado pela inclinação do celular</p>
+              <button type="button" className="botao" disabled={!!pendente} onClick={marcarCanto}>
+                Marcar canto
+              </button>
+            </>
+          )}
+          {fase === 'pronto' && conferindo && (
+            <button type="button" className="botao" disabled={!!pendente} onClick={marcarCanto}>
+              Conferir este canto
+            </button>
           )}
           {erroCm !== null && <p className="ra-nota">Erro no canto conferido: {erroCm.toLocaleString('pt-BR')} cm</p>}
 
@@ -508,6 +570,11 @@ export default function TelaRA(props: PropsTelaRA) {
                       </button>
                     </li>
                   ))}
+                  <li>
+                    <button type="button" className="chip" aria-pressed={malha} onClick={() => setMalha((v) => !v)}>
+                      Malha
+                    </button>
+                  </li>
                 </ul>
               </div>
               <div className="ra-acoes">
@@ -541,6 +608,10 @@ export default function TelaRA(props: PropsTelaRA) {
         </div>
       )}
 
+      {fase === 'alinhar' && !lendoQr && !pendente && plantaReal(geometria, planta) && (
+        <PlantaDosCantos geometria={geometria} planta={planta} bloqueado={primeiro?.canto ?? null} miniatura />
+      )}
+
       {pendente && (
         <div className="ra-folha" role="dialog" aria-label="Qual canto você tocou?">
           <p className="ra-folha-titulo">Qual canto você tocou?</p>
@@ -556,6 +627,7 @@ export default function TelaRA(props: PropsTelaRA) {
           </div>
           <PlantaDosCantos
             geometria={geometria}
+            planta={planta}
             bloqueado={pendente.para === 'segundo' ? (primeiro?.canto ?? null) : null}
             onEscolher={escolherCanto}
           />
@@ -568,53 +640,121 @@ export default function TelaRA(props: PropsTelaRA) {
   )
 }
 
-/** Planta do ambiente vista de cima, com os cantos numerados para o fiscal escolher. */
+type GeometriaComPagina = GeometriaAmbiente & { contornoPagina?: Ponto2[] }
+
+/** Cantos do cômodo em pixels do recorte e viewBox que cobre a imagem e todos os cantos. */
+function plantaReal(g: GeometriaComPagina, planta: PlantaRA | null | undefined) {
+  const pagina = g.contornoPagina
+  if (!planta || !pagina || pagina.length !== g.contorno.length || pagina.length === 0) return null
+  const ref = {
+    pagina_pt: planta.pagina_pt,
+    recorte_pt: planta.recorte_pt,
+    largura: planta.largura,
+    altura: planta.altura,
+  }
+  const pontos = pagina.map(([x, y]): Ponto2 => {
+    const p = marcadorParaPixel({ x, y }, ref)
+    return [p.x, p.y]
+  })
+  const xs = [0, planta.largura, ...pontos.map((p) => p[0])]
+  const ys = [0, planta.altura, ...pontos.map((p) => p[1])]
+  const maior = Math.max(planta.largura, planta.altura)
+  const margem = maior * 0.05
+  const x0 = Math.min(...xs) - margem
+  const y0 = Math.min(...ys) - margem
+  const l = Math.max(...xs) + margem - x0
+  const a = Math.max(...ys) + margem - y0
+  return {
+    pontos,
+    viewBox: `${x0} ${y0} ${l} ${a}`,
+    raio: Math.max(l, a) * 0.035,
+  }
+}
+
+/**
+ * Planta do ambiente com os cantos numerados. Com o recorte da planta e `contornoPagina`, mostra o
+ * cômodo na planta real; senão, a planta esquemática vista de cima. `miniatura` é só leitura.
+ */
 function PlantaDosCantos({
   geometria,
+  planta,
   bloqueado,
   onEscolher,
+  miniatura = false,
 }: {
   geometria: GeometriaAmbiente
+  planta?: PlantaRA | null
   bloqueado: number | null
-  onEscolher: (indice: number) => void
+  onEscolher?: (indice: number) => void
+  miniatura?: boolean
 }) {
-  const xs = geometria.contorno.map((p) => p[0])
-  const zs = geometria.contorno.map((p) => p[1])
-  const x0 = Math.min(...xs)
-  const z0 = Math.min(...zs)
-  const largura = Math.max(...xs) - x0
-  const altura = Math.max(...zs) - z0
-  const escala = 240 / Math.max(largura, altura, 0.1)
-  const margem = 28
-  const ponto = ([x, z]: Ponto2): Ponto2 => [margem + (x - x0) * escala, margem + (z - z0) * escala]
-  const pontos = geometria.contorno.map(ponto)
+  const real = plantaReal(geometria, planta)
+  let pontos: Ponto2[]
+  let viewBox: string
+  let raio: number
+  if (real) {
+    ;({ pontos, viewBox, raio } = real)
+  } else {
+    const xs = geometria.contorno.map((p) => p[0])
+    const zs = geometria.contorno.map((p) => p[1])
+    const x0 = Math.min(...xs)
+    const z0 = Math.min(...zs)
+    const largura = Math.max(...xs) - x0
+    const altura = Math.max(...zs) - z0
+    const escala = 240 / Math.max(largura, altura, 0.1)
+    const margem = 28
+    pontos = geometria.contorno.map(([x, z]): Ponto2 => [margem + (x - x0) * escala, margem + (z - z0) * escala])
+    viewBox = `0 0 ${largura * escala + margem * 2} ${altura * escala + margem * 2}`
+    raio = 18
+  }
+  const legivel = miniatura ? 'Planta do cômodo' : 'Cantos do ambiente'
   return (
     <svg
-      className="ra-planta"
-      viewBox={`0 0 ${largura * escala + margem * 2} ${altura * escala + margem * 2}`}
-      role="group"
-      aria-label="Cantos do ambiente"
+      className={miniatura ? 'ra-planta ra-planta-mini' : 'ra-planta'}
+      viewBox={viewBox}
+      role={miniatura ? 'img' : 'group'}
+      aria-label={legivel}
+      data-testid={miniatura ? 'ra-miniatura' : undefined}
     >
-      <polygon points={pontos.map((p) => p.join(',')).join(' ')} />
-      {pontos.map(([x, y], i) => (
-        <g
-          key={i}
-          role="button"
-          tabIndex={bloqueado === i ? -1 : 0}
-          aria-label={`Canto ${i + 1}`}
-          aria-disabled={bloqueado === i}
-          className={bloqueado === i ? 'ra-canto ra-canto-bloqueado' : 'ra-canto'}
-          onClick={() => bloqueado !== i && onEscolher(i)}
-          onKeyDown={(e) => {
-            if ((e.key === 'Enter' || e.key === ' ') && bloqueado !== i) onEscolher(i)
-          }}
-        >
-          <circle cx={x} cy={y} r={18} />
-          <text x={x} y={y} dy="0.35em" textAnchor="middle">
-            {i + 1}
-          </text>
-        </g>
-      ))}
+      {real && planta?.url && <image href={planta.url} x={0} y={0} width={planta.largura} height={planta.altura} />}
+      <polygon className={real ? 'ra-planta-comodo' : undefined} points={pontos.map((p) => p.join(',')).join(' ')} />
+      {pontos.map(([x, y], i) => {
+        const marcado = bloqueado === i
+        const ativo = !miniatura && !marcado
+        const classe = ['ra-canto', marcado && 'ra-canto-bloqueado', marcado && real && 'ra-canto-marcado']
+          .filter(Boolean)
+          .join(' ')
+        const rotulo = marcado ? '✓' : String(i + 1)
+        if (miniatura) {
+          return (
+            <g key={i} className={classe}>
+              <circle cx={x} cy={y} r={raio} />
+              <text x={x} y={y} dy="0.35em" textAnchor="middle" style={{ fontSize: raio * 1.1 }}>
+                {rotulo}
+              </text>
+            </g>
+          )
+        }
+        return (
+          <g
+            key={i}
+            role="button"
+            tabIndex={ativo ? 0 : -1}
+            aria-label={`Canto ${i + 1}`}
+            aria-disabled={marcado}
+            className={classe}
+            onClick={() => ativo && onEscolher?.(i)}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && ativo) onEscolher?.(i)
+            }}
+          >
+            <circle cx={x} cy={y} r={raio} />
+            <text x={x} y={y} dy="0.35em" textAnchor="middle" style={{ fontSize: raio * 1.1 }}>
+              {rotulo}
+            </text>
+          </g>
+        )
+      })}
     </svg>
   )
 }
