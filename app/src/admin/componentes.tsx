@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
 import { useOrganizacao } from './dados/hooks.ts'
 import { CATEGORIAS, ROTULO_CATEGORIA } from './dados/tipos.ts'
 
@@ -103,5 +103,46 @@ export function SelectCategoria({
         </option>
       ))}
     </select>
+  )
+}
+
+/** Valor que só acompanha o original depois de `ms` sem mudar (evita uma consulta por tecla). */
+export function useAtrasado<T>(valor: T, ms = 400): T {
+  const [atrasado, setAtrasado] = useState(valor)
+  useEffect(() => {
+    const t = setTimeout(() => setAtrasado(valor), ms)
+    return () => clearTimeout(t)
+  }, [valor, ms])
+  return atrasado
+}
+
+/** Rótulo, controle e dica de um campo de formulário; `obrigatorio` marca o rótulo com um asterisco. */
+export function Campo({
+  rotulo,
+  dica,
+  obrigatorio = false,
+  largo = false,
+  children,
+}: {
+  rotulo: string
+  dica?: ReactNode
+  obrigatorio?: boolean
+  /** Ocupa a linha inteira da grade. */
+  largo?: boolean
+  children: (p: { id: string; 'aria-describedby'?: string; 'aria-required'?: boolean }) => ReactNode
+}) {
+  const id = useId()
+  return (
+    <div className={`adm-campo-form${largo ? ' adm-campo-largo' : ''}`}>
+      <label htmlFor={id} className={obrigatorio ? 'adm-obrigatorio' : undefined}>
+        {rotulo}
+      </label>
+      {children({ id, 'aria-describedby': dica ? `${id}-dica` : undefined, ...(obrigatorio ? { 'aria-required': true } : {}) })}
+      {dica && (
+        <span className="adm-dica" id={`${id}-dica`}>
+          {dica}
+        </span>
+      )}
+    </div>
   )
 }

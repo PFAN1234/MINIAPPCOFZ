@@ -11,6 +11,7 @@ import ObraAdmin, { NovaObra } from './telas/ObraAdmin.tsx'
 import ObrasAdmin from './telas/ObrasAdmin.tsx'
 import EtapaAdmin, { NovaEtapa } from './telas/etapa/EtapaAdmin.tsx'
 import Organizacao from './telas/Organizacao.tsx'
+import Pessoas from './telas/Pessoas.tsx'
 import EditorPlanta from './telas/planta/EditorPlanta.tsx'
 import ModelosObra from './telas/modelo/ModelosObra.tsx'
 import PlantaObra from './telas/planta/PlantaObra.tsx'
@@ -75,6 +76,7 @@ export default function AdminApp({ entrada }: { entrada: Entrada }) {
         <Route path="obras/:slug/planta" element={<PlantaObra />} />
         <Route path="obras/:slug/planta/:pavimento" element={<EditorPlanta />} />
         <Route path="obras/:slug/modelos" element={<ModelosObra />} />
+        <Route path="pessoas" element={<Pessoas />} />
         <Route path="organizacao" element={<Organizacao />} />
         <Route path="obras/:slug/ra" element={<RaObra />} />
         <Route path="admins" element={<Admins />} />
@@ -93,6 +95,7 @@ function Layout({ usuario, onSair, children }: { usuario: UsuarioSessao; onSair:
           <NavLink to="/" end>
             Etapas
           </NavLink>
+          <NavLink to="/pessoas">Pessoas</NavLink>
           <NavLink to="/organizacao">Organização</NavLink>
           <NavLink to="/admins">Admins</NavLink>
         </nav>

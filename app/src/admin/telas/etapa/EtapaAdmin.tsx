@@ -1,21 +1,19 @@
 /**
- * Página de uma etapa (`/etapas/:slug`): nome e ordem, grupo do Telegram, obras da etapa e
- * arquivar ou excluir. E a criação (`/nova-etapa`).
+ * Página de uma etapa (`/etapas/:slug`): cadastro (identificação, localização e contrato), o que
+ * falta para o boletim, responsáveis, aditivos, grupo do Telegram, obras da etapa e arquivar ou
+ * excluir. E a criação (`/nova-etapa`).
  */
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { ComDados, mensagemDe, Resultado } from '../../componentes.tsx'
-import { useDesvincularEtapa, useEtapas, useObrasAdmin, useSalvarEtapa } from '../../dados/hooks.ts'
-import type { EtapaLista } from '../../dados/tipos.ts'
+import { ComDados, mensagemDe } from '../../componentes.tsx'
+import { useDesvincularEtapa, useEtapa, useEtapas, useObrasAdmin } from '../../dados/hooks.ts'
+import { ROTULO_FALTANDO, type EtapaLista } from '../../dados/tipos.ts'
 import { TabelaObras } from '../ObrasAdmin.tsx'
 import { data } from '../obra/ArquivarExcluir.tsx'
+import Aditivos from './Aditivos.tsx'
 import ArquivarExcluirEtapa from './ArquivarExcluirEtapa.tsx'
-
-const SLUG = /^[a-z0-9-]+$/
-
-function inteiro(texto: string): number | null {
-  return /^-?\d{1,9}$/.test(texto.trim()) ? Number(texto) : null
-}
+import FormularioEtapa, { chaveDoCadastro } from './FormularioEtapa.tsx'
+import Responsaveis from './Responsaveis.tsx'
 
 export function AvisoEtapaArquivada({ arquivadaEm }: { arquivadaEm: string }) {
   return (
@@ -29,7 +27,9 @@ export function AvisoEtapaArquivada({ arquivadaEm }: { arquivadaEm: string }) {
 export default function EtapaAdmin() {
   const { slug = '' } = useParams()
   const etapas = useEtapas()
+  const detalhe = useEtapa(slug)
   const [salvo, setSalvo] = useState<string | null>(null)
+  // A lista traz arquivamento, grupo e contagens; o detalhe, o cadastro do boletim.
   return (
     <ComDados consulta={etapas}>
       {(lista) => {
@@ -53,12 +53,21 @@ export default function EtapaAdmin() {
             </p>
             <h1 id="titulo-etapa">{etapa.nome}</h1>
             {etapa.arquivada_em && <AvisoEtapaArquivada arquivadaEm={etapa.arquivada_em} />}
-            <DadosDaEtapa
-              key={`${etapa.nome}|${etapa.ordem}`}
-              etapa={etapa}
-              sucesso={salvo}
-              onSalvo={() => setSalvo('Etapa salva.')}
-            />
+            <ComDados consulta={detalhe}>
+              {(d) => (
+                <>
+                  <FaltamParaOBoletim faltando={d.faltando} />
+                  <FormularioEtapa
+                    key={chaveDoCadastro(d)}
+                    etapa={d}
+                    sucesso={salvo}
+                    onSalvo={() => setSalvo('Etapa salva.')}
+                  />
+                  <Responsaveis etapaId={d.id} atuais={d.responsaveis} />
+                  <Aditivos etapa={d} />
+                </>
+              )}
+            </ComDados>
             <GrupoTelegram etapa={etapa} />
             <ObrasDaEtapa etapa={etapa} />
             <ArquivarExcluirEtapa etapa={etapa} />
@@ -69,102 +78,27 @@ export default function EtapaAdmin() {
   )
 }
 
+/** Aviso com os campos do cadastro que ainda estão vazios (não aparece com o cadastro completo). */
+export function FaltamParaOBoletim({ faltando }: { faltando: string[] }) {
+  if (faltando.length === 0) return null
+  return (
+    <p className="adm-alerta adm-alerta-aviso" role="status">
+      Faltam para o boletim: {faltando.map((f) => ROTULO_FALTANDO[f] ?? f).join(', ')}.
+    </p>
+  )
+}
+
 // --- Nova etapa ------------------------------------------------------------------------------
 
 export function NovaEtapa() {
-  const salvar = useSalvarEtapa()
   const navegar = useNavigate()
-  const [slug, setSlug] = useState('')
-  const [nome, setNome] = useState('')
-  const [ordem, setOrdem] = useState('0')
-  const [aviso, setAviso] = useState<string | null>(null)
-
-  function enviar(e: FormEvent) {
-    e.preventDefault()
-    const n = inteiro(ordem)
-    if (!SLUG.test(slug) || slug.length > 40) {
-      return setAviso('Slug inválido: use letras minúsculas, dígitos e hífen (até 40 caracteres).')
-    }
-    if (!nome.trim()) return setAviso('Informe o nome da etapa.')
-    if (n === null) return setAviso('A ordem precisa ser um número inteiro.')
-    setAviso(null)
-    salvar.mutate({ slug, nome: nome.trim(), ordem: n }, { onSuccess: (et) => navegar(`/etapas/${et.slug}`) })
-  }
-
   return (
     <section aria-labelledby="titulo-nova-etapa">
       <p>
         <Link to="/">← Etapas</Link>
       </p>
       <h1 id="titulo-nova-etapa">Nova etapa</h1>
-      <form className="adm-form" onSubmit={enviar}>
-        <label>
-          Slug
-          <input value={slug} onChange={(e) => setSlug(e.target.value.trim())} placeholder="ex.: 3a-etapa" required />
-          <span className="adm-dica">
-            Letras minúsculas, dígitos e hífen. Vai no comando <code>/vincular_etapa</code> e não muda depois de criado.
-          </span>
-        </label>
-        <label>
-          Nome
-          <input value={nome} onChange={(e) => setNome(e.target.value)} maxLength={120} placeholder="ex.: 3ª ETAPA" required />
-        </label>
-        <label>
-          Ordem
-          <input value={ordem} onChange={(e) => setOrdem(e.target.value)} inputMode="numeric" />
-          <span className="adm-dica">Posição na lista de etapas do site e no seletor do Mini App.</span>
-        </label>
-        <Resultado sucesso={null} erro={aviso ? new Error(aviso) : salvar.error} />
-        <div>
-          <button type="submit" className="adm-botao adm-botao-principal" disabled={salvar.isPending}>
-            Criar etapa
-          </button>
-        </div>
-      </form>
-    </section>
-  )
-}
-
-// --- Dados da etapa --------------------------------------------------------------------------
-
-function DadosDaEtapa({ etapa, sucesso, onSalvo }: { etapa: EtapaLista; sucesso: string | null; onSalvo: () => void }) {
-  const salvar = useSalvarEtapa()
-  const [nome, setNome] = useState(etapa.nome)
-  const [ordem, setOrdem] = useState(String(etapa.ordem))
-  const [aviso, setAviso] = useState<string | null>(null)
-
-  function enviar(e: FormEvent) {
-    e.preventDefault()
-    const n = inteiro(ordem)
-    if (!nome.trim()) return setAviso('Informe o nome da etapa.')
-    if (n === null) return setAviso('A ordem precisa ser um número inteiro.')
-    setAviso(null)
-    salvar.mutate({ id: etapa.id, nome: nome.trim(), ordem: n }, { onSuccess: onSalvo })
-  }
-
-  return (
-    <section className="adm-secao" aria-labelledby="titulo-dados-etapa">
-      <h2 id="titulo-dados-etapa">Dados da etapa</h2>
-      <form className="adm-form" onSubmit={enviar}>
-        <label>
-          Slug
-          <input value={etapa.slug} readOnly disabled />
-        </label>
-        <label>
-          Nome
-          <input value={nome} onChange={(e) => setNome(e.target.value)} maxLength={120} required />
-        </label>
-        <label>
-          Ordem
-          <input value={ordem} onChange={(e) => setOrdem(e.target.value)} inputMode="numeric" />
-        </label>
-        <Resultado sucesso={sucesso} erro={aviso ? new Error(aviso) : salvar.error} />
-        <div>
-          <button type="submit" className="adm-botao adm-botao-principal" disabled={salvar.isPending}>
-            Salvar etapa
-          </button>
-        </div>
-      </form>
+      <FormularioEtapa etapa={null} onSalvo={(et) => navegar(`/etapas/${et.slug}`)} />
     </section>
   )
 }

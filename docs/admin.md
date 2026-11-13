@@ -321,6 +321,24 @@ Contrato: `docs/contrato-etapas.md`. O campus é implantado em etapas; cada etap
 4. No BotFather, trocar o nome do bot e do Mini App para Fiscal Bot (opcional, só exibição).
 5. No site, `/admin/organizacao`: enviar o logo; no grupo da 2ª etapa, `/vincular_etapa 2a-etapa` (se a etapa não herdou o grupo).
 
+## Boletim: cadastro da etapa e pessoas
+
+Contrato: `docs/contrato-boletim.md` (parte 1, banco e site). Os dados abaixo alimentam o Boletim de Acompanhamento Diário; a geração do boletim vem em partes seguintes. As RPCs são as `admin_*` do contrato (`admin_obter_etapa`, `admin_salvar_etapa`, `admin_salvar_aditivo`, `admin_remover_aditivo`, `admin_definir_responsaveis`, `admin_sugerir_estacoes`, `admin_listar_pessoas`, `admin_definir_nome_exibicao`); no site, o `RepositorioAdmin` ganhou os métodos de mesmo nome (`obterEtapa`, `salvarAditivo`, ...), com a fixture reproduzindo as validações, o `prazo` e o `faltando`.
+
+- **Pessoas** (`/pessoas`, entre "Etapas" e "Organização"): tabela com o nome de exibição (campo + Salvar na própria linha; aparece em maiúsculas enquanto se digita), o nome do Telegram, o @username, as obras com o papel e o selo "admin". A busca acha por qualquer um dos nomes. Sem nome de exibição, vale o do Telegram ("usa o nome do Telegram"); o campo vazio tira o nome.
+- **Etapa** (`/nova-etapa` e `/etapas/<slug>`): o mesmo formulário, em três seções.
+  - *Identificação*: nome, slug, ordem e **sigla**, com a prévia "Número do boletim: BA2/261111/COFZ" (data de hoje e nome da OM).
+  - *Localização*: endereço; latitude e longitude (colar "−3.7610, −38.5297" em qualquer dos dois campos preenche os dois), com mapa de prévia (`iframe` do OpenStreetMap, sem chave de API) e o link "abrir no mapa"; fuso horário (rótulos como "Fortaleza (UTC−3)"); estação INMET e reserva (lista das mais próximas, de `admin_sugerir_estacoes`; enquanto a tabela de estações está vazia, campo de código); horário de emissão.
+  - *Dados do contrato*: obra/serviço, local, contratante, contrato, contratada, CNPJ (com máscara), OS (número e data), vigência, valor original (R$ com máscara) e área construída.
+  - Na criação, sigla, latitude, longitude e fuso são obrigatórios. Na edição, só os campos alterados são enviados (campo esvaziado apaga; a sigla não pode ser apagada).
+- Na página da etapa, além do formulário: o aviso **"Faltam para o boletim: …"** (a partir de `faltando`), **Responsáveis** (escolher pessoas, função, subir/descer, remover; mostra o nome de exibição) e **Aditivos** (tabela, adicionar, editar, remover; mostra término original, prazo dos aditivos, término atual e valor atual). Aditivo com prazo ou valor negativo é supressão.
+- **Etapas** (`/`): cada etapa mostra a sigla e, se `faltando > 0`, o selo "cadastro incompleto".
+- **Organização** (`/organizacao`): "Linhas do cabeçalho do boletim" (até 4 linhas, adicionar/remover/reordenar), com prévia do cabeçalho (logo, linhas e nome da OM).
+
+Formatos de exibição: datas `dd/mm/aaaa`, valores `R$ 79.499.000,00`, área `86.102,17 m²`, coordenadas com 4 casas e vírgula decimal (`app/src/admin/formato.ts`).
+
+Mapa: o site não define Content-Security-Policy (`vercel.json`, `index.html` e `admin.html` não têm), então o `iframe` de `https://www.openstreetmap.org` funciona sem ajuste. Se uma CSP for adicionada, incluir `frame-src https://www.openstreetmap.org`.
+
 ## Realidade aumentada (QR)
 
 Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra, ao lado de "Modelos 3D"). Cadastra a posição do QR de cada ambiente e imprime a folha A4 que o Mini App lê para alinhar o modelo 3D com a obra. Contrato de dados em `docs/contrato-ra.md`; código em `app/src/admin/telas/ra/` e `app/src/admin/ra/` (`qr.ts`, `geometria.ts`).

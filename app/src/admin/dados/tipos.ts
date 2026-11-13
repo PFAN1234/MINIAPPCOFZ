@@ -133,21 +133,176 @@ export interface EtapaLista {
   telegram_chat_titulo: string | null
   obras: number
   obras_arquivadas: number
+  /** Forma o número do boletim (`BA<sigla>/…`); null na etapa que ainda não tem. */
+  sigla: string | null
+  /** Quantos campos do cadastro do boletim estão vazios (0 = completo). */
+  faltando: number
 }
 
-/** Criação (sem `id`, com `slug`) ou edição de nome e ordem (com `id`). */
-export interface DadosEtapa {
+// --- Boletim: cadastro da etapa e pessoas (contrato: docs/contrato-boletim.md) -------------------
+
+/** Fusos do Brasil aceitos pelo banco (`etapa.fuso`), com o rótulo mostrado no site. */
+export const FUSOS: { valor: string; rotulo: string }[] = [
+  { valor: 'America/Noronha', rotulo: 'Fernando de Noronha (UTC−2)' },
+  { valor: 'America/Belem', rotulo: 'Belém (UTC−3)' },
+  { valor: 'America/Fortaleza', rotulo: 'Fortaleza (UTC−3)' },
+  { valor: 'America/Recife', rotulo: 'Recife (UTC−3)' },
+  { valor: 'America/Araguaina', rotulo: 'Araguaína (UTC−3)' },
+  { valor: 'America/Maceio', rotulo: 'Maceió (UTC−3)' },
+  { valor: 'America/Bahia', rotulo: 'Salvador (UTC−3)' },
+  { valor: 'America/Sao_Paulo', rotulo: 'São Paulo / Brasília (UTC−3)' },
+  { valor: 'America/Campo_Grande', rotulo: 'Campo Grande (UTC−4)' },
+  { valor: 'America/Cuiaba', rotulo: 'Cuiabá (UTC−4)' },
+  { valor: 'America/Santarem', rotulo: 'Santarém (UTC−3)' },
+  { valor: 'America/Porto_Velho', rotulo: 'Porto Velho (UTC−4)' },
+  { valor: 'America/Boa_Vista', rotulo: 'Boa Vista (UTC−4)' },
+  { valor: 'America/Manaus', rotulo: 'Manaus (UTC−4)' },
+  { valor: 'America/Eirunepe', rotulo: 'Eirunepé (UTC−5)' },
+  { valor: 'America/Rio_Branco', rotulo: 'Rio Branco (UTC−5)' },
+]
+
+/** Nomes dos campos em `admin_obter_etapa.faltando`, como aparecem no aviso do site. */
+export const ROTULO_FALTANDO: Record<string, string> = {
+  sigla: 'sigla',
+  localizacao: 'localização (latitude e longitude)',
+  inmet_estacao: 'estação do INMET',
+  objeto: 'obra/serviço',
+  local: 'local',
+  contratante: 'contratante',
+  contrato: 'contrato',
+  contratada: 'contratada',
+  contratada_cnpj: 'CNPJ da contratada',
+  os_numero: 'número da OS',
+  os_data: 'data da OS',
+  vigencia_meses: 'vigência',
+  valor_original: 'valor original',
+  area_construida_m2: 'área construída',
+  responsaveis: 'responsáveis',
+}
+
+/** Campos do cadastro da etapa que não são identidade (`etapa.*`, todos opcionais no banco). */
+export interface CamposEtapa {
+  sigla: string | null
+  endereco: string | null
+  latitude: number | null
+  longitude: number | null
+  fuso: string
+  inmet_estacao: string | null
+  inmet_estacao_reserva: string | null
+  /** "HH:MM", hora local da emissão automática. */
+  boletim_horario: string
+  objeto: string | null
+  local: string | null
+  contratante: string | null
+  contrato: string | null
+  contratada: string | null
+  contratada_cnpj: string | null
+  os_numero: string | null
+  /** "AAAA-MM-DD". */
+  os_data: string | null
+  vigencia_meses: number | null
+  valor_original: number | null
+  area_construida_m2: number | null
+}
+
+export interface Aditivo {
+  id: string
+  etapa_id: string
+  numero: string
+  /** "AAAA-MM-DD". */
+  data: string
+  /** Acréscimo em dias (negativo = supressão). */
+  prazo_dias: number
+  /** Acréscimo em reais (negativo = supressão). */
+  valor: number
+  descricao: string | null
+}
+
+export interface DadosAditivo {
+  id?: string
+  etapa_id: string
+  numero: string
+  data: string
+  prazo_dias: number
+  valor: number
+  descricao: string | null
+}
+
+export interface Responsavel {
+  usuario_id: string
+  nome: string
+  nome_exibicao: string | null
+  funcao: string
+  ordem: number
+}
+
+export interface PrazoEtapa {
+  termino_original: string
+  prazo_aditivos_dias: number
+  termino_atual: string
+  /** Valor original mais os aditivos; null sem valor original. */
+  valor_atual: number | null
+}
+
+/** `admin_obter_etapa`: a etapa inteira, com aditivos, responsáveis, prazo e o que falta. */
+export interface EtapaDetalhe extends CamposEtapa {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+  arquivada_em: string | null
+  telegram_vinculado: boolean
+  telegram_chat_titulo: string | null
+  aditivos: Aditivo[]
+  responsaveis: Responsavel[]
+  /** Só com `os_data` e `vigencia_meses`. */
+  prazo: PrazoEtapa | null
+  /** Campos vazios entre os que o boletim usa (nomes em `ROTULO_FALTANDO`). */
+  faltando: string[]
+}
+
+/**
+ * Criação (sem `id`, com `slug`; `sigla`, `latitude`, `longitude` e `fuso` obrigatórios) ou edição
+ * (com `id`): chave ausente mantém o valor, `null` apaga (menos `fuso`, `boletim_horario` e `sigla`).
+ */
+export type DadosEtapa = Partial<{ [K in keyof CamposEtapa]: CamposEtapa[K] | null }> & {
   id?: string
   slug?: string
   nome: string
   ordem: number
 }
 
-export interface EtapaSalva {
+/** Devolvido ao salvar: a etapa como em `admin_obter_etapa`. */
+export type EtapaSalva = EtapaDetalhe
+
+export interface ParticipacaoPessoa {
+  obra_slug: string
+  obra_nome: string
+  etapa_nome: string
+  papel: string
+}
+
+/** `admin_listar_pessoas`. */
+export interface Pessoa {
   id: string
-  slug: string
   nome: string
-  ordem: number
+  nome_exibicao: string | null
+  username: string | null
+  telegram_id: number
+  eh_admin: boolean
+  participacoes: ParticipacaoPessoa[]
+}
+
+export const NOME_EXIBICAO_MAX = 60
+
+/** `admin_sugerir_estacoes`: estação automática do INMET perto da obra. */
+export interface EstacaoSugerida {
+  codigo: string
+  nome: string
+  uf: string
+  latitude: number
+  longitude: number
+  distancia_km: number
 }
 
 /** O que a exclusão da etapa apaga (`admin_resumo_etapa`): as obras e a soma das contagens. */
@@ -171,7 +326,12 @@ export interface Organizacao {
   logo_path: string | null
   /** URL pública do logo (montada pelo repositório); null sem logo. */
   logo_url: string | null
+  /** Linhas de subordinação acima do nome no boletim (até 4); vazio = nenhuma. */
+  cabecalho: string[]
 }
+
+export const CABECALHO_LINHAS_MAX = 4
+export const CABECALHO_LINHA_MAX = 100
 
 export const NOME_OM_MAX = 80
 /** Limite do bucket `organizacao` (1 MB). */

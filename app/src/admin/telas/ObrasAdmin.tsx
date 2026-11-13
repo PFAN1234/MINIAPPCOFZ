@@ -115,9 +115,24 @@ function CartaoEtapa({ etapa, obras }: { etapa: EtapaLista; obras: ObraLista[] }
     <section className="adm-secao adm-cartao-etapa" aria-labelledby={idTitulo}>
       <div className="adm-titulo-linha">
         <div>
-          <h2 id={idTitulo}>
-            <Link to={`/etapas/${etapa.slug}`}>{etapa.nome}</Link>
-          </h2>
+          <div className="adm-titulo-etapa">
+            <h2 id={idTitulo}>
+              <Link to={`/etapas/${etapa.slug}`}>{etapa.nome}</Link>
+            </h2>
+            {etapa.sigla && (
+              <span className="adm-selo adm-selo-sigla" title="Sigla no número do boletim">
+                sigla {etapa.sigla}
+              </span>
+            )}
+            {etapa.faltando > 0 && (
+              <span
+                className="adm-selo adm-selo-incompleto"
+                title={`${etapa.faltando} ${etapa.faltando === 1 ? 'campo vazio' : 'campos vazios'} no cadastro do boletim`}
+              >
+                cadastro incompleto
+              </span>
+            )}
+          </div>
           <p className="adm-dica adm-meta-etapa">
             <code>{etapa.slug}</code> · {plural(etapa.obras - etapa.obras_arquivadas, 'obra ativa', 'obras ativas')}
             {etapa.obras_arquivadas > 0 && ` · ${plural(etapa.obras_arquivadas, 'arquivada', 'arquivadas')}`} ·{' '}

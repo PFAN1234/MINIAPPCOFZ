@@ -14,8 +14,12 @@ import {
   type Admin,
   type BucketObra,
   type ConfigObra,
+  type Aditivo,
+  type EstacaoSugerida,
+  type EtapaDetalhe,
   type EtapaLista,
-  type EtapaSalva,
+  type Pessoa,
+  type Responsavel,
   type Organizacao,
   type ResultadoExclusaoEtapa,
   type ResumoEtapa,
@@ -167,7 +171,74 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       nome: typeof l?.nome === 'string' && l.nome ? l.nome : 'CO-FZ',
       logo_path: logo,
       logo_url: logo ? `${base}/storage/v1/object/public/organizacao/${logo}` : null,
+      cabecalho: Array.isArray(l?.cabecalho) ? l.cabecalho.map(String) : [],
     }
+  }
+
+  const numeroOuNulo = (v: unknown) => (v == null ? null : Number(v))
+  const aditivoDe = (l: Linha): Aditivo => ({
+    id: String(l.id),
+    etapa_id: String(l.etapa_id ?? ''),
+    numero: String(l.numero),
+    data: String(l.data),
+    prazo_dias: Number(l.prazo_dias ?? 0),
+    valor: Number(l.valor ?? 0),
+    descricao: textoOuNulo(l.descricao),
+  })
+  const responsavelDe = (l: Linha): Responsavel => ({
+    usuario_id: String(l.usuario_id),
+    nome: String(l.nome ?? ''),
+    nome_exibicao: textoOuNulo(l.nome_exibicao),
+    funcao: String(l.funcao ?? 'Fiscal'),
+    ordem: Number(l.ordem ?? 0),
+  })
+  function etapaDetalheDe(l: Linha): EtapaDetalhe {
+    const prazo = l.prazo as Linha | null | undefined
+    return {
+      id: String(l.id),
+      slug: String(l.slug),
+      nome: String(l.nome),
+      ordem: Number(l.ordem ?? 0),
+      arquivada_em: textoOuNulo(l.arquivada_em),
+      telegram_vinculado: l.telegram_vinculado === true,
+      telegram_chat_titulo: textoOuNulo(l.telegram_chat_titulo),
+      sigla: textoOuNulo(l.sigla),
+      endereco: textoOuNulo(l.endereco),
+      latitude: numeroOuNulo(l.latitude),
+      longitude: numeroOuNulo(l.longitude),
+      fuso: textoOuNulo(l.fuso) ?? 'America/Sao_Paulo',
+      inmet_estacao: textoOuNulo(l.inmet_estacao),
+      inmet_estacao_reserva: textoOuNulo(l.inmet_estacao_reserva),
+      boletim_horario: (textoOuNulo(l.boletim_horario) ?? '23:30').slice(0, 5),
+      objeto: textoOuNulo(l.objeto),
+      local: textoOuNulo(l.local),
+      contratante: textoOuNulo(l.contratante),
+      contrato: textoOuNulo(l.contrato),
+      contratada: textoOuNulo(l.contratada),
+      contratada_cnpj: textoOuNulo(l.contratada_cnpj),
+      os_numero: textoOuNulo(l.os_numero),
+      os_data: textoOuNulo(l.os_data),
+      vigencia_meses: numeroOuNulo(l.vigencia_meses),
+      valor_original: numeroOuNulo(l.valor_original),
+      area_construida_m2: numeroOuNulo(l.area_construida_m2),
+      aditivos: Array.isArray(l.aditivos) ? (l.aditivos as Linha[]).map(aditivoDe) : [],
+      responsaveis: Array.isArray(l.responsaveis) ? (l.responsaveis as Linha[]).map(responsavelDe) : [],
+      prazo: prazo
+        ? {
+            termino_original: String(prazo.termino_original),
+            prazo_aditivos_dias: Number(prazo.prazo_aditivos_dias ?? 0),
+            termino_atual: String(prazo.termino_atual),
+            valor_atual: numeroOuNulo(prazo.valor_atual),
+          }
+        : null,
+      faltando: Array.isArray(l.faltando) ? l.faltando.map(String) : [],
+    }
+  }
+  /** Mensagem crua do Postgres para violação de unicidade (as das RPCs já vêm em português). */
+  const ehMensagemBruta = (msg: string) => /duplicate key|violates unique|unique constraint/i.test(msg)
+  const codigoDe = (e: unknown) => {
+    const causa = (e as ErroAdmin).cause
+    return causa && typeof causa === 'object' ? ((causa as ErroBruto).code as unknown) : undefined
   }
 
   return {
@@ -220,18 +291,90 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
           telegram_chat_titulo: textoOuNulo(l.telegram_chat_titulo),
           obras: contagem(l.obras),
           obras_arquivadas: contagem(l.obras_arquivadas),
+          sigla: textoOuNulo(l.sigla),
+          faltando: contagem(l.faltando),
         }),
       )
     },
 
     async salvarEtapa(dados) {
       try {
-        return await rpc<EtapaSalva>('admin_salvar_etapa', { p: dados })
+        return etapaDetalheDe(await rpc<Linha>('admin_salvar_etapa', { p: dados }))
       } catch (e) {
-        const codigo = (e as ErroAdmin).cause && ((e as ErroAdmin).cause as ErroBruto).code
-        if (codigo === '23505') throw new ErroAdmin(`Já existe uma etapa com o slug ${dados.slug ?? ''}`, { cause: e })
+        if (codigoDe(e) === '23505' && ehMensagemBruta((e as ErroAdmin).message)) {
+          const texto = /sigla/i.test((e as ErroAdmin).message)
+            ? `Já existe uma etapa com a sigla ${dados.sigla ?? ''}`
+            : `Já existe uma etapa com o slug ${dados.slug ?? ''}`
+          throw new ErroAdmin(texto, { cause: e })
+        }
         throw e
       }
+    },
+
+    async obterEtapa(slug) {
+      const r = await rpc<Linha | null>('admin_obter_etapa', { p_slug: slug })
+      if (!r) throw new ErroAdmin('Etapa não encontrada')
+      return etapaDetalheDe(r)
+    },
+
+    async salvarAditivo(dados) {
+      try {
+        return aditivoDe(await rpc<Linha>('admin_salvar_aditivo', { p: dados }))
+      } catch (e) {
+        if (codigoDe(e) === '23505' && ehMensagemBruta((e as ErroAdmin).message)) {
+          throw new ErroAdmin(`Já existe o aditivo ${dados.numero} nesta etapa`, { cause: e })
+        }
+        throw e
+      }
+    },
+
+    async removerAditivo(id) {
+      await rpc('admin_remover_aditivo', { p_id: id })
+    },
+
+    async definirResponsaveis(etapaId, lista) {
+      const r = await rpc<Linha[] | null>('admin_definir_responsaveis', { p_etapa: etapaId, p: lista })
+      return (r ?? []).map(responsavelDe)
+    },
+
+    async sugerirEstacoes(latitude, longitude, limite = 5) {
+      const r = await rpc<Linha[] | null>('admin_sugerir_estacoes', { p_lat: latitude, p_lon: longitude, p_limite: limite })
+      return (r ?? []).map(
+        (l): EstacaoSugerida => ({
+          codigo: String(l.codigo),
+          nome: String(l.nome ?? ''),
+          uf: String(l.uf ?? ''),
+          latitude: Number(l.latitude),
+          longitude: Number(l.longitude),
+          distancia_km: Number(l.distancia_km ?? 0),
+        }),
+      )
+    },
+
+    async listarPessoas() {
+      return ((await rpc<Linha[] | null>('admin_listar_pessoas')) ?? []).map(
+        (l): Pessoa => ({
+          id: String(l.id),
+          nome: String(l.nome ?? ''),
+          nome_exibicao: textoOuNulo(l.nome_exibicao),
+          username: textoOuNulo(l.username),
+          telegram_id: Number(l.telegram_id),
+          eh_admin: l.eh_admin === true,
+          participacoes: Array.isArray(l.participacoes)
+            ? (l.participacoes as Linha[]).map((p) => ({
+                obra_slug: String(p.obra_slug ?? ''),
+                obra_nome: String(p.obra_nome ?? ''),
+                etapa_nome: String(p.etapa_nome ?? ''),
+                papel: String(p.papel ?? ''),
+              }))
+            : [],
+        }),
+      )
+    },
+
+    async definirNomeExibicao(usuarioId, nome) {
+      const r = await rpc<Linha>('admin_definir_nome_exibicao', { p_usuario: usuarioId, p_nome: nome })
+      return { id: String(r.id), nome: String(r.nome ?? ''), nome_exibicao: textoOuNulo(r.nome_exibicao) }
     },
 
     async arquivarEtapa(slug, arquivada) {
