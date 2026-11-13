@@ -1,0 +1,171 @@
+# Contrato: Boletim de Acompanhamento Diário — parte 1 (banco e site de administração)
+
+Decisões de 2026-11-13 com o usuário; plano em `tasks/plano-boletim.md`, checklist em `tasks/todo.md` (seção "Boletim de Acompanhamento Diário"), prévia em `docs/mockups/boletim-diario-v2.pdf`.
+
+Esta parte cria a base de dados do boletim e as telas de cadastro no site de administração. Ficam para as próximas partes: nome de exibição e observações no Mini App, coleta do INMET (`coletar-clima`), montagem do snapshot, PDF, envio ao Telegram e agendamento.
+
+## Banco
+
+Migration única: `supabase/migrations/20261113150000_boletim_base.sql`. Testes em `tests/db/test_boletim_base.py` (mesmo padrão de `tests/db/test_etapas.py`).
+
+### `etapa`: identificação, localização e contrato
+
+Colunas novas (todas opcionais no banco, porque a 2ª etapa já existe; as regras de criação ficam na RPC):
+
+| Coluna | Tipo | Regra |
+|---|---|---|
+| `sigla` | text, **unique** | `^[A-Z0-9]{1,10}$`. Forma o número `BA<sigla>/…` |
+| `endereco` | text | até 300 |
+| `latitude`, `longitude` | double precision | −34…6 e −74…−28 (Brasil); as duas juntas ou nenhuma |
+| `fuso` | text **not null** default `'America/Sao_Paulo'` | um destes: `America/Noronha`, `America/Belem`, `America/Fortaleza`, `America/Recife`, `America/Araguaina`, `America/Maceio`, `America/Bahia`, `America/Sao_Paulo`, `America/Campo_Grande`, `America/Cuiaba`, `America/Santarem`, `America/Porto_Velho`, `America/Boa_Vista`, `America/Manaus`, `America/Eirunepe`, `America/Rio_Branco` |
+| `inmet_estacao`, `inmet_estacao_reserva` | text | `^[A-Z][0-9]{3}$` (ex.: `A305`); diferentes entre si |
+| `boletim_horario` | time **not null** default `'23:30'` | hora local da emissão automática |
+| `objeto` | text | até 600 (texto de OBRA/SERVIÇO) |
+| `local` | text | até 300 (texto de LOCAL, pode ter quebra de linha) |
+| `contratante` | text | até 200 |
+| `contrato` | text | até 60 (ex.: `120/2025 - SOP`) |
+| `contratada` | text | até 200 |
+| `contratada_cnpj` | text | `^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$` |
+| `os_numero` | text | até 40 |
+| `os_data` | date | |
+| `vigencia_meses` | int | 1…240 |
+| `valor_original` | numeric(15,2) | ≥ 0 |
+| `area_construida_m2` | numeric(12,2) | > 0 |
+
+Migração dos dados: `2a-etapa` recebe `sigla = '2'` e `fuso = 'America/Fortaleza'`.
+
+### Tabelas novas
+
+```sql
+public.etapa_aditivo (
+  id uuid pk default gen_random_uuid(),
+  etapa_id uuid not null references etapa on delete cascade,
+  numero text not null,                 -- até 40, único por etapa
+  data date not null,
+  prazo_dias int not null default 0,    -- acréscimo (pode ser negativo: supressão)
+  valor numeric(15,2) not null default 0, -- acréscimo (pode ser negativo)
+  descricao text,                       -- até 300
+  criado_em timestamptz not null default now(),
+  criado_por uuid references usuario on delete set null
+)
+
+public.etapa_responsavel (
+  etapa_id uuid references etapa on delete cascade,
+  usuario_id uuid references usuario on delete cascade,
+  funcao text not null default 'Fiscal',  -- até 60
+  ordem int not null default 0,
+  primary key (etapa_id, usuario_id)
+)
+
+public.inmet_estacao (                   -- lista de estações automáticas; preenchida pela parte 2 (coletar-clima)
+  codigo text pk,                        -- ^[A-Z][0-9]{3}$
+  nome text not null, uf text not null,  -- uf: 2 letras
+  latitude double precision not null, longitude double precision not null,
+  altitude double precision,
+  operante boolean not null default true,
+  atualizado_em timestamptz not null default now()
+)
+
+public.observacao (
+  id uuid pk,                            -- gerado no cliente (idempotência, fila sem sinal)
+  obra_id uuid not null references obra on delete cascade,
+  autor_id uuid not null references usuario on delete cascade,
+  data date not null,                    -- dia local (fuso da etapa da obra) de escrito_em
+  texto text not null,                   -- 1…1000, sem espaços nas pontas
+  escrito_em timestamptz not null,       -- hora do aparelho
+  recebido_em timestamptz not null default now(),
+  editado_em timestamptz
+)
+index (obra_id, data)
+
+public.clima_dia (                       -- preenchida pela parte 2
+  etapa_id uuid references etapa on delete cascade,
+  data date,
+  estacao text,
+  horario jsonb not null,                -- lista de leituras horárias já convertidas
+  resumo jsonb not null,
+  obtido_em timestamptz not null default now(),
+  primary key (etapa_id, data, estacao)
+)
+
+public.boletim (                         -- preenchida pelas próximas partes
+  id uuid pk default gen_random_uuid(),
+  etapa_id uuid not null references etapa on delete restrict,
+  data date not null,
+  revisao int not null default 0,        -- 0 = original; 1 = -R1 …
+  numero text not null unique,
+  snapshot jsonb not null,
+  pdf_path text,                         -- caminho no bucket boletins: <etapa_id>/<numero sem barras>.pdf
+  emitido_em timestamptz not null default now(),
+  emitido_por uuid references usuario on delete set null,  -- null = automático
+  unique (etapa_id, data, revisao)
+)
+```
+
+`public.usuario.nome_exibicao text`: null ou 1…60 caracteres, igual a `upper()` dele mesmo, sem espaços nas pontas nem duplos. O `auth-telegram` continua atualizando só `nome` e `username` (conferir que o upsert não toca a coluna nova).
+
+`public.organizacao.cabecalho text[] not null default '{}'`: até 4 linhas de 1…100 caracteres (subordinação acima do nome; ex.: `{"COMANDO DA AERONÁUTICA","DIRETORIA DE INFRAESTRUTURA DA AERONÁUTICA","COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)"}`). A migration preenche esse exemplo.
+
+`etapa` excluída (`admin_excluir_etapa`) com boletins: a exclusão apaga os boletins da etapa antes (o `on delete restrict` protege contra apagar a etapa por outro caminho); os PDFs saem pela Edge Function de exclusão em uma parte futura (registrar como pendência no checklist, não implementar agora).
+
+### Funções auxiliares (`privado`)
+
+- `privado.codigo_om(p_nome text) → text`: maiúsculas, sem acentos (`translate` com os acentos do português; não usar a extensão `unaccent`), só `[A-Z0-9]`. `'CO-FZ'` → `'COFZ'`.
+- `privado.numero_boletim(p_etapa uuid, p_data date, p_revisao int) → text`: `'BA' || sigla || '/' || to_char(p_data, 'YYMMDD') || '/' || codigo_om(organizacao.nome) || (case when p_revisao > 0 then '-R' || p_revisao else '' end)`. Etapa sem sigla → exceção 22023 "A etapa não tem sigla".
+- `privado.data_local(p_obra uuid, p_instante timestamptz) → date`: dia no fuso da etapa da obra.
+- `privado.nome_pessoa(p_usuario uuid) → text`: `coalesce(nome_exibicao, nome)`.
+- `privado.boletim_emitido(p_etapa uuid, p_data date) → boolean`.
+
+### RLS e grants
+
+- `etapa_aditivo`, `etapa_responsavel`, `clima_dia`, `boletim`: `select` para admin ou participante de obra ativa da etapa (`privado.participa_da_etapa`); escrita só por RPC/service_role.
+- `inmet_estacao`: `select` para admin; escrita só service_role.
+- `observacao`: `select` para participante da obra (`privado.eh_participante(obra_id)`) ou admin; escrita só pelas RPCs abaixo.
+- Bucket **privado** `boletins` (10 MB, `application/pdf`): leitura para participante da etapa do primeiro segmento do caminho (`<etapa_id>/…`) ou admin; escrita só service_role.
+
+### RPCs do Mini App (authenticated)
+
+| RPC | Entrada | Regras e retorno |
+|---|---|---|
+| `salvar_observacao(p jsonb)` | `{id, obra_id, texto, escrito_em}` | Participante de obra ativa. Novo id → insere (autor = `auth.uid()`, `data = data_local(obra, escrito_em)`). Id existente → só o autor edita o texto (`editado_em = now()`); `obra_id` e `escrito_em` não mudam. Repetir com o mesmo texto é idempotente. `escrito_em` no futuro (> 5 min) → 22023. Dia com boletim emitido → 22023 "O boletim de dd/mm/aaaa já foi emitido; a correção é feita por retificação". Retorno: `{id, obra_id, data, texto, escrito_em, editado_em, autor: {id, nome}}` (nome = `nome_pessoa`) |
+| `excluir_observacao(p_id uuid)` | | Só o autor, só antes da emissão (mesmas mensagens). Id inexistente → idempotente (sem erro) |
+| `observacoes_do_dia(p_obra uuid, p_data date default null)` | data null = hoje no fuso da etapa | Participante. Lista por `escrito_em`: `{id, data, texto, escrito_em, editado_em, autor: {id, nome}, minha: bool, travada: bool}` |
+| `organizacao()` | | passa a devolver também `cabecalho` (array de texto) |
+
+### RPCs do site (admin; `privado.exigir_admin()`)
+
+| RPC | Entrada | Retorno |
+|---|---|---|
+| `admin_listar_pessoas()` | | jsonb: lista de `{id, nome, nome_exibicao, username, telegram_id, eh_admin, participacoes: [{obra_slug, obra_nome, etapa_nome, papel}]}` ordenada por `coalesce(nome_exibicao, nome)` |
+| `admin_definir_nome_exibicao(p_usuario uuid, p_nome text)` | null ou só espaços tira o nome | Normaliza: `btrim`, espaços internos colapsados, `upper`. Mais de 60 → 22023. Usuário inexistente → P0002. Retorno `{id, nome, nome_exibicao}` |
+| `admin_salvar_etapa(p jsonb)` | Além de `{id?, slug?, nome, ordem}`: `sigla, endereco, latitude, longitude, fuso, inmet_estacao, inmet_estacao_reserva, boletim_horario ("HH:MM"), objeto, local, contratante, contrato, contratada, contratada_cnpj, os_numero, os_data ("AAAA-MM-DD"), vigencia_meses, valor_original, area_construida_m2` | Na **criação**, `sigla`, `latitude`, `longitude` e `fuso` são obrigatórios (22023 com o nome do campo). Na **edição**, chave ausente = mantém; chave com `null` = apaga (exceto `fuso` e `boletim_horario`, que não aceitam null, e `sigla`, que não pode ser apagada depois de existir). Sigla repetida → 23505. Validações das colunas → 22023 com mensagem em português. Texto: `btrim`, vazio vira null. Retorno: o mesmo de `admin_obter_etapa` |
+| `admin_obter_etapa(p_slug text)` | | `{id, slug, nome, ordem, arquivada_em, telegram_vinculado, telegram_chat_titulo, sigla, endereco, latitude, longitude, fuso, inmet_estacao, inmet_estacao_reserva, boletim_horario ("HH:MM"), objeto, local, contratante, contrato, contratada, contratada_cnpj, os_numero, os_data, vigencia_meses, valor_original, area_construida_m2, aditivos: [...], responsaveis: [{usuario_id, nome, nome_exibicao, funcao, ordem}], prazo: {termino_original, prazo_aditivos_dias, termino_atual, valor_atual} \| null, faltando: [nomes dos campos vazios entre sigla, localização (latitude/longitude), inmet_estacao, objeto, local, contratante, contrato, contratada, contratada_cnpj, os_numero, os_data, vigencia_meses, valor_original, area_construida_m2, responsaveis]}`. `prazo` só quando há `os_data` e `vigencia_meses`: término original = `os_data + vigencia_meses meses`, atual = original + soma de `prazo_dias`; valor atual = original + soma de `valor` (null sem valor original). Etapa inexistente → P0002 |
+| `admin_salvar_aditivo(p jsonb)` | `{id?, etapa_id, numero, data, prazo_dias, valor, descricao}` | cria/edita; número repetido na etapa → 23505. Retorno: a linha |
+| `admin_remover_aditivo(p_id uuid)` | | void; inexistente → P0002 |
+| `admin_definir_responsaveis(p_etapa uuid, p jsonb)` | lista `[{usuario_id, funcao}]` na ordem desejada (vazia = nenhum) | substitui todos; usuário repetido ou inexistente → 22023/P0002; `funcao` vazia vira `'Fiscal'`. Retorno: a lista como em `admin_obter_etapa` |
+| `admin_sugerir_estacoes(p_lat double precision, p_lon double precision, p_limite int default 5)` | | as estações operantes mais próximas: `[{codigo, nome, uf, latitude, longitude, distancia_km}]` (haversine, 1 casa decimal). Tabela vazia → `[]` |
+| `admin_salvar_organizacao(p jsonb)` | aceita `cabecalho` (array de texto; `[]` limpa) | retorno ganha `cabecalho` |
+| `admin_listar_etapas()` | | cada item ganha `sigla` e `faltando` (quantidade de campos de `faltando`) |
+
+Erros: mesmos códigos já usados no projeto (42501 não admin, 22023 dado inválido, 23505 repetido, P0002 não encontrado), mensagens em português que o site mostra como estão.
+
+## Site de administração
+
+Rotas novas ou alteradas (`basename="/admin"`):
+
+| Rota | Tela |
+|---|---|
+| `/pessoas` (novo item "Pessoas" na navegação, entre Etapas e Organização) | Tabela: nome de exibição (editável na linha: campo + Salvar; mostra em maiúsculas enquanto digita), nome do Telegram, @username, obras e papéis, selo "admin". Busca por qualquer nome. Sem nome de exibição: texto "usa o nome do Telegram" |
+| `/nova-etapa` | Seções **Identificação** (nome, slug, ordem, sigla com prévia "Número do boletim: BA2/261111/COFZ" usando a data de hoje e o nome da OM), **Localização** (endereço; latitude e longitude num campo que aceita colar "−3.7610, −38.5297" ou dois campos; mapa de prévia por `iframe` do OpenStreetMap `https://www.openstreetmap.org/export/embed.html?bbox=…&marker=lat,lon`, com link "abrir no mapa"; fuso numa lista com rótulos legíveis, ex.: "Fortaleza (UTC−3)"; estação INMET e reserva: lista de sugestões de `admin_sugerir_estacoes` quando houver, senão campo de código com a ajuda "a lista de estações aparece depois da primeira coleta"; horário de emissão), **Dados do contrato** (todos os campos; valor em R$ com máscara brasileira; CNPJ com máscara). Obrigatórios marcados; botão Criar |
+| `/etapas/:slug` | O mesmo formulário para editar, mais: **Responsáveis** (escolher pessoas da lista de `admin_listar_pessoas`, função, reordenar, remover; mostra o nome de exibição), **Aditivos** (tabela + adicionar/editar/remover; mostra término e valor atualizados de `prazo`), aviso "Faltam para o boletim: …" a partir de `faltando`, e as seções que já existem (grupo do Telegram, obras, arquivar/excluir) |
+| `/` (Etapas) | cada etapa mostra a sigla e, se `faltando > 0`, o selo "cadastro incompleto" |
+| `/organizacao` | ganha "Linhas do cabeçalho do boletim" (até 4 linhas, adicionar/remover/reordenar), com prévia do cabeçalho (logo + linhas + nome) |
+
+`RepositorioAdmin` (Supabase e fixture) ganha: `listarPessoas`, `definirNomeExibicao`, `obterEtapa`, `salvarEtapa` (campos novos), `salvarAditivo`, `removerAditivo`, `definirResponsaveis`, `sugerirEstacoes`; `obterOrganizacao`/`salvarOrganizacao` com `cabecalho`. Fixture: a 2ª etapa com os dados do exemplo (sigla 2, Fortaleza, contrato 120/2025 - SOP etc.), três pessoas (uma com nome de exibição `CP PATRICIO`), um aditivo, a estação `A305` e mais duas estações para as sugestões.
+
+Formatos de exibição: datas `dd/mm/aaaa`; valores `R$ 79.499.000,00`; área `86.102,17 m²`; coordenadas com 4 casas e vírgula decimal.
+
+## Verificação
+
+- `pytest -q tests/db` com os testes novos: regras das colunas; criação exige sigla, coordenadas e fuso; edição mantém/apaga; sigla repetida; `admin_obter_etapa` com `prazo` e `faltando`; aditivos e responsáveis; `numero_boletim` (`BA2/261111/COFZ`, `-R1`, sem sigla); `codigo_om`; nome de exibição normalizado e só por admin; observações (idempotência, só o autor edita, outra obra não lê, data no fuso da etapa, travada depois de existir boletim do dia); `organizacao()` com `cabecalho`; RLS das tabelas novas; `admin_sugerir_estacoes` ordenado por distância; exclusão de etapa com boletim.
+- `npm run typecheck`, `npm run lint`, `npm test` (testes das telas novas com a fixture) e `npm run build` em `app/`.

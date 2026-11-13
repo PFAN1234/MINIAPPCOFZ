@@ -268,7 +268,7 @@ Decisão de 2026-11-13: qualquer participante da obra (equipe ou gestor) encerra
 
 ## Boletim de Acompanhamento Diário
 
-Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa por dia, emissão automática com retificação (`-R1`), clima só do INMET (céu estimado pela radiação), número `BA<sigla>/<YYMMDD>/<OM>` (ex.: `BA2/261111/COFZ`), nome de exibição definido por admins, observações por obra escritas pelos participantes. Prévia: `docs/mockups/boletim-diario-v2.pdf`.
+Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa por dia, emissão automática com retificação (`-R1`), clima só do INMET (céu estimado pela radiação), número `BA<sigla>/<YYMMDD>/<OM>` (ex.: `BA2/261111/COFZ`), nome de exibição definido por admins, observações por obra escritas pelos participantes. Prévia: `docs/mockups/boletim-diario-v2.pdf`. Contrato da parte 1 (banco e site de administração): `docs/contrato-boletim.md`.
 
 - [ ] Migration: sigla, localização, fuso, estação INMET e dados administrativos da etapa; `etapa_aditivo`, `clima_dia`, `boletim`, bucket `boletins`, RLS e numeração.
 - [ ] Admin: cadastro da etapa com sigla, localização (mapa + estação INMET sugerida) e dados do contrato, editáveis depois; aditivos na página da etapa.
@@ -278,4 +278,5 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [ ] Snapshot do dia: indicadores, serviços e pendências, com testes de banco (inclui fuso e lançamento tardio).
 - [ ] Template HTML, PDF, envio ao grupo da etapa no Telegram.
 - [ ] Agendamento por etapa, retificação e tela "Boletins" no Mini App.
+- [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
 - [ ] Externo: token do INMET; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.
