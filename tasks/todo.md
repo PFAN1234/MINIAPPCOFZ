@@ -263,4 +263,5 @@ Decisão de 2026-11-13: qualquer participante da obra (equipe ou gestor) encerra
 
 - [x] Banco: migration `20261113120000_encerrar_pendencia_equipe.sql` (`encerrar_pendencia` confere `privado.eh_participante` no lugar de `eh_gestor`; `encerramento.gestor_id` mantém o nome e guarda quem encerrou) e testes de banco.
 - [x] Mini App: formulário de encerramento para todos os participantes, sem a nota "Só gestores…"; fixture igual.
-- [ ] Aplicar no `miniappcofz-dev` e merge na main.
+- [x] Aplicado no `miniappcofz-dev` (2026-11-13).
+- [ ] Merge na main.
