@@ -16,6 +16,12 @@ export function useOrganizacao() {
   return useQuery({ queryKey: ['organizacao'], queryFn: () => repo.organizacao(), staleTime: 5 * 60_000 })
 }
 
+/** Totais por obra para as barrinhas do Início e o botão Gestão. */
+export function useResumoObras() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['resumo-obras'], queryFn: () => repo.resumoObras() })
+}
+
 export function useObra(slug: string) {
   const repo = useRepositorio()
   return useQuery({ queryKey: ['obra', slug], queryFn: () => repo.obterObra(slug) })
@@ -189,6 +195,7 @@ export function useResolverPublicacao() {
       Promise.all([
         qc.invalidateQueries({ queryKey: ['publicacoes-problema'] }),
         qc.invalidateQueries({ queryKey: ['registros'] }),
+        qc.invalidateQueries({ queryKey: ['resumo-obras'] }),
         qc.invalidateQueries({ queryKey: ['pendencia'] }),
       ]),
   })

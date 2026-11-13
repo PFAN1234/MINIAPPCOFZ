@@ -61,8 +61,7 @@ describe('navegação com a fixture', () => {
     const usuario = userEvent.setup()
     renderizar()
     const navegacao = await screen.findByRole('navigation', { name: 'Navegação principal' })
-    // Com as pendências do Início carregadas, o rótulo leva a contagem.
-    const item = await within(navegacao).findByRole('link', { name: 'Pendências · 3 abertas' })
+    const item = await within(navegacao).findByRole('link', { name: 'Pendências' })
     await usuario.click(item)
     expect(await screen.findByRole('heading', { level: 1, name: 'Pendências' })).toBeInTheDocument()
     expect(item).toHaveAttribute('aria-current', 'page')
@@ -91,9 +90,9 @@ describe('navegação com a fixture', () => {
 })
 
 describe('telas', () => {
-  it('Obras mostra a contagem de pendências abertas e a equipe de serviço', async () => {
+  it('Obras mostra as barrinhas de totais e a equipe de serviço', async () => {
     renderizar()
-    expect(await screen.findByRole('link', { name: /^HTO.*3 pendências abertas/ })).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: '3 pendências abertas' })).toBeInTheDocument()
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Equipe de serviço' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Últimos registros' })).not.toBeInTheDocument()
@@ -227,9 +226,9 @@ describe('acesso às obras', () => {
     ).toBeInTheDocument()
   })
 
-  it('Obra (gestor) mostra o atalho da Gestão com o selo e a rota de Acessos aprova', async () => {
+  it('Início (gestor) mostra o atalho da Gestão com o selo e a rota de Acessos aprova', async () => {
     const usuario = userEvent.setup()
-    renderizar('/obras/hto')
+    renderizar('/')
     // 1 pedido de acesso + 2 publicações com problema.
     expect(await screen.findByRole('link', { name: 'Gestão 3' })).toHaveAttribute('href', '/obras/hto/gestao')
     cleanup()

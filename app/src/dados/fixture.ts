@@ -44,6 +44,7 @@ import type {
   RecortePt,
   RegistroLocalizado,
   RegistroResumo,
+  ResumoObra,
   SolicitacaoAcesso,
 } from './tipos.ts'
 
@@ -762,6 +763,21 @@ export function criarRepositorioFixture(
         url: `${base}/admin/#entrar=fixture`,
         expira_em: new Date(Date.now() + 120_000).toISOString(),
       }
+    },
+
+    async resumoObras(): Promise<ResumoObra[]> {
+      const registros = todos()
+      return OBRAS.map((o) => {
+        const dela = registros.filter((x) => x.obra.id === o.id)
+        return {
+          obra_id: o.id,
+          // No fixture só a HTO tem participação; nas outras o usuário só vê a obra.
+          papel: o.id === ID_HTO ? papelUsuario() : null,
+          servicos: dela.filter((x) => x.tipo === 'servico').length,
+          abertas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'aberta').length,
+          resolvidas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'resolvida').length,
+        }
+      })
     },
 
     async listarObras() {

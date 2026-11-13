@@ -5,14 +5,15 @@ import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../components/Est
 import { AbasEtapa } from '../components/AbasEtapa.tsx'
 import { EquipeServico } from '../components/EquipeServico.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
-import type { ObraDisponivel } from '../dados/tipos.ts'
+import type { ObraDaLista, ObraDisponivel, ResumoObra } from '../dados/tipos.ts'
 import {
-  FILTRO_PENDENCIAS_ABERTAS,
   useCriarLinkAdmin,
   useEtapasInicio,
   useObras,
   useObrasDisponiveis,
-  useRegistros,
+  usePublicacoesProblema,
+  useResumoObras,
+  useSolicitacoes,
   useSolicitarAcesso,
   useSouAdmin,
 } from '../dados/hooks.ts'
@@ -21,13 +22,13 @@ import { useUsuarioId } from '../offline/contexto.tsx'
 import { etapasDasAbas, useEtapaEscolhida } from '../util/etapas.ts'
 import { useOnline } from '../util/online.ts'
 import { normalizarTexto } from '../util/busca.ts'
-import { textoPendencias } from '../util/formato.ts'
+import { textoPendencias, textoPendenciasResolvidas, textoServicos } from '../util/formato.ts'
 
 const MINIMO_PARA_BUSCA = 5
 
 export default function Obras() {
   const obras = useObras()
-  const abertas = useRegistros(FILTRO_PENDENCIAS_ABERTAS)
+  const resumo = useResumoObras()
   const [busca, setBusca] = useState('')
   const online = useOnline()
   const disponiveis = useObrasDisponiveis()
@@ -50,25 +51,28 @@ export default function Obras() {
   const outras = etapa ? todasOutras.filter((o) => o.etapa_id === etapa.id) : todasOutras
 
   const porObra = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const r of abertas.data ?? []) m.set(r.obra.id, (m.get(r.obra.id) ?? 0) + 1)
-    return m
-  }, [abertas.data])
+    return new Map((resumo.data ?? []).map((r) => [r.obra_id, r]))
+  }, [resumo.data])
 
   return (
     <>
-      <TopoTela lista titulo="Obras" idTitulo="titulo-obras">
-        {etapa && (
-          <AbasEtapa
-            etapas={etapas}
-            valor={etapa.id}
-            onMudar={(id) => {
-              escolherEtapa(id)
-              setBusca('')
-            }}
-          />
-        )}
-      </TopoTela>
+      <TopoTela
+        lista
+        titulo="Obras"
+        idTitulo="titulo-obras"
+        aoLado={
+          etapa && (
+            <AbasEtapa
+              etapas={etapas}
+              valor={etapa.id}
+              onMudar={(id) => {
+                escolherEtapa(id)
+                setBusca('')
+              }}
+            />
+          )
+        }
+      />
       <section aria-labelledby="titulo-obras">
         <EstadoConsulta consulta={obras}>
           {(todas) => {
@@ -104,17 +108,9 @@ export default function Obras() {
                   <EstadoVazio titulo="Nenhuma obra encontrada" texto="Tente outro nome." />
                 ) : (
                   <ul className="lista">
-                    {visiveis.map((o) => {
-                      const n = porObra.get(o.id) ?? 0
-                      return (
-                        <li key={o.id}>
-                          <Link className="lista-item lista-item-linha" to={`/obras/${o.slug}`}>
-                            <span className="lista-titulo">{o.nome}</span>
-                            {n > 0 && <span className="selo selo-aberta">{textoPendencias(n)}</span>}
-                          </Link>
-                        </li>
-                      )
-                    })}
+                    {visiveis.map((o) => (
+                      <LinhaObra key={o.id} obra={o} resumo={porObra.get(o.id)} />
+                    ))}
                   </ul>
                 )}
               </>
@@ -126,6 +122,47 @@ export default function Obras() {
       {etapa && <EquipeServico etapaId={etapa.id} />}
       <Administracao />
     </>
+  )
+}
+
+/** Uma obra do Início: o nome (link), as 3 barrinhas de totais e, para o gestor, o botão Gestão. */
+function LinhaObra({ obra, resumo }: { obra: ObraDaLista; resumo: ResumoObra | undefined }) {
+  const gestor = resumo?.papel === 'gestor'
+  return (
+    <li className="lista-item obra-linha">
+      <Link className="obra-linha-nome lista-titulo" to={`/obras/${obra.slug}`}>
+        {obra.nome}
+      </Link>
+      {resumo && (
+        <span className="barrinhas">
+          <Barrinha tipo="servicos" n={resumo.servicos} texto={textoServicos(resumo.servicos)} />
+          <Barrinha tipo="abertas" n={resumo.abertas} texto={textoPendencias(resumo.abertas)} />
+          <Barrinha tipo="resolvidas" n={resumo.resolvidas} texto={textoPendenciasResolvidas(resumo.resolvidas)} />
+        </span>
+      )}
+      {gestor && <BotaoGestao obra={obra} />}
+    </li>
+  )
+}
+
+function Barrinha({ tipo, n, texto }: { tipo: 'servicos' | 'abertas' | 'resolvidas'; n: number; texto: string }) {
+  return (
+    <span className={`barrinha barrinha-${tipo}`} role="img" aria-label={texto} title={texto}>
+      {n}
+    </span>
+  )
+}
+
+/** Atalho da Gestão, com selo de alerta (pedidos de acesso e publicações com problema). */
+function BotaoGestao({ obra }: { obra: ObraDaLista }) {
+  const pedidos = useSolicitacoes(obra.id, true)
+  const problemas = usePublicacoesProblema(obra.id, true)
+  const n = (pedidos.data?.length ?? 0) + (problemas.data?.length ?? 0)
+  return (
+    <Link className="atalho" to={`/obras/${obra.slug}/gestao`}>
+      Gestão{' '}
+      {n > 0 && <span className="atalho-selo atalho-selo-alerta">{n}</span>}
+    </Link>
   )
 }
 

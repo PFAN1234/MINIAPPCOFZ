@@ -72,6 +72,7 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
         aoEnviar: async (r) => {
           await Promise.all([
             qc.invalidateQueries({ queryKey: ['registros'] }),
+            qc.invalidateQueries({ queryKey: ['resumo-obras'] }),
             qc.invalidateQueries({ queryKey: ['obras'] }),
             qc.invalidateQueries({ queryKey: ['obra', r.obra.slug] }),
             qc.invalidateQueries({ queryKey: ['ambiente', r.obra.slug, r.ambiente.codigo] }),
@@ -80,6 +81,7 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
         aoEncerrar: async (e) => {
           await Promise.all([
             qc.invalidateQueries({ queryKey: ['registros'] }),
+            qc.invalidateQueries({ queryKey: ['resumo-obras'] }),
             qc.invalidateQueries({ queryKey: ['pendencia'] }),
             qc.invalidateQueries({ queryKey: ['obras'] }),
             qc.invalidateQueries({ queryKey: ['obra', e.obra.slug] }),

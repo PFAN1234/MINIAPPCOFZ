@@ -12,6 +12,8 @@ interface Props {
   baixar: (modelo: ModeloFrag) => Promise<ArrayBuffer>
   /** Siglas visíveis. */
   ativos: ReadonlySet<string>
+  /** Prévia da tela da obra: sem botão Enquadrar e sem resposta a toque ou arrasto. */
+  previa?: boolean
 }
 
 interface Motor {
@@ -33,7 +35,7 @@ function mostrar(objeto: THREE.Object3D, visivel: boolean) {
 }
 
 /** Visualizador 3D do modelo federado (That Open Engine). Carregado sob demanda pela tela Modelo. */
-export default function VisualizadorModelo({ modelos, baixar, ativos }: Props) {
+export default function VisualizadorModelo({ modelos, baixar, ativos, previa = false }: Props) {
   const contenedor = useRef<HTMLDivElement>(null)
   const motor = useRef<Motor | null>(null)
   const [estado, setEstado] = useState<Estado>(() =>
@@ -69,6 +71,7 @@ export default function VisualizadorModelo({ modelos, baixar, ativos }: Props) {
     world.renderer.showLogo = false
     world.camera = new OBC.SimpleCamera(components)
     components.init()
+    if (previa) world.camera.controls.enabled = false
 
     const fragments = components.get(OBC.FragmentsManager)
     fragments.init(workerUrl)
@@ -105,7 +108,7 @@ export default function VisualizadorModelo({ modelos, baixar, ativos }: Props) {
       components.dispose()
     }
     // enquadrar só lê refs; o motor é recriado apenas se a obra ou a lista mudarem.
-  }, [modelos, baixar])
+  }, [modelos, baixar, previa])
 
   useEffect(() => {
     ativosRef.current = ativos
@@ -116,7 +119,7 @@ export default function VisualizadorModelo({ modelos, baixar, ativos }: Props) {
   }, [ativos])
 
   return (
-    <div className="visualizador-modelo">
+    <div className={previa ? 'visualizador-modelo visualizador-previa' : 'visualizador-modelo'}>
       <div ref={contenedor} className="visualizador-tela" role="img" aria-label="Modelo 3D federado" />
       {estado.tipo === 'carregando' && (
         <p className="visualizador-aviso" role="status">
@@ -128,7 +131,7 @@ export default function VisualizadorModelo({ modelos, baixar, ativos }: Props) {
           {estado.texto}
         </p>
       )}
-      {estado.tipo === 'pronto' && (
+      {estado.tipo === 'pronto' && !previa && (
         <button type="button" className="botao visualizador-enquadrar" onClick={() => enquadrar(true)}>
           Enquadrar
         </button>

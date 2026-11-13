@@ -23,7 +23,7 @@ vi.mock('../modelo/VisualizadorModelo.tsx', () => ({
 }))
 
 describe('Obra: cartão do modelo e atalhos', () => {
-  it('mostra o link "Obras" no topo, o cartão do modelo federado e os atalhos (gestor)', async () => {
+  it('mostra o link "Obras" no topo, o cartão do modelo federado e Pendências (sem Gestão)', async () => {
     renderizarApp('/obras/hto')
     expect(await screen.findByRole('heading', { level: 1, name: 'HTO' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Obras' })).toHaveAttribute('href', '/')
@@ -35,18 +35,8 @@ describe('Obra: cartão do modelo e atalhos', () => {
       'href',
       '/obras/hto/pendencias',
     )
-    expect(await screen.findByRole('link', { name: 'Gestão 3' })).toHaveAttribute('href', '/obras/hto/gestao')
-    expect(screen.getByRole('heading', { level: 3, name: 'Ambientes' })).toBeInTheDocument()
-  })
-
-  it('equipe não vê o atalho da Gestão', async () => {
-    const base = criarRepositorioFixture()
-    renderizarApp('/obras/hto', {
-      ...base,
-      obterObra: async (slug) => ({ ...(await base.obterObra(slug)), papel: 'equipe' }),
-    })
-    await screen.findByRole('link', { name: 'Pendências 3' })
     expect(screen.queryByRole('link', { name: /Gestão/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: 'Ambientes' })).toBeInTheDocument()
   })
 
   it('o cartão leva à tela do modelo; sem .frag publicado, avisa e deixa os chips desabilitados', async () => {

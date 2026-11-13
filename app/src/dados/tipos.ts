@@ -81,6 +81,16 @@ export interface Ambiente {
 
 export type PapelObra = 'equipe' | 'gestor'
 
+/** Totais de uma obra para o Início (`resumo_obras`): serviços de sempre, pendências abertas e resolvidas. */
+export interface ResumoObra {
+  obra_id: string
+  /** Papel do usuário na obra; `null` quando vê a obra sem participar (admin). */
+  papel: PapelObra | null
+  servicos: number
+  abertas: number
+  resolvidas: number
+}
+
 export interface ObraDetalhe {
   obra: ObraResumo
   /** Papel do usuário na obra (da própria participação). */

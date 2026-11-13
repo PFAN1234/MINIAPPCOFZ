@@ -31,6 +31,7 @@ import type {
   ObraResumo,
   Organizacao,
   PapelObra,
+  ResumoObra,
   Participante,
   Pavimento,
   PendenciaDetalhe,
@@ -334,6 +335,24 @@ export function criarRepositorioSupabase(
     async idUsuario() {
       const { data } = await cliente.auth.getSession()
       return data.session?.user.id ?? null
+    },
+
+    async resumoObras() {
+      try {
+        const { data, error } = await cliente.rpc('resumo_obras')
+        if (error) throw error
+        return ((data ?? []) as Linha[]).map(
+          (l): ResumoObra => ({
+            obra_id: String(l.obra_id),
+            papel: l.papel === 'gestor' || l.papel === 'equipe' ? l.papel : null,
+            servicos: Number(l.servicos ?? 0),
+            abertas: Number(l.abertas ?? 0),
+            resolvidas: Number(l.resolvidas ?? 0),
+          }),
+        )
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
     },
 
     async etapasInicio() {
