@@ -51,7 +51,7 @@ table.cab td { border: 1.4px solid #222; padding: 4px 8px; vertical-align: middl
 .logo { width: 19%; text-align: center; }
 .logo img { width: 112px; max-height: 140px; object-fit: contain; display: block; margin: 4px auto; }
 .om { text-align: center; font-weight: bold; line-height: 1.15; }
-.om .l1 { font-size: 14.5pt; } .om .l2 { font-size: 10.8pt; }
+.om .l1 { font-size: 14.5pt; } .om .l2 { font-size: 10.8pt; } .om .curta { white-space: nowrap; }
 .doc { width: 26%; text-align: center; padding: 0 !important; }
 .doc div { border-bottom: 1.4px solid #222; padding: 6px 4px; }
 .doc div:last-child { border-bottom: 0; }
@@ -104,11 +104,11 @@ table.obras tr { break-inside: avoid; }
 .foto figcaption:empty { display: none; }
 .pendencias { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .pend { border: 1px solid #bbb; padding: 6px; display: grid; grid-template-columns: 38% 1fr; gap: 8px; break-inside: avoid; }
-.pend.larga { grid-column: 1 / -1; }
+.pendencias .larga { grid-column: 1 / -1; margin-bottom: 0; }
+.larga .tag { display: inline-block; margin-top: 4px; }
 .pend .reg-cab { flex-direction: column; gap: 1px; font-size: 9.2pt; }
 .pend .reg-cab span { white-space: normal; }
 .pend p { font-size: 9.4pt; }
-.pend .mais-fotos { grid-column: 1 / -1; }
 .tag { font-family: "Boletim Sans", "Liberation Sans", sans-serif; font-size: 7.5pt; font-weight: bold; padding: 1px 5px; border-radius: 2px; letter-spacing: .05em; }
 .tag.aberta { background: #f6dede; color: #8b1e1e; }
 .nota { font-size: 8.8pt; color: #555; font-style: italic; margin: 2px 0 0; }
@@ -120,6 +120,7 @@ table.tardios { width: 100%; border-collapse: collapse; font-size: 9.4pt; }
 table.tardios th, table.tardios td { border: 1px solid #999; padding: 3px 5px; text-align: left; vertical-align: top; }
 table.tardios th { background: #d9d9d9; font-size: 8.5pt; }
 table.tardios tr { break-inside: avoid; }
+table.tardios td:nth-child(-n+2), table.tardios td:nth-child(4) { white-space: nowrap; }
 .assinaturas { display: grid; grid-template-columns: 1fr 1fr; gap: 34px 40px; margin: 34px 30px 0; }
 .assinaturas.uma { grid-template-columns: 1fr; width: 50%; margin: 34px auto 0; }
 .assin { text-align: center; font-size: 10pt; break-inside: avoid; }
@@ -141,7 +142,10 @@ const ou = (v: string | null | undefined) => (v ? escapar(v) : '—')
 
 function cabecalho(s: Snapshot, o: OpcoesTemplate): string {
   const linhas = s.organizacao.cabecalho.length > 0 ? s.organizacao.cabecalho : [s.organizacao.nome]
-  const om = linhas.map((l, i) => `<div class="${i === 0 ? 'l1' : 'l2'}">${escapar(l)}</div>`).join('')
+  // Linhas curtas não quebram (como na prévia v2); as longas quebram para não sair da célula.
+  const om = linhas
+    .map((l, i) => `<div class="${i === 0 ? 'l1' : 'l2'}${l.length <= 48 ? ' curta' : ''}">${escapar(l)}</div>`)
+    .join('')
   const logo = o.logo ? `<img src="${o.logo}" alt="Logo da OM">` : ''
   const numero = o.numero
     ? `<div class="val">${escapar(o.numero)}</div>`
@@ -177,6 +181,8 @@ function secaoDados(s: Snapshot): string {
     ? `${escapar(e.contratada)}${e.contratada_cnpj ? ` · CNPJ ${escapar(e.contratada_cnpj)}` : ''}`
     : '—'
   const prazo = e.prazo
+  const termino = prazo ? cel('TÉRMINO ATUAL', dataBr(prazo.termino_atual)) : null
+  const valorAtual = prazo?.valor_atual != null ? cel('VALOR ATUALIZADO', moeda(prazo.valor_atual)) : null
   const dados = [
     linhaDados([cel('CONTRATANTE', ou(e.contratante))]),
     linhaDados([
@@ -189,11 +195,10 @@ function secaoDados(s: Snapshot): string {
       cel('VIGÊNCIA ORIGINAL', e.vigencia_meses != null ? `${e.vigencia_meses} ${e.vigencia_meses === 1 ? 'mês' : 'meses'}` : '—'),
       cel('VALOR ORIGINAL', e.valor_original != null ? moeda(e.valor_original) : '—'),
     ]),
-    linhaDados([
-      cel('ADITIVOS', aditivos),
-      prazo ? cel('TÉRMINO ATUAL', dataBr(prazo.termino_atual)) : null,
-      prazo?.valor_atual != null ? cel('VALOR ATUALIZADO', moeda(prazo.valor_atual)) : null,
-    ]),
+    // Sem aditivos, uma linha só (como na prévia v2); com aditivos, a lista ocupa a linha dela.
+    ...(e.aditivos.length === 0
+      ? [linhaDados([cel('ADITIVOS', aditivos), termino, valorAtual])]
+      : [linhaDados([cel('ADITIVOS', aditivos)]), linhaDados([termino, valorAtual])]),
   ].join('\n')
   let barra = ''
   if (prazo && prazo.dias_totais > 0) {
@@ -325,13 +330,16 @@ function secaoAbertas(s: Snapshot, o: OpcoesTemplate): string {
   const cards = itens
     .map(({ obra, r }) => {
       const hora = horaBr(r.hora, s.fuso)
-      const [primeira, ...demais] = r.fotos
-      const capa = primeira ? foto(o, primeira, '') : '<figure class="foto"><div class="img"><span class="falta">sem foto</span></div></figure>'
-      const mais =
-        demais.length > 0 ? `<div class="mais-fotos">${fotosDe(o, demais, (i) => `Foto ${i + 2} · ${hora}`)}</div>` : ''
-      return `<div class="pend${demais.length > 0 ? ' larga' : ''}"><div class="pend-foto">${capa}</div><div>
-<div class="reg-cab"><b>${escapar(obra.nome.toUpperCase())} › ${local(r)}</b><span>${escapar(hora)} · ${escapar(r.autor)}</span></div>
-${r.legenda ? `<p>${comQuebras(r.legenda)}</p>` : ''}<span class="tag aberta">ABERTA</span></div>${mais}</div>`
+      const cab = `<div class="reg-cab"><b>${escapar(obra.nome.toUpperCase())} › ${local(r)}</b><span>${escapar(hora)} · ${escapar(r.autor)}</span></div>`
+      const legenda = r.legenda ? `<p>${comQuebras(r.legenda)}</p>` : ''
+      if (r.fotos.length > 1) {
+        // Várias fotos: a linha inteira, com as fotos 4 por linha.
+        return `<div class="registro larga">${cab}${legenda}${fotosDe(o, r.fotos, (i) => `Foto ${i + 1} · ${hora}`)}<span class="tag aberta">ABERTA</span></div>`
+      }
+      const capa = r.fotos[0]
+        ? foto(o, r.fotos[0], '')
+        : '<figure class="foto"><div class="img"><span class="falta">sem foto</span></div></figure>'
+      return `<div class="pend"><div class="pend-foto">${capa}</div><div>${cab}${legenda}<span class="tag aberta">ABERTA</span></div></div>`
     })
     .join('')
   return `${titulo}\n<div class="sec pendencias">${cards}</div>`

@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "modelos": "node --max-old-space-size=8192 scripts/ifc_para_frag.mjs",
     "publicar:modelos": "node scripts/publicar_modelos.mjs",
-    "testar:modelos": "node scripts/testar_modelos_supabase.mjs"
+    "testar:modelos": "node scripts/testar_modelos_supabase.mjs",
+    "boletim:exemplo": "node scripts/gerar_boletim_exemplo.mjs"
   },
   "dependencies": {
     "@fontsource/arimo": "5.3.0",

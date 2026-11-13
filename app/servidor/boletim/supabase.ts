@@ -39,12 +39,11 @@ export interface AcessoAdmin {
 
 /** Erro de RPC com o código do Postgres (22023, P0002, 42501...). */
 export class ErroRpc extends Error {
-  constructor(
-    mensagem: string,
-    readonly codigo: string | null,
-  ) {
+  readonly codigo: string | null
+  constructor(mensagem: string, codigo: string | null) {
     super(mensagem)
     this.name = 'ErroRpc'
+    this.codigo = codigo
   }
 }
 

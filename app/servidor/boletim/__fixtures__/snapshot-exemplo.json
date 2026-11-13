@@ -1,0 +1,416 @@
+{
+  "versao": 1,
+  "data": "2026-11-13",
+  "fuso": "America/Fortaleza",
+  "gerado_em": "2026-11-14T02:30:04.512+00:00",
+  "organizacao": {
+    "nome": "CO-FZ",
+    "cabecalho": [
+      "COMANDO DA AERONÁUTICA",
+      "DIRETORIA DE INFRAESTRUTURA DA AERONÁUTICA",
+      "COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)"
+    ],
+    "logo_path": "logo-0123456789abcdef.png"
+  },
+  "etapa": {
+    "id": "7b0c6a52-1f7e-4f5e-9a51-2d9c1d3e4f60",
+    "slug": "2a-etapa",
+    "nome": "2ª ETAPA",
+    "ordem": 2,
+    "arquivada_em": null,
+    "telegram_vinculado": true,
+    "telegram_chat_titulo": "Fiscalização 2ª ETAPA",
+    "sigla": "2",
+    "endereco": "Av Borges de Melo, 205 - CEP 60415-513 Fortaleza - CE",
+    "latitude": -3.761,
+    "longitude": -38.5297,
+    "fuso": "America/Fortaleza",
+    "estacao": "8836",
+    "estacao_reserva": "9281",
+    "boletim_horario": "23:30",
+    "objeto": "OBRA DE IMPLANTAÇÃO DA 2ª ETAPA DO CAMPUS EM FORTALEZA DO ITA COMPREENDENDO O 1 BLOCO DE ALOJAMENTO E 1 BLOCO DIDÁTICO",
+    "local": "INSTITUTO TECNOLÓGICO DE AERONÁUTICA - CAMPUS FORTALEZA\nAv Borges de Melo, 205 - CEP 60415-513 Fortaleza - CE",
+    "contratante": "Superintendência de Obras Públicas - SOP-CE",
+    "contrato": "120/2025 - SOP",
+    "contratada": "Consórcio Cetro/Porto/Morais Engenharia",
+    "contratada_cnpj": "57.228.483/0001-01",
+    "os_numero": "313/2025",
+    "os_data": "2025-08-06",
+    "vigencia_meses": 27,
+    "valor_original": 79499000.0,
+    "area_construida_m2": 86102.17,
+    "responsaveis": [
+      {
+        "usuario_id": "u-1",
+        "nome": "João Felipe",
+        "nome_exibicao": "3S JOÃO FELIPE",
+        "funcao": "Fiscal da obra",
+        "ordem": 0
+      }
+    ],
+    "aditivos": [
+      {
+        "id": "ad-1",
+        "etapa_id": "7b0c6a52-1f7e-4f5e-9a51-2d9c1d3e4f60",
+        "numero": "1º TA",
+        "data": "2026-03-10",
+        "prazo_dias": 90,
+        "valor": 1250000.0,
+        "descricao": "Reprogramação de fundações"
+      }
+    ],
+    "prazo": {
+      "termino_original": "2027-11-06",
+      "prazo_aditivos_dias": 90,
+      "termino_atual": "2028-02-04",
+      "valor_atual": 80749000.0,
+      "dias_decorridos": 464,
+      "dias_totais": 912,
+      "percentual": 50.9,
+      "dias_restantes": 448
+    }
+  },
+  "responsaveis": [
+    {
+      "nome": "3S JOÃO FELIPE",
+      "funcao": "Fiscal da obra"
+    },
+    {
+      "nome": "CP PATRICIO",
+      "funcao": "Fiscal substituto"
+    }
+  ],
+  "indicadores": {
+    "pendencias": {
+      "abertas_inicio": 18,
+      "abertas_no_dia": 4,
+      "encerradas_no_dia": 2,
+      "abertas_fim": 20,
+      "total_abertas": 142,
+      "total_encerradas": 122,
+      "taxa_resolucao": 85.9,
+      "mais_7": 9,
+      "mais_15": 5,
+      "mais_30": 2,
+      "tempo_medio_resolucao_dias": 6.4
+    },
+    "atividade": {
+      "registros_servico": 5,
+      "fotos": 11,
+      "ambientes": 9,
+      "pessoas": 4
+    },
+    "por_obra": [
+      {
+        "obra": "Bloco de Alojamento",
+        "servicos": 3,
+        "abertas_no_dia": 3,
+        "encerradas_no_dia": 1,
+        "abertas_fim": 12,
+        "mais_15": 3
+      },
+      {
+        "obra": "Bloco Didático",
+        "servicos": 2,
+        "abertas_no_dia": 1,
+        "encerradas_no_dia": 1,
+        "abertas_fim": 8,
+        "mais_15": 2
+      }
+    ]
+  },
+  "obras": [
+    {
+      "id": "o-1",
+      "nome": "Bloco de Alojamento",
+      "slug": "alojamento",
+      "servicos": [
+        {
+          "id": "r-1",
+          "pavimento": "Térreo",
+          "ambiente": "Apto. 101",
+          "hora": "08:14",
+          "autor": "3S JOÃO FELIPE",
+          "legenda": "Assentamento de porcelanato 60×60 no piso do quarto; cerca de 70% concluído.",
+          "fotos": [
+            {
+              "path": "exemplo/foto-01.jpg",
+              "largura": 1600,
+              "altura": 1200
+            },
+            {
+              "path": "exemplo/foto-02.jpg",
+              "largura": 1600,
+              "altura": 1200
+            },
+            {
+              "path": "exemplo/foto-03.jpg",
+              "largura": 1600,
+              "altura": 1200
+            },
+            {
+              "path": "exemplo/foto-04.jpg",
+              "largura": 1600,
+              "altura": 1200
+            },
+            {
+              "path": "exemplo/foto-05.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ]
+        },
+        {
+          "id": "r-2",
+          "pavimento": "1º pavimento",
+          "ambiente": "Circulação norte",
+          "hora": "09:40",
+          "autor": "CB ALMEIDA",
+          "legenda": "Instalação de eletrocalhas e passagem de cabos da rede de dados entre os eixos 3 e 8.",
+          "fotos": [
+            {
+              "path": "exemplo/foto-06.jpg",
+              "largura": 1600,
+              "altura": 1200
+            },
+            {
+              "path": "exemplo/foto-07.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ]
+        },
+        {
+          "id": "r-3",
+          "pavimento": "Térreo",
+          "ambiente": "Salão de eventos",
+          "hora": "14:05",
+          "autor": "3S JOÃO FELIPE",
+          "legenda": "Aplicação da 1ª demão de massa corrida no forro de gesso.",
+          "fotos": [
+            {
+              "path": "exemplo/foto-08.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ]
+        }
+      ],
+      "pendencias_abertas": [
+        {
+          "id": "p-1",
+          "pavimento": "Térreo",
+          "ambiente": "Banheiro Apto. 104",
+          "hora": "09:02",
+          "autor": "3S JOÃO FELIPE",
+          "legenda": "Caimento do piso do box invertido; água acumula junto à porta.",
+          "fotos": [
+            {
+              "path": "exemplo/foto-09.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ]
+        },
+        {
+          "id": "p-2",
+          "pavimento": "1º pavimento",
+          "ambiente": "Apto. 211",
+          "hora": "11:30",
+          "autor": "CB ALMEIDA",
+          "legenda": "Esquadria da janela com folga e sem vedação de silicone no lado externo.",
+          "fotos": [
+            {
+              "path": "exemplo/foto-10.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ]
+        },
+        {
+          "id": "p-3",
+          "pavimento": "Térreo",
+          "ambiente": "Circulação sul",
+          "hora": "16:40",
+          "autor": "3S JOÃO FELIPE",
+          "legenda": "Fissura no reboco acima da porta corta-fogo PCF-02.",
+          "fotos": [
+            {
+              "path": "exemplo/foto-11.jpg",
+              "largura": 1600,
+              "altura": 1200
+            },
+            {
+              "path": "exemplo/foto-12.jpg",
+              "largura": 1600,
+              "altura": 1200
+            },
+            {
+              "path": "exemplo/foto-13.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ]
+        }
+      ],
+      "pendencias_encerradas": [
+        {
+          "id": "p-9",
+          "pavimento": "Térreo",
+          "ambiente": "Apto. 108",
+          "aberta_em": "2026-11-05T13:10:00+00:00",
+          "dias_aberta": 8,
+          "legenda": "Rejunte falhado no piso do quarto.",
+          "fotos_registro": [
+            {
+              "path": "exemplo/foto-14.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ],
+          "encerramento": {
+            "hora": "13:20",
+            "autor": "CP PATRICIO",
+            "observacao": "Rejunte refeito em toda a área; conferido com a contratada.",
+            "fotos": [
+              {
+                "path": "exemplo/foto-15.jpg",
+                "largura": 1600,
+                "altura": 1200
+              }
+            ]
+          }
+        }
+      ],
+      "observacoes": [
+        {
+          "hora": "10:15",
+          "autor": "CP PATRICIO",
+          "texto": "Visita técnica da fiscalização da SOP-CE ao 1º pavimento, sem ressalvas.",
+          "editada": false
+        },
+        {
+          "hora": "17:40",
+          "autor": "3S JOÃO FELIPE",
+          "texto": "Efetivo reduzido na frente de pisos (8 de 12 oficiais) por falta de transporte da contratada.",
+          "editada": true
+        }
+      ]
+    },
+    {
+      "id": "o-2",
+      "nome": "Bloco Didático",
+      "slug": "didatico",
+      "servicos": [
+        {
+          "id": "r-4",
+          "pavimento": "Térreo",
+          "ambiente": "Sala de aula 03",
+          "hora": "10:22",
+          "autor": "2S RIBEIRO",
+          "legenda": "Execução de reboco interno nas paredes leste e sul.",
+          "fotos": [
+            {
+              "path": "exemplo/foto-16.jpg",
+              "largura": 1600,
+              "altura": 1200
+            },
+            {
+              "path": "exemplo/foto-17.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ]
+        },
+        {
+          "id": "r-5",
+          "pavimento": "Cobertura",
+          "ambiente": "Eixos 4 a 7",
+          "hora": "15:48",
+          "autor": "2S RIBEIRO",
+          "legenda": "Montagem da estrutura metálica da cobertura; terças instaladas até o eixo 6.",
+          "fotos": [
+            {
+              "path": "exemplo/foto-18.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ]
+        }
+      ],
+      "pendencias_abertas": [
+        {
+          "id": "p-4",
+          "pavimento": "Térreo",
+          "ambiente": "Laboratório 1",
+          "hora": "15:12",
+          "autor": "2S RIBEIRO",
+          "legenda": "Eletroduto aparente fora do projeto na parede norte.",
+          "fotos": [
+            {
+              "path": "exemplo/foto-19.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ]
+        }
+      ],
+      "pendencias_encerradas": [
+        {
+          "id": "p-10",
+          "pavimento": "Térreo",
+          "ambiente": "Sala de aula 01",
+          "aberta_em": "2026-11-08T19:02:00+00:00",
+          "dias_aberta": 5,
+          "legenda": "Tomada da bancada sem espelho e com fiação exposta.",
+          "fotos_registro": [
+            {
+              "path": "exemplo/foto-20.jpg",
+              "largura": 1600,
+              "altura": 1200
+            }
+          ],
+          "encerramento": {
+            "hora": "16:05",
+            "autor": "2S RIBEIRO",
+            "observacao": "Espelho instalado e circuito identificado no quadro QD-T1.",
+            "fotos": [
+              {
+                "path": "exemplo/foto-21.jpg",
+                "largura": 1600,
+                "altura": 1200
+              },
+              {
+                "path": "exemplo/foto-22.jpg",
+                "largura": 1600,
+                "altura": 1200
+              }
+            ]
+          }
+        }
+      ],
+      "observacoes": [
+        {
+          "hora": "14:30",
+          "autor": "2S RIBEIRO",
+          "texto": "Concretagem da laje do eixo 7 adiada para 14/11 por indisponibilidade da bomba.",
+          "editada": false
+        }
+      ]
+    }
+  ],
+  "tardios": [
+    {
+      "id": "r-0",
+      "tipo": "servico",
+      "data": "2026-11-12",
+      "hora": "17:55",
+      "recebido_em": "2026-11-13T11:02:00+00:00",
+      "obra": "Bloco Didático",
+      "ambiente": "Sala de aula 02",
+      "autor": "2S RIBEIRO",
+      "texto": "Chapisco das paredes internas concluído (enviado sem sinal)."
+    }
+  ],
+  "clima": null
+}

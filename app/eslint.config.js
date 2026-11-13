@@ -4,7 +4,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules'] },
+  { ignores: ['dist', 'dist-fixture', 'node_modules'] },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -14,5 +14,10 @@ export default tseslint.config(
     },
     plugins: { 'react-hooks': reactHooks },
     rules: reactHooks.configs.recommended.rules,
+  },
+  {
+    // Funções da Vercel e código do gerador do boletim: Node, fora do bundle do Vite.
+    files: ['api/**/*.ts', 'servidor/**/*.ts'],
+    languageOptions: { globals: globals.node },
   },
 )
