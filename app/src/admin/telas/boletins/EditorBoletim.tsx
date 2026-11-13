@@ -58,6 +58,14 @@ function fotosDe(s: SnapshotBoletim): string[] {
   return r
 }
 
+/** Rótulo do tipo de lançamento tardio. */
+const ROTULO_TARDIO: Record<string, string> = {
+  servico: 'serviço',
+  pendencia: 'pendência',
+  encerramento: 'encerramento',
+  observacao: 'observação',
+}
+
 export default function EditorBoletim() {
   const { id = '' } = useParams()
   const consulta = useBoletim(id)
@@ -308,7 +316,7 @@ function Editor({ b }: { b: BoletimDetalhe }) {
             key={t.id}
             ctx={ctx}
             chave={chave}
-            titulo={`${t.obra}${t.ambiente ? ` · ${t.ambiente}` : ''} · ${t.tipo} · ${dataBr(t.data)}${t.hora ? ` ${t.hora}` : ''} · ${t.autor}`}
+            titulo={`${t.obra}${t.ambiente ? ` · ${t.ambiente}` : ''} · ${ROTULO_TARDIO[t.tipo] ?? t.tipo} · ${dataBr(t.data)}${t.hora ? ` ${t.hora}` : ''} · ${t.autor}`}
             vazioOculta={ctx.texto(chave, t.texto ?? '') === ''}
           >
             <Texto ctx={ctx} chave={chave} original={t.texto ?? ''} rotulo="Texto" vazio="oculto (texto vazio)" />
