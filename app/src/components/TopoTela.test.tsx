@@ -135,7 +135,17 @@ describe('TopoTela: faixa de identidade', () => {
   it('organização indisponível (erro): a tela abre normalmente, com "Fiscal Bot"', async () => {
     renderizarApp('/', { ...criarRepositorioFixture(), organizacao: () => Promise.reject(new Error('falhou')) })
     expect(await screen.findByRole('link', { name: /^HTO/ })).toBeInTheDocument()
-    expect(screen.getByTestId('faixa-identidade')).toHaveTextContent(/^Fiscal Bot$/)
+    expect(screen.getByTestId('faixa-identidade')).toHaveTextContent(/^Fiscal Bot/)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('a versão do app aparece na faixa só na tela inicial', async () => {
+    const { unmount } = renderizarApp('/')
+    await screen.findByRole('link', { name: /^HTO/ })
+    expect(screen.getByRole('button', { name: /^Versão do app: / })).toBeInTheDocument()
+    unmount()
+    renderizarApp('/obras/hto')
+    await screen.findByRole('heading', { level: 1, name: 'HTO' })
+    expect(screen.queryByRole('button', { name: /^Versão do app: / })).not.toBeInTheDocument()
   })
 })

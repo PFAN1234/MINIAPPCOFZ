@@ -349,3 +349,8 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Banco: RPC `listar_relatorios()` (etapas do usuário com o boletim/pedido de hoje e registros do dia; boletins emitidos), aplicada em produção.
 - [x] Mini app: aba Relatórios na barra inferior: cartão "Hoje" por etapa, lista dos emitidos com Abrir PDF; admin: Emitir agora / Emitir revisão e Excluir (dia inteiro, com a mensagem no grupo).
 - [ ] Usuário: testar a aba no Telegram (abrir PDF, emitir e excluir como admin).
+
+## Mini app: versão na tela inicial
+
+- [x] Etiqueta "v39 · 13/11" no canto direito da faixa de identidade, só na tela inicial: número do último PR (da mensagem do commit de merge, `VERCEL_GIT_COMMIT_MESSAGE`), dia do build; um toque mostra o commit curto e a data e hora. Sem PR na mensagem, mostra o commit curto.
+- [ ] Usuário: conferir no Telegram que a etiqueta mostra o número do PR desta entrega.

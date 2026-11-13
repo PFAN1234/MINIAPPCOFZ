@@ -58,6 +58,7 @@ export default function Obras() {
     <>
       <TopoTela
         lista
+        versao
         titulo="Obras"
         idTitulo="titulo-obras"
         aoLado={

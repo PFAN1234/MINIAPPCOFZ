@@ -6,6 +6,7 @@ import { podeSair } from '../util/guardaSaida.ts'
 import { FaixaDoTopo } from './faixaDoTopo.ts'
 import { FaixaIdentidade } from './FaixaIdentidade.tsx'
 import { IconeVoltar } from './Icones.tsx'
+import { SeloVersao } from './SeloVersao.tsx'
 
 /** A partir de quantas letras o título diminui. Nome longo quebra a linha, nunca vira reticências. */
 const TITULO_LONGO = 20
@@ -29,6 +30,8 @@ interface Props {
   idTitulo?: string
   /** À direita do título, na mesma linha (abas, botão). Se não couber, rola na horizontal; o título não quebra a linha dele. */
   aoLado?: ReactNode
+  /** Mostra a versão do app no canto direito da faixa de identidade (só a tela inicial). */
+  versao?: boolean
   /** Ações no topo (botões, seletor de pavimento). */
   children?: ReactNode
 }
@@ -39,7 +42,17 @@ interface Props {
  * Telegram, quem volta é o BackButton nativo (ver `Layout` e `telegramBack.ts`); fora dele, o
  * "Voltar" fica aqui. A faixa de envio e de sem sinal vem logo abaixo, nunca acima do azul.
  */
-export function TopoTela({ titulo, subtitulo, sobretitulo, voltar, lista = false, idTitulo, aoLado, children }: Props) {
+export function TopoTela({
+  titulo,
+  subtitulo,
+  sobretitulo,
+  voltar,
+  lista = false,
+  idTitulo,
+  aoLado,
+  versao = false,
+  children,
+}: Props) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const voltarNoHistorico = useVoltar()
@@ -59,7 +72,7 @@ export function TopoTela({ titulo, subtitulo, sobretitulo, voltar, lista = false
   return (
     <div className="topo">
       <header className={lista ? 'topo-tela topo-lista' : 'topo-tela'}>
-        <FaixaIdentidade />
+        <FaixaIdentidade>{versao && <SeloVersao />}</FaixaIdentidade>
         {comVoltar && (
           <button type="button" className="topo-voltar" onClick={aoVoltar}>
             <IconeVoltar tamanho={24} />

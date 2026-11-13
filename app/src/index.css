@@ -115,6 +115,32 @@ textarea {
   border-left: 1px solid var(--azul-borda);
 }
 
+/* Versão do app no canto direito da faixa (tela inicial): discreta; o toque mostra o detalhe. */
+.identidade-direita {
+  flex: none;
+  max-width: 60%;
+  margin-left: auto;
+}
+
+.selo-versao {
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--azul-borda);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--texto-suave-no-azul);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  text-align: right;
+  cursor: pointer;
+}
+
+.selo-versao-linha {
+  display: block;
+  white-space: nowrap;
+}
+
 /* Topo só com a faixa (telas antes de entrar). */
 .topo-identidade {
   padding-bottom: 0;
