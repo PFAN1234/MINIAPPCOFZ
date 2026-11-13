@@ -717,7 +717,8 @@ export function criarRepositorioFixture(
       if (!UUID.test(d.id) || !UUID.test(d.registroId)) falhaValidacao('Identificadores obrigatórios')
       const registro = todos().find((x) => x.id === d.registroId && x.tipo === 'pendencia')
       if (!registro) throw new ErroEnvio('nao_encontrado', 'Pendência não encontrada.')
-      exigirGestor(registro.obra.id)
+      // Qualquer participante da obra (equipe ou gestor) encerra; no fixture só a HTO tem participação.
+      if (registro.obra.id !== ID_HTO) throw new ErroEnvio('permissao', 'Você não participa desta obra.')
 
       const existente = todosEncerramentos().find((e) => e.id === d.id)
       if (existente) {
