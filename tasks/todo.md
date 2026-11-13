@@ -336,3 +336,10 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] 2ª ETAPA em produção: objeto, local, endereço, contratante, contrato, contratada, CNPJ, OS, vigência, valor e área (do boletim de 12/11/26).
 - [x] Aba "Boletins" do site passa a se chamar "Relatórios" (rota `/boletins` mantida).
 - [ ] Usuário: marcar no mapa o local da 2ª ETAPA, salvar e preencher os responsáveis.
+
+## Site: excluir boletim publicado
+
+- [x] Banco: `admin_excluir_boletim(p_id)` apaga o dia inteiro (revisões, pedidos, publicações, rascunho); 55006 se houver emissão ou envio em andamento (migração `20261118090000`, aplicada e registrada em produção).
+- [x] Edge Function `admin-excluir-obra` (v3 em produção): ação `excluir_boletim` apaga a mensagem no grupo (`deleteMessage`) e os PDFs/PNG do bucket `boletins`.
+- [x] Relatórios: botão "Excluir" em cada boletim, com confirmação e aviso se a mensagem não puder ser apagada (limite de 48 h do Telegram). O agendador pode reemitir o dia de hoje.
+- [ ] Usuário: testar a exclusão de um boletim no site.
