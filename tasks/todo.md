@@ -357,3 +357,11 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Faixa do topo reorganizada: OM à esquerda, logo (40 px) no centro, "Fiscal Bot" à direita; versão em todas as telas, no pé do topo azul, pequena, sem contorno e apagada.
 - [x] Redesign "Farda" (conceito 1, revisão 2, aprovado pelo usuário): topo em uma linha só (brasão de 52 px, CO-FZ e Fiscal Bot à esquerda, título no centro, versão no canto); etapas e pavimentos como abas na base do topo, com o atalho Pendências à direita; cartões de obra com os 3 totais rotulados; títulos de seção com marcador amarelo; botões principais em maiúsculas.
 - [ ] Usuário: conferir no Telegram o novo topo (Início, obra, ambiente, Registros, Relatórios) e a versão (número do PR desta entrega).
+
+## Mini app: painel e exportação de pendências na aba Relatórios (contrato: `docs/contrato-relatorios-painel.md`)
+
+- [x] Banco: RPCs `painel_relatorios` e `relatorio_pendencias` e bucket privado `relatorios` (migration `20261119090000_relatorios_painel.sql`, testes em `tests/db/test_relatorios_painel.py`).
+- [x] Servidor: rota `api/relatorio-pendencias` gera o PDF com fotos (visual do boletim), grava em `relatorios/pendencias/<usuário>/` e devolve URL assinada de 10 min.
+- [x] Tela: abas de etapa no topo, filtro de obra, cartões (serviços, pendências abertas, resolvidas), gráfico acumulado com toque, barras por obra, tabela e botão "Relatório de pendências (PDF)".
+- [ ] Usuário: no Telegram, abrir Relatórios, conferir os números com o Início e exportar o PDF da etapa e de uma obra.
+- [ ] Exclusão de etapa/obra: remover também os PDFs do bucket `relatorios`.

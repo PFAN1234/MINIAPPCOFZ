@@ -2,14 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { afastar, passoBonito } from './GraficoAcumulado.tsx'
 
 describe('GraficoAcumulado: auxiliares', () => {
-  it('passoBonito cobre o máximo com 3 passos inteiros', () => {
-    for (const max of [0, 1, 4, 7, 23, 100, 480]) {
+  it('passoBonito cobre o máximo com até 4 passos inteiros', () => {
+    for (const max of [0, 1, 4, 7, 23, 100, 160, 480]) {
       const p = passoBonito(max)
       expect(Number.isInteger(p)).toBe(true)
-      expect(p * 3).toBeGreaterThanOrEqual(max)
+      expect(p * 4).toBeGreaterThanOrEqual(max)
     }
     expect(passoBonito(0)).toBe(1)
     expect(passoBonito(100)).toBe(50)
+    expect(passoBonito(160)).toBe(50)
+    expect(passoBonito(60)).toBe(20)
   })
 
   it('afastar separa rótulos a menos de 12 px, sem trocar a ordem', () => {

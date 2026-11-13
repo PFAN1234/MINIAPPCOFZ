@@ -2192,3 +2192,17 @@ a.botao {
 .painel-tabela th, .painel-tabela td { padding: 4px 6px; text-align: right; border-bottom: 1px solid var(--borda-fraca); font-weight: 400; font-variant-numeric: tabular-nums; }
 .painel-tabela th:first-child { text-align: left; }
 .painel-tabela thead th { font-size: 11px; color: var(--texto-suave); }
+
+/* Filtro de obra: os nomes não quebram linha; se não couberem, a linha rola na horizontal. */
+.filtro-obra .abas {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filtro-obra .abas::-webkit-scrollbar {
+  display: none;
+}
+.filtro-obra .aba {
+  flex: 1 0 auto;
+  white-space: nowrap;
+  padding: 0 14px;
+}
