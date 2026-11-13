@@ -1,9 +1,10 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import type { EtapaRelatorio, Relatorios as DadosRelatorios } from '../dados/tipos.ts'
+import * as telegram from '../telegram.ts'
 import { renderizarApp } from '../test/renderApp.tsx'
 
 afterEach(() => vi.restoreAllMocks())
@@ -22,25 +23,92 @@ function comHoje(mudanca: Partial<EtapaRelatorio>, admin = false): Repositorio {
 const cartao = () => screen.getByRole('article', { name: 'Hoje, 2ª ETAPA' })
 
 describe('Relatórios', () => {
-  it('lista os boletins emitidos e filtra por etapa (na URL)', async () => {
+  it('abre na primeira etapa e troca pelas abas (na URL)', async () => {
     const usuario = userEvent.setup()
     renderizarApp('/relatorios')
     expect(await screen.findByRole('heading', { name: 'Relatórios' })).toBeInTheDocument()
-    const itens = await screen.findAllByRole('listitem')
-    const lista = itens.filter((li) => li.classList.contains('relatorio-linha'))
-    expect(lista).toHaveLength(4)
-    expect(screen.getAllByText('Publicado no grupo')).toHaveLength(4)
-    expect(screen.getAllByText(/Revisão 1/)).toHaveLength(1)
+    await waitFor(() => expect(document.querySelectorAll('.relatorio-linha')).toHaveLength(3))
+    expect(screen.getByRole('tab', { name: '2ª ETAPA' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByRole('combobox', { name: 'Filtrar por etapa' })).not.toBeInTheDocument()
 
-    await usuario.selectOptions(screen.getByRole('combobox', { name: 'Filtrar por etapa' }), '3a-etapa')
+    await usuario.click(screen.getByRole('tab', { name: /3ª ETAPA/ }))
     await waitFor(() => expect(document.querySelectorAll('.relatorio-linha')).toHaveLength(1))
     expect(screen.queryByRole('article', { name: 'Hoje, 2ª ETAPA' })).not.toBeInTheDocument()
+    expect(await screen.findByText('Ainda não há registros nesta etapa.')).toBeInTheDocument()
   })
 
   it('lê a etapa da URL', async () => {
-    renderizarApp('/relatorios?etapa=2a-etapa')
-    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Filtrar por etapa' })).toHaveValue('2a-etapa'))
-    expect(document.querySelectorAll('.relatorio-linha')).toHaveLength(3)
+    renderizarApp('/relatorios?etapa=3a-etapa')
+    await waitFor(() => expect(screen.getByRole('tab', { name: /3ª ETAPA/ })).toHaveAttribute('aria-selected', 'true'))
+    expect(document.querySelectorAll('.relatorio-linha')).toHaveLength(1)
+  })
+
+  describe('painel', () => {
+    it('mostra cartões, gráficos e tabela', async () => {
+      renderizarApp('/relatorios')
+      const grafico = await screen.findByRole('img', { name: /^Acumulado até/ })
+      expect(grafico.getAttribute('aria-label')).toMatch(/\d+ serviços, \d+ pendências registradas, \d+ resolvidas/)
+      expect(screen.getByText(/de \d+ registradas/)).toBeInTheDocument()
+      expect(screen.getByText(/% das pendências/)).toBeInTheDocument()
+      expect(screen.getByRole('list', { name: 'Pendências por obra' })).toBeInTheDocument()
+      expect(screen.getByText('Ver em tabela')).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: 'Todas' })).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('filtra por obra (na URL) e esconde o gráfico por obra', async () => {
+      const usuario = userEvent.setup()
+      renderizarApp('/relatorios')
+      await screen.findByRole('img', { name: /^Acumulado até/ })
+      await usuario.click(screen.getByRole('tab', { name: 'Residencial Aurora' }))
+      await waitFor(() => expect(screen.queryByRole('list', { name: 'Pendências por obra' })).not.toBeInTheDocument())
+      expect(screen.getByText(/Obra Residencial Aurora/)).toBeInTheDocument()
+    })
+
+    it('lê a obra da URL', async () => {
+      renderizarApp('/relatorios?etapa=2a-etapa&obra=hto')
+      expect(await screen.findByText(/Obra HTO/)).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: 'HTO' })).toHaveAttribute('aria-selected', 'true')
+    })
+
+    it('tocar no gráfico mostra o dia e soltar esconde', async () => {
+      renderizarApp('/relatorios')
+      const grafico = await screen.findByRole('img', { name: /^Acumulado até/ })
+      grafico.getBoundingClientRect = () => ({ left: 0, width: 320, top: 0, height: 190 }) as DOMRect
+      fireEvent.pointerDown(grafico, { clientX: 160, pointerType: 'touch' })
+      expect(await screen.findByText(/^\d\d\/\d\d · Serviços \d+ · Pendências \d+ · Resolvidas \d+$/)).toBeInTheDocument()
+      fireEvent.pointerUp(grafico, { pointerType: 'touch' })
+      await waitFor(() => expect(screen.queryByText(/ · Serviços \d+ ·/)).not.toBeInTheDocument())
+    })
+
+    it('setas do teclado percorrem os dias', async () => {
+      renderizarApp('/relatorios')
+      const grafico = await screen.findByRole('img', { name: /^Acumulado até/ })
+      fireEvent.keyDown(grafico, { key: 'ArrowLeft' })
+      expect(await screen.findByText(/ · Serviços \d+ ·/)).toBeInTheDocument()
+    })
+  })
+
+  describe('exportar', () => {
+    it('gera o PDF e abre o link', async () => {
+      const usuario = userEvent.setup()
+      const abrir = vi.spyOn(telegram, 'abrirLink').mockImplementation(() => {})
+      renderizarApp('/relatorios')
+      expect(await screen.findByText(/Todas as obras da 2ª ETAPA/)).toBeInTheDocument()
+      await usuario.click(screen.getByRole('button', { name: 'Relatório de pendências (PDF)' }))
+      expect(await screen.findByRole('button', { name: 'Gerando PDF…' })).toBeDisabled()
+      await waitFor(() => expect(abrir).toHaveBeenCalledWith(expect.stringContaining('pendencias')), { timeout: 3000 })
+    })
+
+    it('erro vira alerta', async () => {
+      const usuario = userEvent.setup()
+      const repo = criarRepositorioFixture()
+      repo.exportarPendencias = async () => {
+        throw new Error('Sem permissão para exportar')
+      }
+      renderizarApp('/relatorios', repo)
+      await usuario.click(await screen.findByRole('button', { name: 'Relatório de pendências (PDF)' }))
+      expect(await screen.findByText('Sem permissão para exportar')).toBeInTheDocument()
+    })
   })
 
   it('sem boletins: mostra o vazio', async () => {
@@ -138,9 +206,9 @@ describe('Relatórios', () => {
     it('admin vê Emitir e Excluir só na última revisão do dia', async () => {
       renderizarApp('/relatorios', criarRepositorioFixture({ admin: true }))
       await screen.findAllByRole('button', { name: /^Abrir PDF/ })
-      expect(screen.getAllByRole('button', { name: 'Emitir agora' })).toHaveLength(2)
-      // 4 boletins, 3 são última revisão do dia (o dia com retificação tem 2 linhas)
-      expect(screen.getAllByRole('button', { name: /^Excluir o boletim/ })).toHaveLength(3)
+      expect(screen.getAllByRole('button', { name: 'Emitir agora' })).toHaveLength(1)
+      // 3 boletins da etapa, 2 são última revisão do dia (o dia com retificação tem 2 linhas)
+      expect(screen.getAllByRole('button', { name: /^Excluir o boletim/ })).toHaveLength(2)
     })
 
     it('Emitir agora: cancelar não chama; confirmar chama com a etapa e o dia', async () => {

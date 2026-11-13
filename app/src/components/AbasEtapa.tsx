@@ -1,12 +1,10 @@
-import type { Etapa } from '../dados/tipos.ts'
-
 /** Abas das etapas no topo azul do Início: todas lado a lado, com rolagem horizontal se não couberem. */
 export function AbasEtapa({
   etapas,
   valor,
   onMudar,
 }: {
-  etapas: readonly Etapa[]
+  etapas: readonly { id: string; nome: string }[]
   valor: string
   onMudar: (etapaId: string) => void
 }) {
