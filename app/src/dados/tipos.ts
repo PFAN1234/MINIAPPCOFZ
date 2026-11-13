@@ -293,6 +293,53 @@ export interface ObservacoesDoDia {
   observacoes: Observacao[]
 }
 
+/** Etapa da tela inicial (`etapas_inicio`): todas as ativas, com a participação do usuário. */
+export interface EtapaInicio {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+  participa: boolean
+}
+
+/** Um serviço (entrada e saída) da equipe de uma etapa. */
+export interface MembroServico {
+  id: string
+  usuario_id: string
+  nome: string
+  entrada_em: string
+  saida_em: string | null
+  /** Fechado sozinho 24 h depois da entrada ("saída não registrada"). */
+  saida_automatica: boolean
+  /** É o próprio usuário. */
+  eu: boolean
+}
+
+export interface ServicoAberto {
+  id: string
+  etapa_id: string
+  etapa_nome: string
+  entrada_em: string
+}
+
+/** Equipe de serviço de uma etapa (`equipe_servico`, `fazer_checkin`, `fazer_checkout`). */
+export interface EquipeServico {
+  etapa_id: string
+  participa: boolean
+  /** A etapa tem coordenada cadastrada (sem ela, o check-in não vale). */
+  tem_localizacao: boolean
+  /** Serviço aberto do usuário em qualquer etapa. */
+  meu_servico: ServicoAberto | null
+  equipe: MembroServico[]
+}
+
+/** Posição do GPS do aparelho. */
+export interface Posicao {
+  latitude: number
+  longitude: number
+  precisao: number | null
+}
+
 /** Dados de `salvar_observacao`: id novo cria; id existente edita o texto (só o autor). */
 export interface NovaObservacao {
   /** Gerado no aparelho (chave de idempotência). */

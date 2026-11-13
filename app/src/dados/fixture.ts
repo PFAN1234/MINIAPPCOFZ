@@ -16,7 +16,10 @@ import type {
   AmbienteDetalhe,
   Encerramento,
   DetalhePlanta,
+  EquipeServico,
   EstadoPublicacao,
+  EtapaInicio,
+  MembroServico,
   FiltroRegistros,
   LinkAdmin,
   FotoRegistro,
@@ -63,6 +66,14 @@ export const ETAPA_3: Etapa = {
   slug: '3a-etapa',
   nome: '3ª ETAPA',
   ordem: 3,
+}
+
+/** Etapa em que o usuário da fixture não participa (equipe de serviço só para leitura). */
+export const ETAPA_4: Etapa = {
+  id: '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4b04',
+  slug: '4a-etapa',
+  nome: '4ª ETAPA',
+  ordem: 4,
 }
 
 /** Como a linha padrão de `organizacao` no banco: "CO-FZ", sem logo. */
@@ -521,6 +532,48 @@ export function criarRepositorioFixture(
   const removidos = salvo.removidos
   const publicacoes = salvo.publicacoes
   const observacoes = salvo.observacoes
+  // Equipe de serviço: só em memória. A 4ª etapa já tem um colega de serviço (usuário não participa dela).
+  const etapasServico = [ETAPA_2, ETAPA_3, ETAPA_4]
+  let servicos: (MembroServico & { etapa_id: string })[] = [
+    {
+      id: 'servico-colega',
+      etapa_id: ETAPA_4.id,
+      usuario_id: 'usuario-colega',
+      nome: 'SD COLEGA',
+      entrada_em: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+      saida_em: null,
+      saida_automatica: false,
+      eu: false,
+    },
+  ]
+  let proximoServico = 1
+  function equipeDaEtapa(etapaId: string): EquipeServico {
+    const etapa = etapasServico.find((e) => e.id === etapaId)
+    if (!etapa) throw new ErroEnvio('nao_encontrado', 'Etapa não encontrada')
+    const aberto = servicos.find((s) => s.eu && s.saida_em === null)
+    const etapaAberto = aberto && etapasServico.find((e) => e.id === aberto.etapa_id)
+    return {
+      etapa_id: etapa.id,
+      participa: etapa.id !== ETAPA_4.id,
+      tem_localizacao: true,
+      meu_servico:
+        aberto && etapaAberto
+          ? { id: aberto.id, etapa_id: aberto.etapa_id, etapa_nome: etapaAberto.nome, entrada_em: aberto.entrada_em }
+          : null,
+      equipe: servicos
+        .filter((s) => s.etapa_id === etapa.id)
+        .sort((a, b) => Number(b.saida_em === null) - Number(a.saida_em === null) || b.entrada_em.localeCompare(a.entrada_em))
+        .map((s) => ({
+          id: s.id,
+          usuario_id: s.usuario_id,
+          nome: s.nome,
+          entrada_em: s.entrada_em,
+          saida_em: s.saida_em,
+          saida_automatica: s.saida_automatica,
+          eu: s.eu,
+        })),
+    }
+  }
 
   function persistir(): void {
     if (!persistencia) return
@@ -658,6 +711,45 @@ export function criarRepositorioFixture(
 
     async souAdmin() {
       return opcoes.admin === true
+    },
+
+    async etapasInicio(): Promise<EtapaInicio[]> {
+      return etapasServico.map((e) => ({ ...e, participa: e.id !== ETAPA_4.id }))
+    },
+
+    async equipeServico(etapaId) {
+      return equipeDaEtapa(etapaId)
+    },
+
+    async fazerCheckin(etapaId) {
+      exigirRede()
+      const atual = equipeDaEtapa(etapaId)
+      if (!atual.participa) throw new ErroEnvio('permissao', 'Você não participa desta etapa')
+      if (atual.meu_servico) {
+        throw new ErroEnvio('conflito', `Você já está de serviço na ${atual.meu_servico.etapa_nome}`)
+      }
+      servicos = [
+        ...servicos,
+        {
+          id: `servico-${proximoServico++}`,
+          etapa_id: etapaId,
+          usuario_id: 'usuario-teste',
+          nome: 'CP TESTE',
+          entrada_em: new Date().toISOString(),
+          saida_em: null,
+          saida_automatica: false,
+          eu: true,
+        },
+      ]
+      return equipeDaEtapa(etapaId)
+    },
+
+    async fazerCheckout() {
+      exigirRede()
+      const aberto = servicos.find((s) => s.eu && s.saida_em === null)
+      if (!aberto) throw new ErroEnvio('nao_encontrado', 'Você não está de serviço')
+      servicos = servicos.map((s) => (s === aberto ? { ...s, saida_em: new Date().toISOString() } : s))
+      return equipeDaEtapa(aberto.etapa_id)
     },
 
     async criarLinkAdmin(): Promise<LinkAdmin> {

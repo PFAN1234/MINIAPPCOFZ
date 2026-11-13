@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorio } from './contexto.tsx'
-import type { FiltroRegistros, NovaObservacao, PapelObra } from './tipos.ts'
+import type { EquipeServico, FiltroRegistros, NovaObservacao, PapelObra, Posicao } from './tipos.ts'
 
 export function useObras() {
   const repo = useRepositorio()
@@ -211,6 +211,58 @@ export function useGeometria(
     queryKey: ['geometria', obra?.id, ambiente?.id],
     queryFn: () => repo.obterGeometria(obra!, ambiente!),
     enabled: habilitado && Boolean(obra && ambiente),
+  })
+}
+
+/** Todas as etapas ativas (abas do Início), com a participação do usuário. */
+export function useEtapasInicio() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['etapas-inicio'], queryFn: () => repo.etapasInicio() })
+}
+
+/** Equipe de serviço da etapa: refeita a cada 60 s e ao focar o app. */
+export function useEquipeServico(etapaId: string | undefined) {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['equipe-servico', etapaId],
+    queryFn: () => repo.equipeServico(etapaId!),
+    enabled: !!etapaId,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  })
+}
+
+/** Grava o retorno (equipe da etapa) no cache dela e invalida as das outras etapas. */
+function useAtualizarEquipes() {
+  const qc = useQueryClient()
+  return (equipe: EquipeServico) => {
+    qc.setQueryData(['equipe-servico', equipe.etapa_id], equipe)
+    void qc.invalidateQueries({
+      queryKey: ['equipe-servico'],
+      predicate: (q) => q.queryKey[1] !== equipe.etapa_id,
+    })
+  }
+}
+
+/** Check-in na etapa, com a posição já obtida. Exige conexão. */
+export function useCheckin(etapaId: string) {
+  const repo = useRepositorio()
+  const atualizar = useAtualizarEquipes()
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (posicao: Posicao) => repo.fazerCheckin(etapaId, posicao),
+    onSuccess: atualizar,
+  })
+}
+
+/** Check-out do serviço aberto do usuário (em qualquer etapa). Exige conexão. */
+export function useCheckout() {
+  const repo = useRepositorio()
+  const atualizar = useAtualizarEquipes()
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: () => repo.fazerCheckout(),
+    onSuccess: atualizar,
   })
 }
 

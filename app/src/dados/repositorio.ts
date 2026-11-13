@@ -1,6 +1,9 @@
 import type {
   AmbienteDetalhe,
   CaminhoFoto,
+  EquipeServico,
+  EtapaInicio,
+  Posicao,
   NovaObservacao,
   NovoEncerramento,
   Observacao,
@@ -91,6 +94,14 @@ export interface Repositorio {
   salvarObservacao(dados: NovaObservacao): Promise<Observacao>
   /** Só o autor e antes da emissão do boletim; id inexistente não é erro. Falhas sobem como `ErroEnvio`. */
   excluirObservacao(id: string): Promise<void>
+  /** Etapas ativas, com a participação do usuário. */
+  etapasInicio(): Promise<EtapaInicio[]>
+  /** Equipe de serviço da etapa (abertos e encerrados nas últimas 24 h). */
+  equipeServico(etapaId: string): Promise<EquipeServico>
+  /** Check-in (exige estar a até 1 km da etapa). Falhas sobem como `ErroEnvio`. */
+  fazerCheckin(etapaId: string, posicao: Posicao): Promise<EquipeServico>
+  /** Fecha o serviço aberto do usuário. Devolve a equipe da etapa dele. */
+  fazerCheckout(): Promise<EquipeServico>
 }
 
 /**
