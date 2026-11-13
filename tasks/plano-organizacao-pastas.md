@@ -12,7 +12,7 @@ Reduzir o ruído na raiz do repositório, eliminar nomes de diretórios com espa
 | --- | --- |
 | Monorepo (`apps/` / `packages/`) | **Não fazer.** `app/` já é o `Root Directory` da Vercel, `app/vite.config.ts` já separa os bundles (`index.html` e `admin.html`) e exclui o admin do `precache-manifest.json`. |
 | `supabase/`, `data/`, `tests/` | **Manter onde estão.** Possuem acoplamento testado com `app/vite.config.ts`, `paridade.node.test.ts`, `tests/test_*.py` e `.github/workflows/ci.yml`. |
-| Capturas na raiz | Mover `Screenshot 2026-11-06 *.png` para `docs/mockups/referencias/`. |
+| Capturas na raiz | Removidas em 2026-11-12 (commit `ef7277c`); ficam no histórico do Git, sem cópia em `docs/mockups/referencias/`. |
 | Pastas de PDFs/IFCs originais | Unificar `DOCS COFZ/` e `DOCS HTO/` (e o diretório local ignorado `public/ifc/`) em `obras/<slug>/` (`obras/cofz/pdf/`, `obras/hto/pdf/`, `obras/hto/ifc/`). |
 | `tasks/` | **Manter na raiz** (referenciado por `CLAUDE.md`, `dashboard/collect.py`, `supabase/migrations/*.sql` e `tests/db/test_admin*.py`), atualizando o `README.md`. |
 | `app/src/` | Separar gradualmente o que é exclusivo do Mini App (`miniapp/`) e o que é compartilhado (`shared/`), mantendo `admin/` isolado. |
@@ -21,9 +21,9 @@ Reduzir o ruído na raiz do repositório, eliminar nomes de diretórios com espa
 
 ### Fase 1 — Limpeza da raiz (risco zero)
 
-1. [ ] Mover as 4 capturas da raiz (`Screenshot 2026-11-06 061618.png`, `061729.png`, `063757.png`, `072441.png`) para `docs/mockups/referencias/`.
-2. [ ] Atualizar as referências em `README.md` e `docs/mockups/README.md`.
-3. [ ] Conferir que não restaram links quebrados nos arquivos Markdown alterados.
+1. [x] Tirar as 4 capturas da raiz (`Screenshot 2026-11-06 061618.png`, `061729.png`, `063757.png`, `072441.png`): removidas em 2026-11-12 (commit `ef7277c`), em vez de movidas.
+2. [x] Atualizar as referências em `README.md` e `docs/mockups/README.md` (feito no mesmo commit).
+3. [x] Conferir que não restaram links quebrados nos arquivos Markdown alterados (conferido em 2026-11-13).
 
 ### Fase 2 — Padronização de `DOCS COFZ/` e `DOCS HTO/` → `obras/<slug>/`
 
