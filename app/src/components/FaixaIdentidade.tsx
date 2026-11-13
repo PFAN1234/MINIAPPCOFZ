@@ -4,8 +4,9 @@ import { NOME_APP, OrganizacaoContexto } from './identidade.ts'
 /**
  * Faixa fina no alto do topo azul: logo da organização militar (se houver), nome da OM e
  * "Fiscal Bot". Sem organização carregada ou com o logo indisponível, mostra só os textos.
+ * `children` fica no canto direito (a versão do app, na tela inicial).
  */
-export function FaixaIdentidade() {
+export function FaixaIdentidade({ children }: { children?: ReactNode } = {}) {
   const organizacao = useContext(OrganizacaoContexto)
   const nome = organizacao?.nome.trim() ?? ''
   const logo = organizacao?.logo_url ?? null
@@ -23,6 +24,7 @@ export function FaixaIdentidade() {
         {nome && <span className="identidade-om">{nome}</span>}
         <span className="identidade-app">{NOME_APP}</span>
       </p>
+      {children && <div className="identidade-direita">{children}</div>}
     </div>
   )
 }
