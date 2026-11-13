@@ -25,7 +25,7 @@ function textoPeriodo(m: MembroServico): string {
 export function EquipeServico({ etapaId }: { etapaId: string }) {
   const equipe = useEquipeServico(etapaId)
   return (
-    <section aria-labelledby="titulo-equipe">
+    <section className="equipe-servico" aria-labelledby="titulo-equipe">
       <h2 id="titulo-equipe">Equipe de serviço</h2>
       <EstadoConsulta consulta={equipe}>{(dados) => <Conteudo etapaId={etapaId} dados={dados} />}</EstadoConsulta>
     </section>

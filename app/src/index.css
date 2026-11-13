@@ -154,6 +154,16 @@ textarea {
   border-color: var(--destaque);
 }
 
+/* Equipe de serviço: espaço entre a lista e os botões, e antes da seção seguinte. */
+.equipe-servico {
+  margin-bottom: 24px;
+}
+
+.equipe-servico > .botao,
+.equipe-servico > .equipe-confirmar {
+  margin-top: 12px;
+}
+
 .equipe-confirmar {
   display: flex;
   flex-wrap: wrap;
