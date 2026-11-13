@@ -23,17 +23,23 @@ A cota de uso é limitada e compartilhada entre a conversa principal e os subage
 
 ### Subagentes
 
+- Usar os agentes do projeto (`.claude/agents/`), que já fixam modelo, esforço e limite de passos:
+  - `implementador` (Sonnet, esforço médio, até 50 passos, em cópia própria do repositório): código, testes e documentação guiados por contrato. Fazer commit antes de chamá-lo, porque ele só vê o que está em commit; no fim, revisar o commit dele e juntar ao branch de trabalho.
+  - `conferente` (Haiku, esforço baixo, até 25 passos, sem editar arquivos): buscas, rodar suítes e lint, conferências mecânicas.
+  - Tarefa que não caiba em 50 passos: dividir em partes e chamar um implementador por vez.
 - Rodar um subagente pesado por vez. Dois em paralelo só quando as tarefas forem pequenas e independentes.
 - Definir o modelo de cada subagente: Sonnet 5.5 para implementação guiada por contrato, testes e documentação; Haiku 5.5 para buscas e conferências mecânicas. Opus ou superior só para planejamento, arquitetura e revisão final.
 - Dar a cada subagente um escopo fechado, que caiba em uma sessão curta: os arquivos que ele pode tocar, o trecho do contrato que vale para ele (copiado no prompt, em vez de mandar ler o documento inteiro) e o critério de pronto.
 - Pedir que o relatório final seja curto: o que mudou, o que foi testado e com que resultado, e o que ficou em aberto. Sem colar código nem saídas longas.
 - Se um subagente travar ou passar de três tentativas no mesmo erro, ele deve parar e relatar, em vez de continuar tentando.
+- Subagente que falhar ou for interrompido (limite de uso, erro): não retomar o mesmo agente com todo o histórico. Abrir um novo, com contexto limpo e um resumo curto do que já está pronto (arquivos, commits) e do que falta.
 
 ### Leitura de arquivos
 
 - Antes de abrir um arquivo grande, localizar o trecho com grep e ler só as linhas necessárias.
 - Não reler um arquivo que já está no contexto e não mudou.
 - Documentos longos (`docs/contrato-boletim.md`, `tasks/plano-boletim.md`, migrações) são consultados por seção, não inteiros.
+- Abrir imagens (prints, páginas de PDF, mockups) só quando a conferência visual for necessária, e só as páginas que importam: cada imagem custa de 1.500 a 3.000 tokens e fica no contexto até o fim da sessão. Para conferir texto de um PDF, extrair o texto em vez de abrir a página.
 
 ### Comandos e testes
 
@@ -47,9 +53,14 @@ A cota de uso é limitada e compartilhada entre a conversa principal e os subage
 - Respostas curtas: o resultado, o que falta e a próxima decisão. Sem recapitular o que já foi dito.
 - Ao terminar cada parte (PR e merge), registrar o estado em `tasks/todo.md` e pedir ao usuário que rode `/compact` (o Claude não consegue rodá-lo sozinho).
 - Se a conversa passar de uma parte grande do trabalho sem compactar, avisar o usuário.
+- Trocar de modelo (`/model`) só logo depois de um `/compact`: o cache é por modelo, e a troca obriga a regravar o contexto inteiro.
 
 ### O que não cortar
 
 - Revisão do trabalho dos subagentes antes do commit.
 - Testes do que foi alterado e a suíte completa antes do merge.
 - Conferência do que foi aplicado no banco de produção.
+
+### Banco e funções em produção
+
+- Aplicar migrations e publicar Edge Functions pela linha de comando ou pela API de gerenciamento do Supabase (`api.supabase.com`), lendo os arquivos do disco, em vez das ferramentas que exigem o texto inteiro na conversa. O token de acesso fica como segredo de rede do ambiente; nunca no chat nem em arquivo.
