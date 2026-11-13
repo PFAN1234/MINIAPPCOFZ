@@ -47,6 +47,8 @@ interface Publicacao {
   registro_id: string | null;
   encerramento_id: string | null;
   boletim_id?: string | null;
+  servico_id?: string | null;
+  servico_evento?: "entrada" | "saida" | null;
   tentativas: number;
 }
 
@@ -85,6 +87,18 @@ export function formatarData(iso: string | Date): string {
   }).formatToParts(new Date(iso));
   const p = (t: string) => partes.find((x) => x.type === t)?.value ?? "";
   return `${p("day")}/${p("month")} ${p("hour")}:${p("minute")}`;
+}
+
+/** `HH:mm` no fuso informado (o da etapa). */
+export function formatarHora(iso: string | Date, fuso: string): string {
+  const partes = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: fuso,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(iso));
+  const p = (t: string) => partes.find((x) => x.type === t)?.value ?? "";
+  return `${p("hour")}:${p("minute")}`;
 }
 
 /** "AAAA-MM-DD" → "dd/mm/aaaa". */
@@ -369,6 +383,60 @@ export function criarHandler(deps: Deps) {
    * Boletim emitido: o PDF (bucket `boletins`) vai ao grupo da etapa com `sendDocument`, no tópico
    * Geral (sem `message_thread_id`). Etapa sem grupo: espera, como obra sem tópico.
    */
+  /** Check-in/check-out de serviço: aviso no grupo da etapa (tópico Geral). */
+  async function processarServico(pub: Publicacao): Promise<Resultado> {
+    const servico = await um(
+      "servico",
+      "etapa_id, usuario_id, entrada_em, saida_em",
+      "id",
+      pub.servico_id!,
+    );
+    if (!servico) return { estado: "falhou", erro: "Serviço não encontrado." };
+    const etapa = await um(
+      "etapa",
+      "nome, telegram_chat_id, fuso",
+      "id",
+      servico.etapa_id,
+    );
+    if (!etapa) return { estado: "falhou", erro: "Etapa não encontrada." };
+    if (etapa.telegram_chat_id == null) {
+      return {
+        estado: "pendente",
+        erro: "Etapa sem grupo vinculado.",
+        proxima: new Date(agora().getTime() + ESPERA_SEM_TOPICO_MIN * 60_000),
+      };
+    }
+    const usuario = await um(
+      "usuario",
+      "nome, nome_exibicao",
+      "id",
+      servico.usuario_id,
+    );
+    const saida = pub.servico_evento === "saida";
+    const instante = saida ? servico.saida_em : servico.entrada_em;
+    if (!instante) return { estado: "falhou", erro: "Serviço sem horário." };
+    const fuso = etapa.fuso || "America/Sao_Paulo";
+    const quem = `<b>${escaparHtml(nomeMostrado(usuario) ?? "Alguém")}</b>`;
+    const texto = `${saida ? "🔴" : "🟢"} ${quem} ${
+      saida ? "saiu do serviço" : "entrou de serviço"
+    } às ${formatarHora(instante, fuso)} · ${escaparHtml(etapa.nome)}`;
+    const r = await telegram.chamar("sendMessage", {
+      chat_id: etapa.telegram_chat_id,
+      text: texto,
+      parse_mode: "HTML",
+    });
+    if (r.tipo === "http") {
+      console.warn(
+        `publish-outbox: serviço da publicação ${pub.id} recusado pelo Telegram (${r.status}): ${r.description}`,
+      );
+    } else if (r.tipo === "rede") {
+      console.warn(
+        `publish-outbox: serviço da publicação ${pub.id} sem resposta (${r.motivo})`,
+      );
+    }
+    return classificar(r, pub.tentativas);
+  }
+
   async function processarBoletim(pub: Publicacao): Promise<Resultado> {
     const boletim = await um(
       "boletim",
@@ -526,6 +594,7 @@ export function criarHandler(deps: Deps) {
     const backoff = () =>
       new Date(agora().getTime() + backoffMinutos(pub.tentativas) * 60_000);
     try {
+      if (pub.servico_id) return await processarServico(pub);
       if (pub.boletim_id) return await processarBoletim(pub);
       if (!pub.obra_id) {
         return { estado: "falhou", erro: "Publicação sem obra." };

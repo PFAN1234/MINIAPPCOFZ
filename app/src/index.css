@@ -125,45 +125,50 @@ textarea {
   border-bottom: 0;
 }
 
-/* Seletor de etapa da tela inicial: select nativo sobre o azul. */
-.seletor-etapa {
+/* Abas de etapa da tela inicial, sobre o azul: lado a lado, com rolagem horizontal. */
+.abas-etapa {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
 }
 
-.seletor-etapa-rotulo {
+.aba-etapa {
   flex: none;
-  color: var(--texto-suave-no-azul);
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.seletor-etapa select {
-  flex: 1;
-  min-width: 0;
   min-height: 44px;
-  padding: 0 40px 0 12px;
+  padding: 0 16px;
   font: inherit;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--texto-no-azul);
-  background-color: var(--azul-painel);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
+  color: var(--texto-suave-no-azul);
+  background: var(--azul-painel);
   border: 1px solid var(--azul-borda);
   border-radius: 10px;
-  appearance: none;
   cursor: pointer;
 }
 
-/* A lista que o sistema abre usa as cores normais (fundo claro). */
-.seletor-etapa option {
-  color: var(--texto);
-  background: var(--superficie);
+.aba-etapa[aria-selected='true'] {
+  color: var(--destaque-texto);
+  background: var(--destaque);
+  border-color: var(--destaque);
+}
+
+/* Equipe de serviço: espaço entre a lista e os botões, e antes da seção seguinte. */
+.equipe-servico {
+  margin-bottom: 24px;
+}
+
+.equipe-servico > .botao,
+.equipe-servico > .equipe-confirmar {
+  margin-top: 12px;
+}
+
+.equipe-confirmar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Sobre o azul, o anel de foco azul some: usa o amarelo. */

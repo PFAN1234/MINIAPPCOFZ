@@ -11,6 +11,25 @@ export interface TelegramBackButton {
   offClick(callback: () => void): void
 }
 
+/** Dados de `LocationManager.getLocation` (Bot API 8.0+). */
+export interface TelegramLocalizacao {
+  latitude: number
+  longitude: number
+  horizontal_accuracy?: number | null
+}
+
+/** `WebApp.LocationManager` (Bot API 8.0+). */
+export interface TelegramLocationManager {
+  isInited: boolean
+  isLocationAvailable: boolean
+  isAccessRequested: boolean
+  isAccessGranted: boolean
+  init(callback?: () => void): void
+  /** Pede a posição (e a permissão, se faltar); o callback recebe null se o acesso for negado. */
+  getLocation(callback: (dados: TelegramLocalizacao | null) => void): void
+  openSettings(): void
+}
+
 export interface TelegramThemeParams {
   bg_color?: string
   text_color?: string
@@ -50,6 +69,8 @@ export interface TelegramWebApp {
   disableVerticalSwipes?(): void
   /** Ocupa a tela inteira, sem o cabeçalho do Telegram (8.0+). */
   requestFullscreen?(): void
+  /** Localização do aparelho (8.0+). */
+  LocationManager?: TelegramLocationManager
 }
 
 declare global {
@@ -135,6 +156,21 @@ export function aplicarCoresTelegram(): void {
   pedirCor(app, '6.9', app.setHeaderColor, CORES_TELEGRAM.cabecalho)
   pedirCor(app, '6.1', app.setBackgroundColor, CORES_TELEGRAM.fundo)
   pedirCor(app, '7.10', app.setBottomBarColor, CORES_TELEGRAM.barraInferior)
+}
+
+/**
+ * `LocationManager` do Telegram, só se o cliente tiver a Bot API 8.0+ (senão undefined e o
+ * chamador usa o GPS do navegador). Erro do cliente não derruba o app.
+ */
+export function localizacaoDoTelegram(): TelegramLocationManager | undefined {
+  try {
+    const app = webApp()
+    if (!app || !dentroDoTelegram()) return undefined
+    if (typeof app.isVersionAtLeast !== 'function' || !app.isVersionAtLeast('8.0')) return undefined
+    return app.LocationManager
+  } catch {
+    return undefined
+  }
 }
 
 /** `initData` bruto a ser validado no servidor; string vazia fora do Telegram. */

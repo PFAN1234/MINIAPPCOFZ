@@ -91,11 +91,12 @@ describe('navegação com a fixture', () => {
 })
 
 describe('telas', () => {
-  it('Obras mostra a contagem de pendências abertas e os últimos registros', async () => {
+  it('Obras mostra a contagem de pendências abertas e a equipe de serviço', async () => {
     renderizar()
     expect(await screen.findByRole('link', { name: /^HTO.*3 pendências abertas/ })).toBeInTheDocument()
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
-    expect(await screen.findAllByText('Serviço')).not.toHaveLength(0)
+    expect(await screen.findByRole('heading', { name: 'Equipe de serviço' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Últimos registros' })).not.toBeInTheDocument()
   })
 
   it('Obra: busca "circ" mostra as circulações e area em pt-BR', async () => {

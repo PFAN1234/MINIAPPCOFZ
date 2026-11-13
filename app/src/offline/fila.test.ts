@@ -57,6 +57,18 @@ function criarRepoFalso() {
     async souAdmin() {
       return false
     },
+    async etapasInicio() {
+      return []
+    },
+    async equipeServico() {
+      throw new Error('n/a')
+    },
+    async fazerCheckin() {
+      throw new Error('n/a')
+    },
+    async fazerCheckout() {
+      throw new Error('n/a')
+    },
     async organizacao() {
       return { nome: 'CO-FZ', logo_url: null }
     },

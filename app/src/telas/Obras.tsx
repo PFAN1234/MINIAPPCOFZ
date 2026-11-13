@@ -2,13 +2,14 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
-import { ListaRegistros } from '../components/ListaRegistros.tsx'
-import { SeletorEtapa } from '../components/SeletorEtapa.tsx'
+import { AbasEtapa } from '../components/AbasEtapa.tsx'
+import { EquipeServico } from '../components/EquipeServico.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
 import type { ObraDisponivel } from '../dados/tipos.ts'
 import {
   FILTRO_PENDENCIAS_ABERTAS,
   useCriarLinkAdmin,
+  useEtapasInicio,
   useObras,
   useObrasDisponiveis,
   useRegistros,
@@ -16,8 +17,8 @@ import {
   useSouAdmin,
 } from '../dados/hooks.ts'
 import { abrirLink } from '../telegram.ts'
-import { useRegistrosLocais, useUsuarioId } from '../offline/contexto.tsx'
-import { etapasDasObras, useEtapaEscolhida } from '../util/etapas.ts'
+import { useUsuarioId } from '../offline/contexto.tsx'
+import { etapasDasAbas, useEtapaEscolhida } from '../util/etapas.ts'
 import { useOnline } from '../util/online.ts'
 import { normalizarTexto } from '../util/busca.ts'
 import { textoPendencias } from '../util/formato.ts'
@@ -26,8 +27,6 @@ const MINIMO_PARA_BUSCA = 5
 
 export default function Obras() {
   const obras = useObras()
-  const recentes = useRegistros({ limite: 5 })
-  const locais = useRegistrosLocais()
   const abertas = useRegistros(FILTRO_PENDENCIAS_ABERTAS)
   const [busca, setBusca] = useState('')
   const online = useOnline()
@@ -36,12 +35,18 @@ export default function Obras() {
   // Só afirma que não há obras depois de saber se há outras para pedir acesso.
   const outrasConhecidas = !online || !disponiveis.isPending
 
-  // Uma etapa por vez: a lista, a busca e "Outras obras" seguem a escolhida.
+  // Uma etapa por vez: a lista, a busca, "Outras obras" e a equipe de serviço seguem a escolhida.
+  const inicio = useEtapasInicio()
   const etapas = useMemo(
-    () => etapasDasObras(obras.data ?? [], todasOutras),
-    [obras.data, todasOutras],
+    () => etapasDasAbas(inicio.data ?? [], obras.data ?? [], todasOutras),
+    [inicio.data, obras.data, todasOutras],
   )
   const [etapa, escolherEtapa] = useEtapaEscolhida(useUsuarioId(), etapas)
+  // Sem a resposta de `etapas_inicio` (sinal ou cache), vale ter obra própria na etapa.
+  const participa = etapa
+    ? (inicio.data?.find((e) => e.id === etapa.id)?.participa ??
+      (obras.data ?? []).some((o) => o.etapa?.id === etapa.id))
+    : true
   const outras = etapa ? todasOutras.filter((o) => o.etapa_id === etapa.id) : todasOutras
 
   const porObra = useMemo(() => {
@@ -52,14 +57,9 @@ export default function Obras() {
 
   return (
     <>
-      <TopoTela
-        lista
-        titulo="Obras"
-        idTitulo="titulo-obras"
-        subtitulo={etapas.length === 1 ? etapas[0].nome : undefined}
-      >
-        {etapas.length > 1 && etapa && (
-          <SeletorEtapa
+      <TopoTela lista titulo="Obras" idTitulo="titulo-obras">
+        {etapa && (
+          <AbasEtapa
             etapas={etapas}
             valor={etapa.id}
             onMudar={(id) => {
@@ -76,6 +76,14 @@ export default function Obras() {
             if (lista.length === 0) {
               if (!outrasConhecidas) return <EstadoCarregando />
               if (outras.length > 0) return null
+              if (!participa) {
+                return (
+                  <EstadoVazio
+                    titulo="Você não participa desta etapa"
+                    texto="Entre no grupo dela no Telegram e abra o app de novo para pedir acesso."
+                  />
+                )
+              }
               return (
                 <EstadoVazio
                   titulo="Você ainda não tem acesso a nenhuma obra"
@@ -115,12 +123,7 @@ export default function Obras() {
         </EstadoConsulta>
       </section>
       {outras.length > 0 && <OutrasObras obras={outras} />}
-      <section aria-labelledby="titulo-recentes">
-        <h2 id="titulo-recentes">Últimos registros</h2>
-        <EstadoConsulta consulta={recentes}>
-          {(lista) => <ListaRegistros registros={lista} locais={locais} limite={5} vazio="Nenhum registro ainda" />}
-        </EstadoConsulta>
-      </section>
+      {etapa && <EquipeServico etapaId={etapa.id} />}
       <Administracao />
     </>
   )

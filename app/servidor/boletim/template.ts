@@ -18,6 +18,7 @@ import {
   horaBr,
   moeda,
   numeroBr,
+  partesNoFuso,
 } from './formato.js'
 import type { FotoSnapshot, ObraSnapshot, PendenciaEncerradaSnapshot, RegistroSnapshot, Snapshot } from './tipos.js'
 
@@ -116,6 +117,9 @@ table.obras tr { break-inside: avoid; }
 .obs-obra { font-size: 10pt; margin: 2px 0 8px; }
 .obs-obra .item { display: grid; grid-template-columns: 150px 1fr; gap: 8px; padding: 3px 0; border-bottom: 1px dotted #bbb; break-inside: avoid; }
 .obs-obra .quem { color: #444; font-size: 9pt; }
+table.equipe { width: 100%; border-collapse: collapse; font-size: 9.4pt; margin-bottom: 8px; }
+table.equipe th, table.equipe td { border: 1px solid #999; padding: 3px 5px; text-align: left; }
+table.equipe th { background: #d9d9d9; font-size: 8.5pt; }
 table.tardios { width: 100%; border-collapse: collapse; font-size: 9.4pt; }
 table.tardios th, table.tardios td { border: 1px solid #999; padding: 3px 5px; text-align: left; vertical-align: top; }
 table.tardios th { background: #d9d9d9; font-size: 8.5pt; }
@@ -411,6 +415,28 @@ ${s.tardios
   return `<h2><span>7.</span>OBSERVAÇÕES</h2>\n<div class="sec">${obs}${tardios}</div>`
 }
 
+/** `dd/mm HH:MM` no fuso do snapshot. */
+function diaHoraBr(instante: string, fuso: string): string {
+  const p = partesNoFuso(new Date(instante), fuso)
+  return `${p.dia}/${p.mes} ${p.hora}:${p.minuto}`
+}
+
+function tabelaEquipe(s: Snapshot): string {
+  const eq = s.equipe_servico
+  if (!eq) return ''
+  if (eq.length === 0) {
+    return '<p class="vazio">Nenhum check-in de serviço neste dia; assinam os responsáveis cadastrados na etapa.</p>'
+  }
+  const saida = (x: (typeof eq)[number]) =>
+    x.saida_em === null ? 'em serviço' : x.saida_automatica ? 'não registrada' : diaHoraBr(x.saida_em, s.fuso)
+  return `<table class="equipe"><tr><th>Militar</th><th>Entrada</th><th>Saída</th></tr>${eq
+    .map(
+      (x) =>
+        `<tr><td>${escapar(x.nome)}</td><td>${escapar(diaHoraBr(x.entrada_em, s.fuso))}</td><td>${escapar(saida(x))}</td></tr>`,
+    )
+    .join('')}</table>`
+}
+
 function secaoResponsaveis(s: Snapshot, o: OpcoesTemplate): string {
   const r = s.responsaveis
   const assin =
@@ -427,7 +453,7 @@ function secaoResponsaveis(s: Snapshot, o: OpcoesTemplate): string {
       } Lançamentos deste dia recebidos após a emissão entram no boletim seguinte.`
     : `${MARCA_PREVIA}: gerada pelo Fiscal Bot em ${quando} (horário de ${cidade}), com os lançamentos de ${dataBr(s.data)} até este momento. Não é um boletim emitido.`
   return `<div style="break-inside: avoid"><h2><span>8.</span>RESPONSÁVEIS</h2>
-<div class="sec">${assin}<div class="emissao">${escapar(texto)}</div></div></div>`
+<div class="sec">${tabelaEquipe(s)}${assin}<div class="emissao">${escapar(texto)}</div></div></div>`
 }
 
 /** HTML completo do boletim. */

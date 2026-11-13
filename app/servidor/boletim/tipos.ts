@@ -160,6 +160,8 @@ export interface Snapshot {
   organizacao: { nome: string; cabecalho: string[]; logo_path: string | null }
   etapa: EtapaSnapshot
   responsaveis: { nome: string; funcao: string }[]
+  /** Serviços (check-in/check-out) do dia; ausente em snapshots antigos. */
+  equipe_servico?: { nome: string; entrada_em: string; saida_em: string | null; saida_automatica: boolean }[]
   indicadores: IndicadoresSnapshot
   obras: ObraSnapshot[]
   tardios: TardioSnapshot[]
