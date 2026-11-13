@@ -41,7 +41,7 @@ export interface OpcoesTemplate {
   cssFontes: string
 }
 
-const CSS = `
+export const CSS = `
 @page { size: A4; margin: 12mm 12mm 16mm 12mm; }
 * { box-sizing: border-box; }
 html { padding-right: 2px; }

@@ -21,13 +21,14 @@ describe('vercel.json', () => {
   it('as rotas /api/* não caem nas reescritas do SPA', () => {
     expect(destino('/api/gerar-boletim')).toBeNull()
     expect(destino('/api/previa-boletim')).toBeNull()
+    expect(destino('/api/relatorio-pendencias')).toBeNull()
     expect(destino('/admin/etapas/2a-etapa')).toBe('/admin.html')
     expect(destino('/obras/hto')).toBe('/index.html')
     expect(destino('/')).toBe('/index.html')
   })
 
   it('as funções do boletim têm memória e tempo para o Chromium e levam o binário dele', () => {
-    for (const nome of ['api/gerar-boletim.ts', 'api/previa-boletim.ts']) {
+    for (const nome of ['api/gerar-boletim.ts', 'api/previa-boletim.ts', 'api/relatorio-pendencias.ts']) {
       const f = config.functions[nome]
       expect(f.memory).toBeGreaterThanOrEqual(2048)
       expect(f.maxDuration).toBeGreaterThanOrEqual(60)
