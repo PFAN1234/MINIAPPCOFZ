@@ -11,8 +11,11 @@ import ambientesHto from '../../../../data/hto/ambientes.json'
 import obraHto from '../../../../data/hto/obra.json'
 import plantasHto from '../../../../data/hto/plantas.json'
 import { ehWebp } from '../planta/render.ts'
+import { aplicarCampos, calcularFaltando, calcularPrazo, CAMPOS_VAZIOS, camposDe, distanciaKm } from './fixtureBoletim.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import {
+  CABECALHO_LINHA_MAX,
+  CABECALHO_LINHAS_MAX,
   CAMINHO_LOGO,
   ErroAdmin,
   NOME_OM_MAX,
@@ -23,7 +26,13 @@ import {
   type ConfigObra,
   type EstadoSessao,
   type BucketObra,
+  type Aditivo,
+  type CamposEtapa,
+  type EstacaoSugerida,
+  type EtapaDetalhe,
   type EtapaLista,
+  type Pessoa,
+  type Responsavel,
   type Organizacao,
   type AmbienteRA,
   type EventoModelo,
@@ -134,7 +143,10 @@ interface ObraMemoria {
   telegram_chat_id: number | null
 }
 
-interface EtapaMemoria {
+interface EtapaMemoria extends CamposEtapa {
+  aditivos: Aditivo[]
+  /** Responsáveis na ordem (a `ordem` sai da posição). */
+  responsaveis: { usuario_id: string; funcao: string }[]
   id: string
   slug: string
   nome: string
@@ -156,6 +168,14 @@ function dataUrl(arquivo: Blob): Promise<string> {
     leitor.readAsDataURL(arquivo)
   })
 }
+
+/** Estações do INMET da fixture (a lista real vem da coleta de clima, parte 2 do boletim). */
+const ESTACOES: (EstacaoSugerida & { operante: boolean })[] = [
+  { codigo: 'A305', nome: 'FORTALEZA', uf: 'CE', latitude: -3.8167, longitude: -38.5389, distancia_km: 0, operante: true },
+  { codigo: 'A360', nome: 'PACAJUS', uf: 'CE', latitude: -4.1722, longitude: -38.4667, distancia_km: 0, operante: true },
+  { codigo: 'A347', nome: 'GUARAMIRANGA', uf: 'CE', latitude: -4.2667, longitude: -38.9333, distancia_km: 0, operante: true },
+  { codigo: 'A399', nome: 'SOBRAL (INATIVA)', uf: 'CE', latitude: -3.7333, longitude: -40.3333, distancia_km: 0, operante: false },
+]
 
 const VOCE: UsuarioApp = { id: 'usuario-teste', nome: 'Você (teste)', username: 'voce', telegram_id: 1, eh_admin: true }
 const USUARIOS_BASE: Omit<UsuarioApp, 'eh_admin'>[] = [
@@ -252,6 +272,28 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       telegram_chat_id: GRUPO_2A,
       telegram_chat_titulo: 'Fiscalização 2ª ETAPA',
       arquivada_em: null,
+      ...CAMPOS_VAZIOS,
+      sigla: '2',
+      endereco: 'Av. Santos Dumont, 1500 - Aldeota, Fortaleza - CE',
+      latitude: -3.761,
+      longitude: -38.5297,
+      fuso: 'America/Fortaleza',
+      inmet_estacao: 'A305',
+      objeto: 'CONSTRUÇÃO DO HOTEL DE TRÂNSITO DE OFICIAIS (HTO) E DA SEDE DA COMISSÃO DE OBRAS',
+      local: 'CAMPUS DO COMANDO\nFORTALEZA - CE',
+      contratante: 'SECRETARIA DE OBRAS PÚBLICAS',
+      contrato: '120/2025 - SOP',
+      contratada: 'CONSTRUTORA EXEMPLO LTDA',
+      contratada_cnpj: '12.345.678/0001-95',
+      os_numero: '120/2025',
+      os_data: '2025-06-02',
+      vigencia_meses: 24,
+      valor_original: 79499000,
+      area_construida_m2: 86102.17,
+      aditivos: [
+        { id: 'aditivo-1', etapa_id: 'etapa-2a', numero: '1º TA', data: '2026-03-10', prazo_dias: 90, valor: 1250000, descricao: 'Reprogramação de fundações' },
+      ],
+      responsaveis: [{ usuario_id: 'usuario-patricio', funcao: 'Fiscal' }],
     },
     {
       id: 'etapa-3a',
@@ -261,17 +303,39 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       telegram_chat_id: null,
       telegram_chat_titulo: null,
       arquivada_em: null,
+      ...CAMPOS_VAZIOS,
+      aditivos: [],
+      responsaveis: [],
     },
   ]
   const obras: ObraMemoria[] = [
     obraDoJson('obra-hto', 0, obraHto as unknown as ObraJson, ambientesHto as unknown as AmbientesJson, 'etapa-2a', GRUPO_2A),
     obraDoJson('obra-cofz', 1, obraCofz as unknown as ObraJson, ambientesCofz as unknown as AmbientesJson, 'etapa-2a', null),
   ]
-  const organizacao = { nome: 'CO-FZ', logo_path: null as string | null }
+  const organizacao = {
+    nome: 'CO-FZ',
+    logo_path: null as string | null,
+    cabecalho: [
+      'COMANDO DA AERONÁUTICA',
+      'DIRETORIA DE INFRAESTRUTURA DA AERONÁUTICA',
+      'COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)',
+    ],
+  }
+  /** `usuario.nome_exibicao`. */
+  const nomesExibicao = new Map<string, string | null>([['usuario-patricio', 'CP PATRICIO']])
+  const nomeExibicao = (id: string) => nomesExibicao.get(id) ?? null
+  /** Papel de cada pessoa em cada obra (para "participações" da tela de pessoas). */
+  const participantes: { usuario_id: string; obra_id: string; papel: string }[] = [
+    { usuario_id: 'usuario-patricio', obra_id: 'obra-hto', papel: 'gestor' },
+    { usuario_id: 'usuario-eduardo', obra_id: 'obra-hto', papel: 'equipe' },
+    { usuario_id: 'usuario-maria', obra_id: 'obra-cofz', papel: 'equipe' },
+  ]
   /** Logos enviados: caminho → data URL. */
   const logos = new Map<string, string>()
   const organizacaoAtual = (): Organizacao => ({
-    ...organizacao,
+    nome: organizacao.nome,
+    logo_path: organizacao.logo_path,
+    cabecalho: [...organizacao.cabecalho],
     logo_url: organizacao.logo_path ? (logos.get(organizacao.logo_path) ?? null) : null,
   })
   const admins = new Map<string, { criado_em: string; criado_por: string | null }>([
@@ -333,6 +397,33 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     const e = etapas.find((x) => x.slug === slug)
     if (!e) throw new ErroAdmin('Etapa não encontrada')
     return e
+  }
+  const nomeDaPessoa = (id: string) => USUARIOS_BASE.find((u) => u.id === id)?.nome ?? ''
+  function responsaveisDe(e: EtapaMemoria): Responsavel[] {
+    return e.responsaveis.map((r, i) => ({
+      usuario_id: r.usuario_id,
+      nome: nomeDaPessoa(r.usuario_id),
+      nome_exibicao: nomeExibicao(r.usuario_id),
+      funcao: r.funcao,
+      ordem: i,
+    }))
+  }
+  function detalheDe(e: EtapaMemoria): EtapaDetalhe {
+    const campos = camposDe(e)
+    return {
+      ...campos,
+      id: e.id,
+      slug: e.slug,
+      nome: e.nome,
+      ordem: e.ordem,
+      arquivada_em: e.arquivada_em,
+      telegram_vinculado: e.telegram_chat_id !== null,
+      telegram_chat_titulo: e.telegram_chat_titulo,
+      aditivos: copia(e.aditivos).sort((a, b) => a.data.localeCompare(b.data) || a.numero.localeCompare(b.numero)),
+      responsaveis: responsaveisDe(e),
+      prazo: calcularPrazo(campos, e.aditivos),
+      faltando: calcularFaltando(campos, e.responsaveis.length),
+    }
   }
   const etapaDe = (o: ObraMemoria): EtapaMemoria => etapas.find((e) => e.id === o.etapa_id)!
 
@@ -416,6 +507,8 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
             telegram_chat_titulo: e.telegram_chat_titulo,
             obras: daEtapa.length,
             obras_arquivadas: daEtapa.filter((o) => o.arquivada_em).length,
+            sigla: e.sigla,
+            faltando: calcularFaltando(camposDe(e), e.responsaveis.length).length,
           }
         })
     },
@@ -428,16 +521,28 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       if (d.id) {
         const e = etapas.find((x) => x.id === d.id)
         if (!e) throw new ErroAdmin('Etapa não encontrada')
+        const campos = aplicarCampos(
+          camposDe(e),
+          d,
+          etapas.filter((x) => x !== e && x.sigla !== null).map((x) => x.sigla as string),
+        )
         e.nome = nome
         e.ordem = d.ordem
-        return { id: e.id, slug: e.slug, nome: e.nome, ordem: e.ordem }
+        Object.assign(e, campos)
+        return detalheDe(e)
       }
       const slug = d.slug ?? ''
       if (!SLUG.test(slug) || slug.length > 40) {
         throw new ErroAdmin('Slug inválido: use letras minúsculas, dígitos e hífen (até 40 caracteres)')
       }
       if (etapas.some((x) => x.slug === slug)) throw new ErroAdmin(`Já existe uma etapa com o slug ${slug}`)
+      const campos = aplicarCampos(
+        null,
+        d,
+        etapas.filter((x) => x.sigla !== null).map((x) => x.sigla as string),
+      )
       const nova: EtapaMemoria = {
+        ...campos,
         id: `etapa-nova-${++sequencia}`,
         slug,
         nome,
@@ -445,9 +550,116 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         telegram_chat_id: null,
         telegram_chat_titulo: null,
         arquivada_em: null,
+        aditivos: [],
+        responsaveis: [],
       }
       etapas.push(nova)
-      return { id: nova.id, slug, nome, ordem: nova.ordem }
+      return detalheDe(nova)
+    },
+
+    async obterEtapa(slug) {
+      exigirAdmin()
+      return detalheDe(etapaPorSlug(slug))
+    },
+
+    async salvarAditivo(d) {
+      exigirAdmin()
+      const e = etapas.find((x) => x.id === d.etapa_id)
+      if (!e) throw new ErroAdmin('Etapa não encontrada')
+      const numero = (d.numero ?? '').trim()
+      if (!numero || numero.length > 40) throw new ErroAdmin('Informe o número do aditivo (até 40 caracteres)')
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d.data ?? '') || Number.isNaN(Date.parse(d.data))) {
+        throw new ErroAdmin('Data do aditivo inválida: use AAAA-MM-DD')
+      }
+      if (!Number.isInteger(d.prazo_dias)) throw new ErroAdmin('O prazo do aditivo precisa ser um número inteiro de dias')
+      if (!Number.isFinite(d.valor)) throw new ErroAdmin('O valor do aditivo precisa ser um número')
+      const descricao = (d.descricao ?? '').trim() || null
+      if (descricao && descricao.length > 300) throw new ErroAdmin('A descrição do aditivo pode ter até 300 caracteres')
+      if (e.aditivos.some((a) => a.numero === numero && a.id !== d.id)) {
+        throw new ErroAdmin(`Já existe o aditivo ${numero} nesta etapa`)
+      }
+      const valor = Math.round(d.valor * 100) / 100
+      if (d.id) {
+        const atual = e.aditivos.find((a) => a.id === d.id)
+        if (!atual) throw new ErroAdmin('Aditivo não encontrado')
+        Object.assign(atual, { numero, data: d.data, prazo_dias: d.prazo_dias, valor, descricao })
+        return copia(atual)
+      }
+      const novo: Aditivo = { id: `aditivo-novo-${++sequencia}`, etapa_id: e.id, numero, data: d.data, prazo_dias: d.prazo_dias, valor, descricao }
+      e.aditivos.push(novo)
+      return copia(novo)
+    },
+
+    async removerAditivo(id) {
+      exigirAdmin()
+      for (const e of etapas) {
+        const i = e.aditivos.findIndex((a) => a.id === id)
+        if (i >= 0) {
+          e.aditivos.splice(i, 1)
+          return
+        }
+      }
+      throw new ErroAdmin('Aditivo não encontrado')
+    },
+
+    async definirResponsaveis(etapaId, lista) {
+      exigirAdmin()
+      const e = etapas.find((x) => x.id === etapaId)
+      if (!e) throw new ErroAdmin('Etapa não encontrada')
+      const vistos = new Set<string>()
+      const nova = lista.map((r) => {
+        if (vistos.has(r.usuario_id)) throw new ErroAdmin('Responsável repetido na lista')
+        vistos.add(r.usuario_id)
+        if (!USUARIOS_BASE.some((u) => u.id === r.usuario_id)) throw new ErroAdmin('Usuário não encontrado')
+        const funcao = (r.funcao ?? '').trim() || 'Fiscal'
+        if (funcao.length > 60) throw new ErroAdmin('A função pode ter até 60 caracteres')
+        return { usuario_id: r.usuario_id, funcao }
+      })
+      e.responsaveis = nova
+      return responsaveisDe(e)
+    },
+
+    async sugerirEstacoes(latitude, longitude, limite = 5) {
+      exigirAdmin()
+      return ESTACOES.filter((x) => x.operante)
+        .map((x) => ({
+          codigo: x.codigo,
+          nome: x.nome,
+          uf: x.uf,
+          latitude: x.latitude,
+          longitude: x.longitude,
+          distancia_km: Math.round(distanciaKm(latitude, longitude, x.latitude, x.longitude) * 10) / 10,
+        }))
+        .sort((a, b) => a.distancia_km - b.distancia_km)
+        .slice(0, limite)
+    },
+
+    async listarPessoas(): Promise<Pessoa[]> {
+      exigirAdmin()
+      return USUARIOS_BASE.map((u) => ({
+        id: u.id,
+        nome: u.nome,
+        nome_exibicao: nomeExibicao(u.id),
+        username: u.username,
+        telegram_id: u.telegram_id,
+        eh_admin: admins.has(u.id),
+        participacoes: participantes
+          .filter((p) => p.usuario_id === u.id)
+          .map((p) => {
+            const o = obras.find((x) => x.id === p.obra_id)!
+            return { obra_slug: o.slug, obra_nome: o.nome, etapa_nome: etapaDe(o).nome, papel: p.papel }
+          }),
+      })).sort((a, b) => (a.nome_exibicao ?? a.nome).localeCompare(b.nome_exibicao ?? b.nome))
+    },
+
+    async definirNomeExibicao(usuarioId, nome) {
+      exigirAdmin()
+      const u = USUARIOS_BASE.find((x) => x.id === usuarioId)
+      if (!u) throw new ErroAdmin('Usuário não encontrado')
+      const limpo = (nome ?? '').trim().replace(/\s+/g, ' ').toUpperCase()
+      if (limpo.length > 60) throw new ErroAdmin('O nome de exibição pode ter até 60 caracteres')
+      nomesExibicao.set(usuarioId, limpo || null)
+      return { id: u.id, nome: u.nome, nome_exibicao: limpo || null }
     },
 
     async arquivarEtapa(slug, arquivada) {
@@ -526,8 +738,19 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         if (!CAMINHO_LOGO.test(d.logo_path)) throw new ErroAdmin('Caminho do logo inválido')
         if (!logos.has(d.logo_path)) throw new ErroAdmin('Logo não encontrado no Storage: envie o arquivo antes de salvar')
       }
+      let cabecalho = organizacao.cabecalho
+      if (d.cabecalho !== undefined) {
+        if (d.cabecalho.length > CABECALHO_LINHAS_MAX) {
+          throw new ErroAdmin(`O cabeçalho pode ter até ${CABECALHO_LINHAS_MAX} linhas`)
+        }
+        cabecalho = d.cabecalho.map((l) => l.trim())
+        if (cabecalho.some((l) => l.length < 1 || l.length > CABECALHO_LINHA_MAX)) {
+          throw new ErroAdmin(`Cada linha do cabeçalho precisa ter de 1 a ${CABECALHO_LINHA_MAX} caracteres`)
+        }
+      }
       organizacao.nome = nome
       organizacao.logo_path = d.logo_path
+      organizacao.cabecalho = cabecalho
       return organizacaoAtual()
     },
 

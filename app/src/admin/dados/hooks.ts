@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
-import type { ConfigObra, DadosEtapa, DadosObra, PavimentoResumo, QrAmbiente } from './tipos.ts'
+import type { ConfigObra, DadosAditivo, DadosEtapa, DadosObra, PavimentoResumo, QrAmbiente } from './tipos.ts'
 
 export function useObrasAdmin() {
   const repo = useRepositorioAdmin()
@@ -61,6 +61,62 @@ export function useSalvarEtapa() {
   return useMutation({ mutationFn: (d: DadosEtapa) => repo.salvarEtapa(d), onSuccess: invalidar })
 }
 
+/** Cadastro completo da etapa (`admin_obter_etapa`): aditivos, responsáveis, prazo e o que falta. */
+export function useEtapa(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'etapa', slug], queryFn: () => repo.obterEtapa(slug) })
+}
+
+export function useSalvarAditivo() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (d: DadosAditivo) => repo.salvarAditivo(d), onSuccess: invalidar })
+}
+
+export function useRemoverAditivo() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({ mutationFn: (id: string) => repo.removerAditivo(id), onSuccess: invalidar })
+}
+
+export function useDefinirResponsaveis(etapaId: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({
+    mutationFn: (lista: { usuario_id: string; funcao: string }[]) => repo.definirResponsaveis(etapaId, lista),
+    onSuccess: invalidar,
+  })
+}
+
+/** Estações do INMET perto do ponto; só consulta com coordenadas válidas. */
+export function useSugestoesEstacoes(ponto: { latitude: number; longitude: number } | null) {
+  const repo = useRepositorioAdmin()
+  return useQuery({
+    queryKey: ['admin', 'estacoes', ponto?.latitude ?? null, ponto?.longitude ?? null],
+    queryFn: () => repo.sugerirEstacoes(ponto!.latitude, ponto!.longitude),
+    enabled: ponto !== null,
+    placeholderData: keepPreviousData,
+    retry: false,
+  })
+}
+
+// --- Pessoas -----------------------------------------------------------------------------------
+
+export function usePessoas() {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'pessoas'], queryFn: () => repo.listarPessoas() })
+}
+
+/** Os nomes aparecem também nos responsáveis das etapas: relê tudo do admin. */
+export function useDefinirNomeExibicao() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarObras()
+  return useMutation({
+    mutationFn: (p: { id: string; nome: string | null }) => repo.definirNomeExibicao(p.id, p.nome),
+    onSuccess: invalidar,
+  })
+}
+
 export function useArquivarEtapa(slug: string) {
   const repo = useRepositorioAdmin()
   const invalidar = useInvalidarObras()
@@ -104,9 +160,9 @@ export function useSalvarOrganizacao() {
   const repo = useRepositorioAdmin()
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (d: { nome: string; logo: Blob | null; logo_path: string | null }) => {
+    mutationFn: async (d: { nome: string; logo: Blob | null; logo_path: string | null; cabecalho?: string[] }) => {
       const caminho = d.logo ? await repo.enviarLogo(d.logo) : d.logo_path
-      return repo.salvarOrganizacao({ nome: d.nome, logo_path: caminho })
+      return repo.salvarOrganizacao({ nome: d.nome, logo_path: caminho, cabecalho: d.cabecalho })
     },
     onSuccess: (org) => {
       qc.setQueryData(['organizacao'], org)

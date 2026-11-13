@@ -3,7 +3,13 @@ import type {
   Bucket,
   ConfigObra,
   DadosEditorPlanta,
+  DadosAditivo,
   DadosEtapa,
+  Aditivo,
+  EstacaoSugerida,
+  EtapaDetalhe,
+  Pessoa,
+  Responsavel,
   DadosModelos,
   DadosObra,
   DadosWidget,
@@ -42,8 +48,22 @@ export interface RepositorioAdmin {
 
   /** Etapas (ativas e arquivadas) por `ordem, nome`, com as contagens de obras. */
   listarEtapas(): Promise<EtapaLista[]>
-  /** Cria (sem `id`; slug repetido é recusado) ou edita nome e ordem (com `id`). */
+  /** Cria (sem `id`; slug ou sigla repetidos são recusados) ou edita (com `id`; chave ausente mantém, `null` apaga). */
   salvarEtapa(dados: DadosEtapa): Promise<EtapaSalva>
+  /** `admin_obter_etapa`: cadastro completo, aditivos, responsáveis, prazo e o que falta para o boletim. */
+  obterEtapa(slug: string): Promise<EtapaDetalhe>
+  /** Cria ou edita (com `id`) um aditivo; número repetido na etapa é recusado. */
+  salvarAditivo(dados: DadosAditivo): Promise<Aditivo>
+  removerAditivo(id: string): Promise<void>
+  /** Substitui os responsáveis da etapa, na ordem da lista (vazia = nenhum). */
+  definirResponsaveis(etapaId: string, lista: { usuario_id: string; funcao: string }[]): Promise<Responsavel[]>
+  /** Estações do INMET operantes mais próximas do ponto (vazio até a primeira coleta de clima). */
+  sugerirEstacoes(latitude: number, longitude: number, limite?: number): Promise<EstacaoSugerida[]>
+
+  /** Pessoas que já abriram o Mini App, com nome de exibição e participações nas obras. */
+  listarPessoas(): Promise<Pessoa[]>
+  /** Normaliza (maiúsculas, espaços); texto vazio ou null tira o nome de exibição. */
+  definirNomeExibicao(usuarioId: string, nome: string | null): Promise<{ id: string; nome: string; nome_exibicao: string | null }>
   /** Arquiva (true) ou desarquiva (false) a etapa; devolve `arquivada_em`. Não mexe no arquivamento das obras. */
   arquivarEtapa(slug: string, arquivada: boolean): Promise<string | null>
   /** Desliga o grupo do Telegram da etapa e os tópicos das obras dela. */
@@ -55,8 +75,8 @@ export interface RepositorioAdmin {
 
   /** Nome e logo da organização militar (RPC `organizacao()`, também sem sessão). */
   obterOrganizacao(): Promise<Organizacao>
-  /** `logo_path` null tira o logo; se vier, precisa já estar no bucket `organizacao`. */
-  salvarOrganizacao(dados: { nome: string; logo_path: string | null }): Promise<Organizacao>
+  /** `logo_path` null tira o logo; se vier, precisa já estar no bucket `organizacao`. `cabecalho` ausente mantém; `[]` limpa. */
+  salvarOrganizacao(dados: { nome: string; logo_path: string | null; cabecalho?: string[] }): Promise<Organizacao>
   /** Envia o logo ao bucket `organizacao` (PNG, JPEG ou WebP, até 1 MB) e devolve o caminho. */
   enviarLogo(arquivo: Blob): Promise<string>
 

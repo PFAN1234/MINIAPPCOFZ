@@ -6,7 +6,7 @@
 import { useId, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ComDados, Resultado } from '../componentes.tsx'
 import { useOrganizacao, useSalvarOrganizacao } from '../dados/hooks.ts'
-import { NOME_OM_MAX, problemaDoLogo, TIPOS_LOGO, type Organizacao as DadosOrganizacao } from '../dados/tipos.ts'
+import { CABECALHO_LINHA_MAX, CABECALHO_LINHAS_MAX, NOME_OM_MAX, problemaDoLogo, TIPOS_LOGO, type Organizacao as DadosOrganizacao } from '../dados/tipos.ts'
 
 export default function Organizacao() {
   const org = useOrganizacao()
@@ -19,7 +19,7 @@ export default function Organizacao() {
         Nome e logo da organização militar: aparecem na barra deste site e no topo de todas as telas do Mini App.
       </p>
       <ComDados consulta={org}>
-        {(d) => <Formulario key={`${d.nome}|${d.logo_path ?? ''}`} atual={d} sucesso={sucesso} setSucesso={setSucesso} />}
+        {(d) => <Formulario key={`${d.nome}|${d.logo_path ?? ''}|${d.cabecalho.join('\n')}`} atual={d} sucesso={sucesso} setSucesso={setSucesso} />}
       </ComDados>
     </section>
   )
@@ -50,10 +50,27 @@ function Formulario({ atual, sucesso, setSucesso }: Props) {
   /** Logo novo escolhido (ainda não enviado) e a pré-visualização dele. */
   const [novo, setNovo] = useState<{ arquivo: File; url: string } | null>(null)
   const [remover, setRemover] = useState(false)
+  /** Linhas do cabeçalho do boletim, como digitadas (as vazias saem ao salvar). */
+  const [linhas, setLinhas] = useState<string[]>(atual.cabecalho)
   const [aviso, setAviso] = useState<string | null>(null)
 
   const previa = novo?.url ?? (remover ? null : atual.logo_url)
-  const mudou = nome.trim() !== atual.nome || novo !== null || (remover && atual.logo_path !== null)
+  const linhasLimpas = linhas.map((l) => l.trim()).filter((l) => l !== '')
+  const mudou =
+    nome.trim() !== atual.nome ||
+    novo !== null ||
+    (remover && atual.logo_path !== null) ||
+    JSON.stringify(linhasLimpas) !== JSON.stringify(atual.cabecalho)
+
+  function mudarLinhas(nova: string[]) {
+    setLinhas(nova)
+    setSucesso(null)
+  }
+  function moverLinha(i: number, delta: number) {
+    const nova = [...linhas]
+    ;[nova[i], nova[i + delta]] = [nova[i + delta], nova[i]]
+    mudarLinhas(nova)
+  }
 
   async function escolher(e: ChangeEvent<HTMLInputElement>) {
     const arquivo = e.target.files?.[0]
@@ -82,7 +99,7 @@ function Formulario({ atual, sucesso, setSucesso }: Props) {
     setAviso(null)
     setSucesso(null)
     salvar.mutate(
-      { nome: n, logo: novo?.arquivo ?? null, logo_path: remover ? null : atual.logo_path },
+      { nome: n, logo: novo?.arquivo ?? null, logo_path: remover ? null : atual.logo_path, cabecalho: linhasLimpas },
       { onSuccess: () => setSucesso('Organização salva.') },
     )
   }
@@ -162,6 +179,71 @@ function Formulario({ atual, sucesso, setSucesso }: Props) {
                 </button>
               )}
             </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset className="adm-pares">
+        <legend>Linhas do cabeçalho do boletim</legend>
+        <p className="adm-dica">
+          Subordinação, uma linha por nível, acima do nome da OM (até {CABECALHO_LINHAS_MAX} linhas de {CABECALHO_LINHA_MAX}{' '}
+          caracteres).
+        </p>
+        {linhas.map((l, i) => (
+          <div className="adm-linha-cabecalho" key={i}>
+            <input
+              aria-label={`Linha ${i + 1} do cabeçalho`}
+              value={l}
+              maxLength={CABECALHO_LINHA_MAX}
+              onChange={(e) => mudarLinhas(linhas.map((x, j) => (j === i ? e.target.value : x)))}
+            />
+            <button
+              type="button"
+              className="adm-botao adm-botao-discreto"
+              aria-label={`Subir linha ${i + 1}`}
+              disabled={i === 0}
+              onClick={() => moverLinha(i, -1)}
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="adm-botao adm-botao-discreto"
+              aria-label={`Descer linha ${i + 1}`}
+              disabled={i === linhas.length - 1}
+              onClick={() => moverLinha(i, 1)}
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              className="adm-botao adm-botao-discreto"
+              aria-label={`Remover linha ${i + 1}`}
+              onClick={() => mudarLinhas(linhas.filter((_, j) => j !== i))}
+            >
+              Remover
+            </button>
+          </div>
+        ))}
+        <div className="adm-acoes">
+          <button
+            type="button"
+            className="adm-botao"
+            disabled={linhas.length >= CABECALHO_LINHAS_MAX}
+            onClick={() => mudarLinhas([...linhas, ''])}
+          >
+            Adicionar linha
+          </button>
+        </div>
+        <div className="adm-cabecalho-previa" role="group" aria-label="Prévia do cabeçalho do boletim">
+          {previa && <img src={previa} alt="" />}
+          <div>
+            {linhasLimpas.map((l, i) => (
+              <p key={i} className="adm-cabecalho-linha">
+                {l}
+              </p>
+            ))}
+            <p className="adm-cabecalho-nome">{nome.trim() || 'Nome da OM'}</p>
           </div>
         </div>
       </fieldset>

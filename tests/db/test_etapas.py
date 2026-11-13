@@ -99,6 +99,14 @@ def salvar_etapa(c, usuario, dados):
     return rpc(c, usuario, 'select public.admin_salvar_etapa(%s::jsonb)', (json.dumps(dados),))
 
 
+# Obrigatórios na criação desde o boletim (20261113150000_boletim_base.sql), além da sigla.
+LOCALIZACAO = {'latitude': -3.761, 'longitude': -38.5297, 'fuso': 'America/Fortaleza'}
+
+
+def sigla_nova():
+    return uuid.uuid4().hex[:8].upper()
+
+
 # --- Migração dos dados ------------------------------------------------------------------------
 
 def _banco_antes_das_etapas(servidor_dsn):
@@ -368,14 +376,18 @@ def test_admin_salvar_etapa(cenario):
     c = cenario
     tornar_admin(c, c.sem_obra)
     s = f'etapa-{uuid.uuid4().hex[:8]}'
-    criada = salvar_etapa(c, c.sem_obra, {'slug': s, 'nome': '  3ª ETAPA ', 'ordem': 3})
-    assert set(criada) == {'id', 'slug', 'nome', 'ordem'}
-    assert (criada['slug'], criada['nome'], criada['ordem']) == (s, '3ª ETAPA', 3)
+    sigla = sigla_nova()
+    criada = salvar_etapa(c, c.sem_obra, {'slug': s, 'nome': '  3ª ETAPA ', 'ordem': 3, 'sigla': sigla,
+                                          **LOCALIZACAO})
+    # retorno no formato de admin_obter_etapa (contrato do boletim)
+    assert {'id', 'slug', 'nome', 'ordem', 'sigla', 'faltando'} <= set(criada)
+    assert (criada['slug'], criada['nome'], criada['ordem'], criada['sigla']) == (s, '3ª ETAPA', 3, sigla)
     editada = salvar_etapa(c, c.sem_obra, {'id': criada['id'], 'nome': 'Terceira', 'ordem': 1})
-    assert editada == {'id': criada['id'], 'slug': s, 'nome': 'Terceira', 'ordem': 1}
+    assert {k: editada[k] for k in ('id', 'slug', 'nome', 'ordem')} == {
+        'id': criada['id'], 'slug': s, 'nome': 'Terceira', 'ordem': 1}
     assert salvar_etapa(c, c.sem_obra, {'id': criada['id'], 'slug': s, 'nome': 'X'})['nome'] == 'X'
     with pytest.raises(errors.UniqueViolation):
-        salvar_etapa(c, c.sem_obra, {'slug': s, 'nome': 'Outra'})
+        salvar_etapa(c, c.sem_obra, {'slug': s, 'nome': 'Outra', 'sigla': sigla_nova(), **LOCALIZACAO})
     with pytest.raises(errors.InsufficientPrivilege):
         salvar_etapa(c, c.gestor_a, {'slug': 'x', 'nome': 'X'})
 
@@ -419,7 +431,7 @@ def test_admin_listar_etapas(cenario):
     item = por_id[str(c.etapa)]
     assert item == {'id': str(c.etapa), 'slug': slug_etapa(c), 'nome': nome_etapa(c), 'ordem': 0,
                     'arquivada_em': None, 'telegram_vinculado': True, 'telegram_chat_titulo': 'Grupo X',
-                    'obras': 2, 'obras_arquivadas': 1}
+                    'obras': 2, 'obras_arquivadas': 1, 'sigla': None, 'faltando': 15}
     assert por_id[str(vazia)]['obras'] == 0 and por_id[str(vazia)]['telegram_vinculado'] is False
     # Por ordem (o desempate pelo nome segue a collation do servidor, que muda entre ambientes).
     ordens = [x['ordem'] for x in lista]
@@ -599,19 +611,21 @@ def test_excluir_etapa_vazia(cenario):
 # --- Organização ---------------------------------------------------------------------------------
 
 LOGO = 'logo-0123456789abcdef.png'
+CABECALHO = ['COMANDO DA AERONÁUTICA', 'DIRETORIA DE INFRAESTRUTURA DA AERONÁUTICA',
+             'COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)']
 
 
 @pytest.fixture
 def org(cenario):
-    su(cenario, "update public.organizacao set nome = 'CO-FZ', logo_path = null, atualizado_em = null, "
-                'atualizado_por = null')
+    restaurar = "update public.organizacao set nome = 'CO-FZ', logo_path = null, cabecalho = %s"
+    su(cenario, restaurar + ', atualizado_em = null, atualizado_por = null', (CABECALHO,))
     yield cenario
-    su(cenario, "update public.organizacao set nome = 'CO-FZ', logo_path = null")
+    su(cenario, restaurar, (CABECALHO,))
 
 
 def test_organizacao_leitura(org):
     c = org
-    padrao = {'nome': 'CO-FZ', 'logo_path': None}
+    padrao = {'nome': 'CO-FZ', 'logo_path': None, 'cabecalho': CABECALHO}
     assert sql(c, 'select public.organizacao()', papel='anon') == [(padrao,)]
     assert rpc(c, c.equipe_a, 'select public.organizacao()') == padrao
     for papel, usuario in (('anon', None), ('authenticated', c.equipe_a)):
@@ -631,7 +645,7 @@ def test_admin_salvar_organizacao(org):
     tornar_admin(c, c.sem_obra)
 
     assert rpc(c, c.sem_obra, salvar, (json.dumps({'nome': '  1º BEC  ', 'logo_path': None}),)) == {
-        'nome': '1º BEC', 'logo_path': None}
+        'nome': '1º BEC', 'logo_path': None, 'cabecalho': CABECALHO}
     assert su(c, 'select atualizado_por, atualizado_em is not null from public.organizacao') == [(c.sem_obra, True)]
 
     # logo: formato e existência no bucket
@@ -643,11 +657,13 @@ def test_admin_salvar_organizacao(org):
         rpc(c, c.sem_obra, salvar, (json.dumps({'nome': 'X', 'logo_path': LOGO}),))
     objeto(c, 'organizacao', LOGO)
     assert rpc(c, c.sem_obra, salvar, (json.dumps({'nome': '1º BEC', 'logo_path': LOGO}),)) == {
-        'nome': '1º BEC', 'logo_path': LOGO}
-    assert sql(c, 'select public.organizacao()', papel='anon') == [({'nome': '1º BEC', 'logo_path': LOGO},)]
+        'nome': '1º BEC', 'logo_path': LOGO, 'cabecalho': CABECALHO}
+    assert sql(c, 'select public.organizacao()', papel='anon') == [
+        ({'nome': '1º BEC', 'logo_path': LOGO, 'cabecalho': CABECALHO},)]
     # campo ausente mantém; null tira o logo
     assert rpc(c, c.sem_obra, salvar, (json.dumps({'nome': 'Outro'}),))['logo_path'] == LOGO
-    assert rpc(c, c.sem_obra, salvar, (json.dumps({'logo_path': None}),)) == {'nome': 'Outro', 'logo_path': None}
+    assert rpc(c, c.sem_obra, salvar, (json.dumps({'logo_path': None}),)) == {
+        'nome': 'Outro', 'logo_path': None, 'cabecalho': CABECALHO}
 
     for dados in ({'nome': ''}, {'nome': 'x' * 81}, {'nome': 1}, {'logo_path': 1}, []):
         with pytest.raises(errors.InvalidParameterValue):

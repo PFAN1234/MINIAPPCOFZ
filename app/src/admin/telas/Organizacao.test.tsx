@@ -39,7 +39,7 @@ describe('organização (fixture)', () => {
     expect(within(barra).getByText('Fiscal Bot · Administração')).toBeInTheDocument()
     expect(within(barra).queryByRole('img')).not.toBeInTheDocument()
     const nav = within(barra).getByRole('navigation', { name: 'Principal' })
-    expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(['Etapas', 'Organização', 'Admins'])
+    expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(['Etapas', 'Pessoas', 'Organização', 'Admins'])
   })
 
   it('troca o nome, envia o logo com pré-visualização e ele aparece na barra', async () => {
@@ -119,5 +119,62 @@ describe('organização (fixture)', () => {
     await expect(repo.salvarOrganizacao({ nome: 'CO-FZ', logo_path: 'logo-0123456789abcdef.png' })).rejects.toThrow(
       'envie o arquivo antes',
     )
+  })
+})
+
+describe('linhas do cabeçalho do boletim (fixture)', () => {
+  it('mostra as linhas do exemplo e a prévia com logo, linhas e nome', async () => {
+    const repo = criarRepositorioAdminFixture()
+    await repo.salvarOrganizacao({ nome: 'CO-FZ', logo_path: await repo.enviarLogo(logo()) })
+    renderizar('/organizacao', repo)
+    expect(await screen.findByLabelText('Linha 1 do cabeçalho')).toHaveValue('COMANDO DA AERONÁUTICA')
+    expect(screen.getByLabelText('Linha 3 do cabeçalho')).toHaveValue('COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)')
+    const previa = screen.getByRole('group', { name: 'Prévia do cabeçalho do boletim' })
+    expect(within(previa).getAllByText(/./).map((e) => e.textContent)).toEqual([
+      'COMANDO DA AERONÁUTICA',
+      'DIRETORIA DE INFRAESTRUTURA DA AERONÁUTICA',
+      'COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)',
+      'CO-FZ',
+    ])
+    expect(previa.querySelector('img')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Salvar organização' })).toBeDisabled()
+  })
+
+  it('adiciona (até 4), reordena, remove e salva; a prévia acompanha e linha vazia é descartada', async () => {
+    const user = userEvent.setup()
+    const repo = criarRepositorioAdminFixture()
+    const salvar = vi.spyOn(repo, 'salvarOrganizacao')
+    renderizar('/organizacao', repo)
+    await screen.findByLabelText('Linha 1 do cabeçalho')
+    const adicionar = screen.getByRole('button', { name: 'Adicionar linha' })
+    await user.click(adicionar)
+    expect(adicionar).toBeDisabled()
+    expect(screen.getByLabelText('Linha 4 do cabeçalho')).toHaveValue('')
+    await user.click(screen.getByRole('button', { name: 'Subir linha 3' }))
+    expect(screen.getByLabelText('Linha 2 do cabeçalho')).toHaveValue('COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)')
+    expect(screen.getByRole('button', { name: 'Subir linha 1' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Descer linha 4' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Remover linha 1' }))
+    expect(screen.getByRole('button', { name: 'Adicionar linha' })).toBeEnabled()
+    await user.type(screen.getByLabelText('Linha 3 do cabeçalho'), 'Seção nova')
+    await user.click(screen.getByRole('button', { name: 'Salvar organização' }))
+    expect(await screen.findByText('Organização salva.')).toBeInTheDocument()
+    expect(salvar).toHaveBeenCalledWith({
+      nome: 'CO-FZ',
+      logo_path: null,
+      cabecalho: ['COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)', 'DIRETORIA DE INFRAESTRUTURA DA AERONÁUTICA', 'Seção nova'],
+    })
+    expect((await repo.obterOrganizacao()).cabecalho).toHaveLength(3)
+  })
+
+  it('remover todas as linhas limpa o cabeçalho', async () => {
+    const user = userEvent.setup()
+    const repo = criarRepositorioAdminFixture()
+    renderizar('/organizacao', repo)
+    for (let i = 0; i < 3; i++) await user.click(await screen.findByRole('button', { name: 'Remover linha 1' }))
+    expect(screen.queryByLabelText('Linha 1 do cabeçalho')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Salvar organização' }))
+    expect(await screen.findByText('Organização salva.')).toBeInTheDocument()
+    expect((await repo.obterOrganizacao()).cabecalho).toEqual([])
   })
 })

@@ -265,3 +265,20 @@ Decisão de 2026-11-13: qualquer participante da obra (equipe ou gestor) encerra
 - [x] Mini App: formulário de encerramento para todos os participantes, sem a nota "Só gestores…"; fixture igual.
 - [x] Aplicado no `miniappcofz-dev` (2026-11-13).
 - [ ] Merge na main.
+
+## Boletim de Acompanhamento Diário
+
+Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa por dia, emissão automática com retificação (`-R1`), clima só do INMET (céu estimado pela radiação), número `BA<sigla>/<YYMMDD>/<OM>` (ex.: `BA2/261111/COFZ`), nome de exibição definido por admins, observações por obra escritas pelos participantes. Prévia: `docs/mockups/boletim-diario-v2.pdf`. Contrato da parte 1 (banco e site de administração): `docs/contrato-boletim.md`.
+
+- [x] Migration `20261113150000_boletim_base.sql`: sigla, localização, fuso, estações INMET, horário de emissão e dados do contrato da etapa; `etapa_aditivo`, `etapa_responsavel`, `usuario.nome_exibicao`, `organizacao.cabecalho`, `observacao`, `inmet_estacao`, `clima_dia`, `boletim`, bucket `boletins`, RLS e numeração (`tests/db/test_boletim_base.py`; 547 testes de banco passando).
+- [ ] Aplicar a migration no `miniappcofz-dev` e preencher os dados da 2ª etapa.
+- [x] Admin: cadastro da etapa com sigla, localização (mapa + estação INMET sugerida), fuso, horário de emissão e dados do contrato, editáveis depois; responsáveis e aditivos na página da etapa; linhas do cabeçalho em Organização (Vitest e e2e passando).
+- [x] Página Pessoas no admin (nome de exibição).
+- [ ] Nome de exibição no Mini App e nas publicações do Telegram.
+- [ ] Cartão Observações do dia na página da obra (com fila offline e trava após a emissão).
+- [ ] Edge Function `coletar-clima` (INMET, estação reserva, céu pela radiação) com testes; acesso ao INMET a partir de `sa-east-1`.
+- [ ] Snapshot do dia: indicadores, serviços e pendências, com testes de banco (inclui fuso e lançamento tardio).
+- [ ] Template HTML, PDF, envio ao grupo da etapa no Telegram.
+- [ ] Agendamento por etapa, retificação e tela "Boletins" no Mini App.
+- [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
+- [ ] Externo: token do INMET; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.
