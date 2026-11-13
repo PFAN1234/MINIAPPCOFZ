@@ -7,12 +7,11 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ComDados, mensagemDe } from '../../componentes.tsx'
 import { useDesvincularEtapa, useEtapa, useEtapas, useObrasAdmin } from '../../dados/hooks.ts'
-import { ROTULO_FALTANDO, type EtapaLista } from '../../dados/tipos.ts'
+import { ROTULO_FALTANDO, type EtapaDetalhe, type EtapaLista } from '../../dados/tipos.ts'
 import { TabelaObras } from '../ObrasAdmin.tsx'
 import { data } from '../obra/ArquivarExcluir.tsx'
 import Aditivos from './Aditivos.tsx'
 import ArquivarExcluirEtapa from './ArquivarExcluirEtapa.tsx'
-import Boletins from './Boletins.tsx'
 import FormularioEtapa, { chaveDoCadastro } from './FormularioEtapa.tsx'
 import Responsaveis from './Responsaveis.tsx'
 
@@ -66,7 +65,7 @@ export default function EtapaAdmin() {
                   />
                   <Responsaveis etapaId={d.id} atuais={d.responsaveis} />
                   <Aditivos etapa={d} />
-                  <Boletins etapa={d} telegramVinculado={etapa.telegram_vinculado} />
+                  <CartaoBoletins etapa={d} />
                 </>
               )}
             </ComDados>
@@ -77,6 +76,22 @@ export default function EtapaAdmin() {
         )
       }}
     </ComDados>
+  )
+}
+
+/** Cartão "Boletins" da página da etapa: horário da emissão automática e o caminho para a aba. */
+function CartaoBoletins({ etapa }: { etapa: EtapaDetalhe }) {
+  return (
+    <section className="adm-secao" aria-labelledby="titulo-boletins">
+      <h2 id="titulo-boletins">Boletins</h2>
+      <p className="adm-dica">
+        Emissão automática todos os dias às {etapa.boletim_horario} ({etapa.fuso.replace('America/', '').replace('_', ' ')}),
+        com os lançamentos do dia. O PDF vai para o grupo do Telegram da etapa, no tópico Geral.
+      </p>
+      <p>
+        <Link to={`/boletins?etapa=${encodeURIComponent(etapa.slug)}`}>Ver boletins da etapa</Link>
+      </p>
+    </section>
   )
 }
 

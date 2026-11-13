@@ -295,7 +295,8 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 
 - [x] Parte A: banco (rascunho, retificação editada, listagem geral, `admin_boletim`), gerador (`aplicarEdicao`, prévia por POST) e publish-outbox (retificação apaga a mensagem anterior).
 - [x] Aplicar a migration em produção e publicar a publish-outbox (2026-11-13).
-- [ ] Parte B: site (aba Boletins com filtros, editor `/boletins/:id`, cartão na página da etapa).
+- [x] Parte B: site (aba Boletins com filtros, editor `/boletins/:id`, cartão na página da etapa).
+- [ ] Usuário: testar no site a edição de um boletim (Salvar, Pré-visualizar, Salvar e reenviar) e conferir no grupo que a mensagem anterior foi substituída.
 
 ## Organização de pastas e consolidação do repositório
 
