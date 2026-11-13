@@ -293,8 +293,8 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 
 ## Aba Boletins e edição do boletim (contrato: `docs/contrato-boletim.md`, parte 4)
 
-- [ ] Parte A: banco (rascunho, retificação editada, listagem geral, `admin_boletim`), gerador (`aplicarEdicao`, prévia por POST) e publish-outbox (retificação apaga a mensagem anterior).
-- [ ] Aplicar a migration em produção e publicar a publish-outbox.
+- [x] Parte A: banco (rascunho, retificação editada, listagem geral, `admin_boletim`), gerador (`aplicarEdicao`, prévia por POST) e publish-outbox (retificação apaga a mensagem anterior).
+- [x] Aplicar a migration em produção e publicar a publish-outbox (2026-11-13).
 - [ ] Parte B: site (aba Boletins com filtros, editor `/boletins/:id`, cartão na página da etapa).
 
 ## Organização de pastas e consolidação do repositório
