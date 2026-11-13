@@ -20,6 +20,7 @@ import type {
   ObraDisponivel,
   Organizacao,
   RegistroLocalizado,
+  PainelRelatorios,
   Relatorios,
   ResultadoExclusaoBoletim,
   RegistroResumo,
@@ -95,6 +96,10 @@ export interface Repositorio {
   criarLinkAdmin(): Promise<LinkAdmin>
   /** Aba Relatórios: situação de hoje por etapa e boletins emitidos. */
   relatorios(): Promise<Relatorios>
+  /** Painel da aba Relatórios: movimento por obra e dia da etapa, até hoje. */
+  painelRelatorios(etapaId: string): Promise<PainelRelatorios>
+  /** Gera o PDF de pendências (etapa inteira ou uma obra) e devolve a URL assinada. */
+  exportarPendencias(etapaId: string, obraId: string | null): Promise<string>
   /** URL assinada (5 min) do PDF de um boletim. */
   urlPdfBoletim(caminho: string): Promise<string>
   /** Admin: pede a emissão agora (nova revisão se já houver boletim no dia). Falhas sobem como `ErroEnvio`. */

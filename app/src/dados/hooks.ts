@@ -314,3 +314,20 @@ export function useExcluirBoletim() {
     onSettled: () => qc.invalidateQueries({ queryKey: ['relatorios'] }),
   })
 }
+
+/** Painel da aba Relatórios (histórico inteiro da etapa). */
+export function usePainelRelatorios(etapaId: string | null | undefined) {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['painel-relatorios', etapaId],
+    queryFn: () => repo.painelRelatorios(etapaId as string),
+    enabled: !!etapaId,
+  })
+}
+
+export function useExportarPendencias() {
+  const repo = useRepositorio()
+  return useMutation({
+    mutationFn: ({ etapaId, obraId }: { etapaId: string; obraId: string | null }) => repo.exportarPendencias(etapaId, obraId),
+  })
+}

@@ -49,6 +49,7 @@ import type {
   SolicitacaoAcesso,
   BoletimRelatorio,
   EtapaRelatorio,
+  PainelRelatorios,
   Relatorios,
   ResultadoExclusaoBoletim,
 } from './tipos.ts'
@@ -545,6 +546,34 @@ function boletinsIniciais(dia: string): BoletimRelatorio[] {
   ]
 }
 
+/** Painel determinístico: ~5 semanas até `hoje`, 3 obras da 2ª etapa, pendências em parte resolvidas. */
+export function painelFixture(hoje: string): PainelRelatorios {
+  const obras = [
+    { id: ID_HTO, slug: 'hto', nome: 'HTO' },
+    { id: ID_AURORA, slug: 'aurora', nome: 'Residencial Aurora' },
+    { id: 'obra-quadra-fixture', slug: 'quadra', nome: 'Quadra Poliesportiva' },
+  ]
+  const base = new Date(`${hoje}T12:00:00Z`).getTime()
+  const dias: PainelRelatorios['dias'] = []
+  const total = 35
+  for (let i = total - 1; i >= 0; i--) {
+    const d = new Date(base - i * 86_400_000)
+    const dow = d.getUTCDay()
+    if (dow === 0) continue // domingo sem movimento
+    const dia = d.toISOString().slice(0, 10)
+    const k = total - 1 - i
+    obras.forEach((obra, o) => {
+      if (dow === 6 && o !== 0) return
+      if ((k + o) % 5 === 4) return // alguns dias sem movimento
+      const servicos = 1 + ((k * 3 + o * 2) % 4)
+      const pendencias = (k * 7 + o * 3) % 5 === 0 ? 2 : (k + o) % 3 === 0 ? 1 : 0
+      const resolvidas = k > 6 && (k * 5 + o) % 4 === 0 ? 1 : 0
+      if (servicos + pendencias + resolvidas > 0) dias.push({ obra_id: obra.id, dia, servicos, pendencias, resolvidas })
+    })
+  }
+  return { etapa: { id: ETAPA_2.id, slug: '2a-etapa', nome: ETAPA_2.nome, hoje }, obras, dias }
+}
+
 export function criarRepositorioFixture(
   opcoes: {
     persistencia?: Storage | null
@@ -818,6 +847,18 @@ export function criarRepositorioFixture(
         ultima_revisao: !boletinsRel.some((o) => o.etapa_slug === b.etapa_slug && o.data === b.data && o.revisao > b.revisao),
       }))
       return { admin: opcoes.admin === true, etapas, boletins }
+    },
+
+    async painelRelatorios(etapaId): Promise<PainelRelatorios> {
+      if (etapaId !== ETAPA_2.id) {
+        return { etapa: { id: etapaId, slug: '', nome: '', hoje: hoje() }, obras: [], dias: [] }
+      }
+      return painelFixture(hoje())
+    },
+
+    async exportarPendencias() {
+      await new Promise((r) => setTimeout(r, 800))
+      return 'https://exemplo.invalid/relatorios/pendencias-exemplo.pdf'
     },
 
     async urlPdfBoletim(caminho) {

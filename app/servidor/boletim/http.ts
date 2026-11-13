@@ -10,7 +10,7 @@ import type { Snapshot } from './tipos.js'
 
 export const CABECALHO_SEGREDO_INTERNO = 'x-segredo-interno'
 
-const json = (corpo: unknown, status = 200) =>
+export const json = (corpo: unknown, status = 200) =>
   new Response(JSON.stringify(corpo), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } })
 
 export function igualConstante(a: string, b: string): boolean {
@@ -57,7 +57,7 @@ const SLUG = /^[a-z0-9-]{1,40}$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** Erro de RPC do banco → resposta com a mensagem em português (sem o prefixo com o nome da RPC). */
-function respostaDeRpc(e: ErroRpc): Response {
+export function respostaDeRpc(e: ErroRpc): Response {
   const status = e.codigo === 'P0002' ? 404 : e.codigo === '22023' ? 400 : e.codigo === '42501' ? 403 : 500
   return json({ erro: e.message.replace(/^[a-z_]+: /, '') }, status)
 }

@@ -411,6 +411,29 @@ export interface Relatorios {
   boletins: BoletimRelatorio[]
 }
 
+/** Obra da etapa no painel da aba Relatórios. */
+export interface ObraPainel {
+  id: string
+  slug: string
+  nome: string
+}
+
+/** Movimento de uma obra em um dia (no fuso da etapa). */
+export interface DiaPainel {
+  obra_id: string
+  dia: string
+  servicos: number
+  pendencias: number
+  resolvidas: number
+}
+
+/** Resposta de `painel_relatorios`. */
+export interface PainelRelatorios {
+  etapa: { id: string; slug: string; nome: string; hoje: string }
+  obras: ObraPainel[]
+  dias: DiaPainel[]
+}
+
 /** Resultado de excluir um boletim (o dia inteiro). */
 export interface ResultadoExclusaoBoletim {
   numero: string

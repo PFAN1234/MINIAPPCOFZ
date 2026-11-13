@@ -2146,3 +2146,63 @@ a.botao {
 .relatorio-erro { margin-top: 8px; font-size: 0.875rem; color: var(--erro); }
 .relatorio-aviso { padding: 10px 12px; margin: 0 0 12px; font-size: 0.875rem; background: var(--bg-secundario); border: 1px solid var(--borda); border-radius: 10px; }
 .botao-perigo { color: #fff; background: var(--erro); }
+
+/* Painel de relatórios */
+.painel-cartoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 12px; }
+.painel-numero { min-width: 0; padding: 8px 8px 8px 10px; background: var(--superficie, var(--bg-secundario)); border-left: 3px solid var(--painel-cor); border-radius: 8px; color: var(--texto); }
+.painel-numero b { display: block; font-family: var(--fonte-titulo); font-size: 24px; line-height: 1.1; }
+.painel-numero span { display: block; font-size: 11px; font-weight: 600; }
+.painel-numero small { display: block; font-size: 11px; color: var(--texto-suave); }
+.painel-servicos { --painel-cor: var(--servico); }
+.painel-abertas { --painel-cor: var(--pendencia); }
+.painel-resolvidas { --painel-cor: var(--ok); }
+.painel-subtitulo { margin: 12px 0 4px; font-family: var(--fonte-titulo); font-size: 0.95rem; color: var(--texto); }
+.grafico { margin: 0 0 8px; }
+.grafico-legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 0; margin: 0 0 4px; list-style: none; font-size: 12px; color: var(--texto); }
+.grafico-legenda li { display: flex; align-items: center; gap: 6px; }
+.grafico-chave { width: 18px; height: 0; border-top: 2px solid var(--cor-serie); border-radius: 2px; }
+.serie-servicos { --cor-serie: var(--servico); }
+.serie-pendencias { --cor-serie: var(--pendencia); }
+.serie-resolvidas { --cor-serie: var(--ok); }
+.grafico-chave.serie-resolvidas { border-top-style: dashed; }
+.grafico-dica { min-height: 1.4em; margin: 0 0 2px; font-size: 12px; color: var(--texto); }
+.grafico-dica[data-visivel='nao'] { visibility: hidden; }
+.grafico-svg { display: block; width: 100%; height: auto; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.grafico-grade { stroke: var(--borda-fraca); stroke-width: 1; }
+.grafico-eixo { font-family: var(--fonte-texto); font-size: 11px; fill: var(--texto-suave); }
+.grafico-valor { font-family: var(--fonte-texto); font-size: 11px; font-weight: 700; fill: var(--texto); }
+.grafico-linha { stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.grafico-linha.serie-resolvidas { stroke-dasharray: 5 3; }
+.grafico-cursor { stroke: var(--texto-suave); stroke-width: 1; }
+.por-obra { padding: 0; margin: 0 0 8px; list-style: none; }
+.por-obra-linha { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin: 0 0 10px; color: var(--texto); }
+.por-obra-nome { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.por-obra-numeros { font-size: 12px; text-align: right; }
+.por-obra-trilho { grid-column: 1 / -1; display: block; }
+.por-obra-barra { display: flex; gap: 2px; height: 14px; min-width: 6px; }
+.por-obra-seg { display: block; min-width: 4px; }
+.por-obra-resolvidas { background: var(--ok); }
+.por-obra-abertas { background: var(--pendencia); }
+.por-obra-seg:first-child { border-radius: 4px 0 0 4px; }
+.por-obra-seg:last-child { border-radius: 0 4px 4px 0; }
+.por-obra-seg:only-child { border-radius: 4px; }
+.painel-tabela { margin: 8px 0 0; font-size: 13px; color: var(--texto); }
+.painel-tabela summary { cursor: pointer; padding: 6px 0; }
+.painel-tabela table { width: 100%; border-collapse: collapse; }
+.painel-tabela th, .painel-tabela td { padding: 4px 6px; text-align: right; border-bottom: 1px solid var(--borda-fraca); font-weight: 400; font-variant-numeric: tabular-nums; }
+.painel-tabela th:first-child { text-align: left; }
+.painel-tabela thead th { font-size: 11px; color: var(--texto-suave); }
+
+/* Filtro de obra: os nomes não quebram linha; se não couberem, a linha rola na horizontal. */
+.filtro-obra .abas {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filtro-obra .abas::-webkit-scrollbar {
+  display: none;
+}
+.filtro-obra .aba {
+  flex: 1 0 auto;
+  white-space: nowrap;
+  padding: 0 14px;
+}
