@@ -298,6 +298,11 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [x] Parte B: site (aba Boletins com filtros, editor `/boletins/:id`, cartão na página da etapa).
 - [ ] Usuário: testar no site a edição de um boletim (Salvar, Pré-visualizar, Salvar e reenviar) e conferir no grupo que a mensagem anterior foi substituída.
 
+## Mini App em tela cheia
+
+- [x] Arrasto para baixo travado (7.7+) e tela cheia no celular (8.0+), com áreas seguras `--seguro-topo`/`--seguro-base` (PR #34, merge).
+- [ ] Usuário: abrir o Mini App no celular e conferir o topo (logo abaixo dos botões X e ⋯) e que arrastar para baixo só rola.
+
 ## Organização de pastas e consolidação do repositório
 
 Plano: `tasks/plano-organizacao-pastas.md` (decisões de 2026-11-12; registrado em `docs/ROADMAP.md`).
