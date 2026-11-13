@@ -262,6 +262,25 @@ Regras: dia = `[data 00:00, data+1 00:00)` no fuso da etapa, por `registro.captu
 
 **`publish-outbox`** (`supabase/functions/publish-outbox/`): trata publicação com `boletim_id` (baixa o PDF de `boletins`, `sendDocument` com a legenda acima; resposta e erros como as demais publicações). Testes Deno.
 
+### Reenvio ao Telegram e clima de boletim anterior (`20261114150000_boletim_reenvio_clima.sql`; testes `tests/db/test_boletim_reenvio_clima.py`)
+
+- `admin_reenviar_boletim(p_slug, p_boletim) → {boletim_id, publicacao_estado: 'pendente'}` (admin): o boletim
+  tem de ser da etapa (senão `P0002` "Boletim não encontrado") e a etapa precisa de grupo (senão `22023`
+  "A etapa não tem grupo do Telegram vinculado"). Trava a linha de `publicacao_telegram`: `falhou` ou `incerto`
+  voltam a `pendente` (tentativas 0, erro nulo, `proxima_tentativa_em = now()`) e a publish-outbox é acionada;
+  `pendente`/`enviando` → `23505` "O envio deste boletim já está em andamento"; `publicado` → `22023` "Este
+  boletim já foi publicado no grupo"; sem linha, cria a pendente. No site, o botão "Reenviar ao Telegram" aparece
+  em `falhou` e `incerto` (neste, antes pede confirmação: pode duplicar a mensagem).
+- `admin_listar_boletins` passa a trazer, em cada boletim, `publicacao_erro` e `publicacao_tentativas` (0 sem linha).
+- `boletim_clima_anterior(p_etapa, p_data) → {numero, revisao, clima} | null` (só `service_role`, para o gerador):
+  o boletim de maior revisão da data cujo `snapshot->'clima'->>'imagem_path'` não é nulo; `clima` é o
+  `snapshot->'clima'`. Climas indisponíveis são ignorados. No gerador, quando a data não cabe nas
+  últimas 24 horas do Observatório (`climaCabeNoDia` falso), `montarBoletim` consulta a RPC, baixa a imagem
+  de `boletins/<imagem_path>` e usa o clima com `reaproveitado_de` (número do boletim de origem) e
+  `imagem_path` nulo; a emissão envia a cópia para `<etapa>/<numero>-clima.png` e grava o novo caminho. A
+  legenda do PDF cita o boletim de origem. Sem anterior, ou com falha na consulta/download (só registrada no
+  log), o clima sai indisponível. A prévia também reaproveita.
+
 ## Gerador (Vercel, em `app/`)
 
 - Funções Node em `app/api/`: `gerar-boletim.ts` (POST, segredo interno; processa a fila) e `previa-boletim.ts` (GET `?etapa=<slug>&data=AAAA-MM-DD`, cabeçalho `Authorization: Bearer <JWT do admin>`; confere `sou_admin` com o JWT; devolve o PDF com a marca "PRÉVIA — sem número" e sem gravar nada). Código compartilhado em `app/servidor/boletim/` (fora do bundle do Vite): `template.ts` (HTML/CSS do boletim a partir do snapshot, no layout da prévia v2, fonte Liberation/Times, A4, rodapé com número e paginação), `clima.ts` (captura), `fotos.ts` (download pelo Storage com a chave secreta e redução para 1000 px no lado maior, JPEG ~75%, embutidas no HTML), `pdf.ts` (Chromium headless: `@sparticuz/chromium` + `playwright-core` na Vercel; Chromium local nos testes).

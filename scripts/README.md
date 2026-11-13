@@ -129,3 +129,15 @@ Os testes conferem que `ambientes.json` e os seeds no Git são exatamente o que 
 `data/cofz/ambientes.json` está `aguardando_revisao_humana`: as três "CIRCULAÇÃO" ficam numeradas pela área (Circulação 1/2/3), "DA" vira "Sala DA" e dois cômodos sem rótulo ("WC da chefia" e "Sala de apoio") entram por `ambientes_manuais`.
 
 Para conferir visualmente a posição dos pinos, abra `data/<slug>/plantas/<revisao>/<pavimento>/prova.png`: é a visão geral com todos os pinos desenhados. As imagens usadas pelo app não trazem o pino gravado; o frontend o desenha a partir do manifesto.
+
+## `supabase_api.py`: banco de produção pela API de gerenciamento
+
+Aplica migrations e roda SQL no projeto `miniappcofz-dev` lendo os arquivos do disco, sem passar o texto pela conversa do Claude. O token de acesso do Supabase (gerado em Account → Access Tokens, restrito ao projeto) fica como segredo de rede do ambiente do Claude Code para `api.supabase.com`; o script não lê variável nem arquivo de credencial.
+
+```bash
+python3 scripts/supabase_api.py pendentes
+python3 scripts/supabase_api.py aplicar supabase/migrations/<arquivo>.sql
+python3 scripts/supabase_api.py sql "select count(*) from public.etapa"
+```
+
+`aplicar` roda o arquivo numa transação e grava a migration em `supabase_migrations.schema_migrations` (versão e nome tirados do nome do arquivo). Depois de aplicar, conferir as funções alteradas comparando `md5(prosrc)` com um banco local montado a partir do repositório.

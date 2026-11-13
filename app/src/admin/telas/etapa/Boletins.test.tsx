@@ -7,6 +7,7 @@ import AdminApp from '../../AdminApp.tsx'
 import { RepositorioAdminProvider } from '../../dados/contexto.tsx'
 import { criarRepositorioAdminFixture } from '../../dados/fixture.ts'
 import { somarDias } from '../../dados/fixtureBoletim.ts'
+import type { BoletimEmitido } from '../../dados/tipos.ts'
 import type { RepositorioAdmin } from '../../dados/repositorio.ts'
 import { criarEntrada } from '../../entrada.ts'
 import { dataBr, hojeNoFuso, numeroBoletim } from '../../formato.ts'
@@ -160,5 +161,69 @@ describe('fixture: boletins (como admin_listar_boletins / admin_pedir_emissao)',
     const pdf = await repo.previaBoletim('2a-etapa', hoje)
     expect(pdf.type).toBe('application/pdf')
     expect(new TextDecoder().decode(await pdf.arrayBuffer())).toMatch(/^%PDF-1\.4[\s\S]*%%EOF\n$/)
+  })
+})
+
+describe('página da etapa: reenvio ao Telegram', () => {
+  /** Repositório cujo boletim mais recente está no estado de publicação dado. */
+  async function comEstado(estado: string, erro: string | null = null) {
+    const repo = criarRepositorioAdminFixture()
+    const lista = await repo.listarBoletins('2a-etapa')
+    const boletins: BoletimEmitido[] = lista.boletins.map((b, i) =>
+      i === 0 ? { ...b, publicado: false, publicacao_estado: estado, publicacao_erro: erro, publicacao_tentativas: 8 } : b,
+    )
+    vi.spyOn(repo, 'listarBoletins').mockResolvedValue({ ...lista, boletins })
+    return repo
+  }
+
+  it('falhou: mostra o erro e reenvia sem confirmação', async () => {
+    const user = userEvent.setup()
+    const repo = await comEstado('falhou', 'chat not found')
+    const reenviar = vi.spyOn(repo, 'reenviarBoletim').mockResolvedValue()
+    const confirmar = vi.spyOn(window, 'confirm')
+    renderizar('/etapas/2a-etapa', repo)
+    expect(await screen.findByText('chat not found')).toHaveClass('adm-dica')
+    await user.click(screen.getByRole('button', { name: `Reenviar ${num(ontem)} ao Telegram` }))
+    expect(confirmar).not.toHaveBeenCalled()
+    expect(reenviar).toHaveBeenCalledWith('2a-etapa', `boletim-${ontem}-0`)
+  })
+
+  it('incerto: pede confirmação; recusada não reenvia, aceita reenvia', async () => {
+    const user = userEvent.setup()
+    const repo = await comEstado('incerto')
+    const reenviar = vi.spyOn(repo, 'reenviarBoletim').mockResolvedValue()
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)
+    renderizar('/etapas/2a-etapa', repo)
+    const botao = await screen.findByRole('button', { name: `Reenviar ${num(ontem)} ao Telegram` })
+    await user.click(botao)
+    expect(confirmar).toHaveBeenCalledWith(
+      'O envio pode ter chegado ao grupo. Confira no Telegram antes: reenviar pode duplicar a mensagem. Reenviar mesmo assim?',
+    )
+    expect(reenviar).not.toHaveBeenCalled()
+    await user.click(botao)
+    expect(reenviar).toHaveBeenCalledTimes(1)
+  })
+
+  it('sem botão em publicado e aguardando', async () => {
+    renderizar('/etapas/2a-etapa')
+    await screen.findByRole('table', { name: 'Boletins emitidos' })
+    expect(screen.queryByRole('button', { name: /Reenviar/ })).not.toBeInTheDocument()
+  })
+
+  it('mostra o erro do reenvio', async () => {
+    const user = userEvent.setup()
+    const repo = await comEstado('falhou')
+    vi.spyOn(repo, 'reenviarBoletim').mockRejectedValue(new Error('O envio deste boletim já está em andamento'))
+    renderizar('/etapas/2a-etapa', repo)
+    await user.click(await screen.findByRole('button', { name: `Reenviar ${num(ontem)} ao Telegram` }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('já está em andamento')
+  })
+
+  it('fixture: recusa pendente, publicado, boletim inexistente e etapa sem grupo', async () => {
+    const repo = criarRepositorioAdminFixture()
+    await expect(repo.reenviarBoletim('2a-etapa', `boletim-${ontem}-0`)).rejects.toThrow('em andamento')
+    await expect(repo.reenviarBoletim('2a-etapa', `boletim-${anteontem}-0`)).rejects.toThrow('já foi publicado')
+    await expect(repo.reenviarBoletim('2a-etapa', 'nao-existe')).rejects.toThrow('Boletim não encontrado')
+    await expect(repo.reenviarBoletim('3a-etapa', `boletim-${ontem}-0`)).rejects.toThrow('Boletim não encontrado')
   })
 })

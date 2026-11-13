@@ -43,7 +43,7 @@ export async function tratarGerar(req: Request, c: ContextoGerar): Promise<Respo
 }
 
 export interface ContextoPrevia {
-  fonte: Pick<FonteBoletim, 'baixar'>
+  fonte: Pick<FonteBoletim, 'baixar' | 'climaAnterior'>
   /** Acesso com o JWT de quem pediu. */
   acesso: (jwt: string) => AcessoAdmin
   deps?: Dependencias

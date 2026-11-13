@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Banco de produção pela API de gerenciamento do Supabase, lendo os arquivos do disco.
 
-O token de acesso não fica em variável nem em arquivo: é um segredo de rede do ambiente do
-Claude Code, que o proxy põe no cabeçalho das chamadas a api.supabase.com.
+No Claude Code na nuvem, o token é um segredo de rede que o proxy põe no cabeçalho das chamadas a
+api.supabase.com. Na máquina local, lê SUPABASE_ACCESS_TOKEN do ambiente ou do `.env` (ignorado pelo Git).
 
 Uso:
   python3 scripts/supabase_api.py pendentes              # migrations do repositório ainda não aplicadas
@@ -23,7 +23,6 @@ MIGRATIONS = RAIZ / "supabase" / "migrations"
 
 
 def token() -> str:
-    """No Claude Code na nuvem o proxy troca o valor; fora dela, lê SUPABASE_ACCESS_TOKEN (ambiente ou .env)."""
     if os.environ.get("SUPABASE_ACCESS_TOKEN"):
         return os.environ["SUPABASE_ACCESS_TOKEN"]
     env = RAIZ / ".env"

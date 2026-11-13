@@ -352,6 +352,8 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       pdf_path: `etapa-2a/${numero.replace(/\//g, '')}.pdf`,
       publicado,
       publicacao_estado: publicado ? 'publicado' : 'pendente',
+      publicacao_erro: null,
+      publicacao_tentativas: 0,
     }
   }
   const boletins: (BoletimEmitido & { etapa_id: string })[] = [
@@ -722,6 +724,19 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       const novo = { id: ++sequenciaPedido, etapa_id: e.id, data, revisao, estado: 'pendente' as const, tentativas: 0, erro: null, atualizado_em: agora }
       pedidos.push(novo)
       return { ...semEtapa(novo), numero: numeroDe(revisao) }
+    },
+
+    async reenviarBoletim(slug, boletimId) {
+      exigirAdmin()
+      const e = etapaPorSlug(slug)
+      const b = boletins.find((x) => x.id === boletimId && x.etapa_id === e.id)
+      if (!b) throw new ErroAdmin('Boletim não encontrado')
+      if (e.telegram_chat_id === null) throw new ErroAdmin('A etapa não tem grupo do Telegram vinculado')
+      if (b.publicado || b.publicacao_estado === 'publicado') throw new ErroAdmin('Este boletim já foi publicado no grupo')
+      if (b.publicacao_estado === 'pendente' || b.publicacao_estado === 'enviando') {
+        throw new ErroAdmin('O envio deste boletim já está em andamento')
+      }
+      Object.assign(b, { publicacao_estado: 'pendente', publicacao_erro: null, publicacao_tentativas: 0 })
     },
 
     async urlPdfBoletim(caminho) {

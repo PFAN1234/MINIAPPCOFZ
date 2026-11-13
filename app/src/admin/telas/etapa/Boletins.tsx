@@ -5,7 +5,14 @@
  */
 import { useEffect, useState } from 'react'
 import { ComDados, mensagemDe } from '../../componentes.tsx'
-import { useBoletins, useOrganizacao, usePedirEmissao, usePreviaBoletim, useUrlPdfBoletim } from '../../dados/hooks.ts'
+import {
+  useBoletins,
+  useOrganizacao,
+  usePedirEmissao,
+  usePreviaBoletim,
+  useReenviarBoletim,
+  useUrlPdfBoletim,
+} from '../../dados/hooks.ts'
 import type { BoletimEmitido, EstadoEmissao, EtapaDetalhe, PedidoEmissao } from '../../dados/tipos.ts'
 import { dataBr, dataHoraBr, hojeNoFuso, numeroBoletim } from '../../formato.ts'
 
@@ -46,7 +53,7 @@ export default function Boletins({ etapa, telegramVinculado }: { etapa: EtapaDet
           <>
             <EmitirOuPrever etapa={etapa} boletins={dados.boletins} pedidos={dados.pedidos} telegramVinculado={telegramVinculado} />
             <Pedidos pedidos={dados.pedidos} />
-            <Emitidos boletins={dados.boletins} />
+            <Emitidos slug={etapa.slug} boletins={dados.boletins} />
           </>
         )}
       </ComDados>
@@ -243,8 +250,18 @@ function Pedidos({ pedidos }: { pedidos: PedidoEmissao[] }) {
 
 // --- Emitidos --------------------------------------------------------------------------------
 
-function Emitidos({ boletins }: { boletins: BoletimEmitido[] }) {
+const AVISO_INCERTO =
+  'O envio pode ter chegado ao grupo. Confira no Telegram antes: reenviar pode duplicar a mensagem. Reenviar mesmo assim?'
+
+function Emitidos({ slug, boletins }: { slug: string; boletins: BoletimEmitido[] }) {
   const url = useUrlPdfBoletim()
+  const reenviar = useReenviarBoletim(slug)
+
+  function pedirReenvio(b: BoletimEmitido) {
+    if (b.publicacao_estado === 'incerto' && !window.confirm(AVISO_INCERTO)) return
+    reenviar.mutate(b.id)
+  }
+
   const [bloqueado, setBloqueado] = useState<string | null>(null)
   if (boletins.length === 0) return <p className="adm-dica">Nenhum boletim emitido.</p>
   return (
@@ -270,8 +287,22 @@ function Emitidos({ boletins }: { boletins: BoletimEmitido[] }) {
                 <td>{dataBr(b.data)}</td>
                 <td>{dataHoraBr(b.emitido_em)}</td>
                 <td>{b.emitido_por_nome ?? 'automático'}</td>
-                <td>{rotuloPublicacao(b)}</td>
+                <td>
+                  {rotuloPublicacao(b)}
+                  {b.publicacao_erro && <p className="adm-dica">{b.publicacao_erro}</p>}
+                </td>
                 <td className="adm-acoes">
+                  {(b.publicacao_estado === 'falhou' || b.publicacao_estado === 'incerto') && (
+                    <button
+                      type="button"
+                      className="adm-botao"
+                      aria-label={`Reenviar ${b.numero} ao Telegram`}
+                      disabled={reenviar.isPending}
+                      onClick={() => pedirReenvio(b)}
+                    >
+                      Reenviar ao Telegram
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="adm-botao"
@@ -300,9 +331,9 @@ function Emitidos({ boletins }: { boletins: BoletimEmitido[] }) {
           .
         </p>
       )}
-      {url.isError && (
+      {(url.isError || reenviar.isError) && (
         <p className="adm-alerta adm-alerta-erro" role="alert">
-          {mensagemDe(url.error)}
+          {mensagemDe(url.error ?? reenviar.error)}
         </p>
       )}
     </>

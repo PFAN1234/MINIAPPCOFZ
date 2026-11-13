@@ -110,6 +110,15 @@ export function usePedirEmissao(slug: string) {
   })
 }
 
+export function useReenviarBoletim(slug: string) {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (boletimId: string) => repo.reenviarBoletim(slug, boletimId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'boletins', slug] }),
+  })
+}
+
 export function useUrlPdfBoletim() {
   const repo = useRepositorioAdmin()
   return useMutation({ mutationFn: (caminho: string) => repo.urlPdfBoletim(caminho) })
