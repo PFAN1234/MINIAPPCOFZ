@@ -7,21 +7,21 @@ export interface Versao {
   data: string
 }
 
-/** "v39 · 13/11" (sem PR, o commit curto no lugar do número). */
+/** "v40.261113.58182c8": PR, data do build (aammdd, fuso de Brasília) e commit curto. Sem PR, "vdev". */
 export function rotuloVersao(v: Versao): string {
-  const dia = formatarDia(dataNoFuso(new Date(v.data), FUSO_PADRAO)).slice(0, 5)
-  const nome = v.pr !== null ? `v${v.pr}` : (v.commit ?? 'dev')
-  return `${nome} · ${dia}`
+  const aammdd = dataNoFuso(new Date(v.data), FUSO_PADRAO).slice(2).replaceAll('-', '')
+  const partes = [v.pr !== null ? `v${v.pr}` : 'vdev', aammdd]
+  if (v.commit) partes.push(v.commit)
+  return partes.join('.')
 }
 
-/** Duas linhas: "Versão 39 · commit 9e969c1" e "13/11/2026 14:32". */
+/** Duas linhas: a versão e "Publicada em 13/11/2026 14:32". */
 export function detalheVersao(v: Versao): [string, string] {
-  const nome = v.pr !== null ? `Versão ${v.pr}` : 'Versão sem PR'
-  const primeira = v.commit ? `${nome} · commit ${v.commit}` : nome
-  return [primeira, `${formatarDia(dataNoFuso(new Date(v.data), FUSO_PADRAO))} ${horaNoFuso(v.data, FUSO_PADRAO)}`]
+  const quando = `${formatarDia(dataNoFuso(new Date(v.data), FUSO_PADRAO))} ${horaNoFuso(v.data, FUSO_PADRAO)}`
+  return [rotuloVersao(v), `Publicada em ${quando}`]
 }
 
-/** Etiqueta discreta da versão no canto da faixa de identidade; um toque mostra o commit e a hora. */
+/** Etiqueta discreta da versão no canto da faixa de identidade; um toque mostra a data e a hora da publicação. */
 export function SeloVersao({ versao = __VERSAO_APP__ }: { versao?: Versao }) {
   const [aberto, setAberto] = useState(false)
   return (
