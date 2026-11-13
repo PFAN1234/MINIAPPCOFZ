@@ -37,8 +37,9 @@ test('pedir acesso à Obra Demonstração mostra "Aguardando aprovação"', asyn
 })
 
 test('o gestor aprova o pedido da Maria', async ({ page }) => {
-  await page.goto('/obras/hto')
-  await page.getByRole('link', { name: /^Gestão/ }).tap()
+  // O atalho da Gestão fica no Início, na linha da obra (só para o gestor).
+  await page.goto('/')
+  await page.getByRole('listitem').filter({ hasText: 'HTO' }).getByRole('link', { name: /^Gestão/ }).tap()
   await expect(page).toHaveURL(/\/obras\/hto\/gestao$/)
   await expect(page.getByRole('heading', { name: 'Pedidos de acesso', level: 3 })).toBeVisible()
   await expect(page.getByText('Maria Souza')).toBeVisible()

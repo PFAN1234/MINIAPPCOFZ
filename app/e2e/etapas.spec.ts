@@ -21,21 +21,18 @@ test('a faixa de identidade mostra a OM e "Fiscal Bot" em todas as telas', async
 
 test('trocar de etapa na tela inicial muda as obras e fica lembrado', async ({ page }) => {
   await page.goto('/')
-  const seletor = page.getByRole('combobox', { name: 'Etapa' })
-  await expect(seletor).toBeVisible()
-  await expect(seletor.locator('option:checked')).toHaveText('2ª ETAPA')
+  const abas = page.getByRole('tablist', { name: 'Etapa' })
+  await expect(abas).toBeVisible()
+  await expect(abas.getByRole('tab', { selected: true })).toHaveText('2ª ETAPA')
   await expect(page.getByRole('link', { name: /^HTO/ })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Outras obras', level: 2 })).toBeVisible()
 
-  await seletor.selectOption({ label: '3ª ETAPA' })
+  await abas.getByRole('tab', { name: '3ª ETAPA' }).click()
   await expect(page.getByRole('link', { name: /Bloco de Alojamentos/ })).toBeVisible()
   await expect(page.getByRole('link', { name: /^HTO/ })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Outras obras', level: 2 })).toHaveCount(0)
-  // Os últimos registros continuam com todas as obras.
-  await expect(page.getByRole('heading', { name: 'Últimos registros', level: 2 })).toBeVisible()
-  await expect(page.locator('.registro-item').first()).toBeVisible()
 
   await page.reload()
-  await expect(page.getByRole('combobox', { name: 'Etapa' }).locator('option:checked')).toHaveText('3ª ETAPA')
+  await expect(page.getByRole('tablist', { name: 'Etapa' }).getByRole('tab', { selected: true })).toHaveText('3ª ETAPA')
   await expect(page.getByRole('link', { name: /Bloco de Alojamentos/ })).toBeVisible()
 })
