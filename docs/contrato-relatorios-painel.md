@@ -10,7 +10,7 @@ Decisões do usuário (13/11/2026):
 
 ## Parte 1 · Banco
 
-Migration nova `supabase/migrations/20261119090000_relatorios_painel.sql`.
+Migration nova `supabase/migrations/20261119100000_relatorios_painel.sql`.
 
 ### `public.painel_relatorios(p_etapa uuid) returns jsonb`
 
