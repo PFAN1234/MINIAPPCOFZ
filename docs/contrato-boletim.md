@@ -121,7 +121,7 @@ public.boletim (                         -- preenchida pelas próximas partes
 - `etapa_aditivo`, `etapa_responsavel`, `clima_dia`, `boletim`: `select` para admin ou participante de obra ativa da etapa (`privado.participa_da_etapa`); escrita só por RPC/service_role.
 - `inmet_estacao`: `select` para admin; escrita só service_role.
 - `observacao`: `select` para participante da obra (`privado.eh_participante(obra_id)`) ou admin; escrita só pelas RPCs abaixo.
-- Bucket **privado** `boletins` (10 MB, `application/pdf`): leitura para participante da etapa do primeiro segmento do caminho (`<etapa_id>/…`) ou admin; escrita só service_role.
+- Bucket **privado** `boletins` (10 MB, `application/pdf` e `image/png` para a imagem do clima): leitura para participante da etapa do primeiro segmento do caminho (`<etapa_id>/…`) ou admin; escrita só service_role.
 
 ### RPCs do Mini App (authenticated)
 
