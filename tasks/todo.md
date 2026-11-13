@@ -282,7 +282,8 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [x] Gerador na Vercel (`app/api/gerar-boletim.ts`, `app/api/previa-boletim.ts`, `app/servidor/boletim/`): HTML no modelo da CO-FZ, PDF com Chromium, fotos reduzidas, upload ao bucket; `publish-outbox` envia o PDF ao grupo da etapa (Deno: 143 testes). **`publish-outbox` novo ainda não publicado.**
 - [x] Site: seção Boletins na página da etapa (emitidos, pedidos, pré-visualizar, emitir agora/retificação); Vitest 577, e2e 48.
 - [x] Produção (2026-11-13, PR #26): migration aplicada (21 funções conferidas por hash), cron `agendar-boletins` ativo, `publish-outbox` versão 5 publicado, Vault `url_gerador_boletim` = `https://miniappcofz.vercel.app/api/gerar-boletim`, `SUPABASE_URL` criado na Vercel (Production).
-- [ ] Vercel (usuário): criar `SUPABASE_SECRET_KEY` (Production, Sensitive), conferir Node ≥ 22.17 e memória das funções ≥ 2 GB, fazer novo deploy; depois testar "Pré-visualizar" no site e conferir que o Chromium foi junto na função.
+- [x] Vercel: `SUPABASE_SECRET_KEY` (Production, Sensitive) criada pelo usuário e redeploy feito; banco → gerador responde 202 (pg_net), gerador lê o segredo interno do banco.
+- [ ] Testar "Pré-visualizar" no site (confirma o Chromium na função) e acompanhar a primeira emissão automática da 2ª etapa (23:30, horário de Fortaleza).
 - [ ] Retificação de dia antigo sai sem clima (o Observatório só cobre 24 h); avaliar reaproveitar a imagem do boletim anterior.
 - [ ] Botão para reenviar ao Telegram um boletim cuja publicação falhou.
 - [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
