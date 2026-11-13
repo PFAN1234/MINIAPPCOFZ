@@ -1576,15 +1576,6 @@ a.botao {
   white-space: pre-wrap;
 }
 
-.nota-acesso {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0 12px;
-  color: var(--texto-suave);
-  font-size: 0.85rem;
-}
-
 .form-encerramento .secao-titulo {
   margin-top: 16px;
 }

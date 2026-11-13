@@ -252,6 +252,15 @@ Contrato: `docs/contrato-etapas.md`. Decisões de 2026-11-12: o app passa a se c
 - [x] Mini App: nome Fiscal Bot, faixa com logo e nome da OM em todas as telas, seletor de etapa na tela inicial.
 - [x] Aplicar no `miniappcofz-dev` (2026-11-12): migration (a "2ª ETAPA" herdou o grupo das 3 obras), deploy de `bot-webhook`, `publish-outbox` e `admin-excluir-obra`, comandos do bot reconfigurados.
 - [x] Merge na main (PR #21, 2026-11-12) e app novo publicado pela Vercel.
-- [ ] Usuário: trocar o nome do bot e do Mini App no BotFather para Fiscal Bot; enviar o logo da CO-FZ em `/admin/organizacao` (o `/vincular_etapa 2a-etapa` não é necessário: a etapa herdou o grupo).
+- [x] Logo da CO-FZ enviado em `/admin/organizacao`; a prévia do logo no site deixou de vazar da caixa (2026-11-13).
+- [ ] Usuário: trocar o nome do bot e do Mini App no BotFather para Fiscal Bot (o `/vincular_etapa 2a-etapa` não é necessário: a etapa herdou o grupo).
 
 Verificação: testes de banco (arquivar etapa bloqueia acesso e publicação; excluir etapa exige o nome), Deno, Vitest e Playwright (criar etapa e obra, arquivar, excluir digitando o nome, trocar logo; seletor de etapa no Mini App).
+
+## Encerrar pendência pela equipe
+
+Decisão de 2026-11-13: qualquer participante da obra (equipe ou gestor) encerra pendência, com as mesmas fotos de comprovação. Antes só o gestor. Obra ou etapa arquivada continua bloqueando.
+
+- [x] Banco: migration `20261113120000_encerrar_pendencia_equipe.sql` (`encerrar_pendencia` confere `privado.eh_participante` no lugar de `eh_gestor`; `encerramento.gestor_id` mantém o nome e guarda quem encerrou) e testes de banco.
+- [x] Mini App: formulário de encerramento para todos os participantes, sem a nota "Só gestores…"; fixture igual.
+- [ ] Aplicar no `miniappcofz-dev` e merge na main.

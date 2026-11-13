@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { GaleriaFotos } from '../components/GaleriaFotos.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { Horario } from '../components/Horario.tsx'
-import { IconeUsuario } from '../components/Icones.tsx'
 import { SeloSituacao } from '../components/CartaoPendencia.tsx'
 import { Publicacao } from '../components/ListaRegistros.tsx'
 import { textoEstadoEncerramento } from '../components/RegistroLocal.tsx'
@@ -42,7 +41,7 @@ export default function PendenciaDetalheTela() {
 }
 
 function Carregada({ detalhe }: { detalhe: PendenciaDetalhe }) {
-  const { registro, pavimento, papel, encerramento } = detalhe
+  const { registro, pavimento, encerramento } = detalhe
   const aberta = registro.situacao !== 'resolvida'
   const local = useEncerramentoLocal(registro.id)
   return (
@@ -80,13 +79,9 @@ function Carregada({ detalhe }: { detalhe: PendenciaDetalhe }) {
         </section>
       ) : local ? (
         <EncerramentoNoAparelho item={local} />
-      ) : papel === 'gestor' ? (
-        <FormularioEncerramento detalhe={detalhe} />
       ) : (
-        <p className="nota-acesso">
-          <IconeUsuario tamanho={18} />
-          Só gestores da obra podem encerrar pendências.
-        </p>
+        // Qualquer participante da obra (equipe ou gestor) encerra a pendência.
+        <FormularioEncerramento detalhe={detalhe} />
       )}
     </section>
   )
@@ -244,10 +239,6 @@ function FormularioEncerramento({ detalhe }: { detalhe: PendenciaDetalhe }) {
           </p>
         </div>
       </fieldset>
-      <p className="nota-acesso">
-        <IconeUsuario tamanho={18} />
-        Acesso de gestor
-      </p>
       {erro && (
         <p className="form-erro" role="alert">
           {erro}
