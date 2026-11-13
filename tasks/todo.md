@@ -277,7 +277,7 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [x] Página Pessoas no admin (nome de exibição).
 - [x] Nome de exibição no Mini App e nas publicações do Telegram (migration `20261114090000_nome_exibicao_mini_app.sql` aplicada no `miniappcofz-dev` em 2026-11-13, conferida por hash; `publish-outbox` versão 4 publicada).
 - [x] Cartão Observações do dia na página da obra (com fila offline e trava após a emissão).
-- [ ] Clima pelo Observatório de Fortaleza (decisão de 2026-11-13; INMET fora do ar): migration (`estacao`/`estacao_reserva` com padrão Montese 8836 e Benfica 9281, `clima_leitura`), Edge Function `coletar-clima` de hora em hora lendo a página com testes sobre uma cópia gravada, ajuste do cadastro da etapa no site.
+- [ ] Clima pelo Observatório de Fortaleza (decisões de 2026-11-13): por enquanto só a imagem da linha da estação Montese (reserva Benfica) na tabela "Últimas 24 horas", copiada na emissão, com fonte e horários; migration `estacao`/`estacao_reserva` (8836/9281) e lista fixa no cadastro da etapa.
 - [ ] Snapshot do dia: indicadores, serviços e pendências, com testes de banco (inclui fuso e lançamento tardio).
 - [ ] Template HTML, PDF, envio ao grupo da etapa no Telegram.
 - [ ] Agendamento por etapa, retificação e tela "Boletins" no Mini App.

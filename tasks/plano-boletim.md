@@ -8,32 +8,24 @@ Ao fim de cada dia a etapa emite um boletim que compila tudo o que foi lançado 
 
 - **Abrangência:** um boletim por **etapa** por dia, com as seções separadas por obra (ex.: Bloco de Alojamento e Bloco Didático).
 - **Emissão:** **automática** em horário fixo (hora local da obra), sem revisão prévia; o fiscal pode emitir **retificação** (`-R1`, `-R2`…), que substitui a anterior e fica registrada.
-- **Clima:** **Observatório de Riscos Climáticos de Fortaleza** (Prefeitura de Fortaleza; decisão de 2026-11-13, substitui o INMET, que estava fora do ar): estação principal **Montese** (`8836`), reserva **Benfica** (`9281`). Coleta **de hora em hora**; gráficos **próprios** no estilo do site, com fonte e horário da leitura. Só Fortaleza por enquanto (sem outra fonte para obras fora da cidade). A condição do céu é estimada pelo **índice UV** (a Montese não mede radiação).
+- **Clima:** **Observatório de Riscos Climáticos de Fortaleza** (Prefeitura de Fortaleza; decisão de 2026-11-13, substitui o INMET, que estava fora do ar). **Por enquanto o boletim só copia o gráfico do site** (decisão de 2026-11-13, no lugar da coleta horária com gráficos próprios): uma imagem da linha da estação **Montese** (`8836`) na tabela "Últimas 24 horas", tirada logo antes da emissão; **Benfica** (`9281`) se a Montese estiver sem leitura recente. Com a fonte e os horários da leitura e da cópia. Só Fortaleza por enquanto.
 - **Nome de exibição:** cada pessoa tem um nome de exibição em texto livre, maiúsculas (ex.: Patricio Ferreira → `CP PATRICIO`), definido **só por admins** no site; vale no Mini App, nas publicações do Telegram e nos boletins.
 - **Observações:** várias notas por obra e por dia, escritas por **qualquer participante** na página inicial da obra no Mini App; o boletim compila as de todas as obras da etapa na seção Observações.
 - **Numeração:** `BA<sigla da etapa>/<YYMMDD>/<OM>`, ex.: `BA2/261111/COFZ`. Sigla = novo campo curto da etapa (`2`); OM = `organizacao.nome` em maiúsculas, sem acentos e só com letras e números (`CO-FZ` → `COFZ`). Retificação: `BA2/261111/COFZ-R1`.
 
 ## Clima (Observatório de Fortaleza)
 
-**Fonte:** página pública `https://observatorio.fortaleza.ce.gov.br/riscos-climaticos/estacoes-meteorologicas` (robots.txt libera; atualizada a cada 10 min; 11 estações). Não há API: a página é gerada no servidor e cada estação tem uma ficha `article#estacao-<id>` com:
-- valores atuais: temperatura, mín./máx. e sensação térmica; umidade (faixa de 24 h); vento (km/h e rumo, ex.: SE) e rajada máxima; chuva de hoje e do mês; índice UV e classificação; pressão (faixa de 24 h); ponto de orvalho; radiação solar (a Montese mostra "—");
-- séries das últimas 24 h, hora a hora, como SVG: temperatura, umidade, vento, UV e pressão em `path.mg-linha` (24 pontos; o `aria-label` traz o mínimo e o máximo, e o valor de cada ponto sai da posição vertical, com precisão de 0,1) e chuva em `rect.mg-barra` (alturas proporcionais; o `aria-label` traz o total, que distribui os milímetros);
-- "Leitura às HH:MM" na lista de estações; dados do equipamento (bateria, sinal).
-- Testado em 2026-11-13: Montese 27,2–30,9 °C e 62–82% em 24 h; Centro com 1,5 mm = 1,4 + 0,1 mm.
+**Fonte:** página pública `https://observatorio.fortaleza.ce.gov.br/riscos-climaticos/estacoes-meteorologicas` (robots.txt libera; atualizada a cada 10 min; 11 estações). Não há API; a tabela "Últimas 24 horas" tem uma linha por estação (`tr` com `button.est-tabela-estacao[data-estacao="<id>"]`): nome e "há N min", temperatura, umidade, chuva em 24 h, vento com rumo e rajada, índice UV, cada um com um mini gráfico das últimas 24 h.
 
-**Riscos:** mudança de layout quebra a leitura → a coleta valida o que leu (24 pontos, faixas coerentes, horário da leitura) e registra falha; o boletim usa a reserva (Benfica) e, sem nenhuma, sai com "Dados meteorológicos indisponíveis (Observatório de Fortaleza)". Uso de dado público da Prefeitura com citação da fonte; vale avisar o IPPLAN/Observatório e, se oferecerem, trocar por um feed oficial.
+**Cópia (versão atual):** na emissão, o mesmo Chromium que gera o PDF abre a página (fuso `America/Fortaleza`, `pt-BR`), espera a tabela, localiza a linha pela `data-estacao` da estação principal da etapa e tira a imagem só dessa linha (PNG, escala 2). Confere a idade da leitura ("há N min"); acima de 3 h, ou sem a linha, tenta a reserva; sem nenhuma, o boletim sai com "Dados meteorológicos indisponíveis (Observatório de Fortaleza)". A imagem vai para o bucket `boletins` junto com o PDF e entra no snapshot (`clima: {fonte, estacao, leitura_em, copiado_em, imagem}`).
 
-**Coleta:** pg_cron + pg_net de hora em hora (minuto 5) chamam a Edge Function `coletar-clima`, que baixa a página uma vez, lê as fichas da estação principal e da reserva de cada etapa e grava `clima_leitura` (etapa, estação, hora da leitura, valores atuais, séries de 24 h, `obtido_em`). Repetível sem duplicar (`unique (estacao, leitura_em)`). Na emissão, o dia (0h–24h no fuso da etapa) é montado com as leituras horárias guardadas; `clima_dia` guarda o resumo usado no boletim.
+**No boletim** (substitui "SOL / CHUVA"): a imagem da linha da estação, com a legenda "Fonte: Observatório de Riscos Climáticos de Fortaleza (Prefeitura de Fortaleza), estação Montese — leitura das HH:MM, cópia de dd/mm/aaaa às HH:MM. Últimas 24 horas até a cópia."
 
-**Cadastro:** os campos `inmet_estacao`/`inmet_estacao_reserva` da etapa passam a ser `estacao`/`estacao_reserva` com o código numérico do Observatório (padrão Montese `8836` e Benfica `9281`); o site mostra a lista das 11 estações pelo nome (a tabela de estações é preenchida pela própria coleta). A sugestão por distância sai (a página não traz coordenadas).
+**Limitações aceitas por enquanto:** a janela é móvel (as 24 h até a cópia, não o dia 0h–24h); não há valores em números para indicadores (dias com chuva etc.) nem a divisão manhã/tarde; uma mudança de layout no site pode exigir ajuste do recorte (o boletim sai sem clima e avisa).
 
-**Céu estimado pelo UV:** razão entre o UV medido e o de céu limpo estimado para a hora e a latitude (`UV_limpo ≈ 12,5 · cos(z)^2,42`, z = ângulo zenital): ≥ 75% ensolarado; 45–75% parcialmente nublado; < 45% nublado. Limiares a calibrar com uma semana de dados; o boletim diz que é estimativa.
+**Cadastro:** os campos `inmet_estacao`/`inmet_estacao_reserva` da etapa passam a ser `estacao`/`estacao_reserva` com o código numérico do Observatório (padrão Montese `8836` e Benfica `9281`), escolhidos numa lista fixa das 11 estações (sem a sugestão por distância).
 
-**No boletim** (substitui "SOL / CHUVA"):
-- Manhã (6h–12h) e Tarde (12h–18h): condição ("Sem chuva · ensolarado", "Chuva · nublado"), faixa de temperatura, umidade, chuva (mm e horário), vento médio / rajada, UV máximo.
-- Dia: mínima/máxima e sensação térmica, umidade, chuva total e horas com chuva, vento com rumo, rajada máxima, pressão, ponto de orvalho.
-- Gráficos próprios no estilo do site (uma linha por variável: temperatura, umidade, chuva em barras, vento, UV), com a linha de fonte: "Fonte: Observatório de Riscos Climáticos de Fortaleza (Prefeitura de Fortaleza), estação Montese — leitura das 23:20, coletada em 13/11/2026 às 23:25".
-- Dia com chuva = chuva ≥ 0,2 mm no dia (conta nos indicadores de clima).
+**Evolução possível** (estudada em 2026-11-13, não implementada): coletar de hora em hora e ler os valores dos gráficos do próprio HTML (as séries de 24 h estão nos `path` dos SVG, com mínimo e máximo no `aria-label`; a chuva está nas barras, com o total no `aria-label`), para montar o dia 0h–24h, manhã/tarde, indicadores de chuva e céu estimado pelo UV.
 
 ## Dados administrativos da etapa
 
@@ -75,7 +67,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 
 ## Emissão
 
-- pg_cron por etapa no horário local configurado (padrão 23:30) → Edge Function `emitir-boletim`: monta o clima do dia com as leituras horárias do Observatório, monta o **snapshot** (`jsonb`) do dia, grava `boletim` (etapa, data, numero, revisao, snapshot, pdf_path, emitido_em, emitido_por = null quando automático) e gera o PDF.
+- pg_cron por etapa no horário local configurado (padrão 23:30) → Edge Function `emitir-boletim`: copia o gráfico do clima (Observatório), monta o **snapshot** (`jsonb`) do dia, grava `boletim` (etapa, data, numero, revisao, snapshot, pdf_path, emitido_em, emitido_por = null quando automático) e gera o PDF.
 - PDF: página HTML do boletim renderizada por Chromium em função da Vercel (fidelidade ao modelo da CO-FZ); arquivo no bucket privado `boletins` e envio ao grupo da etapa no Telegram (`sendDocument`, tópico Geral).
 - Emitido = imutável. Retificação: o fiscal edita observações/correções no app, gera `-R1` com novo snapshot; o anterior fica no histórico como substituído.
 - Lançamentos que chegam depois da emissão (registro offline com `capturado_em` do dia já emitido): aparecem no boletim seguinte em "Lançamentos recebidos após a emissão" e o app sugere retificação ao fiscal.
@@ -90,7 +82,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 1. Migration: campos da etapa (sigla, localização, fuso, estações INMET, dados administrativos), `etapa_aditivo`, `etapa_responsavel`, `usuario.nome_exibicao`, `observacao`, `organizacao.cabecalho`, `clima_dia`, `boletim`, bucket `boletins`, RLS (boletins: leitura para participantes da etapa; escrita só por service_role e RPC de retificação); função `numero_boletim(etapa, data, revisao)`.
 2. Admin: página Pessoas (nome de exibição); formulário de cadastro/edição da etapa com sigla, localização (mapa, estações INMET sugeridas, fuso), dados do contrato e responsáveis; aditivos na página da etapa; linhas do cabeçalho em `/admin/organizacao`.
 3. Mini App: nome de exibição em todas as telas e publicações; cartão Observações do dia na obra (com fila offline).
-4. `coletar-clima` (Observatório de Fortaleza, de hora em hora, estação reserva, céu pelo UV) com testes Deno sobre uma cópia gravada da página; migration das estações e `clima_leitura`; ajuste do cadastro da etapa no site.
+4. Clima: migration das estações (`estacao`/`estacao_reserva`, padrão 8836/9281), lista fixa no cadastro da etapa e captura da linha da estação no gerador do PDF (teste com uma cópia gravada da página).
 5. RPC/consulta do snapshot do dia (indicadores, serviços, pendências, observações) + testes de banco.
 6. Template HTML do boletim + geração do PDF + bucket + envio ao Telegram.
 7. Agendamento por etapa, retificação e tela "Boletins" no Mini App (lista, abrir PDF, retificar).
@@ -99,7 +91,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 
 - Testes de banco: snapshot de um dia com registros, pendências abertas/encerradas e lançamento tardio; contagens dos indicadores; número `BA2/261111/COFZ` e `-R1`; fuso diferente (ex.: `America/Rio_Branco`) muda o dia de um lançamento às 23h.
 - Testes de banco: nome de exibição só por admin e não sobrescrito no login; observação travada depois da emissão; participante de outra obra não lê observações.
-- Testes Deno: leitura das fichas (valores atuais, séries de 24 h a partir do SVG, chuva por barras, horário da leitura), validação contra layout alterado, troca para a estação reserva, resumo manhã/tarde, céu pelo UV.
+- Teste da captura: com uma cópia gravada da página, a linha certa é recortada; leitura antiga ou linha ausente → reserva; nenhuma → "indisponível".
 - Playwright: template do boletim com fixture → PDF com cabeçalho, tabela de clima e fotos.
 - Real: uma semana de boletins da 2ª etapa comparados com o boletim manual (inclusive a condição do céu estimada) para calibrar os limiares.
 
