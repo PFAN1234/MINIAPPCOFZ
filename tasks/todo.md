@@ -291,6 +291,12 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
 - [ ] Externo: avisar o Observatório/IPPLAN do uso dos dados; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.
 
+## Aba Boletins e edição do boletim (contrato: `docs/contrato-boletim.md`, parte 4)
+
+- [ ] Parte A: banco (rascunho, retificação editada, listagem geral, `admin_boletim`), gerador (`aplicarEdicao`, prévia por POST) e publish-outbox (retificação apaga a mensagem anterior).
+- [ ] Aplicar a migration em produção e publicar a publish-outbox.
+- [ ] Parte B: site (aba Boletins com filtros, editor `/boletins/:id`, cartão na página da etapa).
+
 ## Organização de pastas e consolidação do repositório
 
 Plano: `tasks/plano-organizacao-pastas.md` (decisões de 2026-11-12; registrado em `docs/ROADMAP.md`).
