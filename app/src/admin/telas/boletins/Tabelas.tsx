@@ -2,8 +2,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { mensagemDe } from '../../componentes.tsx'
-import { useReenviarBoletim, useUrlPdfBoletim } from '../../dados/hooks.ts'
-import type { BoletimDaLista, PedidoDaLista } from '../../dados/tipos.ts'
+import { useExcluirBoletim, useReenviarBoletim, useUrlPdfBoletim } from '../../dados/hooks.ts'
+import type { BoletimDaLista, PedidoDaLista, ResultadoExclusaoBoletim } from '../../dados/tipos.ts'
 import { dataBr, dataHoraBr } from '../../formato.ts'
 import { abrir, ROTULO_ESTADO, rotuloPublicacao } from './util.ts'
 
@@ -54,9 +54,15 @@ const AVISO_INCERTO =
 export function Emitidos({ boletins }: { boletins: BoletimDaLista[] }) {
   const url = useUrlPdfBoletim()
   const [bloqueado, setBloqueado] = useState<string | null>(null)
+  const [excluido, setExcluido] = useState<ResultadoExclusaoBoletim | null>(null)
   if (boletins.length === 0) return <p className="adm-dica">Nenhum boletim emitido no período.</p>
   return (
     <>
+      {excluido && (
+        <p className={`adm-alerta ${excluido.mensagens.falhas > 0 || excluido.arquivos_erro ? 'adm-alerta-aviso' : 'adm-alerta-ok'}`} role="status">
+          {textoExclusao(excluido)}
+        </p>
+      )}
       <div className="adm-rolagem">
         <table className="adm-tabela" aria-label="Boletins emitidos">
           <thead>
@@ -74,7 +80,7 @@ export function Emitidos({ boletins }: { boletins: BoletimDaLista[] }) {
           </thead>
           <tbody>
             {boletins.map((b) => (
-              <LinhaEmitido key={b.id} b={b} onAbrirPdf={() => url.mutate(b.pdf_path!, { onSuccess: (u) => setBloqueado(abrir(u) ? null : u) })} abrindo={url.isPending} />
+              <LinhaEmitido key={b.id} b={b} onAbrirPdf={() => url.mutate(b.pdf_path!, { onSuccess: (u) => setBloqueado(abrir(u) ? null : u) })} abrindo={url.isPending} onExcluido={setExcluido} />
             ))}
           </tbody>
         </table>
@@ -97,8 +103,37 @@ export function Emitidos({ boletins }: { boletins: BoletimDaLista[] }) {
   )
 }
 
-function LinhaEmitido({ b, onAbrirPdf, abrindo }: { b: BoletimDaLista; onAbrirPdf: () => void; abrindo: boolean }) {
+function textoExclusao(r: ResultadoExclusaoBoletim): string {
+  let t = `Boletim ${r.numero} excluído.`
+  if (r.mensagens.falhas > 0) {
+    t +=
+      ' Não foi possível apagar a mensagem no grupo do Telegram (o Telegram só permite apagar até 48 h depois do envio): apague-a lá manualmente.'
+  } else if (r.mensagens.apagadas > 0) {
+    t += ' A mensagem foi apagada do grupo.'
+  }
+  if (r.arquivos_erro) t += ' Os PDFs não foram removidos do armazenamento.'
+  return t
+}
+
+function LinhaEmitido({
+  b,
+  onAbrirPdf,
+  abrindo,
+  onExcluido,
+}: {
+  b: BoletimDaLista
+  onAbrirPdf: () => void
+  abrindo: boolean
+  onExcluido: (r: ResultadoExclusaoBoletim) => void
+}) {
   const reenviar = useReenviarBoletim(b.etapa_slug)
+  const excluir = useExcluirBoletim(b.etapa_slug)
+
+  function pedirExclusao() {
+    const msg = `Excluir o boletim ${b.numero}? Sai o dia ${dataBr(b.data)} inteiro, com as revisões, os PDFs e a mensagem no grupo do Telegram. Não dá para desfazer.`
+    if (!window.confirm(msg)) return
+    excluir.mutate(b.id, { onSuccess: onExcluido })
+  }
 
   function pedirReenvio() {
     if (b.publicacao_estado === 'incerto' && !window.confirm(AVISO_INCERTO)) return
@@ -135,6 +170,11 @@ function LinhaEmitido({ b, onAbrirPdf, abrindo }: { b: BoletimDaLista; onAbrirPd
             {mensagemDe(reenviar.error)}
           </p>
         )}
+        {excluir.isError && (
+          <p className="adm-alerta adm-alerta-erro" role="alert">
+            {mensagemDe(excluir.error)}
+          </p>
+        )}
       </td>
       <td className="adm-acoes">
         {(b.publicacao_estado === 'falhou' || b.publicacao_estado === 'incerto') && (
@@ -160,6 +200,15 @@ function LinhaEmitido({ b, onAbrirPdf, abrindo }: { b: BoletimDaLista; onAbrirPd
         <Link className="adm-botao" to={`/boletins/${b.id}`} aria-label={`Editar ${b.numero}`}>
           Editar
         </Link>
+        <button
+          type="button"
+          className="adm-botao adm-botao-perigo"
+          aria-label={`Excluir ${b.numero}`}
+          disabled={excluir.isPending}
+          onClick={pedirExclusao}
+        >
+          Excluir
+        </button>
       </td>
     </tr>
   )

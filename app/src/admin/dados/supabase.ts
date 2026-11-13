@@ -509,6 +509,18 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       await rpc('admin_reenviar_boletim', { p_slug: slug, p_boletim: boletimId })
     },
 
+    async excluirBoletim(_slug, boletimId) {
+      const json = await funcaoExcluir({ acao: 'excluir_boletim', boletim_id: boletimId }, 'Boletim não encontrado')
+      const m = (json.mensagens ?? {}) as { apagadas?: unknown; falhas?: unknown }
+      return {
+        numero: String(json.numero),
+        data: String(json.data),
+        revisoes: Number(json.revisoes ?? 0),
+        mensagens: { apagadas: Number(m.apagadas ?? 0), falhas: Number(m.falhas ?? 0) },
+        arquivos_erro: typeof json.arquivos_erro === 'string' ? json.arquivos_erro : null,
+      }
+    },
+
     async urlPdfBoletim(caminho) {
       try {
         const { data, error } = await cliente.storage.from('boletins').createSignedUrl(caminho, SEGUNDOS_URL_PDF)

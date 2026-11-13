@@ -339,3 +339,75 @@ describe('fixture: edição do boletim', () => {
     expect(b.snapshot.obras[0].servicos.length).toBeGreaterThan(0)
   })
 })
+
+describe('aba Boletins: excluir o dia', () => {
+  const linhaDe = (n: string) => `Excluir ${n}`
+  const resultado = (apagadas: number, falhas: number, arquivos_erro: string | null = null) => ({
+    numero: num(anteontem),
+    data: anteontem,
+    revisoes: 2,
+    mensagens: { apagadas, falhas },
+    arquivos_erro,
+  })
+
+  it('confirmar exclui o dia e mostra o aviso de mensagem apagada', async () => {
+    const user = userEvent.setup()
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const repo = renderizar('/boletins?etapa=2a-etapa')
+    const excluir = vi.spyOn(repo, 'excluirBoletim')
+    await user.click(await screen.findByRole('button', { name: linhaDe(num(anteontem)) }))
+    expect(confirmar).toHaveBeenCalledWith(
+      `Excluir o boletim ${num(anteontem)}? Sai o dia ${dataBr(anteontem)} inteiro, com as revisões, os PDFs e a mensagem no grupo do Telegram. Não dá para desfazer.`,
+    )
+    expect(excluir).toHaveBeenCalledWith('2a-etapa', `boletim-${anteontem}-0`)
+    expect(await screen.findByRole('status')).toHaveTextContent(`Boletim ${num(anteontem)} excluído. A mensagem foi apagada do grupo.`)
+    await waitFor(() => expect(screen.queryByRole('button', { name: linhaDe(num(anteontem)) })).not.toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: linhaDe(num(anteontem, 1)) })).not.toBeInTheDocument()
+  })
+
+  it('cancelar não chama o repositório', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const repo = renderizar('/boletins?etapa=2a-etapa')
+    const excluir = vi.spyOn(repo, 'excluirBoletim')
+    await user.click(await screen.findByRole('button', { name: linhaDe(num(anteontem)) }))
+    expect(excluir).not.toHaveBeenCalled()
+  })
+
+  it('falha ao apagar a mensagem mostra o aviso das 48 h; PDFs com erro também', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const repo = criarRepositorioAdminFixture()
+    vi.spyOn(repo, 'excluirBoletim').mockResolvedValue(resultado(0, 1, 'storage fora'))
+    renderizar('/boletins?etapa=2a-etapa', repo)
+    await user.click(await screen.findByRole('button', { name: linhaDe(num(anteontem)) }))
+    const aviso = await screen.findByRole('status')
+    expect(aviso).toHaveTextContent('só permite apagar até 48 h depois do envio')
+    expect(aviso).toHaveTextContent('Os PDFs não foram removidos do armazenamento.')
+  })
+
+  it('sem mensagens: só "excluído."', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const repo = criarRepositorioAdminFixture()
+    vi.spyOn(repo, 'excluirBoletim').mockResolvedValue(resultado(0, 0))
+    renderizar('/boletins?etapa=2a-etapa', repo)
+    await user.click(await screen.findByRole('button', { name: linhaDe(num(anteontem)) }))
+    expect((await screen.findByRole('status')).textContent).toBe(`Boletim ${num(anteontem)} excluído.`)
+  })
+
+  it('erro 409 mostra o alerta', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const repo = criarRepositorioAdminFixture()
+    vi.spyOn(repo, 'excluirBoletim').mockRejectedValue(new Error('Há uma emissão em andamento para este dia'))
+    renderizar('/boletins?etapa=2a-etapa', repo)
+    await user.click(await screen.findByRole('button', { name: linhaDe(num(anteontem)) }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('emissão em andamento')
+  })
+
+  it('fixture: dia inexistente dá erro', async () => {
+    const repo = criarRepositorioAdminFixture()
+    await expect(repo.excluirBoletim('2a-etapa', 'nao-existe')).rejects.toThrow('Boletim não encontrado')
+  })
+})

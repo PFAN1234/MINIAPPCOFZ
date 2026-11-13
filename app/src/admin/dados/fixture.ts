@@ -837,6 +837,18 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       Object.assign(b, { publicacao_estado: 'pendente', publicacao_erro: null, publicacao_tentativas: 0 })
     },
 
+    async excluirBoletim(slug, boletimId) {
+      exigirAdmin()
+      const e = etapaPorSlug(slug)
+      const b = boletins.find((x) => x.id === boletimId && x.etapa_id === e.id)
+      if (!b) throw new ErroAdmin('Boletim não encontrado')
+      const doDia = boletins.filter((x) => x.etapa_id === e.id && x.data === b.data)
+      const apagadas = doDia.filter((x) => x.publicacao_estado === 'publicado').length
+      for (let i = boletins.length - 1; i >= 0; i--) if (doDia.includes(boletins[i])) boletins.splice(i, 1)
+      for (let i = pedidos.length - 1; i >= 0; i--) if (pedidos[i].etapa_id === e.id && pedidos[i].data === b.data) pedidos.splice(i, 1)
+      return { numero: b.numero, data: b.data, revisoes: doDia.length, mensagens: { apagadas, falhas: 0 }, arquivos_erro: null }
+    },
+
     async urlPdfBoletim(caminho) {
       exigirAdmin()
       const b = boletins.find((x) => x.pdf_path === caminho)
