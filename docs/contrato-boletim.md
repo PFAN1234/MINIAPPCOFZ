@@ -169,3 +169,36 @@ Formatos de exibição: datas `dd/mm/aaaa`; valores `R$ 79.499.000,00`; área `8
 
 - `pytest -q tests/db` com os testes novos: regras das colunas; criação exige sigla, coordenadas e fuso; edição mantém/apaga; sigla repetida; `admin_obter_etapa` com `prazo` e `faltando`; aditivos e responsáveis; `numero_boletim` (`BA2/261111/COFZ`, `-R1`, sem sigla); `codigo_om`; nome de exibição normalizado e só por admin; observações (idempotência, só o autor edita, outra obra não lê, data no fuso da etapa, travada depois de existir boletim do dia); `organizacao()` com `cabecalho`; RLS das tabelas novas; `admin_sugerir_estacoes` ordenado por distância; exclusão de etapa com boletim.
 - `npm run typecheck`, `npm run lint`, `npm test` (testes das telas novas com a fixture) e `npm run build` em `app/`.
+
+---
+
+# Parte 2: nome de exibição e observações no Mini App
+
+Decisões de 2026-11-13 (ver `tasks/plano-boletim.md`, seções "Nome de exibição" e "Observações da obra"). A parte 1 já criou no banco `usuario.nome_exibicao`, `privado.nome_pessoa` e as RPCs `salvar_observacao`, `excluir_observacao` e `observacoes_do_dia` (aplicadas no `miniappcofz-dev`).
+
+## Nome mostrado = `coalesce(nome_exibicao, nome)`
+
+Em todo lugar onde o Mini App ou o bot mostram o nome de uma pessoa:
+
+- **Mini App** (`app/src/dados/supabase.ts` e telas): autor dos registros (histórico do ambiente, aba Registros, últimos registros, pendências, detalhe da pendência), quem encerrou a pendência, pedidos de acesso e participantes vistos pelo gestor (`Acessos`, `Gestao`), observações. Consultas por PostgREST passam a pedir `usuario(nome, nome_exibicao)` e o app escolhe; RPCs do banco que devolvem nome de pessoa ao Mini App passam a usar `privado.nome_pessoa` (nova migration `supabase/migrations/20261114090000_nome_exibicao_mini_app.sql`, recriando só as RPCs necessárias, sem mudar assinatura nem formato). O site de administração continua mostrando o nome do Telegram onde já mostra, exceto onde a parte 1 definiu o contrário.
+- **Telegram** (`supabase/functions/publish-outbox`): autor do registro e quem encerrou a pendência usam o nome de exibição; o aviso de pedido de acesso usa o nome de exibição (se houver) e mantém o `@username`.
+- A pessoa vê o próprio nome de exibição onde o app mostra "você"/o usuário logado, se mostrar.
+- Fixture do Mini App: pelo menos uma pessoa com nome de exibição (ex.: `CP PATRICIO`) e uma sem, para os testes.
+
+## Cartão "Observações do dia" na página da obra (`app/src/telas/Obra.tsx`)
+
+- Acima da lista de ambientes (abaixo do cabeçalho da obra), cartão **Observações do dia** com a data de hoje (`observacoes_do_dia(obra, null)`, que usa o fuso da etapa). Lista por hora: `HH:MM · NOME` e o texto; marca "editada" quando `editado_em`. Vazio: "Nenhuma observação hoje." Mais de 3: mostra as 3 últimas e "Ver todas (n)".
+- **Adicionar observação**: campo de texto (até 1000 caracteres, contador perto do limite) e botão Salvar. Gera o `id` (UUID) no aparelho e `escrito_em = agora`.
+- **Sem sinal**: a observação nova é gravada no aparelho (IndexedDB, mesma infraestrutura de `app/src/offline/`) antes de aparecer como "aguardando envio" e é enviada pela mesma sincronização dos registros (ao abrir, evento `online`, voltar ao app, "Tentar agora"), com o mesmo `id` em toda tentativa (a RPC é idempotente). Rascunhos isolados por usuário, como os registros.
+- **Editar/excluir**: só as próprias (`minha`) e só se `travada = false`; exigem conexão (sem sinal, os botões ficam desabilitados com a dica "Precisa de conexão"). Excluir pede confirmação.
+- **Travada** (boletim do dia já emitido): sem botões de editar/excluir/adicionar; aviso "O boletim de hoje já foi emitido. Correções são feitas por retificação."
+- Erros da RPC: 22023 do dia emitido numa observação da fila → estado de falha definitiva com a mensagem do servidor e as opções "Descartar" (e copiar o texto); demais erros seguem o backoff da fila.
+- Cache de consultas no aparelho como as demais telas (a lista do dia aparece sem sinal com o que já foi visto).
+- Fixture: duas observações de hoje em uma obra (uma do usuário de teste, outra de `CP PATRICIO`) e suporte às três RPCs.
+
+## Verificação
+
+- Testes de banco (`tests/db/`) das RPCs recriadas devolvendo o nome de exibição.
+- Deno (`supabase/functions/publish-outbox`): mensagens com nome de exibição e com fallback para o nome do Telegram.
+- Vitest: cartão (lista, adicionar, editar, excluir, travada, sem sinal), fila com observação, nome de exibição nas telas.
+- Playwright (fixture, viewport de celular): adicionar observação online; offline → salvar → voltar o sinal → enviada sem duplicar.
