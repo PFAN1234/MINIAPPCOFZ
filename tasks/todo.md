@@ -271,7 +271,8 @@ Decisão de 2026-11-13: qualquer participante da obra (equipe ou gestor) encerra
 Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa por dia, emissão automática com retificação (`-R1`), clima só do INMET (céu estimado pela radiação), número `BA<sigla>/<YYMMDD>/<OM>` (ex.: `BA2/261111/COFZ`), nome de exibição definido por admins, observações por obra escritas pelos participantes. Prévia: `docs/mockups/boletim-diario-v2.pdf`. Contrato da parte 1 (banco e site de administração): `docs/contrato-boletim.md`.
 
 - [x] Migration `20261113150000_boletim_base.sql`: sigla, localização, fuso, estações INMET, horário de emissão e dados do contrato da etapa; `etapa_aditivo`, `etapa_responsavel`, `usuario.nome_exibicao`, `organizacao.cabecalho`, `observacao`, `inmet_estacao`, `clima_dia`, `boletim`, bucket `boletins`, RLS e numeração (`tests/db/test_boletim_base.py`; 547 testes de banco passando).
-- [ ] Aplicar a migration no `miniappcofz-dev` e preencher os dados da 2ª etapa.
+- [x] Migration aplicada no `miniappcofz-dev` em 2026-11-13, junto com o merge (as 31 funções novas ou alteradas conferidas por hash com o repositório; 2ª etapa com sigla 2, fuso de Fortaleza e o número `BA2/261113/COFZ`).
+- [ ] Preencher pelo site os dados da 2ª etapa (14 campos faltando: localização, estação INMET, contrato e responsáveis) e os nomes de exibição.
 - [x] Admin: cadastro da etapa com sigla, localização (mapa + estação INMET sugerida), fuso, horário de emissão e dados do contrato, editáveis depois; responsáveis e aditivos na página da etapa; linhas do cabeçalho em Organização (Vitest e e2e passando).
 - [x] Página Pessoas no admin (nome de exibição).
 - [ ] Nome de exibição no Mini App e nas publicações do Telegram.
