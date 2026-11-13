@@ -144,28 +144,60 @@ function linhaDados(partes: (string | null)[]): string {
 
 const ou = (v: string | null | undefined) => (v ? escapar(v) : '—')
 
-function cabecalho(s: Snapshot, o: OpcoesTemplate): string {
-  const linhas = s.organizacao.cabecalho.length > 0 ? s.organizacao.cabecalho : [s.organizacao.nome]
+export interface CabecalhoDocumento {
+  /** Linhas da OM (`organizacao.cabecalho`); vazio = só o nome. */
+  linhas: string[]
+  nome: string
+  logo: string | null
+  /** Conteúdo (HTML) da coluna da direita: número, expedição. */
+  doc: string
+  assunto: string
+  /** Linhas rótulo → valor (HTML) abaixo do assunto, com classe opcional na célula do valor. */
+  campos: [string, string, string?][]
+}
+
+/** Tabela do cabeçalho do boletim, reaproveitada pelo relatório de pendências. */
+export function tabelaCabecalho(c: CabecalhoDocumento): string {
+  const linhas = c.linhas.length > 0 ? c.linhas : [c.nome]
   // Linhas curtas não quebram (como na prévia v2); as longas quebram para não sair da célula.
   const om = linhas
     .map((l, i) => `<div class="${i === 0 ? 'l1' : 'l2'}${l.length <= 48 ? ' curta' : ''}">${escapar(l)}</div>`)
     .join('')
-  const logo = o.logo ? `<img src="${o.logo}" alt="Logo da OM">` : ''
-  const numero = o.numero
-    ? `<div class="val">${escapar(o.numero)}</div>`
-    : `<div class="val previa">${escapar(MARCA_PREVIA)}</div>`
-  const responsaveis = s.responsaveis.map((r) => escapar(r.nome)).join(', ') || '—'
+  const logo = c.logo ? `<img src="${c.logo}" alt="Logo da OM">` : ''
+  const campos = c.campos
+    .map(
+      ([rotulo, valor, cls]) =>
+        `<tr><td class="chave cinza">${escapar(rotulo)}</td><td colspan="2"${cls ? ` class="${cls}"` : ''}>${valor}</td></tr>`,
+    )
+    .join('\n')
   return `<table class="cab">
 <tr>
   <td class="logo">${logo}</td>
   <td class="om">${om}</td>
-  <td class="doc"><div class="rot">Nº DO DOCUMENTO</div>${numero}<div class="rot">EXPEDIÇÃO</div><div class="val">${escapar(expedicao(o.emitidoEm, s.fuso))}</div></td>
+  <td class="doc">${c.doc}</td>
 </tr>
-<tr><td class="chave cinza">ASSUNTO</td><td colspan="2" class="assunto">BOLETIM DE ACOMPANHAMENTO DIÁRIO</td></tr>
-<tr><td class="chave cinza">OBRA/SERVIÇO</td><td colspan="2" class="just">${comQuebras(s.etapa.objeto ?? s.etapa.nome)}</td></tr>
-<tr><td class="chave cinza">LOCAL</td><td colspan="2">${comQuebras(s.etapa.local ?? s.etapa.endereco ?? '—')}</td></tr>
-<tr><td class="chave cinza">RESPONSÁVEIS</td><td colspan="2">${responsaveis}</td></tr>
+<tr><td class="chave cinza">ASSUNTO</td><td colspan="2" class="assunto">${escapar(c.assunto)}</td></tr>
+${campos}
 </table>`
+}
+
+function cabecalho(s: Snapshot, o: OpcoesTemplate): string {
+  const numero = o.numero
+    ? `<div class="val">${escapar(o.numero)}</div>`
+    : `<div class="val previa">${escapar(MARCA_PREVIA)}</div>`
+  const responsaveis = s.responsaveis.map((r) => escapar(r.nome)).join(', ') || '—'
+  return tabelaCabecalho({
+    linhas: s.organizacao.cabecalho,
+    nome: s.organizacao.nome,
+    logo: o.logo,
+    doc: `<div class="rot">Nº DO DOCUMENTO</div>${numero}<div class="rot">EXPEDIÇÃO</div><div class="val">${escapar(expedicao(o.emitidoEm, s.fuso))}</div>`,
+    assunto: 'BOLETIM DE ACOMPANHAMENTO DIÁRIO',
+    campos: [
+      ['OBRA/SERVIÇO', comQuebras(s.etapa.objeto ?? s.etapa.nome), 'just'],
+      ['LOCAL', comQuebras(s.etapa.local ?? s.etapa.endereco ?? '—')],
+      ['RESPONSÁVEIS', responsaveis],
+    ],
+  })
 }
 
 function secaoDados(s: Snapshot): string {

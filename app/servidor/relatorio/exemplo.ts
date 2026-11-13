@@ -22,8 +22,21 @@ export function relatorioExemplo(extra: Partial<RelatorioPendencias> = {}): Rela
   return {
     gerado_em: '2026-11-13T15:04:00Z',
     fuso: 'America/Fortaleza',
-    organizacao: { nome: 'COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)', logo_path: 'logo.png' },
-    etapa: { id: '11111111-1111-4111-8111-111111111111', slug: '2a-etapa', nome: '2ª ETAPA', sigla: 'E2' },
+    organizacao: {
+      nome: 'COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)',
+      logo_path: 'logo.png',
+      cabecalho: ['MINISTÉRIO DA DEFESA', 'COMANDO DA AERONÁUTICA', 'COMISSÃO DE OBRAS DE FORTALEZA'],
+    },
+    etapa: {
+      id: '11111111-1111-4111-8111-111111111111',
+      slug: '2a-etapa',
+      nome: '2ª ETAPA',
+      sigla: 'E2',
+      objeto: 'Construção do Hotel de Trânsito de Oficiais (HTO) - 2ª etapa',
+      local: 'Base Aérea de Fortaleza',
+      endereco: null,
+    },
+    responsaveis: [{ nome: 'Patrício' }, { nome: 'Fulano' }],
     obra: null,
     pendencias: [
       pend(1, {}),

@@ -109,7 +109,7 @@ Mesma segurança e os mesmos erros. Com `p_obra` de outra etapa: `22023` ("Obra 
 - **Gravação:** envia o PDF para `relatorios/pendencias/<sub do JWT>/<etapa_slug>-<obra_slug|etapa>.pdf` com upsert. O `sub` é lido do payload do JWT, que já foi validado pela RPC. Responde `{url}`, uma URL assinada por 600 s.
 - **`vercel.json`:** entrada igual à de `api/previa-boletim.ts` (2048 MB, `maxDuration` 120, mesmos `includeFiles`).
 - **Template HTML** (`template.ts`), no visual do boletim, reaproveitando `cssFontes`, `escapar`, `comQuebras`, `dataBr` e o estilo do cabeçalho:
-  1. **Cabeçalho:** logo da organização e nome; título "RELATÓRIO DE PENDÊNCIAS"; a etapa e a obra (ou "Todas as obras"); "Posição em dd/mm/aaaa às hh:mm" no fuso.
+  1. **Cabeçalho:** o mesmo do boletim diário (`tabelaCabecalho`): logo e linhas da OM; à direita, "ABRANGÊNCIA" (etapa e obra, ou "Todas as obras") e "POSIÇÃO EM" (dd/mm/aa · hh:mm no fuso); assunto "RELATÓRIO DE PENDÊNCIAS"; OBRA/SERVIÇO, LOCAL e RESPONSÁVEIS da etapa. A migration `20261120090000_relatorio_pendencias_cabecalho.sql` acrescenta ao retorno da RPC `organizacao.cabecalho`, `etapa.objeto`, `etapa.local`, `etapa.endereco` e `responsaveis`.
   2. **Resumo:**
      - KPIs: registradas, abertas, resolvidas, % resolvidas e tempo médio de resolução em dias;
      - sem filtro de obra, uma tabela por obra com abertas, resolvidas, total e a aberta mais antiga (em dias).
