@@ -99,7 +99,7 @@ function Layout({ usuario, onSair, children }: { usuario: UsuarioSessao; onSair:
           <NavLink to="/" end>
             Etapas
           </NavLink>
-          <NavLink to="/boletins">Boletins</NavLink>
+          <NavLink to="/boletins">Relatórios</NavLink>
           <NavLink to="/pessoas">Pessoas</NavLink>
           <NavLink to="/organizacao">Organização</NavLink>
           <NavLink to="/admins">Admins</NavLink>

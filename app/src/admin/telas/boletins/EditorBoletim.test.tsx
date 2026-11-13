@@ -241,7 +241,7 @@ describe('editor do boletim', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(num(ontem))
     await user.click(screen.getByRole('link', { name: /Boletins de 2ª ETAPA/ }))
     expect(confirmar).toHaveBeenCalledTimes(2)
-    expect(await screen.findByRole('heading', { name: 'Boletins' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Relatórios' })).toBeInTheDocument()
   })
 
   it('só leitura quando não é a última revisão, com link para a lista da etapa', async () => {

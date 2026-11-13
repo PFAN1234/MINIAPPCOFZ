@@ -59,24 +59,20 @@ describe('nova etapa: formulário em seções', () => {
     expect(screen.getByLabelText('Horário de emissão')).toHaveValue('23:30')
   })
 
-  it('o mapa só aparece com coordenadas válidas e usa o iframe do OpenStreetMap', async () => {
+  it('as coordenadas digitadas aparecem na legenda do mapa; fora do Brasil, não', async () => {
     const user = userEvent.setup()
     renderizar('/nova-etapa')
     expect(await screen.findByTestId('mapa-vazio')).toBeInTheDocument()
     await user.type(screen.getByLabelText('Latitude'), '-3,7610')
     await user.type(screen.getByLabelText('Longitude'), '-38,5297')
-    const mapa = screen.getByTitle(/Mapa da obra/)
-    const src = mapa.getAttribute('src') ?? ''
-    expect(src).toMatch(/^https:\/\/www\.openstreetmap\.org\/export\/embed\.html\?bbox=-38\.53570%2C-3\.76500%2C-38\.52370%2C-3\.75700&layer=mapnik&marker=-3\.761%2C-38\.5297$/)
+    expect(screen.getByText(/-3,7610, -38,5297/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'abrir no mapa' })).toHaveAttribute(
       'href',
       'https://www.openstreetmap.org/?mlat=-3.761&mlon=-38.5297#map=17/-3.761/-38.5297',
     )
-    expect(screen.getByText('-3,7610, -38,5297', { exact: false })).toBeInTheDocument()
-    // fora do Brasil: sem mapa
     await user.clear(screen.getByLabelText('Latitude'))
     await user.type(screen.getByLabelText('Latitude'), '40')
-    expect(screen.queryByTitle(/Mapa da obra/)).not.toBeInTheDocument()
+    expect(screen.getByTestId('mapa-vazio')).toBeInTheDocument()
   })
 
   it('estação principal e reserva: lista fixa do Observatório, com Montese e Benfica na criação', async () => {
@@ -186,7 +182,7 @@ describe('página da etapa: cadastro', () => {
     expect(screen.getByLabelText('CNPJ da contratada')).toHaveValue('12.345.678/0001-95')
     expect(screen.getByLabelText('Contrato')).toHaveValue('120/2025 - SOP')
     expect(screen.getByLabelText('Data da OS')).toHaveValue('2025-06-02')
-    expect(screen.getByTitle(/Mapa da obra/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'abrir no mapa' })).toBeInTheDocument()
     expect(screen.queryByText(/Faltam para o boletim/)).not.toBeInTheDocument()
     // as seções que já existiam continuam
     expect(screen.getByRole('heading', { name: 'Grupo do Telegram' })).toBeInTheDocument()

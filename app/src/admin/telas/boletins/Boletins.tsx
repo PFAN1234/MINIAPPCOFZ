@@ -1,5 +1,5 @@
 /**
- * Aba "Boletins": pedidos não emitidos e boletins emitidos de todas as etapas (ou de uma, com
+ * Aba "Relatórios" (rota `/boletins`; por ora só o boletim diário): pedidos não emitidos e boletins emitidos de todas as etapas (ou de uma, com
  * `?etapa=<slug>`), por período (padrão: últimos 30 dias). Com uma etapa escolhida, também o bloco
  * Pré-visualizar / Emitir agora. Contrato: docs/contrato-boletim.md, partes 3 e 4.
  */
@@ -32,7 +32,8 @@ export default function Boletins() {
 
   return (
     <section aria-labelledby="titulo-boletins">
-      <h1 id="titulo-boletins">Boletins</h1>
+      <h1 id="titulo-boletins">Relatórios</h1>
+      <h2 className="adm-subtitulo">Boletim de acompanhamento diário</h2>
       <ComDados consulta={etapas}>
         {(lista) => {
           const etapa = slug ? lista.find((e) => e.slug === slug) : undefined

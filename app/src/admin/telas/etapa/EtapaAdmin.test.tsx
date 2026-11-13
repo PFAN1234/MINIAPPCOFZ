@@ -75,6 +75,17 @@ describe('etapas (fixture)', () => {
     expect(screen.getByText(/Faltam para o boletim: obra\/serviço/)).toBeInTheDocument()
   })
 
+  it('tocar no mapa preenche latitude e longitude', async () => {
+    const user = userEvent.setup()
+    renderizar('/nova-etapa')
+    expect(await screen.findByTestId('mapa-vazio')).toHaveTextContent('Toque no mapa')
+    await user.click(await screen.findByRole('button', { name: 'Tocar no mapa' }))
+    expect(screen.getByLabelText('Latitude')).toHaveValue('-3,761234')
+    expect(screen.getByLabelText('Longitude')).toHaveValue('-38,530123')
+    expect(screen.queryByTestId('mapa-vazio')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'abrir no mapa' })).toHaveAttribute('href', expect.stringContaining('mlat=-3.761234'))
+  })
+
   it('cartão Boletins: horário da emissão automática e link para a aba filtrada pela etapa', async () => {
     renderizar('/etapas/2a-etapa')
     const secao = await screen.findByRole('region', { name: 'Boletins' })
