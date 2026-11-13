@@ -446,7 +446,8 @@ def test_reivindicar_emissoes(cenario):
     # por proxima_tentativa: p2 e o preso (geração interrompida há mais de 15 min)
     assert [x['id'] for x in lote] == sorted([p2, preso])
     assert lote[0] == {'id': lote[0]['id'], 'etapa_id': str(c.etapa), 'data': lote[0]['data'], 'revisao': 0,
-                       'numero': numero(c, lote[0]['data'])}
+                       'numero': numero(c, lote[0]['data']),
+                       'base_boletim_id': None, 'edicao': None}
     assert estado_pedido(c, preso)[:2] == ('gerando', 3)
     assert estado_pedido(c, p2)[:2] == ('gerando', 1)
     assert estado_pedido(c, esgotado)[:3] == ('falhou', 8, 'Geração interrompida; tentativas esgotadas.')
