@@ -368,4 +368,5 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Servidor: rota `api/relatorio-pendencias` gera o PDF com fotos (visual do boletim), grava em `relatorios/pendencias/<usuário>/` e devolve URL assinada de 10 min.
 - [x] Tela: abas de etapa no topo, filtro de obra, cartões (serviços, pendências abertas, resolvidas), gráfico acumulado com toque, barras por obra, tabela e botão "Relatório de pendências (PDF)".
 - [ ] Usuário: no Telegram, abrir Relatórios, conferir os números com o Início e exportar o PDF da etapa e de uma obra.
+- [x] PDF de pendências com o mesmo cabeçalho do boletim diário (linhas da OM, obra/serviço, local, responsáveis; abrangência e posição à direita). Migration `20261120090000_relatorio_pendencias_cabecalho.sql` aplicada em produção e conferida (md5 e chamada como admin).
 - [ ] Exclusão de etapa/obra: remover também os PDFs do bucket `relatorios`.

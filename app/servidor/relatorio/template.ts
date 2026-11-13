@@ -2,8 +2,8 @@
  * HTML do relatório de pendências, no visual do boletim (mesmo CSS, cabeçalho em tabela, fotos
  * em grade). O rodapé ("página x de y") vai no `footerTemplate` do Chromium (`rodapeRelatorio`).
  */
-import { CSS } from '../boletim/template.js'
-import { comQuebras, dataBr, dataHoraBr, escapar, numeroBr } from '../boletim/formato.js'
+import { CSS, tabelaCabecalho } from '../boletim/template.js'
+import { comQuebras, dataBr, escapar, expedicao, numeroBr } from '../boletim/formato.js'
 import type { FotoRelatorio, PendenciaRelatorio, RelatorioPendencias } from './tipos.js'
 
 export interface OpcoesRelatorio {
@@ -26,19 +26,21 @@ const CSS_RELATORIO = `
 export const TITULO = 'RELATÓRIO DE PENDÊNCIAS'
 
 function cabecalho(r: RelatorioPendencias, o: OpcoesRelatorio): string {
-  const logo = o.logo ? `<img src="${o.logo}" alt="Logo da organização">` : ''
-  const posicao = dataHoraBr(new Date(r.gerado_em), r.fuso)
-  return `<table class="cab">
-<tr>
-  <td class="logo">${logo}</td>
-  <td class="om"><div class="l1">${escapar(r.organizacao.nome)}</div></td>
-  <td class="doc"><div class="rot">POSIÇÃO</div><div class="val">${escapar(posicao.replace(' às ', ' · '))}</div></td>
-</tr>
-<tr><td class="chave cinza">ASSUNTO</td><td colspan="2" class="assunto">${TITULO}</td></tr>
-<tr><td class="chave cinza">ETAPA</td><td colspan="2">${escapar(r.etapa.nome)}</td></tr>
-<tr><td class="chave cinza">OBRA</td><td colspan="2">${escapar(r.obra ? r.obra.nome : 'Todas as obras')}</td></tr>
-</table>
-<div class="emissao">Posição em ${escapar(posicao)}</div>`
+  const responsaveis = (r.responsaveis ?? []).map((x) => escapar(x.nome)).join(', ') || '—'
+  const abrangencia = `${escapar(r.etapa.nome)}<br>${r.obra ? `Obra ${escapar(r.obra.nome)}` : 'Todas as obras'}`
+  return tabelaCabecalho({
+    linhas: r.organizacao.cabecalho ?? [],
+    nome: r.organizacao.nome,
+    logo: o.logo,
+    // Como "Nº do documento / Expedição" no boletim: abrangência e posição.
+    doc: `<div class="rot">ABRANGÊNCIA</div><div class="val">${abrangencia}</div><div class="rot">POSIÇÃO EM</div><div class="val">${escapar(expedicao(new Date(r.gerado_em), r.fuso))}</div>`,
+    assunto: TITULO,
+    campos: [
+      ['OBRA/SERVIÇO', comQuebras(r.etapa.objeto ?? r.etapa.nome), 'just'],
+      ['LOCAL', comQuebras(r.etapa.local ?? r.etapa.endereco ?? '—')],
+      ['RESPONSÁVEIS', responsaveis],
+    ],
+  })
 }
 
 const plural = (n: number, um: string, varios: string) => `${numeroBr(n)} ${n === 1 ? um : varios}`

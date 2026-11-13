@@ -25,9 +25,13 @@ describe('template do relatório de pendências', () => {
     const t = texto(html)
     expect(html).toContain('<img src="data:image/png;base64,BBBB"')
     expect(t).toContain('ASSUNTO RELATÓRIO DE PENDÊNCIAS')
-    expect(t).toContain('ETAPA 2ª ETAPA')
-    expect(t).toContain('OBRA Todas as obras')
-    expect(t).toContain('Posição em 13/11/2026 às 12:04')
+    // mesmo cabeçalho do boletim: linhas da OM, obra/serviço, local e responsáveis
+    expect(t).toContain('MINISTÉRIO DA DEFESA COMANDO DA AERONÁUTICA COMISSÃO DE OBRAS DE FORTALEZA')
+    expect(t).toContain('POSIÇÃO EM 13/11/26 · 12:04')
+    expect(t).toContain('OBRA/SERVIÇO Construção do Hotel de Trânsito de Oficiais (HTO) - 2ª etapa')
+    expect(t).toContain('LOCAL Base Aérea de Fortaleza')
+    expect(t).toContain('RESPONSÁVEIS Patrício, Fulano')
+    expect(t).toContain('ABRANGÊNCIA 2ª ETAPA Todas as obras POSIÇÃO EM')
     expect(t).toContain('PENDÊNCIAS ABERTAS')
     expect(t).toContain('PENDÊNCIAS RESOLVIDAS')
     expect(t).toContain('P-001 · HTO › Térreo › Sala 01')
@@ -39,6 +43,20 @@ describe('template do relatório de pendências', () => {
     expect(t).toContain('Reparo feito.')
     expect(html).toContain('src="data:image/jpeg;base64,AAAA"')
     expect(t).toContain('foto indisponível')
+  })
+
+  it('sem os campos novos (RPC antiga): nome da organização, nome da etapa e travessões', () => {
+    const r = relatorioExemplo()
+    const t = texto(
+      montarHtmlRelatorio(
+        { ...r, organizacao: { nome: 'CO-FZ', logo_path: null }, etapa: { ...r.etapa, objeto: undefined, local: undefined }, responsaveis: undefined },
+        opcoes({ logo: null }),
+      ),
+    )
+    expect(t).toContain('CO-FZ')
+    expect(t).toContain('OBRA/SERVIÇO 2ª ETAPA')
+    expect(t).toContain('LOCAL —')
+    expect(t).toContain('RESPONSÁVEIS —')
   })
 
   it('KPIs e tabela por obra quando não há filtro de obra', () => {
@@ -56,7 +74,7 @@ describe('template do relatório de pendências', () => {
   it('com filtro de obra: mostra a obra e omite a tabela por obra', () => {
     const r = relatorioExemplo({ obra: { id: 'x', slug: 'hto', nome: 'HTO' } })
     const html = montarHtmlRelatorio(r, opcoes())
-    expect(texto(html)).toContain('OBRA HTO')
+    expect(texto(html)).toContain('ABRANGÊNCIA 2ª ETAPA Obra HTO')
     expect(html).not.toContain('Aberta mais antiga')
   })
 

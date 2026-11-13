@@ -1,4 +1,4 @@
-"""Testes das RPCs public.painel_relatorios e public.relatorio_pendencias (20261119090000_relatorios_painel.sql)."""
+"""Testes das RPCs public.painel_relatorios e public.relatorio_pendencias (20261119100000_relatorios_painel.sql e 20261120090000_relatorio_pendencias_cabecalho.sql)."""
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -124,10 +124,16 @@ def test_relatorio_ordem_dias_e_estrutura(cenario):
     nova, _ = registro(c, c.obra_a, c.amb_a, 'pendencia', 'aberta nova', c.gestor_a, t - timedelta(hours=1))
     bb, _ = registro(c, c.obra_b, c.amb_b, 'pendencia', 'obra b', c.gestor_b, t - timedelta(days=1))
     registro(c, c.obra_a, c.amb_a, 'servico', 'serviço fora', c.gestor_a, t)
+    su(c, "update public.etapa set objeto = 'Construção do HTO', local = 'Base Aérea' where id = %s", (c.etapa,))
+    su(c, "insert into public.etapa_responsavel (etapa_id, usuario_id, funcao, ordem) values (%s, %s, 'Fiscal', 1)",
+       (c.etapa, c.gestor_a))
     r = relatorio(c, c.gestor_a)
     assert r['obra'] is None and r['fuso'] == 'America/Rio_Branco'
-    assert set(r['organizacao']) == {'nome', 'logo_path'}
-    assert set(r['etapa']) == {'id', 'slug', 'nome', 'sigla'}
+    # mesmo cabeçalho do boletim: linhas da OM, obra/serviço, local e responsáveis
+    assert set(r['organizacao']) == {'nome', 'logo_path', 'cabecalho'} and isinstance(r['organizacao']['cabecalho'], list)
+    assert set(r['etapa']) == {'id', 'slug', 'nome', 'sigla', 'objeto', 'local', 'endereco'}
+    assert r['etapa']['objeto'] == 'Construção do HTO' and r['etapa']['local'] == 'Base Aérea'
+    assert [x['nome'] for x in r['responsaveis']] == ['Usuário 0'] and r['responsaveis'][0]['funcao'] == 'Fiscal'
     assert r['gerado_em']
     ps = r['pendencias']
     # abertas antes das resolvidas; por obra, ambiente (Ambiente 0 antes de Ambiente 1) e captura

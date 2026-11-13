@@ -30,8 +30,18 @@ export interface PendenciaRelatorio {
 export interface RelatorioPendencias {
   gerado_em: string
   fuso: string
-  organizacao: { nome: string; logo_path: string | null }
-  etapa: { id: string; slug: string; nome: string; sigla: string }
+  /** `cabecalho`, `objeto`, `local`, `endereco` e `responsaveis`: cabeçalho do boletim (20261120090000). */
+  organizacao: { nome: string; logo_path: string | null; cabecalho?: string[] }
+  etapa: {
+    id: string
+    slug: string
+    nome: string
+    sigla: string
+    objeto?: string | null
+    local?: string | null
+    endereco?: string | null
+  }
+  responsaveis?: { nome: string }[]
   obra: { id: string; slug: string; nome: string } | null
   pendencias: PendenciaRelatorio[]
 }
