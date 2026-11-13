@@ -277,9 +277,9 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [x] Página Pessoas no admin (nome de exibição).
 - [x] Nome de exibição no Mini App e nas publicações do Telegram (migration `20261114090000_nome_exibicao_mini_app.sql` aplicada no `miniappcofz-dev` em 2026-11-13, conferida por hash; `publish-outbox` versão 4 publicada).
 - [x] Cartão Observações do dia na página da obra (com fila offline e trava após a emissão).
-- [ ] Edge Function `coletar-clima` (INMET, estação reserva, céu pela radiação) com testes; acesso ao INMET a partir de `sa-east-1`.
+- [ ] Clima pelo Observatório de Fortaleza (decisão de 2026-11-13; INMET fora do ar): migration (`estacao`/`estacao_reserva` com padrão Montese 8836 e Benfica 9281, `clima_leitura`), Edge Function `coletar-clima` de hora em hora lendo a página com testes sobre uma cópia gravada, ajuste do cadastro da etapa no site.
 - [ ] Snapshot do dia: indicadores, serviços e pendências, com testes de banco (inclui fuso e lançamento tardio).
 - [ ] Template HTML, PDF, envio ao grupo da etapa no Telegram.
 - [ ] Agendamento por etapa, retificação e tela "Boletins" no Mini App.
 - [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
-- [ ] Externo: token do INMET; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.
+- [ ] Externo: avisar o Observatório/IPPLAN do uso dos dados; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.

@@ -8,27 +8,31 @@ Ao fim de cada dia a etapa emite um boletim que compila tudo o que foi lançado 
 
 - **Abrangência:** um boletim por **etapa** por dia, com as seções separadas por obra (ex.: Bloco de Alojamento e Bloco Didático).
 - **Emissão:** **automática** em horário fixo (hora local da obra), sem revisão prévia; o fiscal pode emitir **retificação** (`-R1`, `-R2`…), que substitui a anterior e fica registrada.
-- **Clima:** **só INMET** (estação automática mais próxima, dado medido; decisão de 2026-11-13, substitui Open-Meteo + INMET). Exige pedir token ao INMET. A condição do céu (ensolarado/parcialmente nublado/nublado) é **estimada pela radiação solar** medida.
+- **Clima:** **Observatório de Riscos Climáticos de Fortaleza** (Prefeitura de Fortaleza; decisão de 2026-11-13, substitui o INMET, que estava fora do ar): estação principal **Montese** (`8836`), reserva **Benfica** (`9281`). Coleta **de hora em hora**; gráficos **próprios** no estilo do site, com fonte e horário da leitura. Só Fortaleza por enquanto (sem outra fonte para obras fora da cidade). A condição do céu é estimada pelo **índice UV** (a Montese não mede radiação).
 - **Nome de exibição:** cada pessoa tem um nome de exibição em texto livre, maiúsculas (ex.: Patricio Ferreira → `CP PATRICIO`), definido **só por admins** no site; vale no Mini App, nas publicações do Telegram e nos boletins.
 - **Observações:** várias notas por obra e por dia, escritas por **qualquer participante** na página inicial da obra no Mini App; o boletim compila as de todas as obras da etapa na seção Observações.
 - **Numeração:** `BA<sigla da etapa>/<YYMMDD>/<OM>`, ex.: `BA2/261111/COFZ`. Sigla = novo campo curto da etapa (`2`); OM = `organizacao.nome` em maiúsculas, sem acentos e só com letras e números (`CO-FZ` → `COFZ`). Retificação: `BA2/261111/COFZ-R1`.
 
-## Clima (INMET)
+## Clima (Observatório de Fortaleza)
 
-**Localização:** `etapa` ganha `latitude`, `longitude`, `endereco`, `fuso` e `inmet_estacao` (código, ex.: `A305`), mais `inmet_estacao_reserva` opcional. Preenchidos no formulário da etapa (ver abaixo): endereço/CEP → geocodificação → pino no mapa para confirmar; a estação é sugerida pela menor distância na lista de estações automáticas do INMET (a segunda mais próxima vira a reserva) e pode ser trocada. O `fuso` é escolhido numa lista dos fusos do Brasil (IANA, ex.: `America/Fortaleza`, `America/Manaus`, `America/Rio_Branco`, `America/Noronha`), pré-preenchido pela UF da estação.
+**Fonte:** página pública `https://observatorio.fortaleza.ce.gov.br/riscos-climaticos/estacoes-meteorologicas` (robots.txt libera; atualizada a cada 10 min; 11 estações). Não há API: a página é gerada no servidor e cada estação tem uma ficha `article#estacao-<id>` com:
+- valores atuais: temperatura, mín./máx. e sensação térmica; umidade (faixa de 24 h); vento (km/h e rumo, ex.: SE) e rajada máxima; chuva de hoje e do mês; índice UV e classificação; pressão (faixa de 24 h); ponto de orvalho; radiação solar (a Montese mostra "—");
+- séries das últimas 24 h, hora a hora, como SVG: temperatura, umidade, vento, UV e pressão em `path.mg-linha` (24 pontos; o `aria-label` traz o mínimo e o máximo, e o valor de cada ponto sai da posição vertical, com precisão de 0,1) e chuva em `rect.mg-barra` (alturas proporcionais; o `aria-label` traz o total, que distribui os milímetros);
+- "Leitura às HH:MM" na lista de estações; dados do equipamento (bateria, sinal).
+- Testado em 2026-11-13: Montese 27,2–30,9 °C e 62–82% em 24 h; Centro com 1,5 mm = 1,4 + 0,1 mm.
 
-**Dados usados** (`apitempo.inmet.gov.br`, estação automática, de hora em hora, em UTC): `CHUVA` (mm), `TEM_INS/MAX/MIN` (°C), `UMD_INS/MAX/MIN` (%), `PTO_INS` (ponto de orvalho), `PRE_INS` (hPa), `VEN_VEL`, `VEN_DIR`, `VEN_RAJ` (m/s → km/h) e `RAD_GLO` (kJ/m²). Dados brutos: horas faltando aparecem como "sem dado"; se faltar mais da metade das horas do expediente na estação principal, usa a reserva e o boletim indica qual estação valeu.
+**Riscos:** mudança de layout quebra a leitura → a coleta valida o que leu (24 pontos, faixas coerentes, horário da leitura) e registra falha; o boletim usa a reserva (Benfica) e, sem nenhuma, sai com "Dados meteorológicos indisponíveis (Observatório de Fortaleza)". Uso de dado público da Prefeitura com citação da fonte; vale avisar o IPPLAN/Observatório e, se oferecerem, trocar por um feed oficial.
 
-**Céu estimado pela radiação:** para cada período, razão entre a radiação medida e a de céu limpo calculada para a posição da estação e a hora (modelo de Haurwitz): ≥ 75% ensolarado; 45–75% parcialmente nublado; < 45% nublado. Limiares a calibrar com uma semana de dados reais da A305; o boletim diz que é estimativa.
+**Coleta:** pg_cron + pg_net de hora em hora (minuto 5) chamam a Edge Function `coletar-clima`, que baixa a página uma vez, lê as fichas da estação principal e da reserva de cada etapa e grava `clima_leitura` (etapa, estação, hora da leitura, valores atuais, séries de 24 h, `obtido_em`). Repetível sem duplicar (`unique (estacao, leitura_em)`). Na emissão, o dia (0h–24h no fuso da etapa) é montado com as leituras horárias guardadas; `clima_dia` guarda o resumo usado no boletim.
 
-**Acesso:** em 2026-11-13 todos os endereços do INMET devolveram resposta vazia a partir do ambiente de desenvolvimento (provável bloqueio de acessos de fora do Brasil). A coleta precisa sair do Brasil: testar a Edge Function com a região fixada em `sa-east-1` assim que houver token; se não der, outra saída no Brasil.
+**Cadastro:** os campos `inmet_estacao`/`inmet_estacao_reserva` da etapa passam a ser `estacao`/`estacao_reserva` com o código numérico do Observatório (padrão Montese `8836` e Benfica `9281`); o site mostra a lista das 11 estações pelo nome (a tabela de estações é preenchida pela própria coleta). A sugestão por distância sai (a página não traz coordenadas).
 
-**Coleta:** pg_cron + pg_net (mesmo padrão do `publish-outbox`) chamam a Edge Function `coletar-clima` antes da emissão e de novo na madrugada seguinte; grava `clima_dia` (etapa, data local, estação, horário em `jsonb`, resumo, `obtido_em`), `unique (etapa_id, data, estacao)`. Sem dado na emissão, o boletim sai com "Dados meteorológicos indisponíveis (INMET)"; se o dado chegar depois, o app sugere retificação ao fiscal.
+**Céu estimado pelo UV:** razão entre o UV medido e o de céu limpo estimado para a hora e a latitude (`UV_limpo ≈ 12,5 · cos(z)^2,42`, z = ângulo zenital): ≥ 75% ensolarado; 45–75% parcialmente nublado; < 45% nublado. Limiares a calibrar com uma semana de dados; o boletim diz que é estimativa.
 
 **No boletim** (substitui "SOL / CHUVA"):
-- Manhã (6h–12h) e Tarde (12h–18h): condição ("Sem chuva · ensolarado", "Chuva · nublado"), faixa de temperatura, umidade, chuva (mm e horário), vento médio / rajada, radiação (% do céu limpo).
-- Dia: mínima/máxima e ponto de orvalho, umidade média e mínima, chuva total e horas com chuva, vento máximo com direção, rajada, pressão.
-- Gráfico hora a hora (temperatura em linha, chuva em barras, radiação medida × céu limpo) e a fonte: estação, distância da obra, horário de obtenção.
+- Manhã (6h–12h) e Tarde (12h–18h): condição ("Sem chuva · ensolarado", "Chuva · nublado"), faixa de temperatura, umidade, chuva (mm e horário), vento médio / rajada, UV máximo.
+- Dia: mínima/máxima e sensação térmica, umidade, chuva total e horas com chuva, vento com rumo, rajada máxima, pressão, ponto de orvalho.
+- Gráficos próprios no estilo do site (uma linha por variável: temperatura, umidade, chuva em barras, vento, UV), com a linha de fonte: "Fonte: Observatório de Riscos Climáticos de Fortaleza (Prefeitura de Fortaleza), estação Montese — leitura das 23:20, coletada em 13/11/2026 às 23:25".
 - Dia com chuva = chuva ≥ 0,2 mm no dia (conta nos indicadores de clima).
 
 ## Dados administrativos da etapa
@@ -101,7 +105,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 
 ## Pendências externas
 
-- Token da API do INMET.
-- Confirmar que a coleta a partir do Supabase (`sa-east-1`) alcança o INMET.
+- Confirmar que a coleta a partir do Supabase alcança a página do Observatório.
+- Avisar o Observatório/IPPLAN do uso dos dados (e pedir um feed oficial, se houver).
 - Nomes de exibição de todos os participantes.
 - Coordenadas exatas do canteiro da 2ª etapa e preenchimento dos dados administrativos.
