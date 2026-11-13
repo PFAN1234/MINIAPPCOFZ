@@ -24,15 +24,21 @@ export function BarraSincronizacao() {
   const regsComErro = estado.itens.filter((i) => i.estado === 'erro').length
   const encsAguardando = estado.encerramentos.filter((i) => i.estado !== 'erro').length
   const encsComErro = estado.encerramentos.filter((i) => i.estado === 'erro')
-  const aguardando = regsAguardando + encsAguardando
-  const comErro = regsComErro + encsComErro.length
-  // Só registros: o texto de sempre; com encerramentos na fila, fala em "itens".
-  const soRegistros = encsAguardando === 0 && encsComErro.length === 0
-  // Um único encerramento com erro leva direto à pendência dele.
+  const obsAguardando = estado.observacoes.filter((i) => i.estado !== 'erro').length
+  const obsComErro = estado.observacoes.filter((i) => i.estado === 'erro')
+  const aguardando = regsAguardando + encsAguardando + obsAguardando
+  const comErro = regsComErro + encsComErro.length + obsComErro.length
+  // Só registros: o texto de sempre; com encerramentos ou observações na fila, fala em "itens".
+  const soRegistros =
+    encsAguardando === 0 && encsComErro.length === 0 && obsAguardando === 0 && obsComErro.length === 0
+  // Um único encerramento (ou observação) com erro leva direto à pendência (ou à obra) dele.
   const destinoErro =
-    regsComErro === 0 && encsComErro.length === 1
+    regsComErro === 0 && encsComErro.length === 1 && obsComErro.length === 0
       ? `/obras/${encsComErro[0].encerramento.obra.slug}/pendencias/${encsComErro[0].encerramento.pendenciaId}`
-      : '/registros'
+      : regsComErro === 0 && encsComErro.length === 0 && obsComErro.length > 0 &&
+          obsComErro.every((i) => i.observacao.obra.slug === obsComErro[0].observacao.obra.slug)
+        ? `/obras/${obsComErro[0].observacao.obra.slug}`
+        : '/registros'
 
   if (aguardando === 0 && comErro === 0 && online) return null
 

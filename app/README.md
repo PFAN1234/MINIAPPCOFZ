@@ -42,6 +42,10 @@ VITE_DADOS=fixture npm run dev     # abre http://localhost:5173/admin/ (HTO e CO
 
 Na fixture o usuário de teste é admin; `localStorage['fixture-admin'] = 'nao'` simula quem não é (no site, "Acesso negado"; no Mini App, o botão Administração some). O teste `e2e/admin.spec.ts` roda o site em modo fixture num viewport de computador.
 
+## Observações do dia (página da obra)
+
+Cartão acima dos ambientes (`components/CartaoObservacoes.tsx`; contrato em `docs/contrato-boletim.md`, parte 2): lista de hoje no fuso da etapa (`HH:MM · NOME`, com o nome de exibição), "Adicionar observação" pela mesma fila do modo sem sinal (`offline/fila.ts`, store `observacoes` do IndexedDB, versão 3), editar e excluir as próprias só com conexão, e o aviso de dia travado depois da emissão do boletim. Na fixture, a HTO tem duas observações de hoje (uma de `CP PATRICIO`, a pessoa com nome de exibição) e `localStorage['fixture-boletim'] = 'emitido'` simula o boletim de hoje já emitido.
+
 ## Estrutura
 
 - `src/admin/`: site de administração (telas, `dados/` com repositório Supabase e fixture próprios).

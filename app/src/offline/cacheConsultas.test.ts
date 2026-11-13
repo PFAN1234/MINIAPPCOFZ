@@ -36,6 +36,18 @@ describe('cache de consultas', () => {
     cancelar()
   })
 
+  it('as observações do dia entram no cache do aparelho e voltam ao restaurar (vistas sem sinal)', async () => {
+    const qc = novoQc()
+    const cancelar = persistirCache(qc, a, 'u1')
+    const dia = { data: '2026-11-13', fuso: 'America/Fortaleza', travada: false, observacoes: [{ id: 'o1' }] }
+    await qc.fetchQuery({ queryKey: ['observacoes', 'obra-1'], queryFn: async () => dia })
+    await vi.advanceTimersByTimeAsync(1000)
+    cancelar()
+    const novo = novoQc()
+    await restaurarCache(novo, a, 'u1')
+    expect(novo.getQueryData(['observacoes', 'obra-1'])).toEqual(dia)
+  })
+
   it('cancelar impede a gravação pendente', async () => {
     const qc = novoQc()
     const cancelar = persistirCache(qc, a, 'u1')
