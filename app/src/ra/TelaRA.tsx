@@ -613,8 +613,8 @@ export default function TelaRA(props: PropsTelaRA) {
       )}
 
       {pendente && (
-        <div className="ra-folha" role="dialog" aria-label="Qual canto você tocou?">
-          <p className="ra-folha-titulo">Qual canto você tocou?</p>
+        <div className="ra-folha" role="dialog" aria-label="Qual canto você marcou?">
+          <p className="ra-folha-titulo">Qual canto você marcou?</p>
           <div className="segmentado">
             <label>
               <input type="radio" name="ra-plano" checked={plano === 'piso'} onChange={() => setPlano('piso')} />
@@ -640,10 +640,8 @@ export default function TelaRA(props: PropsTelaRA) {
   )
 }
 
-type GeometriaComPagina = GeometriaAmbiente & { contornoPagina?: Ponto2[] }
-
-/** Cantos do cômodo em pixels do recorte e viewBox que cobre a imagem e todos os cantos. */
-function plantaReal(g: GeometriaComPagina, planta: PlantaRA | null | undefined) {
+/** Cantos do cômodo em pixels da imagem da planta e viewBox enquadrado no cômodo. */
+function plantaReal(g: GeometriaAmbiente, planta: PlantaRA | null | undefined) {
   const pagina = g.contornoPagina
   if (!planta || !pagina || pagina.length !== g.contorno.length || pagina.length === 0) return null
   const ref = {
@@ -656,10 +654,10 @@ function plantaReal(g: GeometriaComPagina, planta: PlantaRA | null | undefined) 
     const p = marcadorParaPixel({ x, y }, ref)
     return [p.x, p.y]
   })
-  const xs = [0, planta.largura, ...pontos.map((p) => p[0])]
-  const ys = [0, planta.altura, ...pontos.map((p) => p[1])]
-  const maior = Math.max(planta.largura, planta.altura)
-  const margem = maior * 0.05
+  // Enquadra o cômodo com uma faixa da planta em volta, para o fiscal reconhecer portas e vizinhos.
+  const xs = pontos.map((p) => p[0])
+  const ys = pontos.map((p) => p[1])
+  const margem = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * 0.3
   const x0 = Math.min(...xs) - margem
   const y0 = Math.min(...ys) - margem
   const l = Math.max(...xs) + margem - x0

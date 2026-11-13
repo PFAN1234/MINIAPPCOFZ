@@ -326,7 +326,7 @@
 }
 
 /* Planta real do cômodo na folha e miniatura de leitura durante o alinhamento. */
-.ra-planta-comodo {
+.ra-planta polygon.ra-planta-comodo {
   fill: rgba(245, 183, 0, 0.18);
   stroke: #f5b700;
 }

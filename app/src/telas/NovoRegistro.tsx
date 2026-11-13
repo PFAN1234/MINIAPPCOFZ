@@ -48,16 +48,18 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const repo = useRepositorio()
   const [params, setParams] = useSearchParams()
   const geometria = useGeometria(obra, ambiente, recursos.ra)
-  const { planta, detalhe: det } = detalhe
-  const urlsPlanta = useUrlsImagens(det ? [det.imagem.path] : [])
+  // Planta do pavimento (HD quando houver), enquadrada no cômodo pela tela de RA.
+  const { planta } = detalhe
+  const imagemPlanta = planta ? (planta.imagem_hd ?? planta.imagem) : null
+  const urlsPlanta = useUrlsImagens(imagemPlanta ? [imagemPlanta.path] : [])
   const plantaRA =
-    planta && det
+    planta && imagemPlanta
       ? {
-          url: urlsPlanta.data?.[det.imagem.path],
+          url: urlsPlanta.data?.[imagemPlanta.path],
           pagina_pt: planta.pagina_pt,
-          recorte_pt: det.recorte_pt,
-          largura: det.imagem.largura,
-          altura: det.imagem.altura,
+          recorte_pt: planta.recorte_pt,
+          largura: imagemPlanta.largura,
+          altura: imagemPlanta.altura,
         }
       : null
   const modelos = useModelos(obra.slug, recursos.ra)
