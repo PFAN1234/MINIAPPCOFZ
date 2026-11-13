@@ -33,6 +33,14 @@ export function formatarArea(area: number | null): string | null {
   return area === null ? null : `${numeroArea.format(area)} m²`
 }
 
+export function textoServicos(n: number): string {
+  return n === 1 ? '1 serviço' : `${n} serviços`
+}
+
+export function textoPendenciasResolvidas(n: number): string {
+  return n === 1 ? '1 pendência resolvida' : `${n} pendências resolvidas`
+}
+
 export function textoPendencias(n: number): string {
   return n === 1 ? '1 pendência aberta' : `${n} pendências abertas`
 }

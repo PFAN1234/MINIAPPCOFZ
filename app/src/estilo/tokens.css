@@ -47,6 +47,12 @@
   --incerto: #8A5300;
   --erro: #B42318;
 
+  /* Barrinhas do Início: fundos claros com o número em --barrinha-texto (contraste AA conferido). */
+  --barrinha-servicos: #C9DCF7;
+  --barrinha-abertas: #FDBA74;
+  --barrinha-resolvidas: #BBF0CB;
+  --barrinha-texto: #0B1625;
+
   /* Links e anel de foco. */
   --link: var(--servico);
   --foco: var(--servico);

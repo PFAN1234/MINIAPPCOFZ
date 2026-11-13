@@ -9,6 +9,7 @@ import geometriaJson from '../../../data/hto/geometria.json'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
 import { nomeMostrado } from './nome.ts'
 import { dataNoFuso, formatarDia } from '../util/fuso.ts'
+import { dentroDoPeriodo } from '../util/periodo.ts'
 import { baixarModeloLocal, listarModelosLocais } from '../modelo/modelos.ts'
 import type { Repositorio } from './repositorio.ts'
 import type {
@@ -44,6 +45,7 @@ import type {
   RecortePt,
   RegistroLocalizado,
   RegistroResumo,
+  ResumoObra,
   SolicitacaoAcesso,
 } from './tipos.ts'
 
@@ -364,6 +366,7 @@ export function urlLocalDaImagem(path: string): string {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LIMITE_BLOB = 10 * 1024 * 1024
 const AUTOR_FIXTURE = 'Você (teste)'
+const NOME_POR_ID: Record<string, string> = { [ID_USUARIO]: AUTOR_FIXTURE, [ID_PATRICIO]: NOME_PATRICIO }
 
 function falhaValidacao(msg: string): never {
   throw new ErroEnvio('validacao', msg)
@@ -764,6 +767,21 @@ export function criarRepositorioFixture(
       }
     },
 
+    async resumoObras(): Promise<ResumoObra[]> {
+      const registros = todos()
+      return OBRAS.map((o) => {
+        const dela = registros.filter((x) => x.obra.id === o.id)
+        return {
+          obra_id: o.id,
+          // No fixture só a HTO tem participação; nas outras o usuário só vê a obra.
+          papel: o.id === ID_HTO ? papelUsuario() : null,
+          servicos: dela.filter((x) => x.tipo === 'servico').length,
+          abertas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'aberta').length,
+          resolvidas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'resolvida').length,
+        }
+      })
+    },
+
     async listarObras() {
       return OBRAS.map((o) => ({ ...o, etapa: { ...o.etapa } }))
     },
@@ -801,11 +819,22 @@ export function criarRepositorioFixture(
             (!filtro.ambienteId || x.ambiente.id === filtro.ambienteId) &&
             (!filtro.ambienteCodigo || x.ambiente.codigo === filtro.ambienteCodigo) &&
             (!filtro.tipo || x.tipo === filtro.tipo) &&
-            (!filtro.situacao || x.situacao === filtro.situacao),
+            (!filtro.situacao || x.situacao === filtro.situacao) &&
+            (!filtro.etapaId || OBRAS.find((o) => o.id === x.obra.id)?.etapa.id === filtro.etapaId) &&
+            (!filtro.autorId || x.autor === NOME_POR_ID[filtro.autorId]) &&
+            dentroDoPeriodo(x.capturado_em, filtro.de, filtro.ate),
         )
         .sort(porRecente)
       if (filtro.limite) lista = lista.slice(0, filtro.limite)
       return lista.map((x) => ({ ...x, fotos: x.fotos.map((f) => ({ ...f })) }))
+    },
+
+    async autoresRegistros() {
+      const nomes = new Set(todos().map((x) => x.autor))
+      return Object.entries(NOME_POR_ID)
+        .filter(([, nome]) => nomes.has(nome))
+        .map(([id, nome]) => ({ id, nome }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     },
 
     async urlsImagens(paths, bucket = 'plantas') {

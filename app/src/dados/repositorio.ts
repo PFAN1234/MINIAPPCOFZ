@@ -21,6 +21,7 @@ import type {
   Organizacao,
   RegistroLocalizado,
   RegistroResumo,
+  ResumoObra,
   SolicitacaoAcesso,
 } from './tipos.ts'
 import type { ModeloFrag } from '../modelo/modelos.ts'
@@ -29,10 +30,14 @@ import type { GeometriaAmbiente } from '../ra/geometria.ts'
 export interface Repositorio {
   /** Obras em que o usuário participa, cada uma com a sua etapa. */
   listarObras(): Promise<ObraDaLista[]>
+  /** Totais por obra visível (serviços, pendências abertas e resolvidas) e o papel do usuário. */
+  resumoObras(): Promise<ResumoObra[]>
   /** Pavimentos (com planta ativa), ambientes e pendências abertas por ambiente. */
   obterObra(slug: string): Promise<ObraDetalhe>
   obterAmbiente(slug: string, codigo: string): Promise<AmbienteDetalhe>
   listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]>
+  /** Pessoas que têm registros nas obras visíveis (`autores_registros`), pelo nome mostrado. */
+  autoresRegistros(): Promise<{ id: string; nome: string }[]>
   /** URL assinada (1 h) ou local na fixture, indexada pelo caminho recebido. */
   urlsImagens(
     paths: string[],

@@ -57,17 +57,13 @@ describe('navegação com a fixture', () => {
     expect(screen.getByText(/Térreo/)).toBeInTheDocument()
   })
 
-  it('a barra inferior leva às Pendências (abertas, de todas as obras)', async () => {
-    const usuario = userEvent.setup()
-    renderizar()
+  it('a barra inferior só tem Início e Registros; /pendencias leva às abertas em Registros', async () => {
+    renderizar('/pendencias')
     const navegacao = await screen.findByRole('navigation', { name: 'Navegação principal' })
-    // Com as pendências do Início carregadas, o rótulo leva a contagem.
-    const item = await within(navegacao).findByRole('link', { name: 'Pendências · 3 abertas' })
-    await usuario.click(item)
-    expect(await screen.findByRole('heading', { level: 1, name: 'Pendências' })).toBeInTheDocument()
-    expect(item).toHaveAttribute('aria-current', 'page')
-    expect(await screen.findByRole('tab', { name: 'Abertas (3)' })).toHaveAttribute('aria-selected', 'true')
-    expect(await screen.findAllByRole('link', { name: /Aberta/ })).toHaveLength(3)
+    expect(within(navegacao).queryByRole('link', { name: /Pendências/ })).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Registros' })).toBeInTheDocument()
+    expect(within(navegacao).getByRole('link', { name: 'Registros' })).toHaveAttribute('aria-current', 'page')
+    expect(await screen.findAllByRole('listitem')).toHaveLength(3)
   })
 
   it('endereço inexistente mostra a 404 com "Voltar ao início"', async () => {
@@ -91,9 +87,9 @@ describe('navegação com a fixture', () => {
 })
 
 describe('telas', () => {
-  it('Obras mostra a contagem de pendências abertas e a equipe de serviço', async () => {
+  it('Obras mostra as barrinhas de totais e a equipe de serviço', async () => {
     renderizar()
-    expect(await screen.findByRole('link', { name: /^HTO.*3 pendências abertas/ })).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: '3 pendências abertas' })).toBeInTheDocument()
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
     expect(await screen.findByRole('heading', { name: 'Equipe de serviço' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Últimos registros' })).not.toBeInTheDocument()
@@ -227,9 +223,9 @@ describe('acesso às obras', () => {
     ).toBeInTheDocument()
   })
 
-  it('Obra (gestor) mostra o atalho da Gestão com o selo e a rota de Acessos aprova', async () => {
+  it('Início (gestor) mostra o atalho da Gestão com o selo e a rota de Acessos aprova', async () => {
     const usuario = userEvent.setup()
-    renderizar('/obras/hto')
+    renderizar('/')
     // 1 pedido de acesso + 2 publicações com problema.
     expect(await screen.findByRole('link', { name: 'Gestão 3' })).toHaveAttribute('href', '/obras/hto/gestao')
     cleanup()

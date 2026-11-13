@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Route, Routes } from 'react-router'
+import { Navigate, Route, Routes } from 'react-router'
 import { GuardaSessao } from './components/GuardaSessao.tsx'
 import { AberturaPorLink } from './components/AberturaPorLink.tsx'
 import { Layout } from './components/Layout.tsx'
@@ -29,7 +29,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route index element={<Obras />} />
             <Route path="registros" element={<Registros />} />
-            <Route path="pendencias" element={<Pendencias />} />
+            <Route path="pendencias" element={<Navigate replace to="/registros?tipo=abertas" />} />
             <Route path="obras/:slug" element={<Obra />} />
             <Route path="obras/:slug/acessos" element={<Acessos />} />
             <Route path="obras/:slug/modelo" element={<Modelo />} />

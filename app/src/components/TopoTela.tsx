@@ -27,6 +27,8 @@ interface Props {
   lista?: boolean
   /** `id` do `h1`, para o `aria-labelledby` da seção da tela. */
   idTitulo?: string
+  /** À direita do título, na mesma linha (abas, botão). Se não couber, rola na horizontal; o título não quebra a linha dele. */
+  aoLado?: ReactNode
   /** Ações no topo (botões, seletor de pavimento). */
   children?: ReactNode
 }
@@ -37,7 +39,7 @@ interface Props {
  * Telegram, quem volta é o BackButton nativo (ver `Layout` e `telegramBack.ts`); fora dele, o
  * "Voltar" fica aqui. A faixa de envio e de sem sinal vem logo abaixo, nunca acima do azul.
  */
-export function TopoTela({ titulo, subtitulo, sobretitulo, voltar, lista = false, idTitulo, children }: Props) {
+export function TopoTela({ titulo, subtitulo, sobretitulo, voltar, lista = false, idTitulo, aoLado, children }: Props) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const voltarNoHistorico = useVoltar()
@@ -65,9 +67,18 @@ export function TopoTela({ titulo, subtitulo, sobretitulo, voltar, lista = false
           </button>
         )}
         {sobretitulo && <p className="topo-sobretitulo">{sobretitulo}</p>}
-        <h1 id={idTitulo} className="topo-titulo" data-tamanho={tamanho}>
-          {titulo}
-        </h1>
+        {aoLado ? (
+          <div className="topo-linha-titulo">
+            <h1 id={idTitulo} className="topo-titulo" data-tamanho={tamanho}>
+              {titulo}
+            </h1>
+            <div className="topo-ao-lado">{aoLado}</div>
+          </div>
+        ) : (
+          <h1 id={idTitulo} className="topo-titulo" data-tamanho={tamanho}>
+            {titulo}
+          </h1>
+        )}
         {subtitulo && <p className="topo-subtitulo">{subtitulo}</p>}
         {children && <div className="topo-acoes">{children}</div>}
       </header>

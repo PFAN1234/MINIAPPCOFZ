@@ -45,6 +45,12 @@ function criarRepoFalso() {
     async idUsuario() {
       return 'u1'
     },
+    async resumoObras() {
+      return []
+    },
+    async autoresRegistros() {
+      return []
+    },
     async obterGeometria() {
       return null
     },
