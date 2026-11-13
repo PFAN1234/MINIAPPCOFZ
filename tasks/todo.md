@@ -181,7 +181,7 @@ Verificação: sobreposição visual e controle independente de coordenadas; rec
 Plano: `tasks/plano-ra.md` (decisões de 2026-11-12: modelo ELT fornecido pelo usuário; só a "RA parada" dentro do Telegram; alinhamento por dois cantos e por QR; duas fotos por disparo, limpa e com o modelo).
 
 - [x] Código das fases RA0 a RA4 (2026-11-12): tela de teste `/ra-teste`; geometria de 86 dos 87 ambientes no referencial do `ARQ.frag` (`scripts/gerar_geometria.py`, `data/hto/geometria.json`); migration `20261113090000_ra.sql`; tela de RA com dois cantos, QR, ajuste fino e par de fotos no registro; QR no `/admin/obras/<slug>/ra`. Uso e aplicação em `docs/ra.md`.
-- [ ] Aplicar no `miniappcofz-dev`: migration `20261113090000_ra.sql` e `supabase/seed/hto_geometria.sql` (a chave secreta não executa DDL; colar os dois arquivos, nessa ordem, no SQL Editor do Supabase).
+- [x] Aplicado no `miniappcofz-dev` (2026-11-13): migration `20261113090000_ra.sql` e `supabase/seed/hto_geometria.sql` pelo `scripts/supabase_api.py`; conferido no banco (86 geometrias, 1 referencial ARQ R06, 3 RPCs `admin_*_ra/qr`, ARQ publicado).
 - [x] ARQ publicado conferido (2026-11-13): R06, hash `497ec6abd4af7884`, mesmas coordenadas e geometria do `.frag` usado no ajuste do referencial.
 - [x] Modelo de elétrica conferido (2026-11-13): ELT R03 cai no lugar só com a coordenação automática, sem `modelo.matriz` (mediana de 2,6 cm entre as descidas de eletroduto e as faces das paredes).
 - [ ] RA0 no aparelho: `/ra-teste` em um Android e um iPhone, dentro do Telegram.
