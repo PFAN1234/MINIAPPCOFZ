@@ -1200,3 +1200,68 @@ textarea {
   color: var(--adm-erro);
   border-color: currentColor;
 }
+
+/* Editor do boletim emitido. */
+.adm-editor-barra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.adm-editor-item {
+  border: 1px solid var(--adm-borda);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: var(--adm-superficie);
+}
+
+.adm-editor-item-topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.adm-editor-oculto {
+  opacity: 0.5;
+}
+
+.adm-editor-texto {
+  margin: 6px 0;
+}
+
+.adm-editor-texto-botao {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: text;
+  text-decoration: underline dotted;
+}
+
+.adm-editor-fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+}
+
+.adm-editor-fotos li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.adm-editor-encerramento {
+  border-left: 3px solid var(--adm-borda);
+  padding-left: 8px;
+  margin-top: 6px;
+}

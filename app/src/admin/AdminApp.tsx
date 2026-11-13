@@ -10,6 +10,7 @@ import { AcessoNegado, Entrar } from './telas/Entrar.tsx'
 import ObraAdmin, { NovaObra } from './telas/ObraAdmin.tsx'
 import ObrasAdmin from './telas/ObrasAdmin.tsx'
 import Boletins from './telas/boletins/Boletins.tsx'
+import EditorBoletim from './telas/boletins/EditorBoletim.tsx'
 import EtapaAdmin, { NovaEtapa } from './telas/etapa/EtapaAdmin.tsx'
 import Organizacao from './telas/Organizacao.tsx'
 import Pessoas from './telas/Pessoas.tsx'
@@ -78,7 +79,7 @@ export default function AdminApp({ entrada }: { entrada: Entrada }) {
         <Route path="obras/:slug/planta/:pavimento" element={<EditorPlanta />} />
         <Route path="obras/:slug/modelos" element={<ModelosObra />} />
         <Route path="boletins" element={<Boletins />} />
-        <Route path="boletins/:id" element={<p className="adm-dica">Editor de boletim: em breve.</p>} />
+        <Route path="boletins/:id" element={<EditorBoletim />} />
         <Route path="pessoas" element={<Pessoas />} />
         <Route path="organizacao" element={<Organizacao />} />
         <Route path="obras/:slug/ra" element={<RaObra />} />

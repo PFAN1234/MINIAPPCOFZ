@@ -297,11 +297,11 @@ describe('aba Boletins: lista geral e filtros', () => {
     expect(within(l[1]).getByRole('link', { name: `Editar ${num(anteontem, 1)}` })).toHaveAttribute('href', `/boletins/boletim-${anteontem}-1`)
   })
 
-  it('Editar abre a rota do editor (provisória)', async () => {
+  it('Editar abre o editor do boletim', async () => {
     const user = userEvent.setup()
     renderizar('/boletins?etapa=2a-etapa')
     await user.click(await screen.findByRole('link', { name: `Editar ${num(ontem)}` }))
-    expect(await screen.findByText(/em breve/i)).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: `Boletim ${num(ontem)}` })).toBeInTheDocument()
   })
 })
 
