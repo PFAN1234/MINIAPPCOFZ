@@ -329,3 +329,10 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Obra: Pendências no topo, prévia 3D só com ARQ (abre o visualizador), Observações por último.
 - [x] Registros: filtros por etapa, obra, tipo (serviços/abertas/resolvidas), pessoa e período; aba Pendências removida (`/pendencias` → `/registros?tipo=abertas`).
 - [ ] Usuário: conferir no celular o início, a prévia do modelo e os filtros de Registros.
+
+## Site: mapa clicável, dados da 2ª ETAPA e aba Relatórios
+
+- [x] Cadastro da etapa: mapa Leaflet (Mapa/Satélite) em que o toque preenche latitude e longitude.
+- [x] 2ª ETAPA em produção: objeto, local, endereço, contratante, contrato, contratada, CNPJ, OS, vigência, valor e área (do boletim de 12/11/26).
+- [x] Aba "Boletins" do site passa a se chamar "Relatórios" (rota `/boletins` mantida).
+- [ ] Usuário: marcar no mapa o local da 2ª ETAPA, salvar e preencher os responsáveis.

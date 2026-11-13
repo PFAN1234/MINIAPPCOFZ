@@ -39,7 +39,7 @@ describe('organização (fixture)', () => {
     expect(within(barra).getByText('Fiscal Bot · Administração')).toBeInTheDocument()
     expect(within(barra).queryByRole('img')).not.toBeInTheDocument()
     const nav = within(barra).getByRole('navigation', { name: 'Principal' })
-    expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(['Etapas', 'Boletins', 'Pessoas', 'Organização', 'Admins'])
+    expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(['Etapas', 'Relatórios', 'Pessoas', 'Organização', 'Admins'])
   })
 
   it('troca o nome, envia o logo com pré-visualização e ele aparece na barra', async () => {
