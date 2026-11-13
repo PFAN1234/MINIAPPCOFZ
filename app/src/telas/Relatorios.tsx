@@ -87,7 +87,7 @@ function CartaoHoje({
       <p>{situacao}</p>
       <p className="relatorio-dica">{registros}</p>
       <div className="relatorio-acoes">
-        {boletim && !emAndamento && !falhou && (
+        {boletim && (
           <button
             type="button"
             className="botao botao-secundario"

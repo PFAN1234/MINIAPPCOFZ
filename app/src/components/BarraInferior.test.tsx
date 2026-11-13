@@ -12,9 +12,9 @@ function renderizar(rota: string) {
 }
 
 describe('BarraInferior', () => {
-  it('só tem Início e Registros, e marca o da tela atual com aria-current="page"', () => {
+  it('tem Início, Registros e Relatórios, e marca o da tela atual com aria-current="page"', () => {
     renderizar('/registros')
-    expect(screen.getAllByRole('link')).toHaveLength(2)
+    expect(screen.getAllByRole('link')).toHaveLength(3)
     expect(screen.queryByRole('link', { name: /Pendências/ })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Registros' })).toHaveAttribute('aria-current', 'page')
     expect(screen.getByRole('link', { name: 'Início' })).not.toHaveAttribute('aria-current')
