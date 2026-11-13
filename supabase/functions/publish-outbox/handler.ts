@@ -427,7 +427,59 @@ export function criarHandler(deps: Deps) {
         `publish-outbox: boletim da publicação ${pub.id} sem resposta (${r.motivo})`,
       );
     }
-    return classificar(r, pub.tentativas);
+    const resultado = classificar(r, pub.tentativas);
+    if (resultado.estado === "publicado" && boletim.revisao > 0) {
+      await apagarAnteriores(boletim, etapa.telegram_chat_id);
+    }
+    return resultado;
+  }
+
+  /**
+   * Retificação (revisão > 0): apaga do grupo a mensagem das revisões anteriores do mesmo dia.
+   * Falha (mais de 48 h, mensagem já apagada, erro de leitura) só vai para o log: a publicação
+   * nova continua `publicado`.
+   */
+  async function apagarAnteriores(
+    boletim: { etapa_id: string; data: string; revisao: number },
+    chatId: number,
+  ) {
+    try {
+      const antigos = await ler(
+        admin.from("boletim").select("id").eq("etapa_id", boletim.etapa_id)
+          .eq("data", boletim.data).lt("revisao", boletim.revisao),
+        "boletim",
+      );
+      const ids = (antigos ?? []).map((b: { id: string }) => b.id);
+      if (ids.length === 0) return;
+      const pubs = await ler(
+        admin.from("publicacao_telegram").select("boletim_id, message_ids")
+          .in("boletim_id", ids).eq("estado", "publicado"),
+        "publicacao_telegram",
+      );
+      for (const p of pubs ?? []) {
+        for (const messageId of p.message_ids ?? []) {
+          const d = await telegram.chamar("deleteMessage", {
+            chat_id: chatId,
+            message_id: messageId,
+          });
+          if (d.tipo === "http") {
+            console.warn(
+              `publish-outbox: mensagem ${messageId} do boletim anterior não apagada (${d.status}): ${d.description}`,
+            );
+          } else if (d.tipo === "rede") {
+            console.warn(
+              `publish-outbox: mensagem ${messageId} do boletim anterior sem resposta ao apagar (${d.motivo})`,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      console.warn(
+        `publish-outbox: não foi possível apagar o boletim anterior: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
+    }
   }
 
   function classificar(

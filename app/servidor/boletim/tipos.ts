@@ -3,6 +3,7 @@
  * docs/contrato-boletim.md (parte 3). Datas no fuso da etapa ("AAAA-MM-DD"), instantes em ISO,
  * nomes já no formato de exibição. O gerador só preenche `clima`.
  */
+import type { Edicao } from './edicao.js'
 
 export interface FotoSnapshot {
   /** Caminho no bucket `fotos`. */
@@ -172,4 +173,7 @@ export interface PedidoReivindicado {
   data: string
   revisao: number
   numero: string
+  /** Boletim emitido que está sendo retificado (null = emissão normal). */
+  base_boletim_id: string | null
+  edicao: Edicao | null
 }

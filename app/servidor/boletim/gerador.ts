@@ -6,6 +6,7 @@
  */
 import type { Browser } from 'playwright-core'
 import { capturarClima, type OpcoesClima, type ResultadoClima } from './clima.js'
+import { aplicarEdicao } from './edicao.js'
 import { cssFonteRodape, cssFontes } from './fontes.js'
 import { numeroSemBarras, partesNoFuso } from './formato.js'
 import { dataUrl, prepararFotos, tipoDaImagem } from './fotos.js'
@@ -92,12 +93,12 @@ export async function montarBoletim(
   fonte: Pick<FonteBoletim, 'baixar' | 'climaAnterior'>,
   navegador: Browser,
   snapshot: Snapshot,
-  o: { numero: string | null; revisao: number; deps: Dependencias },
+  o: { numero: string | null; revisao: number; deps: Dependencias; /** Reaproveita o clima do boletim anterior sem capturar (retificação com edição). */ reaproveitarSempre?: boolean },
 ): Promise<Montado> {
   const { deps } = o
   const emitidoEm = deps.agora()
   const [clima, fotos, logo] = await Promise.all([
-    climaCabeNoDia(snapshot.data, emitidoEm, snapshot.fuso)
+    !o.reaproveitarSempre && climaCabeNoDia(snapshot.data, emitidoEm, snapshot.fuso)
       ? deps.capturarClima(navegador, { principal: snapshot.etapa.estacao, reserva: snapshot.etapa.estacao_reserva, agora: () => emitidoEm })
       : reaproveitarClima(fonte, snapshot, deps),
     prepararFotos(caminhosDasFotos(snapshot), (c) => fonte.baixar(BUCKET_FOTOS, c), { aviso: deps.log }),
@@ -128,8 +129,12 @@ export async function montarBoletim(
 
 /** Emite um pedido já reivindicado. Lança em caso de erro (quem chama registra a falha). */
 export async function emitirPedido(fonte: FonteBoletim, navegador: Browser, pedido: PedidoReivindicado, deps: Dependencias) {
-  const snapshot = await fonte.snapshot(pedido.etapa_id, pedido.data)
-  const m = await montarBoletim(fonte, navegador, snapshot, { numero: pedido.numero, revisao: pedido.revisao, deps })
+  // Retificação editada: parte do snapshot do boletim de base, com a edição, e reaproveita o clima.
+  const comBase = pedido.base_boletim_id !== null
+  const snapshot = comBase
+    ? aplicarEdicao(await fonte.snapshotDoBoletim(pedido.base_boletim_id!), pedido.edicao ?? {})
+    : await fonte.snapshot(pedido.etapa_id, pedido.data)
+  const m = await montarBoletim(fonte, navegador, snapshot, { numero: pedido.numero, revisao: pedido.revisao, deps, reaproveitarSempre: comBase })
   const caminhos = caminhosDoBoletim(pedido.etapa_id, pedido.numero)
   let final = m.snapshot
   if (m.imagemClima && m.snapshot.clima && !('indisponivel' in m.snapshot.clima)) {
