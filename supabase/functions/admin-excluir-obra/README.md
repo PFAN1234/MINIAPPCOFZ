@@ -11,10 +11,11 @@ excluir obra").
 Sempre `POST` com `Authorization: Bearer <access token do admin>` e corpo JSON
 `{ "acao": ... }`.
 
-| Ação      | Corpo                       | O que faz                                                                                                               |
-| --------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `excluir` | `{acao, slug, confirmacao}` | `admin_excluir_obra(slug, confirmacao)` com o JWT do usuário; remove os arquivos; `admin_registrar_limpeza`             |
-| `limpar`  | `{acao, exclusao_id}`       | confere `sou_admin` com o JWT; `admin_exclusao_para_limpar` (service role) dá o `obra_id`; remove os arquivos; registra |
+| Ação              | Corpo                       | O que faz                                                                                                                                                                                                    |
+| ----------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `excluir`         | `{acao, slug, confirmacao}` | `admin_excluir_obra(slug, confirmacao)` com o JWT do usuário; remove os arquivos; `admin_registrar_limpeza`                                                                                                  |
+| `excluir_boletim` | `{acao, boletim_id}`        | `admin_excluir_boletim(id)` com o JWT do usuário (apaga o dia inteiro do boletim: todas as revisões e pedidos); depois `deleteMessage` de cada mensagem do grupo e remoção dos arquivos no bucket `boletins` |
+| `limpar`          | `{acao, exclusao_id}`       | confere `sou_admin` com o JWT; `admin_exclusao_para_limpar` (service role) dá o `obra_id`; remove os arquivos; registra                                                                                      |
 
 `confirmacao` é o nome da obra, exatamente (o banco ignora só os espaços nas
 pontas; maiúsculas e minúsculas contam).
@@ -43,6 +44,14 @@ Resposta `200`:
   novo com `limpar` e o `exclusao_id`. `arquivos_removidos` conta só o que saiu
   nesta chamada (o banco soma as tentativas em `obra_excluida`).
 
+`excluir_boletim` responde `200` com
+`{ok, numero, data, revisoes, mensagens: {apagadas, falhas}, arquivos_erro?}`.
+Mensagem já inexistente no Telegram (`400 ... not found`) conta como apagada; as
+demais falhas, e todas as mensagens quando a etapa não tem grupo, contam em
+`falhas`. Falha no Telegram ou no Storage não derruba a resposta (o boletim já
+saiu do banco). Erros próprios: `404` boletim não encontrado, `409` emissão ou
+envio em andamento no dia (nada é apagado).
+
 Erros: `400` corpo inválido ou confirmação que não confere (com a mensagem da
 RPC), `401` sem JWT ou JWT inválido, `403` não admin, `404` obra (ou exclusão)
 não encontrada, `405` método, `500` erro interno (sem detalhes).
@@ -60,6 +69,7 @@ conferido como UUID antes de listar (nunca lista a raiz de um bucket).
 | -------------------------- | ---------------------------------------------------------------------------------------- |
 | `SUPABASE_SECRET_KEY`      | chave secreta (alternativa: `SUPABASE_SERVICE_ROLE_KEY`): JWT, Storage e RPCs da limpeza |
 | `SUPABASE_PUBLISHABLE_KEY` | chave pública (alternativa: `SUPABASE_ANON_KEY`) do cliente que chama a RPC como o admin |
+| `TELEGRAM_BOT_TOKEN`       | token do bot, para apagar as mensagens do boletim excluído (nunca vai para o log)        |
 | `ALLOWED_ORIGINS`          | origens CORS permitidas, separadas por vírgula (inclui o domínio do site)                |
 
 `SUPABASE_URL` (e `SUPABASE_ANON_KEY`/`SUPABASE_SERVICE_ROLE_KEY`) são injetadas
