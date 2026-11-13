@@ -75,7 +75,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 
 ## Emissão
 
-- pg_cron por etapa no horário local configurado (padrão 23:30) → Edge Function `emitir-boletim`: coleta o clima do INMET (se faltar), monta o **snapshot** (`jsonb`) do dia, grava `boletim` (etapa, data, numero, revisao, snapshot, pdf_path, emitido_em, emitido_por = null quando automático) e gera o PDF.
+- pg_cron por etapa no horário local configurado (padrão 23:30) → Edge Function `emitir-boletim`: monta o clima do dia com as leituras horárias do Observatório, monta o **snapshot** (`jsonb`) do dia, grava `boletim` (etapa, data, numero, revisao, snapshot, pdf_path, emitido_em, emitido_por = null quando automático) e gera o PDF.
 - PDF: página HTML do boletim renderizada por Chromium em função da Vercel (fidelidade ao modelo da CO-FZ); arquivo no bucket privado `boletins` e envio ao grupo da etapa no Telegram (`sendDocument`, tópico Geral).
 - Emitido = imutável. Retificação: o fiscal edita observações/correções no app, gera `-R1` com novo snapshot; o anterior fica no histórico como substituído.
 - Lançamentos que chegam depois da emissão (registro offline com `capturado_em` do dia já emitido): aparecem no boletim seguinte em "Lançamentos recebidos após a emissão" e o app sugere retificação ao fiscal.
@@ -90,7 +90,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 1. Migration: campos da etapa (sigla, localização, fuso, estações INMET, dados administrativos), `etapa_aditivo`, `etapa_responsavel`, `usuario.nome_exibicao`, `observacao`, `organizacao.cabecalho`, `clima_dia`, `boletim`, bucket `boletins`, RLS (boletins: leitura para participantes da etapa; escrita só por service_role e RPC de retificação); função `numero_boletim(etapa, data, revisao)`.
 2. Admin: página Pessoas (nome de exibição); formulário de cadastro/edição da etapa com sigla, localização (mapa, estações INMET sugeridas, fuso), dados do contrato e responsáveis; aditivos na página da etapa; linhas do cabeçalho em `/admin/organizacao`.
 3. Mini App: nome de exibição em todas as telas e publicações; cartão Observações do dia na obra (com fila offline).
-4. `coletar-clima` (INMET, estação reserva, céu pela radiação) e testes Deno com respostas gravadas; teste real de acesso a partir de `sa-east-1`.
+4. `coletar-clima` (Observatório de Fortaleza, de hora em hora, estação reserva, céu pelo UV) com testes Deno sobre uma cópia gravada da página; migration das estações e `clima_leitura`; ajuste do cadastro da etapa no site.
 5. RPC/consulta do snapshot do dia (indicadores, serviços, pendências, observações) + testes de banco.
 6. Template HTML do boletim + geração do PDF + bucket + envio ao Telegram.
 7. Agendamento por etapa, retificação e tela "Boletins" no Mini App (lista, abrir PDF, retificar).
@@ -99,7 +99,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 
 - Testes de banco: snapshot de um dia com registros, pendências abertas/encerradas e lançamento tardio; contagens dos indicadores; número `BA2/261111/COFZ` e `-R1`; fuso diferente (ex.: `America/Rio_Branco`) muda o dia de um lançamento às 23h.
 - Testes de banco: nome de exibição só por admin e não sobrescrito no login; observação travada depois da emissão; participante de outra obra não lê observações.
-- Testes Deno: conversão UTC → fuso e m/s → km/h, resumo manhã/tarde, céu pela radiação, horas faltando e troca para a estação reserva, INMET indisponível.
+- Testes Deno: leitura das fichas (valores atuais, séries de 24 h a partir do SVG, chuva por barras, horário da leitura), validação contra layout alterado, troca para a estação reserva, resumo manhã/tarde, céu pelo UV.
 - Playwright: template do boletim com fixture → PDF com cabeçalho, tabela de clima e fotos.
 - Real: uma semana de boletins da 2ª etapa comparados com o boletim manual (inclusive a condição do céu estimada) para calibrar os limiares.
 
