@@ -353,4 +353,5 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 ## Mini app: versão na tela inicial
 
 - [x] Etiqueta "v39 · 13/11" no canto direito da faixa de identidade, só na tela inicial: número do último PR (da mensagem do commit de merge, `VERCEL_GIT_COMMIT_MESSAGE`), dia do build; um toque mostra o commit curto e a data e hora. Sem PR na mensagem, mostra o commit curto.
+- [x] Formato trocado para `vPR.aammdd.commit` (ex.: `v41.261113.abc1234`); o toque mostra "Publicada em dd/mm/aaaa hh:mm". Sem PR: `vdev`.
 - [ ] Usuário: conferir no Telegram que a etiqueta mostra o número do PR desta entrega.
