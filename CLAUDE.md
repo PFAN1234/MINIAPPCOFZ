@@ -16,3 +16,7 @@
 - Plano de implementação: `tasks/plano-app.md`; checklist: `tasks/todo.md`. O visualizador do modelo federado é a última fase.
 - Originais em `DOCS HTO/` são apenas lidos; os IFCs não ficam no Git.
 - Dados da HTO: `scripts/extrair_ambientes.py` e `scripts/gerar_plantas.py` (ver `scripts/README.md`).
+
+## Contexto da conversa
+
+- Depois de cada PR aberto e mesclado, compactar o contexto antes de seguir para a próxima parte. O Claude não consegue rodar `/compact` sozinho: ao concluir o merge, deixar o estado registrado em `tasks/todo.md` (o que entrou, o que falta aplicar ou configurar) e pedir ao usuário que rode `/compact`.
