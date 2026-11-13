@@ -75,6 +75,15 @@ describe('etapas (fixture)', () => {
     expect(screen.getByText(/Faltam para o boletim: obra\/serviço/)).toBeInTheDocument()
   })
 
+  it('cartão Boletins: horário da emissão automática e link para a aba filtrada pela etapa', async () => {
+    renderizar('/etapas/2a-etapa')
+    const secao = await screen.findByRole('region', { name: 'Boletins' })
+    expect(secao).toHaveTextContent(/Emissão automática todos os dias às \d{2}:\d{2} \(Fortaleza\)/)
+    expect(within(secao).getByRole('link', { name: 'Ver boletins da etapa' })).toHaveAttribute('href', '/boletins?etapa=2a-etapa')
+    expect(screen.queryByRole('table', { name: 'Boletins emitidos' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Data do boletim')).not.toBeInTheDocument()
+  })
+
   it('edita nome e ordem da etapa', async () => {
     const user = userEvent.setup()
     const repo = criarRepositorioAdminFixture()

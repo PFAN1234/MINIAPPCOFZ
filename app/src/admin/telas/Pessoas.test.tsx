@@ -28,7 +28,7 @@ describe('pessoas (fixture)', () => {
     const user = userEvent.setup()
     renderizar('/')
     const nav = await screen.findByRole('navigation', { name: 'Principal' })
-    expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(['Etapas', 'Pessoas', 'Organização', 'Admins'])
+    expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(['Etapas', 'Boletins', 'Pessoas', 'Organização', 'Admins'])
     await user.click(within(nav).getByRole('link', { name: 'Pessoas' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Pessoas' })).toBeInTheDocument()
     expect(await screen.findByRole('table', { name: 'Pessoas' })).toBeInTheDocument()

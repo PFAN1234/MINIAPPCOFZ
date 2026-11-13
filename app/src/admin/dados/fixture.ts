@@ -29,7 +29,11 @@ import {
   type BucketObra,
   type Aditivo,
   type CamposEtapa,
+  type BoletimDaLista,
+  type BoletimDetalhe,
   type BoletimEmitido,
+  type EdicaoBoletim,
+  type SnapshotBoletim,
   type PedidoEmissao,
   type EtapaDetalhe,
   type EtapaLista,
@@ -280,11 +284,80 @@ function copia<T>(v: T): T {
   return JSON.parse(JSON.stringify(v)) as T
 }
 
-/** Cópia sem o `etapa_id` interno (boletins e pedidos da fixture). */
-function semEtapa<T extends { etapa_id: string }>(x: T): Omit<T, 'etapa_id'> {
-  const r: Partial<T> = copia(x)
+/** Boletim da fixture: o emitido + o que `admin_boletim` e a lista geral acrescentam. */
+type BoletimMemoria = BoletimEmitido & {
+  etapa_id: string
+  base_numero: string | null
+  edicao: EdicaoBoletim | null
+  rascunho: { edicao: EdicaoBoletim; atualizado_em: string; atualizado_por_nome: string | null } | null
+  snapshot: SnapshotBoletim
+}
+type PedidoMemoria = PedidoEmissao & { etapa_id: string; edicao?: EdicaoBoletim }
+
+const CAMPOS_EMITIDO: (keyof BoletimEmitido)[] = [
+  'id', 'data', 'revisao', 'numero', 'emitido_em', 'emitido_por_nome', 'pdf_path', 'publicado',
+  'publicacao_estado', 'publicacao_erro', 'publicacao_tentativas',
+]
+function emitidoDe(b: BoletimMemoria): BoletimEmitido {
+  const r: Record<string, unknown> = {}
+  for (const k of CAMPOS_EMITIDO) r[k] = b[k]
+  return copia(r) as unknown as BoletimEmitido
+}
+function pedidoPublico(p: PedidoMemoria): PedidoEmissao {
+  const r: Partial<PedidoMemoria> = copia(p)
   delete r.etapa_id
-  return r as Omit<T, 'etapa_id'>
+  delete r.edicao
+  return r as PedidoEmissao
+}
+
+/** Edição sem nenhuma alteração (como `privado.edicao_vazia`). */
+function edicaoVazia(e: EdicaoBoletim): boolean {
+  return Object.keys(e.textos ?? {}).length === 0 && (e.ocultos ?? []).length === 0 && (e.fotos_ocultas ?? []).length === 0
+}
+
+function validarEdicaoFixture(e: EdicaoBoletim): void {
+  const o = e as unknown
+  if (typeof o !== 'object' || o === null || Array.isArray(o)) throw new ErroAdmin('Edição do boletim inválida')
+  for (const k of Object.keys(o)) {
+    if (k !== 'textos' && k !== 'ocultos' && k !== 'fotos_ocultas') throw new ErroAdmin('Edição do boletim inválida')
+  }
+}
+
+/** Snapshot pequeno e coerente: uma obra com serviço, pendências, observação e um lançamento tardio. */
+function snapshotFixture(data: string): SnapshotBoletim {
+  const foto = (n: string) => ({ path: `etapa/fotos/${data}-${n}.jpg`, largura: 1200, altura: 900 })
+  return {
+    data,
+    obras: [
+      {
+        id: 'obra-hto',
+        nome: 'HTO',
+        servicos: [
+          { id: `srv-${data}-1`, pavimento: 'Térreo', ambiente: 'Sala 01', hora: '09:10', autor: 'CP PATRICIO', legenda: 'Concretagem da laje concluída', fotos: [foto('a'), foto('b')] },
+          { id: `srv-${data}-2`, pavimento: '1º pavimento', ambiente: 'Corredor', hora: '14:40', autor: 'CP PATRICIO', legenda: null, fotos: [foto('c')] },
+        ],
+        pendencias_abertas: [
+          { id: `pen-${data}-1`, pavimento: 'Térreo', ambiente: 'Sala 02', hora: '10:25', autor: 'CP PATRICIO', legenda: 'Infiltração na parede norte', fotos: [foto('d')] },
+        ],
+        pendencias_encerradas: [
+          {
+            id: `enc-${data}-1`,
+            pavimento: '1º pavimento',
+            ambiente: 'Sala 11',
+            aberta_em: somarDias(data, -3),
+            dias_aberta: 3,
+            legenda: 'Tomada sem espelho',
+            fotos_registro: [],
+            encerramento: { hora: '16:00', autor: 'CP PATRICIO', observacao: 'Espelho instalado', fotos: [foto('e')] },
+          },
+        ],
+        observacoes: [{ hora: '11:30', autor: 'CP PATRICIO', texto: 'Chuva forte pela manhã, sem impacto.', editada: false }],
+      },
+    ],
+    tardios: [
+      { id: `tar-${data}-1`, tipo: 'servico', data, hora: '17:20', recebido_em: `${somarDias(data, 1)}T09:00:00-03:00`, obra: 'HTO', ambiente: 'Sala 01', autor: 'CP PATRICIO', texto: 'Limpeza final do pavimento' },
+    ],
+  }
 }
 
 export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?: boolean } = {}): RepositorioAdmin {
@@ -339,29 +412,54 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
   /** Boletins e pedidos de emissão da 2ª etapa (datas relativas a hoje, no fuso da etapa). */
   const hoje2a = hojeNoFuso('America/Fortaleza')
   const dia = (n: number) => somarDias(hoje2a, n)
-  const boletimFixture = (data: string, revisao: number, por: string | null, publicado: boolean): BoletimEmitido & { etapa_id: string } => {
-    const numero = numeroBoletim('2', data, 'CO-FZ') + (revisao > 0 ? `-R${revisao}` : '')
+  const boletimFixture = (
+    etapaId: string,
+    sigla: string,
+    data: string,
+    revisao: number,
+    por: string | null,
+    publicado: boolean,
+  ): BoletimMemoria => {
+    const numero = numeroBoletim(sigla, data, 'CO-FZ') + (revisao > 0 ? `-R${revisao}` : '')
     return {
-      id: `boletim-${data}-${revisao}`,
-      etapa_id: 'etapa-2a',
+      id: `boletim-${etapaId === 'etapa-2a' ? '' : '3a-'}${data}-${revisao}`,
+      etapa_id: etapaId,
       data,
       revisao,
       numero,
       emitido_em: `${revisao > 0 ? dia(-1) : data}T${revisao > 0 ? '13:05' : '23:30'}:00-03:00`,
       emitido_por_nome: por,
-      pdf_path: `etapa-2a/${numero.replace(/\//g, '')}.pdf`,
+      pdf_path: `${etapaId}/${numero.replace(/\//g, '')}.pdf`,
       publicado,
       publicacao_estado: publicado ? 'publicado' : 'pendente',
       publicacao_erro: null,
       publicacao_tentativas: 0,
+      base_numero: null,
+      edicao: null,
+      rascunho: null,
+      snapshot: snapshotFixture(data),
     }
   }
-  const boletins: (BoletimEmitido & { etapa_id: string })[] = [
-    boletimFixture(dia(-2), 0, null, true),
-    boletimFixture(dia(-2), 1, 'CP PATRICIO', true),
-    boletimFixture(dia(-1), 0, null, false),
-  ]
-  const pedidos: (PedidoEmissao & { etapa_id: string })[] = [
+  const b2aAntigo = boletimFixture('etapa-2a', '2', dia(-45), 0, null, true)
+  const b2aOriginal = boletimFixture('etapa-2a', '2', dia(-2), 0, null, true)
+  // Retificação editada: nasceu da edição do boletim original do dia.
+  const b2aEditado: BoletimMemoria = {
+    ...boletimFixture('etapa-2a', '2', dia(-2), 1, 'CP PATRICIO', true),
+    base_numero: b2aOriginal.numero,
+    edicao: { textos: { [`servico:srv-${dia(-2)}-1`]: 'Concretagem da laje do térreo concluída' }, ocultos: [`servico:srv-${dia(-2)}-2`] },
+  }
+  // Boletim ainda não publicado, com um rascunho salvo.
+  const b2aRascunho: BoletimMemoria = {
+    ...boletimFixture('etapa-2a', '2', dia(-1), 0, null, false),
+    rascunho: {
+      edicao: { ocultos: [`aberta:pen-${dia(-1)}-1`], fotos_ocultas: [`etapa/fotos/${dia(-1)}-a.jpg`] },
+      atualizado_em: `${dia(-1)}T15:20:00-03:00`,
+      atualizado_por_nome: 'CP PATRICIO',
+    },
+  }
+  const b3a = boletimFixture('etapa-3a', '3', dia(-1), 0, null, true)
+  const boletins: BoletimMemoria[] = [b2aAntigo, b2aOriginal, b2aEditado, b2aRascunho, b3a]
+  const pedidos: PedidoMemoria[] = [
     {
       id: 1,
       etapa_id: 'etapa-2a',
@@ -693,11 +791,11 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       return {
         boletins: boletins
           .filter((x) => x.etapa_id === e.id)
-          .map(semEtapa)
+          .map(emitidoDe)
           .sort(ordem),
         pedidos: pedidos
           .filter((x) => x.etapa_id === e.id && x.estado !== 'emitido')
-          .map(semEtapa)
+          .map(pedidoPublico)
           .sort(ordem),
       }
     },
@@ -719,11 +817,11 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       const antigo = pedidos.find((p) => p.etapa_id === e.id && p.data === data && p.revisao === revisao)
       if (antigo) {
         Object.assign(antigo, { estado: 'pendente', tentativas: 0, erro: null, atualizado_em: agora })
-        return { ...semEtapa(antigo), numero: numeroDe(revisao) }
+        return { ...pedidoPublico(antigo), numero: numeroDe(revisao) }
       }
       const novo = { id: ++sequenciaPedido, etapa_id: e.id, data, revisao, estado: 'pendente' as const, tentativas: 0, erro: null, atualizado_em: agora }
       pedidos.push(novo)
-      return { ...semEtapa(novo), numero: numeroDe(revisao) }
+      return { ...pedidoPublico(novo), numero: numeroDe(revisao) }
     },
 
     async reenviarBoletim(slug, boletimId) {
@@ -752,6 +850,118 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       if (!dataValida(data)) throw new ErroAdmin('Data inválida: use AAAA-MM-DD')
       if (data > hojeNoFuso(e.fuso)) throw new ErroAdmin('Não é possível gerar a prévia de uma data futura')
       return new Blob([pdfMinimo(`PREVIA - sem numero - ${e.nome} - ${dataBr(data)}`)], { type: 'application/pdf' })
+    },
+
+    async listarTodosBoletins(filtro = {}) {
+      exigirAdmin()
+      const etapa = filtro.etapa ? etapaPorSlug(filtro.etapa) : null
+      const noPeriodo = (x: { etapa_id: string; data: string }) =>
+        (!etapa || x.etapa_id === etapa.id) && (!filtro.de || x.data >= filtro.de) && (!filtro.ate || x.data <= filtro.ate)
+      const nomeDe = (id: string) => etapas.find((e) => e.id === id)?.nome ?? ''
+      const slugDe = (id: string) => etapas.find((e) => e.id === id)?.slug ?? ''
+      const ordem = (a: { data: string; etapa_nome: string; revisao: number }, b: { data: string; etapa_nome: string; revisao: number }) =>
+        b.data.localeCompare(a.data) || a.etapa_nome.localeCompare(b.etapa_nome) || b.revisao - a.revisao
+      return {
+        boletins: boletins
+          .filter(noPeriodo)
+          .map(
+            (b): BoletimDaLista => ({
+              ...emitidoDe(b),
+              etapa_slug: slugDe(b.etapa_id),
+              etapa_nome: nomeDe(b.etapa_id),
+              base_numero: b.base_numero,
+              editado: b.edicao !== null,
+              tem_rascunho: b.rascunho !== null,
+            }),
+          )
+          .sort(ordem)
+          .slice(0, 300),
+        pedidos: pedidos
+          .filter((p) => p.estado !== 'emitido' && noPeriodo(p))
+          .map((p) => ({ ...pedidoPublico(p), etapa_slug: slugDe(p.etapa_id), etapa_nome: nomeDe(p.etapa_id), editado: p.edicao !== undefined }))
+          .sort(ordem),
+      }
+    },
+
+    async boletim(id) {
+      exigirAdmin()
+      const b = boletins.find((x) => x.id === id)
+      if (!b) throw new ErroAdmin('Boletim não encontrado')
+      const e = etapas.find((x) => x.id === b.etapa_id)!
+      const doDia = boletins.filter((x) => x.etapa_id === b.etapa_id && x.data === b.data)
+      const detalhe: BoletimDetalhe = {
+        ...emitidoDe(b),
+        etapa_slug: e.slug,
+        etapa_nome: e.nome,
+        ultima_revisao: !doDia.some((x) => x.revisao > b.revisao),
+        emissao_em_andamento: pedidos.some(
+          (p) => p.etapa_id === b.etapa_id && p.data === b.data && (p.estado === 'pendente' || p.estado === 'gerando'),
+        ),
+        base_numero: b.base_numero,
+        edicao: b.edicao,
+        snapshot: b.snapshot,
+        rascunho: b.rascunho,
+      }
+      return copia(detalhe)
+    },
+
+    async salvarRascunhoBoletim(id, edicao) {
+      exigirAdmin()
+      validarEdicaoFixture(edicao)
+      const b = boletins.find((x) => x.id === id)
+      if (!b) throw new ErroAdmin('Boletim não encontrado')
+      if (boletins.some((x) => x.etapa_id === b.etapa_id && x.data === b.data && x.revisao > b.revisao)) {
+        throw new ErroAdmin('Só a última revisão do dia pode ser editada')
+      }
+      if (edicaoVazia(edicao)) {
+        b.rascunho = null
+        return null
+      }
+      const atualizado_em = new Date().toISOString()
+      b.rascunho = { edicao: copia(edicao), atualizado_em, atualizado_por_nome: VOCE.nome }
+      return { atualizado_em }
+    },
+
+    async retificarBoletim(id, edicao) {
+      exigirAdmin()
+      validarEdicaoFixture(edicao)
+      const b = boletins.find((x) => x.id === id)
+      if (!b) throw new ErroAdmin('Boletim não encontrado')
+      const e = etapas.find((x) => x.id === b.etapa_id)!
+      if (boletins.some((x) => x.etapa_id === b.etapa_id && x.data === b.data && x.revisao > b.revisao)) {
+        throw new ErroAdmin('Só a última revisão do dia pode ser editada')
+      }
+      if (edicaoVazia(edicao)) throw new ErroAdmin('Nenhuma alteração para enviar')
+      if (pedidos.some((p) => p.etapa_id === b.etapa_id && p.data === b.data && (p.estado === 'pendente' || p.estado === 'gerando'))) {
+        throw new ErroAdmin('Já há uma emissão em andamento para este dia')
+      }
+      const revisao = Math.max(...boletins.filter((x) => x.etapa_id === b.etapa_id && x.data === b.data).map((x) => x.revisao)) + 1
+      const numero = numeroBoletim(e.sigla ?? '3', b.data, organizacao.nome) + `-R${revisao}`
+      const agora = new Date().toISOString()
+      const antigo = pedidos.find((p) => p.etapa_id === b.etapa_id && p.data === b.data && p.revisao === revisao)
+      const pedido: PedidoMemoria =
+        antigo ?? { id: ++sequenciaPedido, etapa_id: b.etapa_id, data: b.data, revisao, estado: 'pendente', tentativas: 0, erro: null, atualizado_em: agora }
+      Object.assign(pedido, { estado: 'pendente', tentativas: 0, erro: null, atualizado_em: agora, edicao: copia(edicao) })
+      if (!antigo) pedidos.push(pedido)
+      b.rascunho = { edicao: copia(edicao), atualizado_em: agora, atualizado_por_nome: VOCE.nome }
+      return { ...pedidoPublico(pedido), numero }
+    },
+
+    async previaBoletimEditado(id, edicao) {
+      exigirAdmin()
+      validarEdicaoFixture(edicao)
+      const b = boletins.find((x) => x.id === id)
+      if (!b) throw new ErroAdmin('Boletim não encontrado')
+      return new Blob([pdfMinimo(`PREVIA EDITADA - sem numero - ${b.numero}`)], { type: 'application/pdf' })
+    },
+
+    async urlsFotos(paths) {
+      exigirAdmin()
+      const r: Record<string, string> = {}
+      for (const p of new Set(paths)) {
+        r[p] = `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90"><rect width="120" height="90" fill="#ccc"/><text x="6" y="48" font-size="9">${p.split('/').pop()}</text></svg>`)}`
+      }
+      return r
     },
 
     async listarPessoas(): Promise<Pessoa[]> {

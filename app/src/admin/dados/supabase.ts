@@ -15,7 +15,13 @@ import {
   type BucketObra,
   type ConfigObra,
   type Aditivo,
+  type BoletimDaLista,
+  type BoletimDetalhe,
   type BoletimEmitido,
+  type EdicaoBoletim,
+  type ListaTodosBoletins,
+  type PedidoDaLista,
+  type SnapshotBoletim,
   type EstadoEmissao,
   type ListaBoletins,
   type PedidoEmissao,
@@ -50,6 +56,7 @@ export const CHAVE_SESSAO_ADMIN = 'miniappcofz-admin-auth'
 
 /** Validade da URL assinada do PDF de um boletim (abre numa aba nova logo em seguida). */
 const SEGUNDOS_URL_PDF = 300
+const SEGUNDOS_URL_FOTO = 3600
 /** Gerador do boletim (função da Vercel no mesmo domínio do site). */
 const URL_PREVIA = '/api/previa-boletim'
 
@@ -97,6 +104,70 @@ export function listaBoletinsDe(r: unknown): ListaBoletins {
   return {
     boletins: Array.isArray(o.boletins) ? (o.boletins as LinhaBoletim[]).map(boletimDe) : [],
     pedidos: Array.isArray(o.pedidos) ? (o.pedidos as LinhaBoletim[]).map(pedidoDe) : [],
+  }
+}
+
+export function boletimDaListaDe(l: LinhaBoletim): BoletimDaLista {
+  return {
+    ...boletimDe(l),
+    etapa_slug: String(l.etapa_slug ?? ''),
+    etapa_nome: String(l.etapa_nome ?? ''),
+    base_numero: l.base_numero == null ? null : String(l.base_numero),
+    editado: l.editado === true,
+    tem_rascunho: l.tem_rascunho === true,
+  }
+}
+
+export function pedidoDaListaDe(l: LinhaBoletim): PedidoDaLista {
+  return {
+    ...pedidoDe(l),
+    etapa_slug: String(l.etapa_slug ?? ''),
+    etapa_nome: String(l.etapa_nome ?? ''),
+    editado: l.editado === true,
+  }
+}
+
+/** `admin_listar_todos_boletins`: `{boletins, pedidos}` com etapa e marcas de edição. */
+export function listaTodosBoletinsDe(r: unknown): ListaTodosBoletins {
+  const o = (r && typeof r === 'object' ? r : {}) as { boletins?: unknown; pedidos?: unknown }
+  return {
+    boletins: Array.isArray(o.boletins) ? (o.boletins as LinhaBoletim[]).map(boletimDaListaDe) : [],
+    pedidos: Array.isArray(o.pedidos) ? (o.pedidos as LinhaBoletim[]).map(pedidoDaListaDe) : [],
+  }
+}
+
+function edicaoDe(v: unknown): EdicaoBoletim | null {
+  return v && typeof v === 'object' && !Array.isArray(v) ? (v as EdicaoBoletim) : null
+}
+
+/** `admin_boletim`. O snapshot vem do banco já no formato do gerador; só garante as listas. */
+export function boletimDetalheDe(l: LinhaBoletim): BoletimDetalhe {
+  const snap = (l.snapshot && typeof l.snapshot === 'object' ? l.snapshot : {}) as Partial<SnapshotBoletim>
+  const r = l.rascunho && typeof l.rascunho === 'object' ? (l.rascunho as LinhaBoletim) : null
+  return {
+    id: String(l.id),
+    etapa_slug: String(l.etapa_slug ?? ''),
+    etapa_nome: String(l.etapa_nome ?? ''),
+    data: String(l.data ?? ''),
+    revisao: Number(l.revisao ?? 0),
+    numero: String(l.numero ?? ''),
+    emitido_em: String(l.emitido_em ?? ''),
+    emitido_por_nome: l.emitido_por_nome == null ? null : String(l.emitido_por_nome),
+    pdf_path: l.pdf_path == null ? null : String(l.pdf_path),
+    publicado: l.publicado === true,
+    publicacao_estado: l.publicacao_estado == null ? null : String(l.publicacao_estado),
+    ultima_revisao: l.ultima_revisao !== false,
+    emissao_em_andamento: l.emissao_em_andamento === true,
+    base_numero: l.base_numero == null ? null : String(l.base_numero),
+    edicao: edicaoDe(l.edicao),
+    snapshot: { ...snap, data: String(snap.data ?? l.data ?? ''), obras: snap.obras ?? [], tardios: snap.tardios ?? [] },
+    rascunho: r
+      ? {
+          edicao: edicaoDe(r.edicao) ?? {},
+          atualizado_em: String(r.atualizado_em ?? ''),
+          atualizado_por_nome: r.atualizado_por_nome == null ? null : String(r.atualizado_por_nome),
+        }
+      : null,
   }
 }
 
@@ -296,6 +367,31 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     return causa && typeof causa === 'object' ? ((causa as ErroBruto).code as unknown) : undefined
   }
 
+  /** Chama o gerador (`/api/previa-boletim`) com o JWT do admin e devolve o PDF. */
+  async function buscarPrevia(url: string, init: RequestInit, naoEncontrado: string): Promise<Blob> {
+    const { data: sessao } = await cliente.auth.getSession()
+    const token = sessao.session?.access_token
+    if (!token) throw new ErroAdmin('Sua sessão expirou. Entre de novo.')
+    let resposta: Response
+    try {
+      resposta = await fetch(url, { ...init, headers: { ...(init.headers as Record<string, string> | undefined), Authorization: `Bearer ${token}` } })
+    } catch (e) {
+      throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
+    }
+    if (resposta.status !== 200) {
+      const json = (await resposta.json().catch(() => null)) as { erro?: unknown } | null
+      const padrao: Record<number, string> = {
+        401: 'Sua sessão expirou. Entre de novo.',
+        403: 'Acesso negado: apenas admins do Mini App.',
+        404: naoEncontrado,
+      }
+      throw new ErroAdmin(
+        typeof json?.erro === 'string' ? json.erro : (padrao[resposta.status] ?? 'Não foi possível gerar a prévia. Tente de novo.'),
+      )
+    }
+    return await resposta.blob()
+  }
+
   return {
     async estadoSessao(): Promise<EstadoSessao> {
       const { data } = await cliente.auth.getSession()
@@ -424,28 +520,58 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     },
 
     async previaBoletim(slug, data) {
-      const { data: sessao } = await cliente.auth.getSession()
-      const token = sessao.session?.access_token
-      if (!token) throw new ErroAdmin('Sua sessão expirou. Entre de novo.')
-      const consulta = new URLSearchParams({ etapa: slug, data })
-      let resposta: Response
+      return await buscarPrevia(`${URL_PREVIA}?${new URLSearchParams({ etapa: slug, data })}`, {}, 'Etapa não encontrada')
+    },
+
+    async previaBoletimEditado(id, edicao) {
+      return await buscarPrevia(
+        URL_PREVIA,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ boletim_id: id, edicao }) },
+        'Boletim não encontrado',
+      )
+    },
+
+    async listarTodosBoletins(filtro = {}) {
+      const r = await rpc<unknown>('admin_listar_todos_boletins', {
+        p_etapa: filtro.etapa || null,
+        p_de: filtro.de || null,
+        p_ate: filtro.ate || null,
+      })
+      return listaTodosBoletinsDe(r)
+    },
+
+    async boletim(id) {
+      return boletimDetalheDe(await rpc<Linha>('admin_boletim', { p_id: id }))
+    },
+
+    async salvarRascunhoBoletim(id, edicao) {
+      const r = await rpc<Linha | null>('admin_salvar_rascunho_boletim', { p_id: id, p_edicao: edicao })
+      return r && r.atualizado_em != null ? { atualizado_em: String(r.atualizado_em) } : null
+    },
+
+    async retificarBoletim(id, edicao) {
       try {
-        resposta = await fetch(`${URL_PREVIA}?${consulta}`, { headers: { Authorization: `Bearer ${token}` } })
+        return pedidoDe((await rpc<Linha | null>('admin_retificar_boletim', { p_id: id, p_edicao: edicao })) ?? {})
       } catch (e) {
-        throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
-      }
-      if (resposta.status !== 200) {
-        const json = (await resposta.json().catch(() => null)) as { erro?: unknown } | null
-        const padrao: Record<number, string> = {
-          401: 'Sua sessão expirou. Entre de novo.',
-          403: 'Acesso negado: apenas admins do Mini App.',
-          404: 'Etapa não encontrada',
+        if (codigoDe(e) === '23505' && ehMensagemBruta((e as ErroAdmin).message)) {
+          throw new ErroAdmin('Já há uma emissão em andamento para este dia', { cause: e })
         }
-        throw new ErroAdmin(
-          typeof json?.erro === 'string' ? json.erro : (padrao[resposta.status] ?? 'Não foi possível gerar a prévia. Tente de novo.'),
-        )
+        throw e
       }
-      return await resposta.blob()
+    },
+
+    async urlsFotos(paths) {
+      const unicos = [...new Set(paths)]
+      if (unicos.length === 0) return {}
+      try {
+        const { data, error } = await cliente.storage.from('fotos').createSignedUrls(unicos, SEGUNDOS_URL_FOTO)
+        if (error) throw error
+        const r: Record<string, string> = {}
+        for (const x of data ?? []) if (x.path && x.signedUrl && !x.error) r[x.path] = x.signedUrl
+        return r
+      } catch (e) {
+        throw erroDaRpc(e)
+      }
     },
 
     async listarPessoas() {

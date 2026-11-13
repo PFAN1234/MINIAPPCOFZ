@@ -249,6 +249,20 @@ td.adm-acoes {
   margin: 0;
 }
 
+a.adm-botao {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Filtros da aba Boletins */
+.adm-filtros {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: end;
+  margin: 12px 0;
+}
+
 .adm-botao {
   display: inline-block;
   font: inherit;
