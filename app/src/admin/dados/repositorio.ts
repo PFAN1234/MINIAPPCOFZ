@@ -33,6 +33,7 @@ import type {
   Publicacao,
   RegistroModelo,
   ResultadoExclusao,
+  ResultadoExclusaoBoletim,
   ResultadoExclusaoEtapa,
   ResultadoPublicacao,
   ResumoEtapa,
@@ -75,6 +76,11 @@ export interface RepositorioAdmin {
    * falhou ou ficou incerta. Já publicado ou envio em andamento são recusados.
    */
   reenviarBoletim(slug: string, boletimId: string): Promise<void>
+  /**
+   * Exclui o DIA INTEIRO do boletim (todas as revisões da etapa e data, os PDFs e as mensagens no
+   * grupo do Telegram). Erro se o boletim não existir ou houver emissão/envio em andamento.
+   */
+  excluirBoletim(slug: string, boletimId: string): Promise<ResultadoExclusaoBoletim>
   /** URL (assinada, de curta duração) do PDF de um boletim no bucket `boletins`. */
   urlPdfBoletim(caminho: string): Promise<string>
   /** Gerador (`/api/previa-boletim`): PDF da prévia, sem número e sem gravar nada. */

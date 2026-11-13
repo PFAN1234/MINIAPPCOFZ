@@ -504,6 +504,17 @@ export interface ResultadoExclusaoEtapa {
   erro: string | null
 }
 
+/** Resultado de `excluir_boletim` (Edge Function `admin-excluir-obra`): o dia inteiro do boletim sai. */
+export interface ResultadoExclusaoBoletim {
+  numero: string
+  data: string
+  /** Quantas revisões (boletins) do dia foram apagadas. */
+  revisoes: number
+  mensagens: { apagadas: number; falhas: number }
+  /** Os PDFs não saíram do armazenamento (texto do erro). */
+  arquivos_erro: string | null
+}
+
 /** Identidade da organização militar (RPC `organizacao()`). */
 export interface Organizacao {
   nome: string

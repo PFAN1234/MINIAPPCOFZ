@@ -119,6 +119,19 @@ export function useReenviarBoletim(slug: string) {
   })
 }
 
+export function useExcluirBoletim(slug: string) {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (boletimId: string) => repo.excluirBoletim(slug, boletimId),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: ['admin', 'boletins'] }),
+        qc.invalidateQueries({ queryKey: ['admin', 'boletim'] }),
+      ]),
+  })
+}
+
 /** Boletins e pedidos de todas as etapas (ou de uma), por período; relê a cada 10 s com pedido em andamento. */
 export function useTodosBoletins(filtro: FiltroBoletins) {
   const repo = useRepositorioAdmin()
