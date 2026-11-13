@@ -35,6 +35,7 @@ A cota de uso é limitada e compartilhada entre a conversa principal e os subage
 - Antes de abrir um arquivo grande, localizar o trecho com grep e ler só as linhas necessárias.
 - Não reler um arquivo que já está no contexto e não mudou.
 - Documentos longos (`docs/contrato-boletim.md`, `tasks/plano-boletim.md`, migrações) são consultados por seção, não inteiros.
+- Abrir imagens (prints, páginas de PDF, mockups) só quando a conferência visual for necessária, e só as páginas que importam: cada imagem custa de 1.500 a 3.000 tokens e fica no contexto até o fim da sessão. Para conferir texto de um PDF, extrair o texto em vez de abrir a página.
 
 ### Comandos e testes
 
