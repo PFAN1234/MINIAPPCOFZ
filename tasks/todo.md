@@ -286,7 +286,7 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [ ] Testar "Pré-visualizar" no site (confirma o Chromium na função) e acompanhar a primeira emissão automática da 2ª etapa (23:30, horário de Fortaleza).
 - [x] Retificação de dia antigo reaproveita o clima do boletim anterior do mesmo dia (imagem copiada para o arquivo da retificação; legenda "reaproveitada do boletim <número>"); sem anterior, sai sem clima (2026-11-13).
 - [x] Botão "Reenviar ao Telegram" no site para publicação `falhou` ou `incerto` (com confirmação), erro do envio na tabela; migration `20261114150000_boletim_reenvio_clima.sql` (`admin_reenviar_boletim`, `admin_listar_boletins` com erro e tentativas, `boletim_clima_anterior`) (2026-11-13; testes de banco 584, Vitest 590, e2e 48).
-- [ ] Aplicar a migration `20261114150000_boletim_reenvio_clima.sql` no `miniappcofz-dev` e fazer o merge na main (o merge publica o site e o gerador na Vercel).
+- [x] Migration `20261114150000_boletim_reenvio_clima.sql` aplicada no `miniappcofz-dev` (2026-11-13; as 3 funções conferidas por hash, `boletim_clima_anterior` só para `service_role`) e merge na main.
 - [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
 - [ ] Externo: avisar o Observatório/IPPLAN do uso dos dados; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.
 
