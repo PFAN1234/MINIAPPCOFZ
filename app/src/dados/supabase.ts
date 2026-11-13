@@ -908,12 +908,24 @@ export function criarRepositorioSupabase(
 
     async obterGeometria(obra, ambiente) {
       // Tabelas da RA: se a migration ainda não foi aplicada, o ambiente fica sem RA.
-      const { data: g, error } = await cliente
+      // `contorno_pagina` vem de migration posterior: sem ela, repete o select sem a coluna.
+      const comPagina = await cliente
         .from('ambiente_geometria')
-        .select('contorno, y_piso, y_teto')
+        .select('contorno, contorno_pagina, y_piso, y_teto')
         .eq('ambiente_id', ambiente.id)
         .maybeSingle()
+      let { data: g, error } = comPagina
+      if (error) {
+        const semPagina = await cliente
+          .from('ambiente_geometria')
+          .select('contorno, y_piso, y_teto')
+          .eq('ambiente_id', ambiente.id)
+          .maybeSingle()
+        g = semPagina.data as typeof g
+        error = semPagina.error
+      }
       if (error || !g) return null
+      const pagina = (g as Linha).contorno_pagina as [number, number][] | null | undefined
       const [qr, referencial, modelos] = await Promise.all([
         cliente.from('ambiente_qr').select('parede, distancia_m, altura_m, lado_m').eq('ambiente_id', ambiente.id).maybeSingle(),
         cliente.from('ra_referencial').select('sigla, coordenadas').eq('obra_id', obra.id).maybeSingle(),
@@ -923,6 +935,9 @@ export function criarRepositorioSupabase(
       const linhaRef = referencial.data as Linha | null
       return {
         contorno: (g.contorno as [number, number][]).map(([x, z]) => [Number(x), Number(z)]),
+        ...(Array.isArray(pagina) && pagina.length >= 3
+          ? { contornoPagina: pagina.map(([x, y]) => [Number(x), Number(y)] as [number, number]) }
+          : {}),
         yPiso: Number(g.y_piso),
         yTeto: Number(g.y_teto),
         qr: linhaQr

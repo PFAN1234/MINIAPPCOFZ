@@ -157,3 +157,21 @@ def test_arquivos_commitados_estao_atualizados():
     assert (ROOT / "data/hto/geometria.json").read_text(encoding="utf-8") == mod.serializar(GEO), \
         "rode python3 scripts/gerar_geometria.py --obra hto"
     assert (ROOT / "supabase/seed/hto_geometria.sql").read_text(encoding="utf-8") == SQL
+
+
+def test_frag_ifc_frag_volta_ao_mesmo_ponto():
+    t = json.loads((ROOT / "data/hto/obra.json").read_text(encoding="utf-8"))["ra"]["ifc_para_frag"]
+    for x, z in [(15.0361, -52.9375), (0.0, 0.0), (-3.2, 41.7)]:
+        ix, iy = mod.frag_para_ifc(t, x, z)
+        fx, _, fz = mod.ifc_para_frag(t, ix, iy)
+        assert abs(fx - x) < 1e-6 and abs(fz - z) < 1e-6
+
+
+def test_contorno_pagina_do_apto_101():
+    g = GEO["ambientes"]["terreo-apto-101"]
+    cp = g["contorno_pagina"]
+    assert len(cp) == len(g["contorno"])
+    assert all(0 <= x <= 1 and 0 <= y <= 1 for x, y in cp)
+    mk = AMB["terreo-apto-101"]["marcadores"][0]
+    p = (mk["x"], mk["y"])
+    assert mod.ponto_em_poligono(p, cp) or mod.distancia_ao_poligono(p, cp) < 0.01

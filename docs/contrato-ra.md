@@ -38,6 +38,7 @@ create table public.ambiente_geometria (
   ambiente_id uuid primary key references public.ambiente (id) on delete cascade,
   guid text,                            -- GlobalId do IfcSpace
   contorno jsonb not null,              -- [[x, z], ...] em metros, sem repetir o primeiro ponto, 3+ pontos
+  contorno_pagina jsonb,                -- cantos de contorno na página da planta: [[x, y], ...] de 0 a 1, mesma ordem; nula até regerar
   y_piso double precision not null,     -- piso acabado
   y_teto double precision not null,     -- forro
   origem text not null default 'ifcspace',

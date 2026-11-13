@@ -189,6 +189,10 @@ Plano: `tasks/plano-ra.md` (decisões de 2026-11-12: modelo ELT fornecido pelo u
 - [ ] Jardim 2 sem geometria (sem área na planta); Lobby e Circulação do 1º pavimento usam só o contorno externo (o IfcSpace tem furo).
 - [ ] Cadastrar e fixar os QRs dos ambientes do piloto.
 - [ ] RA5. Piloto em campo em quatro ambientes, medição do erro.
+  - [x] Depois do 1º teste em campo (2026-11-13): mira no centro + "Marcar canto", planta real enquadrada no cômodo com os cantos numerados (folha e miniatura), malha triangular (piso estimado antes de alinhar; piso, paredes e teto do modelo depois, chip "Malha").
+  - [x] Produção (2026-11-13): migration `20261119090000_ra_contorno_pagina.sql` aplicada e registrada; seed `hto_geometria.sql` reaplicado; 86 de 86 ambientes com `contorno_pagina` (Apto. 101 conferido com o json).
+  - [ ] Repetir o teste em campo (depois do merge do PR #44).
+  - [ ] PR à parte: atualizar os e2e antigos que falham também na main (`etapas`, `navegacao`, `pendencias`).
 
 Verificação: Vitest recupera poses sintéticas (< 1 cm, < 0,5°); e2e com câmera falsa salva o par de fotos; no aparelho, o contorno do Apto. 101 encaixa nas arestas reais. Dependência: 9 (federação validada e vínculo com o IfcSpace); o RA0 pode ser feito já.
 

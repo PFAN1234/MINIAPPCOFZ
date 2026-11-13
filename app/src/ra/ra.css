@@ -289,3 +289,70 @@
   text-align: right;
   overflow-wrap: anywhere;
 }
+
+/* Mira fixa no centro do palco: o toque na imagem não marca canto. */
+.ra-mira {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.ra-mira::before,
+.ra-mira::after {
+  content: '';
+  position: absolute;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.ra-mira::before {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.ra-mira::after {
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+/* Planta real do cômodo na folha e miniatura de leitura durante o alinhamento. */
+.ra-planta polygon.ra-planta-comodo {
+  fill: rgba(245, 183, 0, 0.18);
+  stroke: #f5b700;
+}
+
+.ra-canto-marcado circle {
+  fill: #2e9d57;
+  stroke: #fff;
+}
+
+.ra-canto-marcado text {
+  fill: #fff;
+}
+
+.ra-planta-mini {
+  position: absolute;
+  z-index: 1;
+  top: 64px;
+  right: 8px;
+  width: 110px;
+  max-height: 110px;
+  border-radius: 8px;
+  background: rgba(11, 22, 37, 0.75);
+  pointer-events: none;
+}
+
+.ra-planta-mini polygon {
+  fill: rgba(245, 183, 0, 0.18);
+  stroke: #f5b700;
+}

@@ -767,12 +767,13 @@ export function criarRepositorioFixture(
     baixarModelo: baixarModeloLocal,
     async obterGeometria(obra, ambiente) {
       if (obra.slug !== geometriaJson.obra) return null
-      const g = (geometriaJson.ambientes as Record<string, { contorno: number[][]; y_piso: number; y_teto: number }>)[
+      const g = (geometriaJson.ambientes as Record<string, { contorno: number[][]; contorno_pagina?: number[][]; y_piso: number; y_teto: number }>)[
         ambiente.codigo
       ]
       if (!g) return null
       return {
         contorno: g.contorno.map(([x, z]) => [x, z]),
+        ...(g.contorno_pagina ? { contornoPagina: g.contorno_pagina.map(([x, y]) => [x, y] as [number, number]) } : {}),
         yPiso: g.y_piso,
         yTeto: g.y_teto,
         // QR de teste só no Apto. 101: parede 1, a 1,20 m do canto, centro a 1,50 m.

@@ -6,7 +6,7 @@ import { TopoTela } from '../components/TopoTela.tsx'
 import { useFotosEscolhidas } from '../components/useFotosEscolhidas.ts'
 import { useTelaCheia } from '../components/telaCheia.ts'
 import { useRepositorio } from '../dados/contexto.tsx'
-import { useAmbiente, useGeometria, useModelos } from '../dados/hooks.ts'
+import { useAmbiente, useGeometria, useModelos, useUrlsImagens } from '../dados/hooks.ts'
 import { criarRascunho } from '../dados/envio.ts'
 import { useFila } from '../offline/contexto.tsx'
 import type { AmbienteDetalhe, TipoRegistro } from '../dados/tipos.ts'
@@ -48,6 +48,20 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const repo = useRepositorio()
   const [params, setParams] = useSearchParams()
   const geometria = useGeometria(obra, ambiente, recursos.ra)
+  // Planta do pavimento (HD quando houver), enquadrada no cômodo pela tela de RA.
+  const { planta } = detalhe
+  const imagemPlanta = planta ? (planta.imagem_hd ?? planta.imagem) : null
+  const urlsPlanta = useUrlsImagens(imagemPlanta ? [imagemPlanta.path] : [])
+  const plantaRA =
+    planta && imagemPlanta
+      ? {
+          url: urlsPlanta.data?.[imagemPlanta.path],
+          pagina_pt: planta.pagina_pt,
+          recorte_pt: planta.recorte_pt,
+          largura: imagemPlanta.largura,
+          altura: imagemPlanta.altura,
+        }
+      : null
   const modelos = useModelos(obra.slug, recursos.ra)
   const temRA = recursos.ra && Boolean(geometria.data) && (modelos.data?.length ?? 0) > 0
   const raAberta = temRA && params.get('ra') === '1'
@@ -126,9 +140,7 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
       })
     } catch (e) {
       setErro(
-        e instanceof Error && e.message
-          ? e.message
-          : 'Não foi possível guardar o registro no aparelho. Tente de novo.',
+        e instanceof Error && e.message ? e.message : 'Não foi possível guardar o registro no aparelho. Tente de novo.',
       )
       setGuardando(false)
       return
@@ -149,12 +161,7 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
       />
       <form className="form-registro" onSubmit={(e) => void salvar(e)} noValidate>
         <fieldset className="form-conjunto" disabled={guardando}>
-          <SeletorFotos
-            itens={fotos}
-            desabilitado={guardando}
-            onAdicionar={adicionar}
-            onRemover={remover}
-          />
+          <SeletorFotos itens={fotos} desabilitado={guardando} onAdicionar={adicionar} onRemover={remover} />
           <p className="campo-dica" role="status">
             {aviso}
           </p>
@@ -226,12 +233,7 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
             Este aparelho não permite guardar registros. Não feche o app até o envio terminar.
           </p>
         )}
-        <button
-          type="submit"
-          className="botao botao-bloco"
-          disabled={!valido || guardando}
-          aria-busy={guardando}
-        >
+        <button type="submit" className="botao botao-bloco" disabled={!valido || guardando} aria-busy={guardando}>
           {guardando ? 'Guardando…' : 'Salvar registro'}
         </button>
       </form>
@@ -240,11 +242,15 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
           <TelaRA
             obra={obra}
             pavimento={pavimento.nome}
-            ambiente={{ codigo: ambiente.codigo, nome: ambiente.nome_operacional }}
+            ambiente={{
+              codigo: ambiente.codigo,
+              nome: ambiente.nome_operacional,
+            }}
             geometria={geometria.data}
             modelos={modelos.data}
             baixar={baixarModelo}
             vagas={MAX_FOTOS - fotos.length}
+            planta={plantaRA}
             onConcluir={receberDaRA}
             onFechar={() => alternarRA(false)}
           />
