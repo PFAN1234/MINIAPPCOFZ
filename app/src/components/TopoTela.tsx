@@ -30,15 +30,13 @@ interface Props {
   idTitulo?: string
   /** À direita do título, na mesma linha (abas, botão). Se não couber, rola na horizontal; o título não quebra a linha dele. */
   aoLado?: ReactNode
-  /** Mostra a versão do app no canto direito da faixa de identidade (só a tela inicial). */
-  versao?: boolean
   /** Ações no topo (botões, seletor de pavimento). */
   children?: ReactNode
 }
 
 /**
  * Topo azul de cada tela, emendado com o cabeçalho do Telegram (também azul), com a faixa de
- * identidade (logo e nome da OM, "Fiscal Bot") no alto. Dentro do
+ * identidade (nome da OM, logo e "Fiscal Bot") no alto e a versão do app no pé. Dentro do
  * Telegram, quem volta é o BackButton nativo (ver `Layout` e `telegramBack.ts`); fora dele, o
  * "Voltar" fica aqui. A faixa de envio e de sem sinal vem logo abaixo, nunca acima do azul.
  */
@@ -50,7 +48,6 @@ export function TopoTela({
   lista = false,
   idTitulo,
   aoLado,
-  versao = false,
   children,
 }: Props) {
   const { pathname } = useLocation()
@@ -72,7 +69,7 @@ export function TopoTela({
   return (
     <div className="topo">
       <header className={lista ? 'topo-tela topo-lista' : 'topo-tela'}>
-        <FaixaIdentidade>{versao && <SeloVersao />}</FaixaIdentidade>
+        <FaixaIdentidade />
         {comVoltar && (
           <button type="button" className="topo-voltar" onClick={aoVoltar}>
             <IconeVoltar tamanho={24} />
@@ -94,6 +91,7 @@ export function TopoTela({
         )}
         {subtitulo && <p className="topo-subtitulo">{subtitulo}</p>}
         {children && <div className="topo-acoes">{children}</div>}
+        <SeloVersao />
       </header>
       {faixa}
     </div>

@@ -68,33 +68,17 @@ textarea {
   background: var(--azul);
 }
 
-/* Faixa de identidade (FaixaIdentidade): logo, nome da OM e "Fiscal Bot", no alto do azul. */
+/* Faixa de identidade (FaixaIdentidade): OM à esquerda, logo no centro e "Fiscal Bot" à direita. */
 .identidade {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   align-self: stretch;
-  min-height: 40px;
+  min-height: 48px;
   margin-bottom: 8px;
   padding: 4px 0;
   border-bottom: 1px solid var(--azul-borda);
-}
-
-.identidade-logo {
-  flex: none;
-  width: auto;
-  height: 28px;
-  max-width: 112px;
-  object-fit: contain;
-}
-
-.identidade-textos {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 8px;
-  min-width: 0;
-  margin: 0;
   font-size: 14px;
   line-height: 18px;
 }
@@ -105,33 +89,37 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+.identidade-centro {
+  display: flex;
+  justify-content: center;
+}
+
+.identidade-logo {
+  width: auto;
+  height: 40px;
+  max-width: 140px;
+  object-fit: contain;
+}
+
 .identidade-app {
   color: var(--texto-suave-no-azul);
   font-weight: 600;
+  text-align: right;
 }
 
-.identidade-om + .identidade-app {
-  padding-left: 8px;
-  border-left: 1px solid var(--azul-borda);
-}
-
-/* Versão do app no canto direito da faixa (tela inicial): discreta; o toque mostra o detalhe. */
-.identidade-direita {
-  flex: none;
-  max-width: 60%;
-  margin-left: auto;
-}
-
+/* Versão do app no pé do topo azul, à direita: pequena e apagada; o toque mostra o detalhe. */
 .selo-versao {
-  min-height: 32px;
-  padding: 4px 8px;
-  border: 1px solid var(--azul-borda);
-  border-radius: 12px;
+  align-self: flex-end;
+  min-height: 24px;
+  margin: 4px -4px -12px 0;
+  padding: 4px;
+  border: 0;
   background: transparent;
-  color: var(--texto-suave-no-azul);
+  color: var(--texto-no-azul);
+  opacity: 0.55;
   font: inherit;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 11px;
+  line-height: 14px;
   text-align: right;
   cursor: pointer;
 }
@@ -143,7 +131,7 @@ textarea {
 
 /* Topo só com a faixa (telas antes de entrar). */
 .topo-identidade {
-  padding-bottom: 0;
+  padding-bottom: 12px;
 }
 
 .topo-identidade .identidade {
