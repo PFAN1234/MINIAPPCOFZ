@@ -84,6 +84,12 @@ function criarRepoFalso() {
     async relatorios() {
       return { admin: false, etapas: [], boletins: [] }
     },
+    async painelRelatorios() {
+      throw new Error('n/a')
+    },
+    async exportarPendencias() {
+      throw new Error('n/a')
+    },
     async urlPdfBoletim() {
       throw new Error('n/a')
     },

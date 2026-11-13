@@ -42,6 +42,7 @@ import type {
   RegistroLocalizado,
   RegistroResumo,
   SolicitacaoAcesso,
+  PainelRelatorios,
   Relatorios,
   ResultadoExclusaoBoletim,
 } from './tipos.ts'
@@ -486,6 +487,45 @@ export function criarRepositorioSupabase(
           ultima_revisao: b.ultima_revisao === true,
         })),
       }
+    },
+
+    async painelRelatorios(etapaId): Promise<PainelRelatorios> {
+      const d = (await chamar('painel_relatorios', { p_etapa: etapaId })) as Linha | null
+      const e = (d?.etapa ?? {}) as Linha
+      return {
+        etapa: { id: String(e.id), slug: String(e.slug), nome: String(e.nome), hoje: String(e.hoje) },
+        obras: ((d?.obras as Linha[] | null) ?? []).map((o) => ({ id: String(o.id), slug: String(o.slug), nome: String(o.nome) })),
+        dias: ((d?.dias as Linha[] | null) ?? []).map((x) => ({
+          obra_id: String(x.obra_id),
+          dia: String(x.dia),
+          servicos: Number(x.servicos ?? 0),
+          pendencias: Number(x.pendencias ?? 0),
+          resolvidas: Number(x.resolvidas ?? 0),
+        })),
+      }
+    },
+
+    async exportarPendencias(etapaId, obraId): Promise<string> {
+      const { data } = await cliente.auth.getSession()
+      const jwt = data.session?.access_token
+      if (!jwt) throw new ErroEnvio('sessao', 'Sua sessão expirou. Abra o app novamente pelo Telegram.')
+      const padrao = 'Não foi possível gerar o relatório. Tente de novo.'
+      let resposta: Response
+      try {
+        resposta = await fetch('/api/relatorio-pendencias', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+          body: JSON.stringify({ etapa_id: etapaId, obra_id: obraId }),
+        })
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+      const json = (await resposta.json().catch(() => null)) as Linha | null
+      if (!resposta.ok) {
+        throw new Error(typeof json?.erro === 'string' && json.erro ? json.erro : padrao)
+      }
+      if (typeof json?.url !== 'string' || !json.url) throw new Error(padrao)
+      return json.url
     },
 
     async urlPdfBoletim(caminho) {
