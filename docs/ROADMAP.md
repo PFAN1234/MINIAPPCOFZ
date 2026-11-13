@@ -173,7 +173,7 @@ flowchart TD
        ```
      - Rito padronizado de validação de provas visuais e homologação de nomes operacionais antes da liberação do seed.
   2. **Organização de Pastas e Consolidação do Repositório (`tasks/plano-organizacao-pastas.md`):**
-     - Limpeza da raiz (`Screenshot*.png` → `docs/mockups/referencias/`).
+     - Limpeza da raiz: capturas `Screenshot*.png` removidas em 2026-11-12 (ficam no histórico do Git).
      - Padronização de `DOCS COFZ/` e `DOCS HTO/` → `obras/<slug>/` (sem espaços/maiúsculas), com regeneração dos seeds/manifestos e atualização de E2E/scripts.
      - Atualização do `README.md` raiz e separação interna de `app/src/` em `miniapp/` e `shared/` (mantendo `admin/` isolado).
   3. **Dashboard de Indicadores & Gestão:**
@@ -221,4 +221,4 @@ flowchart TD
 4. [ ] **Configuração do Webhook Telegram:** Apontar o webhook do `@diarioobra_cofz_bot` para a Edge Function correspondente.
 5. [ ] **Vincular Tópico no Grupo de Homologação:** Executar `/vincular_obra hto` no tópico HTO e `/fixar_botao` no Geral.
 6. [ ] **Executar Teste Operacional Completo:** Validar autenticação, novo registro com foto, modo offline e encerramento de pendência.
-7. [ ] **Organização de Pastas (Fases 1–3 de `tasks/plano-organizacao-pastas.md`):** Mover capturas da raiz, padronizar `DOCS *` → `obras/<slug>/` com regeneração do pipeline/E2E e atualizar o `README.md`.
+7. [ ] **Organização de Pastas (Fases 1–3 de `tasks/plano-organizacao-pastas.md`):** Capturas da raiz já removidas; falta padronizar `DOCS *` → `obras/<slug>/` com regeneração do pipeline/E2E e atualizar o `README.md`.

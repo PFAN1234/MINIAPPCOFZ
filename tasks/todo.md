@@ -294,7 +294,7 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 
 Plano: `tasks/plano-organizacao-pastas.md` (decisões de 2026-11-12; registrado em `docs/ROADMAP.md`).
 
-- [ ] Fase 1: mover `Screenshot 2026-11-06 *.png` da raiz para `docs/mockups/referencias/` e atualizar `README.md` e `docs/mockups/README.md`.
+- [x] Fase 1: capturas `Screenshot 2026-11-06 *.png` removidas da raiz em 2026-11-12 (commit `ef7277c`, ficam no histórico); READMEs já ajustados.
 - [ ] Fase 2: padronizar `DOCS COFZ/` e `DOCS HTO/` (e `public/ifc/`) → `obras/<slug>/`, atualizar `.gitignore`, `data/*/obra.json`, re-executar o pipeline Python (`extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `importar_config_obras.py`) e atualizar `app/e2e/planta.spec.ts` e scripts/docs.
 - [ ] Fase 3: atualizar o `README.md` raiz para refletir o estado atual do projeto.
 - [ ] Fase 4 (após estabilização das entregas de UI): organizar `app/src/` em `miniapp/` e `shared/` (mantendo `admin/` isolado) e validar `precache-manifest.json`.
