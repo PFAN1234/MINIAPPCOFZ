@@ -1,4 +1,4 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
 import type { ConfigObra, DadosAditivo, DadosEtapa, DadosObra, PavimentoResumo, QrAmbiente } from './tipos.ts'
 
@@ -88,16 +88,36 @@ export function useDefinirResponsaveis(etapaId: string) {
   })
 }
 
-/** Estações do INMET perto do ponto; só consulta com coordenadas válidas. */
-export function useSugestoesEstacoes(ponto: { latitude: number; longitude: number } | null) {
+// --- Boletins ----------------------------------------------------------------------------------
+
+/** Boletins e pedidos da etapa; enquanto houver pedido na fila ou gerando, relê a cada 10 s. */
+export function useBoletins(slug: string) {
   const repo = useRepositorioAdmin()
   return useQuery({
-    queryKey: ['admin', 'estacoes', ponto?.latitude ?? null, ponto?.longitude ?? null],
-    queryFn: () => repo.sugerirEstacoes(ponto!.latitude, ponto!.longitude),
-    enabled: ponto !== null,
-    placeholderData: keepPreviousData,
-    retry: false,
+    queryKey: ['admin', 'boletins', slug],
+    queryFn: () => repo.listarBoletins(slug),
+    refetchInterval: (q) =>
+      q.state.data?.pedidos.some((p) => p.estado === 'pendente' || p.estado === 'gerando') ? 10_000 : false,
   })
+}
+
+export function usePedirEmissao(slug: string) {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: string) => repo.pedirEmissao(slug, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'boletins', slug] }),
+  })
+}
+
+export function useUrlPdfBoletim() {
+  const repo = useRepositorioAdmin()
+  return useMutation({ mutationFn: (caminho: string) => repo.urlPdfBoletim(caminho) })
+}
+
+export function usePreviaBoletim(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useMutation({ mutationFn: (data: string) => repo.previaBoletim(slug, data) })
 }
 
 // --- Pessoas -----------------------------------------------------------------------------------

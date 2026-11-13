@@ -4,7 +4,7 @@
  * no build de produção (só é importado por `fixture.ts`).
  */
 import { CNPJ } from '../formato.ts'
-import { ErroAdmin, FUSOS, type Aditivo, type CamposEtapa, type DadosEtapa, type PrazoEtapa } from './tipos.ts'
+import { ErroAdmin, ESTACAO_PADRAO, ESTACAO_RESERVA_PADRAO, FUSOS, type Aditivo, type CamposEtapa, type DadosEtapa, type PrazoEtapa } from './tipos.ts'
 
 export const CAMPOS_VAZIOS: CamposEtapa = {
   sigla: null,
@@ -12,8 +12,8 @@ export const CAMPOS_VAZIOS: CamposEtapa = {
   latitude: null,
   longitude: null,
   fuso: 'America/Sao_Paulo',
-  inmet_estacao: null,
-  inmet_estacao_reserva: null,
+  estacao: null,
+  estacao_reserva: null,
   boletim_horario: '23:30',
   objeto: null,
   local: null,
@@ -114,13 +114,18 @@ export function aplicarCampos(
     novo.fuso = String(d.fuso)
   }
 
-  for (const k of ['inmet_estacao', 'inmet_estacao_reserva'] as const) {
+  if (criacao) {
+    // Na criação, sem estação informada, Montese e Benfica.
+    if (!veio('estacao')) novo.estacao = ESTACAO_PADRAO
+    if (!veio('estacao_reserva')) novo.estacao_reserva = ESTACAO_RESERVA_PADRAO
+  }
+  for (const k of ['estacao', 'estacao_reserva'] as const) {
     if (!veio(k)) continue
     const t = limpo(d[k])
-    if (t !== null && !/^[A-Z][0-9]{3}$/.test(t)) throw invalido('Código de estação do INMET inválido: use uma letra e três dígitos, como A305')
+    if (t !== null && !/^[0-9]{3,6}$/.test(t)) throw invalido('Código de estação inválido: use de 3 a 6 dígitos, como 8836')
     novo[k] = t
   }
-  if (novo.inmet_estacao !== null && novo.inmet_estacao === novo.inmet_estacao_reserva) {
+  if (novo.estacao !== null && novo.estacao === novo.estacao_reserva) {
     throw invalido('A estação de reserva precisa ser diferente da principal')
   }
 
@@ -196,7 +201,7 @@ export function calcularFaltando(c: CamposEtapa, responsaveis: number): string[]
   if (c.sigla === null) f.push('sigla')
   if (c.latitude === null || c.longitude === null) f.push('localizacao')
   for (const k of [
-    'inmet_estacao',
+    'estacao',
     'objeto',
     'local',
     'contratante',
@@ -220,12 +225,4 @@ export function camposDe(e: CamposEtapa): CamposEtapa {
   const r = {} as Record<string, unknown>
   for (const k of CHAVES) r[k] = e[k]
   return r as unknown as CamposEtapa
-}
-
-/** Distância em km (haversine). */
-export function distanciaKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const rad = (g: number) => (g * Math.PI) / 180
-  const a =
-    Math.sin(rad(lat2 - lat1) / 2) ** 2 + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(rad(lon2 - lon1) / 2) ** 2
-  return 6371 * 2 * Math.asin(Math.sqrt(a))
 }

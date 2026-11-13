@@ -165,7 +165,7 @@ export const FUSOS: { valor: string; rotulo: string }[] = [
 export const ROTULO_FALTANDO: Record<string, string> = {
   sigla: 'sigla',
   localizacao: 'localização (latitude e longitude)',
-  inmet_estacao: 'estação do INMET',
+  estacao: 'estação meteorológica',
   objeto: 'obra/serviço',
   local: 'local',
   contratante: 'contratante',
@@ -187,8 +187,9 @@ export interface CamposEtapa {
   latitude: number | null
   longitude: number | null
   fuso: string
-  inmet_estacao: string | null
-  inmet_estacao_reserva: string | null
+  /** Código da estação do Observatório de Fortaleza (`ESTACOES_OBSERVATORIO`). */
+  estacao: string | null
+  estacao_reserva: string | null
   /** "HH:MM", hora local da emissão automática. */
   boletim_horario: string
   objeto: string | null
@@ -295,14 +296,61 @@ export interface Pessoa {
 
 export const NOME_EXIBICAO_MAX = 60
 
-/** `admin_sugerir_estacoes`: estação automática do INMET perto da obra. */
-export interface EstacaoSugerida {
-  codigo: string
-  nome: string
-  uf: string
-  latitude: number
-  longitude: number
-  distancia_km: number
+/**
+ * Estações meteorológicas do Observatório de Riscos Climáticos de Fortaleza (lista fixa, só no
+ * site; o gerador do boletim tem a mesma lista em `servidor/boletim/estacoes.ts`).
+ */
+export const ESTACOES_OBSERVATORIO: { codigo: string; nome: string }[] = [
+  { codigo: '3318', nome: 'Dom Lustosa' },
+  { codigo: '8642', nome: 'Centro' },
+  { codigo: '8836', nome: 'Montese' },
+  { codigo: '8869', nome: 'Vila Velha' },
+  { codigo: '9134', nome: 'Conjunto Esperança' },
+  { codigo: '9137', nome: 'Mucuripe' },
+  { codigo: '9169', nome: 'Messejana' },
+  { codigo: '9242', nome: 'Guararapes' },
+  { codigo: '9249', nome: 'Jangurussu' },
+  { codigo: '9281', nome: 'Benfica' },
+  { codigo: '9282', nome: 'Granja Lisboa' },
+]
+
+/** Padrão na criação da etapa (Montese e, de reserva, Benfica). */
+export const ESTACAO_PADRAO = '8836'
+export const ESTACAO_RESERVA_PADRAO = '9281'
+
+/** Boletim emitido (`admin_listar_boletins`). */
+export interface BoletimEmitido {
+  id: string
+  /** "AAAA-MM-DD". */
+  data: string
+  revisao: number
+  numero: string
+  emitido_em: string
+  /** null = emissão automática. */
+  emitido_por_nome: string | null
+  /** Caminho no bucket `boletins`. */
+  pdf_path: string | null
+  /** Já enviado ao grupo do Telegram da etapa. */
+  publicado: boolean
+}
+
+export type EstadoEmissao = 'pendente' | 'gerando' | 'emitido' | 'falhou'
+
+/** Pedido de emissão ainda não emitido (na fila, gerando ou com falha). */
+export interface PedidoEmissao {
+  id: number
+  data: string
+  revisao: number
+  estado: EstadoEmissao
+  tentativas: number
+  erro: string | null
+  atualizado_em: string
+}
+
+export interface ListaBoletins {
+  /** Mais recentes primeiro. */
+  boletins: BoletimEmitido[]
+  pedidos: PedidoEmissao[]
 }
 
 /** O que a exclusão da etapa apaga (`admin_resumo_etapa`): as obras e a soma das contagens. */

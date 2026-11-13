@@ -13,6 +13,32 @@ export function hojeIso(agora = new Date()): string {
   return `${agora.getFullYear()}-${dois(agora.getMonth() + 1)}-${dois(agora.getDate())}`
 }
 
+/** Data de hoje no fuso IANA (ex.: `America/Fortaleza`) como "AAAA-MM-DD". */
+export function hojeNoFuso(fuso: string, agora = new Date()): string {
+  // en-CA formata como AAAA-MM-DD.
+  return new Intl.DateTimeFormat('en-CA', { timeZone: fuso, year: 'numeric', month: '2-digit', day: '2-digit' }).format(agora)
+}
+
+/** Instante ISO → "dd/mm/aaaa às HH:MM" no fuso dado (padrão: o do navegador). */
+export function dataHoraBr(iso: string, fuso?: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat('pt-BR', {
+      timeZone: fuso,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    })
+      .formatToParts(d)
+      .map((x) => [x.type, x.value]),
+  )
+  return `${p.day}/${p.month}/${p.year} às ${p.hour}:${p.minute}`
+}
+
 function decimais(n: number, casas: number): string {
   return n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas })
 }
