@@ -1,12 +1,13 @@
 import { useContext, useState, type ReactNode } from 'react'
 import { NOME_APP, OrganizacaoContexto } from './identidade.ts'
+import { SeloVersao } from './SeloVersao.tsx'
 
 /**
- * Faixa fina no alto do topo azul: logo da organização militar (se houver), nome da OM e
- * "Fiscal Bot". Sem organização carregada ou com o logo indisponível, mostra só os textos.
- * `children` fica no canto direito (a versão do app, na tela inicial).
+ * Faixa no alto do topo azul: nome da OM à esquerda, logo da organização militar (se houver) no
+ * centro e "Fiscal Bot" à direita. Sem organização carregada ou com o logo indisponível, o lugar
+ * fica vazio e os textos continuam nos cantos.
  */
-export function FaixaIdentidade({ children }: { children?: ReactNode } = {}) {
+export function FaixaIdentidade() {
   const organizacao = useContext(OrganizacaoContexto)
   const nome = organizacao?.nome.trim() ?? ''
   const logo = organizacao?.logo_url ?? null
@@ -16,15 +17,14 @@ export function FaixaIdentidade({ children }: { children?: ReactNode } = {}) {
 
   return (
     <div className="identidade" data-testid="faixa-identidade">
-      {mostrarLogo && (
-        // O nome da OM vem logo ao lado: o logo é decorativo.
-        <img className="identidade-logo" src={logo} alt="" height={28} onError={() => setLogoComFalha(logo)} />
-      )}
-      <p className="identidade-textos">
-        {nome && <span className="identidade-om">{nome}</span>}
-        <span className="identidade-app">{NOME_APP}</span>
-      </p>
-      {children && <div className="identidade-direita">{children}</div>}
+      <span className="identidade-om">{nome}</span>
+      <span className="identidade-centro">
+        {mostrarLogo && (
+          // O nome da OM vem ao lado: o logo é decorativo.
+          <img className="identidade-logo" src={logo} alt="" height={40} onError={() => setLogoComFalha(logo)} />
+        )}
+      </span>
+      <span className="identidade-app">{NOME_APP}</span>
     </div>
   )
 }
@@ -35,6 +35,7 @@ export function TopoIdentidade() {
     <div className="topo">
       <div className="topo-tela topo-identidade">
         <FaixaIdentidade />
+        <SeloVersao />
       </div>
     </div>
   )

@@ -95,13 +95,14 @@ describe('TopoTela: faixa de identidade', () => {
     )
   }
 
-  it('com logo: logo decorativo (alt vazio) de 28 px, nome da OM e "Fiscal Bot", acima do título', () => {
+  it('com logo: OM à esquerda, logo decorativo (alt vazio) de 40 px no centro e "Fiscal Bot" à direita, acima do título', () => {
     const { container } = comOrganizacao({ nome: 'CO-FZ', logo_url: 'https://exemplo.test/logo.png' })
     const faixa = screen.getByTestId('faixa-identidade')
     const logo = container.querySelector('img')!
     expect(logo).toHaveAttribute('src', 'https://exemplo.test/logo.png')
     expect(logo).toHaveAttribute('alt', '')
-    expect(logo).toHaveAttribute('height', '28')
+    expect(logo).toHaveAttribute('height', '40')
+    expect([...faixa.children].map((filho) => filho.textContent)).toEqual(['CO-FZ', '', 'Fiscal Bot'])
     expect(faixa).toHaveTextContent('CO-FZ')
     expect(faixa).toHaveTextContent('Fiscal Bot')
     const cabecalho = screen.getByRole('heading', { level: 1, name: 'HTO' }).closest('header')!
@@ -139,13 +140,14 @@ describe('TopoTela: faixa de identidade', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('a versão do app aparece na faixa só na tela inicial', async () => {
+  it('a versão do app aparece no pé do topo em todas as telas', async () => {
     const { unmount } = renderizarApp('/')
     await screen.findByRole('link', { name: /^HTO/ })
-    expect(screen.getByRole('button', { name: /^Versão do app: / })).toBeInTheDocument()
+    const versao = screen.getByRole('button', { name: /^Versão do app: / })
+    expect(versao.parentElement!.lastElementChild).toBe(versao)
     unmount()
     renderizarApp('/obras/hto')
     await screen.findByRole('heading', { level: 1, name: 'HTO' })
-    expect(screen.queryByRole('button', { name: /^Versão do app: / })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Versão do app: / })).toBeInTheDocument()
   })
 })
