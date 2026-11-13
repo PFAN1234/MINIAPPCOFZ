@@ -48,6 +48,9 @@ function criarRepoFalso() {
     async resumoObras() {
       return []
     },
+    async autoresRegistros() {
+      return []
+    },
     async obterGeometria() {
       return null
     },

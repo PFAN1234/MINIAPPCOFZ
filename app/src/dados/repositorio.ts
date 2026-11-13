@@ -36,6 +36,8 @@ export interface Repositorio {
   obterObra(slug: string): Promise<ObraDetalhe>
   obterAmbiente(slug: string, codigo: string): Promise<AmbienteDetalhe>
   listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]>
+  /** Pessoas que têm registros nas obras visíveis (`autores_registros`), pelo nome mostrado. */
+  autoresRegistros(): Promise<{ id: string; nome: string }[]>
   /** URL assinada (1 h) ou local na fixture, indexada pelo caminho recebido. */
   urlsImagens(
     paths: string[],

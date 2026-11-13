@@ -8,7 +8,7 @@ import { IconeFiltro } from '../components/Icones.tsx'
 import { RegistroLocal } from '../components/RegistroLocal.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
 import { useAvisoDaRota } from '../components/useAvisoDaRota.ts'
-import { useObra, useObras, useRegistros } from '../dados/hooks.ts'
+import { useObra, useRegistros } from '../dados/hooks.ts'
 import type { RegistroResumo } from '../dados/tipos.ts'
 import { useRegistrosLocais } from '../offline/contexto.tsx'
 import { ordenarNatural } from '../util/ordenacao.ts'
@@ -20,8 +20,8 @@ function LinkDaObra({ slug }: { slug: string }) {
 }
 
 /**
- * Pendências (tela 5). Na rota da obra filtra por ambiente; na aba global,
- * por obra. Aba e filtro ficam na URL (`?aba=resolvidas&ambiente=<codigo>` ou `&obra=<slug>`).
+ * Pendências da obra (tela 5), filtradas por ambiente. Aba e filtro ficam na URL
+ * (`?aba=resolvidas&ambiente=<codigo>`). A visão de todas as obras é a tela Registros.
  */
 export default function Pendencias() {
   const { slug } = useParams()
@@ -29,9 +29,7 @@ export default function Pendencias() {
   const { aviso, fecharAviso } = useAvisoDaRota()
   const aba = params.get('aba') === 'resolvidas' ? 'resolvidas' : 'abertas'
   const filtroAmbiente = slug ? params.get('ambiente') : null
-  const filtroObra = slug ? slug : params.get('obra')
   const registros = useRegistros({ tipo: 'pendencia', obraSlug: slug })
-  const obras = useObras()
   const locais = useRegistrosLocais({ tipo: 'pendencia', obraSlug: slug })
 
   function mudar(mudancas: Record<string, string | null>) {
@@ -47,10 +45,9 @@ export default function Pendencias() {
     () =>
       locais.filter(
         (i) =>
-          (!filtroAmbiente || i.registro.ambiente.codigo === filtroAmbiente) &&
-          (!filtroObra || i.registro.obra.slug === filtroObra),
+          !filtroAmbiente || i.registro.ambiente.codigo === filtroAmbiente,
       ),
-    [locais, filtroAmbiente, filtroObra],
+    [locais, filtroAmbiente],
   )
 
   return (
@@ -64,23 +61,17 @@ export default function Pendencias() {
       {aviso && <Aviso texto={aviso} onFechar={fecharAviso} />}
       <EstadoConsulta consulta={registros}>
         {(lista) => {
-          const doFiltro = lista.filter(
-            (r) =>
-              (!filtroAmbiente || r.ambiente.codigo === filtroAmbiente) &&
-              (!filtroObra || r.obra.slug === filtroObra),
-          )
+          const doFiltro = lista.filter((r) => !filtroAmbiente || r.ambiente.codigo === filtroAmbiente)
           const abertas = doFiltro.filter((r) => r.situacao !== 'resolvida')
           const resolvidas = doFiltro.filter((r) => r.situacao === 'resolvida')
           const ids = new Set(lista.map((r) => r.id))
           const locaisAbertas = locaisFiltrados.filter((i) => !ids.has(i.registro.id))
           const mostrar: RegistroResumo[] = aba === 'abertas' ? abertas : resolvidas
 
-          const opcoes = slug
-            ? ordenarNatural(
-                [...new Map(lista.map((r) => [r.ambiente.codigo, r.ambiente.nome])).entries()],
-                ([, nome]) => nome,
-              )
-            : (obras.data ?? []).map((o) => [o.slug, o.nome] as const)
+          const opcoes = ordenarNatural(
+            [...new Map(lista.map((r) => [r.ambiente.codigo, r.ambiente.nome])).entries()],
+            ([, nome]) => nome,
+          )
 
           return (
             <>
@@ -96,11 +87,11 @@ export default function Pendencias() {
               <div className="filtro">
                 <IconeFiltro tamanho={20} />
                 <select
-                  aria-label={slug ? 'Filtrar por ambiente' : 'Filtrar por obra'}
-                  value={(slug ? filtroAmbiente : filtroObra) ?? ''}
-                  onChange={(e) => mudar({ [slug ? 'ambiente' : 'obra']: e.target.value || null })}
+                  aria-label="Filtrar por ambiente"
+                  value={filtroAmbiente ?? ''}
+                  onChange={(e) => mudar({ ambiente: e.target.value || null })}
                 >
-                  <option value="">{slug ? 'Todos os ambientes' : 'Todas as obras'}</option>
+                  <option value="">Todos os ambientes</option>
                   {opcoes.map(([valor, nome]) => (
                     <option key={valor} value={valor}>
                       {nome}

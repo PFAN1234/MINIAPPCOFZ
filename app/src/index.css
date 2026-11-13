@@ -1443,6 +1443,51 @@ a.botao {
   border: 0;
 }
 
+.filtros-registros .filtro-tipo {
+  min-width: 0;
+  margin: 0 0 8px;
+}
+
+.filtros-registros .segmentado span {
+  min-width: 0;
+  padding: 0 2px;
+  font-size: 0.875rem;
+}
+
+.filtros-linha {
+  display: flex;
+  gap: 8px;
+}
+
+.filtros-linha > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.filtro-data {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  color: var(--texto-suave);
+}
+
+.filtro-data input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 8px;
+  font: inherit;
+  color: var(--texto);
+  background: var(--bg-secundario);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.filtros-registros > .botao {
+  margin: 0 0 12px;
+}
+
 .lista-cartoes {
   margin: 0;
 }

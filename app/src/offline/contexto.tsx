@@ -17,7 +17,8 @@ import {
 import { EstadoCarregando, EstadoErro } from '../components/Estado.tsx'
 import { TelaDeEntrada } from '../components/FaixaIdentidade.tsx'
 import { useRepositorio } from '../dados/contexto.tsx'
-import type { TipoRegistro } from '../dados/tipos.ts'
+import type { SituacaoRegistro, TipoRegistro } from '../dados/tipos.ts'
+import { dentroDoPeriodo } from '../util/periodo.ts'
 import { abrirArmazenamento, type Armazenamento } from './armazenamento.ts'
 import { persistirCache, restaurarCache } from './cacheConsultas.ts'
 import {
@@ -172,12 +173,22 @@ export interface FiltroLocais {
   ambienteId?: string
   ambienteCodigo?: string
   tipo?: TipoRegistro
+  /** Registro guardado no aparelho nunca está resolvido: `resolvida` não casa com nenhum. */
+  situacao?: SituacaoRegistro
+  /** Só obras destas (as de uma etapa). */
+  obraIds?: string[]
+  /** Só aparecem com o filtro vazio ou igual ao próprio usuário. */
+  autorId?: string
+  de?: string
+  ate?: string
 }
 
 /** Registros guardados no aparelho que ainda não foram enviados, do mais recente ao mais antigo. */
 export function useRegistrosLocais(filtro: FiltroLocais = {}): ItemFila[] {
   const { estado } = useFila()
-  const { obraId, obraSlug, ambienteId, ambienteCodigo, tipo } = filtro
+  const { obraId, obraSlug, ambienteId, ambienteCodigo, tipo, situacao, obraIds, autorId, de, ate } = filtro
+  const usuarioId = useUsuarioId()
+  const chaveObras = obraIds?.join(',')
   return useMemo(
     () =>
       estado.itens.filter(
@@ -186,9 +197,13 @@ export function useRegistrosLocais(filtro: FiltroLocais = {}): ItemFila[] {
           (!obraSlug || i.registro.obra.slug === obraSlug) &&
           (!ambienteId || i.registro.ambiente.id === ambienteId) &&
           (!ambienteCodigo || i.registro.ambiente.codigo === ambienteCodigo) &&
-          (!tipo || i.registro.tipo === tipo),
+          (!tipo || i.registro.tipo === tipo) &&
+          (!situacao || (i.registro.tipo === 'pendencia' && situacao === 'aberta')) &&
+          (chaveObras === undefined || chaveObras.split(',').includes(i.registro.obra.id)) &&
+          (!autorId || autorId === usuarioId) &&
+          dentroDoPeriodo(i.registro.capturadoEm, de, ate),
       ),
-    [estado.itens, obraId, obraSlug, ambienteId, ambienteCodigo, tipo],
+    [estado.itens, obraId, obraSlug, ambienteId, ambienteCodigo, tipo, situacao, chaveObras, autorId, usuarioId, de, ate],
   )
 }
 

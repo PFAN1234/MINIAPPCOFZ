@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import { entrarComTelegram } from './login.ts'
+import { limitesPeriodo } from '../util/periodo.ts'
 import { nomeMostrado } from './nome.ts'
 import { FUSO_PADRAO, dataNoFuso } from '../util/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
@@ -570,12 +571,13 @@ export function criarRepositorioSupabase(
     async listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]> {
       // `!inner` faz o filtro pelo ambiente/obra descartar os registros, e não só o embed.
       const ambInner = filtro.ambienteCodigo ? '!inner' : ''
-      const obraInner = filtro.obraSlug ? '!inner' : ''
+      const obraInner = filtro.obraSlug || filtro.etapaId ? '!inner' : ''
+      const colunasObra = filtro.etapaId ? 'id, slug, nome, etapa_id' : 'id, slug, nome'
       let q = cliente
         .from('registro')
         .select(
           COLUNAS_REGISTRO +
-            `ambiente${ambInner}(id, codigo, nome_operacional, pavimento(nome)), obra${obraInner}(id, slug, nome)`,
+            `ambiente${ambInner}(id, codigo, nome_operacional, pavimento(nome)), obra${obraInner}(${colunasObra})`,
         )
         .order('recebido_em', { ascending: false })
       if (filtro.obraId) q = q.eq('obra_id', filtro.obraId)
@@ -584,8 +586,22 @@ export function criarRepositorioSupabase(
       if (filtro.ambienteCodigo) q = q.eq('ambiente.codigo', filtro.ambienteCodigo)
       if (filtro.tipo) q = q.eq('tipo', filtro.tipo)
       if (filtro.situacao) q = q.eq('situacao', filtro.situacao)
+      if (filtro.etapaId) q = q.eq('obra.etapa_id', filtro.etapaId)
+      if (filtro.autorId) q = q.eq('autor_id', filtro.autorId)
+      const { desde, antes } = limitesPeriodo(filtro.de, filtro.ate)
+      if (desde) q = q.gte('capturado_em', desde)
+      if (antes) q = q.lt('capturado_em', antes)
       if (filtro.limite) q = q.limit(filtro.limite)
       return resumirRegistros(checar(await q) as unknown as Linha[])
+    },
+
+    async autoresRegistros() {
+      const { data, error } = await cliente.rpc('autores_registros')
+      if (error) throw error
+      return ((data ?? []) as Linha[]).map((l) => ({
+        id: String(l.id),
+        nome: nomeMostrado(l) ?? 'Autor desconhecido',
+      }))
     },
 
     async obterPendencia(id): Promise<PendenciaDetalhe | null> {

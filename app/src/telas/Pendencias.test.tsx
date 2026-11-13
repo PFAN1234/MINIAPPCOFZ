@@ -50,13 +50,11 @@ describe('Pendências', () => {
     expect(resolvida).toHaveTextContent('Resolvida')
   })
 
-  it('na aba global: filtra por obra e mantém aba e filtro na URL', async () => {
-    renderizarApp('/pendencias?aba=resolvidas&obra=hto')
-    expect(await screen.findByRole('tab', { name: 'Resolvidas (1)', selected: true })).toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'Filtrar por obra' })).toHaveValue('hto')
-    expect(screen.getByRole('option', { name: 'Todas as obras' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Residencial Aurora' })).toBeInTheDocument()
-    expect(await screen.findByRole('link', { name: /Rejunte irregular/ })).toBeInTheDocument()
+  it('a rota antiga /pendencias redireciona para Registros com as abertas', async () => {
+    renderizarApp('/pendencias')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Registros' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Abertas' })).toBeChecked()
+    expect(await screen.findAllByRole('listitem')).toHaveLength(3)
   })
 
   it('pendência local (fila) aparece no topo de Abertas, sem link para o detalhe', async () => {
@@ -78,8 +76,8 @@ describe('Pendências', () => {
     await screen.findByText('Registro salvo no aparelho')
 
     const navegacao = await screen.findByRole('navigation', { name: 'Navegação principal' })
-    await usuario.click(await within(navegacao).findByRole('link', { name: /^Pendências/ }))
-    expect(await screen.findByRole('tab', { name: 'Abertas (4)' })).toBeInTheDocument()
+    await usuario.click(await within(navegacao).findByRole('link', { name: 'Registros' }))
+    await usuario.click(await screen.findByRole('radio', { name: 'Abertas' }))
     const item = (await screen.findByText('Janela sem trinco')).closest('li')!
     expect(within(item).getByText('Salvo no aparelho · aguardando envio')).toBeInTheDocument()
     expect(within(item).queryByRole('link', { name: /pendencias\// })).not.toBeInTheDocument()

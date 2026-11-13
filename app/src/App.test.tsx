@@ -57,16 +57,13 @@ describe('navegação com a fixture', () => {
     expect(screen.getByText(/Térreo/)).toBeInTheDocument()
   })
 
-  it('a barra inferior leva às Pendências (abertas, de todas as obras)', async () => {
-    const usuario = userEvent.setup()
-    renderizar()
+  it('a barra inferior só tem Início e Registros; /pendencias leva às abertas em Registros', async () => {
+    renderizar('/pendencias')
     const navegacao = await screen.findByRole('navigation', { name: 'Navegação principal' })
-    const item = await within(navegacao).findByRole('link', { name: 'Pendências' })
-    await usuario.click(item)
-    expect(await screen.findByRole('heading', { level: 1, name: 'Pendências' })).toBeInTheDocument()
-    expect(item).toHaveAttribute('aria-current', 'page')
-    expect(await screen.findByRole('tab', { name: 'Abertas (3)' })).toHaveAttribute('aria-selected', 'true')
-    expect(await screen.findAllByRole('link', { name: /Aberta/ })).toHaveLength(3)
+    expect(within(navegacao).queryByRole('link', { name: /Pendências/ })).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Registros' })).toBeInTheDocument()
+    expect(within(navegacao).getByRole('link', { name: 'Registros' })).toHaveAttribute('aria-current', 'page')
+    expect(await screen.findAllByRole('listitem')).toHaveLength(3)
   })
 
   it('endereço inexistente mostra a 404 com "Voltar ao início"', async () => {

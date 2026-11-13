@@ -181,6 +181,13 @@ export interface FiltroRegistros {
   ambienteCodigo?: string
   tipo?: TipoRegistro
   situacao?: SituacaoRegistro
+  /** Etapa da obra do registro. */
+  etapaId?: string
+  /** Id do autor. */
+  autorId?: string
+  /** Período de `capturado_em` (`AAAA-MM-DD`, fuso de Fortaleza); cada lado é opcional. */
+  de?: string
+  ate?: string
   limite?: number
 }
 
