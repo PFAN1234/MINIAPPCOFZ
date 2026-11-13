@@ -105,3 +105,31 @@ test('troca o nome e o logo da OM, que aparecem na barra do topo, e remove o log
   await expect(barra.getByRole('img')).toHaveCount(0)
   expect(erros).toEqual([])
 })
+
+test('boletins da etapa: estação do Observatório, lista, prévia e emissão manual', async ({ page, context }) => {
+  const erros: string[] = []
+  page.on('pageerror', (e) => erros.push(e.message))
+
+  await page.goto('/admin/etapas/2a-etapa')
+  await expect(page.getByRole('combobox', { name: 'Estação meteorológica' })).toHaveValue('8836')
+  await expect(page.getByRole('combobox', { name: 'Estação de reserva' })).toHaveValue('9281')
+
+  const boletins = page.getByRole('region', { name: 'Boletins' })
+  await expect(boletins.getByRole('table', { name: 'Boletins emitidos' }).getByRole('row')).toHaveCount(4)
+  await expect(boletins.getByRole('table', { name: 'Pedidos de emissão' })).toContainText('Tempo esgotado ao gerar o PDF')
+
+  // Prévia: abre uma aba nova com o PDF e deixa o link de reserva.
+  const [aba] = await Promise.all([context.waitForEvent('page'), boletins.getByRole('button', { name: 'Pré-visualizar' }).click()])
+  await expect(boletins.getByRole('link', { name: 'abrir a prévia' })).toHaveAttribute('href', /^blob:/)
+  await aba.close()
+
+  // Emitir agora: confirmação com o número e o pedido entra na fila.
+  await boletins.getByRole('button', { name: 'Emitir agora' }).click()
+  const dialogo = boletins.getByRole('alertdialog')
+  await expect(dialogo).toContainText(/Será emitido o boletim BA2\/\d{6}\/COFZ/)
+  await dialogo.getByRole('button', { name: /^Confirmar: emitir agora/ }).click()
+  await expect(boletins.getByText(/Pedido de emissão de BA2\/\d{6}\/COFZ enviado/)).toBeVisible()
+  await expect(boletins.getByRole('table', { name: 'Pedidos de emissão' })).toContainText('na fila')
+  await expect(boletins.getByRole('button', { name: 'Emitir agora' })).toBeDisabled()
+  expect(erros).toEqual([])
+})

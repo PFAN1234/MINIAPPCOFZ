@@ -1,12 +1,13 @@
 // PDF de exemplo do boletim (local): `npm run boletim:exemplo -- <pasta> [--sem-rede] [--previa]`.
 // Carrega app/servidor/boletim/exemplo.ts pelo módulo do Vite (TypeScript com imports `.js`).
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runnerImport } from 'vite'
 
 const raiz = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 const args = process.argv.slice(2)
-const saida = path.resolve(args.find((a) => !a.startsWith('--')) ?? path.join(raiz, 'boletim-exemplo'))
+const saida = path.resolve(args.find((a) => !a.startsWith('--')) ?? path.join(tmpdir(), 'boletim-exemplo'))
 const { module } = await runnerImport(path.join(raiz, 'servidor/boletim/exemplo.ts'), {
   configFile: false,
   root: raiz,

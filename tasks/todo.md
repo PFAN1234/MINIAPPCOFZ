@@ -277,9 +277,12 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [x] Página Pessoas no admin (nome de exibição).
 - [x] Nome de exibição no Mini App e nas publicações do Telegram (migration `20261114090000_nome_exibicao_mini_app.sql` aplicada no `miniappcofz-dev` em 2026-11-13, conferida por hash; `publish-outbox` versão 4 publicada).
 - [x] Cartão Observações do dia na página da obra (com fila offline e trava após a emissão).
-- [ ] Clima pelo Observatório de Fortaleza (decisões de 2026-11-13): por enquanto só a imagem da linha da estação Montese (reserva Benfica) na tabela "Últimas 24 horas", copiada na emissão, com fonte e horários; migration `estacao`/`estacao_reserva` (8836/9281) e lista fixa no cadastro da etapa.
-- [ ] Snapshot do dia: indicadores, serviços e pendências, com testes de banco (inclui fuso e lançamento tardio).
-- [ ] Template HTML, PDF, envio ao grupo da etapa no Telegram.
-- [ ] Agendamento por etapa, retificação e tela "Boletins" no Mini App.
+- [x] Clima pelo Observatório de Fortaleza: imagem da linha da estação Montese (reserva Benfica) na tabela "Últimas 24 horas", copiada na emissão, com fonte e horários; `estacao`/`estacao_reserva` (8836/9281) com lista fixa no cadastro da etapa.
+- [x] Migration `20261114120000_boletim_emissao.sql`: fila `boletim_emissao`, `boletim_snapshot` (indicadores, serviços, pendências, fuso, lançamentos tardios), agendamento por cron a cada 5 min, retificação, `admin_listar_boletins`/`admin_pedir_emissao` (575 testes de banco passando). **Não aplicada no banco remoto.**
+- [x] Gerador na Vercel (`app/api/gerar-boletim.ts`, `app/api/previa-boletim.ts`, `app/servidor/boletim/`): HTML no modelo da CO-FZ, PDF com Chromium, fotos reduzidas, upload ao bucket; `publish-outbox` envia o PDF ao grupo da etapa (Deno: 143 testes). **`publish-outbox` novo ainda não publicado.**
+- [x] Site: seção Boletins na página da etapa (emitidos, pedidos, pré-visualizar, emitir agora/retificação); Vitest 577, e2e 48.
+- [ ] Produção: aplicar a migration (conferir hashes), publicar o `publish-outbox`, criar no Vault `url_gerador_boletim` = `https://<domínio>/api/gerar-boletim`; na Vercel, `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (Production), Node ≥ 22.17, memória das funções ≥ 2 GB, novo deploy; conferir na Vercel real que o `includeFiles` leva o Chromium e testar uma prévia.
+- [ ] Retificação de dia antigo sai sem clima (o Observatório só cobre 24 h); avaliar reaproveitar a imagem do boletim anterior.
+- [ ] Botão para reenviar ao Telegram um boletim cuja publicação falhou.
 - [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
 - [ ] Externo: avisar o Observatório/IPPLAN do uso dos dados; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.

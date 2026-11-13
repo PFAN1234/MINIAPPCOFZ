@@ -21,7 +21,7 @@ export interface OpcoesClima {
   tempoMaximoMs?: number
   idadeMaximaMin?: number
   /** Antes de abrir a página (os testes servem a cópia gravada por `context.route`). */
-  preparar?: (contexto: BrowserContext) => Promise<void>
+  preparar?: (contexto: BrowserContext) => Promise<unknown>
 }
 
 export interface ResultadoClima {
