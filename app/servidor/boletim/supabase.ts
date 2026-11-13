@@ -4,7 +4,7 @@
  * Variáveis: `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (ver app/.env.example).
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import type { PedidoReivindicado, Snapshot } from './tipos.js'
+import type { ClimaComDados, PedidoReivindicado, Snapshot } from './tipos.js'
 
 export interface Configuracao {
   url: string
@@ -27,6 +27,8 @@ export interface FonteBoletim {
   snapshot(etapaId: string, data: string): Promise<Snapshot>
   concluir(id: number, snapshot: Snapshot, pdfPath: string): Promise<{ boletim_id: string; numero: string }>
   falhar(id: number, erro: string): Promise<void>
+  /** Clima do boletim de maior revisão da data que tem imagem copiada (null se não houver). */
+  climaAnterior(etapaId: string, data: string): Promise<{ numero: string; clima: ClimaComDados } | null>
   baixar(bucket: string, caminho: string): Promise<Uint8Array>
   enviar(bucket: string, caminho: string, bytes: Uint8Array, tipo: string): Promise<void>
 }
@@ -84,6 +86,16 @@ export function criarFonteSupabase(c: Configuracao): FonteBoletim {
     },
     async falhar(id, erro) {
       await chamar(cliente, 'falhar_emissao', { p_id: id, p_erro: erro.slice(0, 2000) })
+    },
+    async climaAnterior(etapaId, data) {
+      const r = await chamar<{ numero?: unknown; clima?: Partial<ClimaComDados> & { indisponivel?: unknown } } | null>(
+        cliente,
+        'boletim_clima_anterior',
+        { p_etapa: etapaId, p_data: data },
+      )
+      const c = r?.clima
+      if (!r || !c || c.indisponivel || typeof c.imagem_path !== 'string' || !c.imagem_path || typeof r.numero !== 'string') return null
+      return { numero: r.numero, clima: c as ClimaComDados }
     },
     async baixar(bucket, caminho) {
       const { data, error } = await cliente.storage.from(bucket).download(caminho)

@@ -52,7 +52,8 @@ export const FOLGA_CLIMA_HORAS = 6
 
 /**
  * A tabela do Observatório mostra só as 24 horas até a cópia: serve para o boletim do dia (ou do
- * dia anterior até as 6 h, quando a emissão atrasa). Retificação de dia antigo sai sem clima.
+ * dia anterior até as 6 h, quando a emissão atrasa). Em dia antigo (retificação), o gerador reaproveita
+ * o clima do boletim anterior do mesmo dia, se houver (`reaproveitarClima`); sem ele, sai sem clima.
  */
 export function climaCabeNoDia(data: string, agora: Date, fuso: string): boolean {
   const hoje = partesNoFuso(agora, fuso)
@@ -62,9 +63,33 @@ export function climaCabeNoDia(data: string, agora: Date, fuso: string): boolean
   return data === `${ontem.ano}-${ontem.mes}-${ontem.dia}` && Number(hoje.hora) < FOLGA_CLIMA_HORAS
 }
 
-/** Monta o PDF de um snapshot (`numero` null = prévia). */
+const MOTIVO_DIA_ANTIGO = 'boletim de data anterior; o Observatório só mostra as últimas 24 horas'
+
+/**
+ * Clima de dia antigo: copia o do boletim anterior da mesma etapa e data (imagem baixada do bucket;
+ * `imagem_path` volta nulo, pois a cópia ganha arquivo próprio na emissão). Falha na consulta ou no
+ * download não derruba a emissão: registra no log e segue sem clima.
+ */
+async function reaproveitarClima(fonte: Pick<FonteBoletim, 'baixar' | 'climaAnterior'>, snapshot: Snapshot, deps: Dependencias): Promise<ResultadoClima> {
+  try {
+    const anterior = await fonte.climaAnterior(snapshot.etapa.id, snapshot.data)
+    if (!anterior) {
+      return { clima: { indisponivel: true, motivo: `${MOTIVO_DIA_ANTIGO} e nenhum boletim desse dia tem o clima copiado` }, imagem: null }
+    }
+    const imagem = await fonte.baixar(BUCKET_BOLETINS, anterior.clima.imagem_path ?? '')
+    return { clima: { ...anterior.clima, imagem_path: null, reaproveitado_de: anterior.numero }, imagem: Buffer.from(imagem) }
+  } catch (e) {
+    deps.log(`Clima do boletim anterior não reaproveitado: ${e instanceof Error ? e.message : String(e)}`)
+    return { clima: { indisponivel: true, motivo: MOTIVO_DIA_ANTIGO }, imagem: null }
+  }
+}
+
+/**
+ * Monta o PDF de um snapshot (`numero` null = prévia). Clima: captura do Observatório quando cabe no
+ * dia; em dia antigo, reaproveita o do boletim anterior do mesmo dia (ou sai indisponível).
+ */
 export async function montarBoletim(
-  fonte: Pick<FonteBoletim, 'baixar'>,
+  fonte: Pick<FonteBoletim, 'baixar' | 'climaAnterior'>,
   navegador: Browser,
   snapshot: Snapshot,
   o: { numero: string | null; revisao: number; deps: Dependencias },
@@ -74,10 +99,7 @@ export async function montarBoletim(
   const [clima, fotos, logo] = await Promise.all([
     climaCabeNoDia(snapshot.data, emitidoEm, snapshot.fuso)
       ? deps.capturarClima(navegador, { principal: snapshot.etapa.estacao, reserva: snapshot.etapa.estacao_reserva, agora: () => emitidoEm })
-      : Promise.resolve<ResultadoClima>({
-          clima: { indisponivel: true, motivo: 'boletim de data anterior; o Observatório só mostra as últimas 24 horas' },
-          imagem: null,
-        }),
+      : reaproveitarClima(fonte, snapshot, deps),
     prepararFotos(caminhosDasFotos(snapshot), (c) => fonte.baixar(BUCKET_FOTOS, c), { aviso: deps.log }),
     snapshot.organizacao.logo_path
       ? fonte

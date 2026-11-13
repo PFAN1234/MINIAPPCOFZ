@@ -274,8 +274,12 @@ Regras: dia = `[data 00:00, data+1 00:00)` no fuso da etapa, por `registro.captu
 - `admin_listar_boletins` passa a trazer, em cada boletim, `publicacao_erro` e `publicacao_tentativas` (0 sem linha).
 - `boletim_clima_anterior(p_etapa, p_data) → {numero, revisao, clima} | null` (só `service_role`, para o gerador):
   o boletim de maior revisão da data cujo `snapshot->'clima'->>'imagem_path'` não é nulo; `clima` é o
-  `snapshot->'clima'`. Climas indisponíveis são ignorados. O uso no gerador (retificação reaproveitar o clima) é
-  descrito na parte B.
+  `snapshot->'clima'`. Climas indisponíveis são ignorados. No gerador, quando a data não cabe nas
+  últimas 24 horas do Observatório (`climaCabeNoDia` falso), `montarBoletim` consulta a RPC, baixa a imagem
+  de `boletins/<imagem_path>` e usa o clima com `reaproveitado_de` (número do boletim de origem) e
+  `imagem_path` nulo; a emissão envia a cópia para `<etapa>/<numero>-clima.png` e grava o novo caminho. A
+  legenda do PDF cita o boletim de origem. Sem anterior, ou com falha na consulta/download (só registrada no
+  log), o clima sai indisponível. A prévia também reaproveita.
 
 ## Gerador (Vercel, em `app/`)
 
