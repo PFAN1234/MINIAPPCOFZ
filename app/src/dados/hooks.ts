@@ -282,3 +282,35 @@ export function useAlterarObservacao(obraId: string) {
     onSettled: () => qc.invalidateQueries({ queryKey: ['observacoes', obraId] }),
   })
 }
+
+/** Aba Relatórios. Reconsulta a cada 10 s enquanto alguma etapa tiver emissão pendente ou gerando. */
+export function useRelatorios() {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['relatorios'],
+    queryFn: () => repo.relatorios(),
+    refetchInterval: (consulta) => {
+      const etapas = consulta.state.data?.etapas ?? []
+      const emAndamento = etapas.some((e) => e.pedido_hoje?.estado === 'pendente' || e.pedido_hoje?.estado === 'gerando')
+      return emAndamento ? 10_000 : false
+    },
+  })
+}
+
+export function useEmitirBoletim() {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ slug, data }: { slug: string; data: string }) => repo.emitirBoletim(slug, data),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['relatorios'] }),
+  })
+}
+
+export function useExcluirBoletim() {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => repo.excluirBoletim(id),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['relatorios'] }),
+  })
+}

@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
 import { NavLink } from 'react-router'
-import { IconeCasa, IconeLista } from './Icones.tsx'
+import { IconeCasa, IconeDocumento, IconeLista } from './Icones.tsx'
 
 interface Item {
   para: string
@@ -12,6 +12,7 @@ interface Item {
 const ITENS: Item[] = [
   { para: '/', rotulo: 'Início', fim: true, Icone: IconeCasa },
   { para: '/registros', rotulo: 'Registros', fim: false, Icone: IconeLista },
+  { para: '/relatorios', rotulo: 'Relatórios', fim: false, Icone: IconeDocumento },
 ]
 
 /** Abas fixas no rodapé. O item da tela atual leva `aria-current="page"` (posto pelo NavLink). */
