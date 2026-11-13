@@ -11,7 +11,8 @@ test-results/
 playwright-report/
 
 # Setup local de assistentes de IA, agentes e enxames (swarms)
-.claude/
+.claude/*
+!.claude/agents/
 .claude-flow/
 .swarm/
 .gemini/

@@ -23,6 +23,10 @@ A cota de uso é limitada e compartilhada entre a conversa principal e os subage
 
 ### Subagentes
 
+- Usar os agentes do projeto (`.claude/agents/`), que já fixam modelo, esforço e limite de passos:
+  - `implementador` (Sonnet, esforço médio, até 50 passos, em cópia própria do repositório): código, testes e documentação guiados por contrato. Fazer commit antes de chamá-lo, porque ele só vê o que está em commit; no fim, revisar o commit dele e juntar ao branch de trabalho.
+  - `conferente` (Haiku, esforço baixo, até 25 passos, sem editar arquivos): buscas, rodar suítes e lint, conferências mecânicas.
+  - Tarefa que não caiba em 50 passos: dividir em partes e chamar um implementador por vez.
 - Rodar um subagente pesado por vez. Dois em paralelo só quando as tarefas forem pequenas e independentes.
 - Definir o modelo de cada subagente: Sonnet 5.5 para implementação guiada por contrato, testes e documentação; Haiku 5.5 para buscas e conferências mecânicas. Opus ou superior só para planejamento, arquitetura e revisão final.
 - Dar a cada subagente um escopo fechado, que caiba em uma sessão curta: os arquivos que ele pode tocar, o trecho do contrato que vale para ele (copiado no prompt, em vez de mandar ler o documento inteiro) e o critério de pronto.
