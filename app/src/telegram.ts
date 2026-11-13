@@ -44,6 +44,12 @@ export interface TelegramWebApp {
   setBackgroundColor?(cor: string): void
   /** Cor da barra inferior do Telegram (7.10+). */
   setBottomBarColor?(cor: string): void
+  /** Plataforma do cliente: 'ios', 'android', 'android_x', 'tdesktop', 'macos', 'weba', 'webk'... */
+  platform?: string
+  /** Impede que arrastar para baixo feche ou minimize o Mini App (7.7+). */
+  disableVerticalSwipes?(): void
+  /** Ocupa a tela inteira, sem o cabeçalho do Telegram (8.0+). */
+  requestFullscreen?(): void
 }
 
 declare global {
@@ -74,6 +80,31 @@ export function ready(): void {
 /** Expande o Mini App para a altura máxima. */
 export function expand(): void {
   webApp()?.expand()
+}
+
+/** Plataformas em que o app abre em tela cheia (no computador, tela cheia tomaria o monitor todo). */
+const PLATAFORMAS_CELULAR = new Set(['ios', 'android', 'android_x'])
+
+/** Chama um método do cliente só se a versão aceitar; erro do cliente não derruba o app. */
+function pedirSeAceitar(app: TelegramWebApp, versaoMinima: string, metodo: (() => void) | undefined) {
+  try {
+    if (typeof metodo !== 'function' || typeof app.isVersionAtLeast !== 'function') return
+    if (!app.isVersionAtLeast(versaoMinima)) return
+    metodo.call(app)
+  } catch {
+    /* cliente antigo ou fora do Telegram: fica o comportamento padrão */
+  }
+}
+
+/**
+ * Trava o arrasto para baixo (só rola a página; fechar fica no X) e, no celular, abre em tela cheia.
+ * O espaço da barra de status e dos botões flutuantes do Telegram vem em `--seguro-topo` (tokens.css).
+ */
+export function telaCheia(): void {
+  const app = webApp()
+  if (!app) return
+  pedirSeAceitar(app, '7.7', app.disableVerticalSwipes)
+  if (PLATAFORMAS_CELULAR.has(app.platform ?? '')) pedirSeAceitar(app, '8.0', app.requestFullscreen)
 }
 
 /** Cores que o app pede ao Telegram (as mesmas de `estilo/tokens.css`: --azul, --fundo, --superficie). */
