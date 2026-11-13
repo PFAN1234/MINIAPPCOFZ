@@ -202,3 +202,76 @@ Em todo lugar onde o Mini App ou o bot mostram o nome de uma pessoa:
 - Deno (`supabase/functions/publish-outbox`): mensagens com nome de exibição e com fallback para o nome do Telegram.
 - Vitest: cartão (lista, adicionar, editar, excluir, travada, sem sinal), fila com observação, nome de exibição nas telas.
 - Playwright (fixture, viewport de celular): adicionar observação online; offline → salvar → voltar o sinal → enviada sem duplicar.
+
+---
+
+# Parte 3: geração, emissão e envio do boletim
+
+Decisões de 2026-11-13: emissão automática no horário da etapa, retificação pelo site; clima = imagem da linha da estação na tabela "Últimas 24 horas" do Observatório de Fortaleza (Montese `8836`, reserva Benfica `9281`), copiada na emissão. Prévia visual em `docs/mockups/boletim-diario-v2.pdf` (o layout do PDF segue a prévia; a seção de clima passa a ser a imagem copiada com a legenda da fonte).
+
+## Fluxo
+
+1. **Agendamento (banco):** pg_cron a cada 5 min chama `privado.agendar_boletins()`. Para cada etapa ativa com sigla, quando a hora local (fuso da etapa) passou de `boletim_horario` e ainda não há boletim nem pedido de emissão para a data local de hoje, cria um pedido em `boletim_emissao` e chama o gerador (`privado.disparar_gerador()`, igual a `disparar_publicacao`: `net.http_post` para o segredo do Vault `url_gerador_boletim` com o cabeçalho `x-segredo-interno`; sem o segredo no Vault, não faz nada). Pedidos pendentes com `proxima_tentativa` vencida também disparam o gerador.
+2. **Gerador (Vercel, `app/api/gerar-boletim.ts`):** confere `x-segredo-interno` (lê o segredo pela RPC `segredo_interno` com a chave secreta, como `supabase/functions/_shared/segredo.ts`), reivindica pedidos (`reivindicar_emissoes`), e para cada um: lê o snapshot (`boletim_snapshot`), copia o clima, baixa e reduz as fotos, monta o HTML, gera o PDF, envia PDF e imagem do clima ao bucket `boletins` e chama `concluir_emissao` (grava o boletim e enfileira o envio ao Telegram). Erro → `falhar_emissao` (nova tentativa com espera crescente: 5, 10, 20, 40 min…, até 8 tentativas; depois `falhou`, visível no site).
+3. **Telegram (`publish-outbox`):** publicação de boletim → `sendDocument` (o PDF) no grupo da etapa (`etapa.telegram_chat_id`, tópico Geral, sem `message_thread_id`), legenda `📄 <b>Boletim BA2/261113/COFZ</b>\n2ª ETAPA · 13/11/2026` (+ `· retificação R1` quando for o caso). Etapa sem grupo → espera, como obra sem tópico.
+
+## Banco (migration `supabase/migrations/20261114120000_boletim_emissao.sql`; testes `tests/db/test_boletim_emissao.py`)
+
+**Estações do Observatório:** `etapa.inmet_estacao`/`inmet_estacao_reserva` passam a `estacao`/`estacao_reserva`, texto `^[0-9]{3,6}$` (diferentes entre si); a `2a-etapa` recebe `8836`/`9281`; na criação, se não vierem, assumem `8836`/`9281`. `admin_salvar_etapa`, `admin_obter_etapa`, `etapa_faltando` (`estacao` no lugar de `inmet_estacao`) e o retorno passam a usar os nomes novos. Saem `public.inmet_estacao`, `admin_sugerir_estacoes` e `clima_dia` (sem uso). Lista fixa das estações (só no site): 3318 Dom Lustosa, 8642 Centro, 8836 Montese, 8869 Vila Velha, 9134 Conjunto Esperança, 9137 Mucuripe, 9169 Messejana, 9242 Guararapes, 9249 Jangurussu, 9281 Benfica, 9282 Granja Lisboa.
+
+**`boletim_emissao`** (fila): `id bigint identity pk, etapa_id → etapa (cascade), data date, revisao int, estado text ('pendente'|'gerando'|'emitido'|'falhou'), tentativas int default 0, proxima_tentativa timestamptz default now(), erro text, pedido_por uuid → usuario (null = automático), criado_em, atualizado_em, boletim_id uuid → boletim (null até emitir); unique (etapa_id, data, revisao)`. Sem acesso direto; leitura pelas RPCs do site.
+
+**RPCs do gerador (service_role):**
+- `reivindicar_emissoes(p_limite int default 3)` → `[{id, etapa_id, data, revisao, numero}]`: pega pendentes com `proxima_tentativa <= now()` (`for update skip locked`), passa a `gerando`, soma 1 em `tentativas`; `numero = numero_boletim(etapa, data, revisao)`. Pedido em `gerando` há mais de 15 min volta a ser reivindicável.
+- `boletim_snapshot(p_etapa uuid, p_data date)` → jsonb (formato abaixo). Também `admin_boletim_snapshot(p_slug text, p_data date)` (admin) para a prévia.
+- `concluir_emissao(p_id bigint, p_snapshot jsonb, p_pdf_path text)` → `{boletim_id, numero}`: insere `boletim` (número, revisão, snapshot com o clima, `pdf_path`, `emitido_por = pedido_por`), marca o pedido `emitido`, enfileira a publicação do boletim e chama `disparar_publicacao`. Idempotente (pedido já emitido → devolve o boletim existente).
+- `falhar_emissao(p_id bigint, p_erro text)` → reagenda ou marca `falhou` (8 tentativas).
+
+**`publicacao_telegram`** ganha `boletim_id uuid → boletim (cascade)` (e o `check` de "registro ou encerramento" passa a aceitar boletim; `obra_id` pode ser null quando for boletim — ajustar o que depender disso, inclusive `reivindicar_publicacoes`, que passa a devolver `boletim_id`).
+
+**RPCs do site (admin):**
+- `admin_listar_boletins(p_slug text)` → `[{id, data, revisao, numero, emitido_em, emitido_por_nome, pdf_path, publicado: bool}]` e `pedidos: [{id, data, revisao, estado, tentativas, erro, atualizado_em}]` (os não emitidos), mais recentes primeiro.
+- `admin_pedir_emissao(p_slug text, p_data date)` → cria pedido manual (`pedido_por = auth.uid()`): sem boletim na data → revisão 0; com boletim → retificação (revisão = maior + 1). Data no futuro → 22023; pedido pendente/gerando para a mesma data → 23505. Dispara o gerador.
+- Bucket `boletins`: admin já lê (parte 1); o site abre o PDF por URL assinada.
+
+**Snapshot** (`boletim_snapshot`, datas no fuso da etapa; instantes em ISO; nomes por `privado.nome_pessoa`):
+```
+{ "versao": 1, "data": "2026-11-13", "fuso": "America/Fortaleza",
+  "organizacao": {"nome", "cabecalho": [..], "logo_path"},
+  "etapa": {<campos de admin_obter_etapa exceto aditivos/faltando>, "aditivos": [..],
+            "prazo": {.., "dias_decorridos", "dias_totais", "percentual", "dias_restantes"}},
+  "responsaveis": [{"nome", "funcao"}],
+  "indicadores": {
+    "pendencias": {"abertas_inicio", "abertas_no_dia", "encerradas_no_dia", "abertas_fim",
+                   "total_abertas", "total_encerradas", "taxa_resolucao", "mais_7", "mais_15", "mais_30",
+                   "tempo_medio_resolucao_dias"},
+    "atividade": {"registros_servico", "fotos", "ambientes", "pessoas"},
+    "por_obra": [{"obra", "servicos", "abertas_no_dia", "encerradas_no_dia", "abertas_fim", "mais_15"}] },
+  "obras": [{"id", "nome", "slug",
+     "servicos": [{"id", "pavimento", "ambiente", "hora", "autor", "legenda", "fotos": [{"path", "largura", "altura"}]}],
+     "pendencias_abertas": [ mesmo formato ],
+     "pendencias_encerradas": [{"id", "pavimento", "ambiente", "aberta_em", "dias_aberta", "legenda",
+         "fotos_registro": [..], "encerramento": {"hora", "autor", "observacao", "fotos": [..]}}],
+     "observacoes": [{"hora", "autor", "texto", "editada": bool}] }],
+  "tardios": [{"tipo": "servico|pendencia|encerramento|observacao", "data", "obra", "ambiente", "autor", "texto"}],
+  "clima": null }
+```
+Regras: dia = `[data 00:00, data+1 00:00)` no fuso da etapa, por `registro.capturado_em`, `encerramento.encerrado_em` e `observacao.data`. "Abertas no início/fim" pelas datas (não pela `situacao` atual). Envelhecimento sobre as abertas no fim do dia. Tempo médio de resolução sobre todos os encerramentos até o fim do dia. Ordem: obra (`ordem`, nome), pavimento, ambiente, hora. "Tardios": lançamentos de dias anteriores recebidos depois da emissão do boletim daquele dia e ainda não listados em outro boletim. O gerador preenche `clima`: `{"fonte": "Observatório de Riscos Climáticos de Fortaleza (Prefeitura de Fortaleza)", "estacao": {"codigo", "nome"}, "leitura": "há 12 min"|"HH:MM", "copiado_em", "imagem_path"}` ou `{"indisponivel": true, "motivo"}`.
+
+**Agendamento:** `cron.schedule('agendar-boletins', '*/5 * * * *', ...)` (mesmo padrão do `publish-outbox`). Segredo novo no Vault: `url_gerador_boletim` (URL completa do gerador; criado na aplicação, não na migration).
+
+**`publish-outbox`** (`supabase/functions/publish-outbox/`): trata publicação com `boletim_id` (baixa o PDF de `boletins`, `sendDocument` com a legenda acima; resposta e erros como as demais publicações). Testes Deno.
+
+## Gerador (Vercel, em `app/`)
+
+- Funções Node em `app/api/`: `gerar-boletim.ts` (POST, segredo interno; processa a fila) e `previa-boletim.ts` (GET `?etapa=<slug>&data=AAAA-MM-DD`, cabeçalho `Authorization: Bearer <JWT do admin>`; confere `sou_admin` com o JWT; devolve o PDF com a marca "PRÉVIA — sem número" e sem gravar nada). Código compartilhado em `app/servidor/boletim/` (fora do bundle do Vite): `template.ts` (HTML/CSS do boletim a partir do snapshot, no layout da prévia v2, fonte Liberation/Times, A4, rodapé com número e paginação), `clima.ts` (captura), `fotos.ts` (download pelo Storage com a chave secreta e redução para 1000 px no lado maior, JPEG ~75%, embutidas no HTML), `pdf.ts` (Chromium headless: `@sparticuz/chromium` + `playwright-core` na Vercel; Chromium local nos testes).
+- **Captura do clima** (`clima.ts`): abre `https://observatorio.fortaleza.ce.gov.br/riscos-climaticos/estacoes-meteorologicas` (locale `pt-BR`, fuso `America/Fortaleza`, 1280 px), espera a tabela "Últimas 24 horas", localiza a linha `tr` que contém `button.est-tabela-estacao[data-estacao="<codigo>"]` (a última tabela que tiver essa linha) e tira a imagem só dela (escala 2). Lê "há N min" da linha; mais de 180 min, linha ausente ou erro → tenta a reserva; sem nenhuma → `{indisponivel: true, motivo}`. Tempo máximo total de 40 s.
+- **Configuração da Vercel** (`app/vercel.json`): `functions` com memória e `maxDuration` suficientes (Chromium); as rotas `/api/*` não podem cair nos `rewrites` do SPA. Variáveis de ambiente (sem valores no Git; documentar em `app/.env.example`): `SUPABASE_URL`, `SUPABASE_SECRET_KEY`.
+- **Site de administração:** na página da etapa, a estação vira um seletor com a lista fixa (principal e reserva); seção **Boletins** (`/etapas/:slug/boletins` ou seção na página): lista dos emitidos (número, data, emitido em, por, publicado no Telegram, botão "Abrir PDF" por URL assinada), pedidos pendentes/com falha (com o erro), "Pré-visualizar" (escolhe a data; abre o PDF da prévia) e "Emitir agora / Emitir retificação" para uma data (confirmação explicando número e envio ao grupo). `RepositorioAdmin`: `listarBoletins`, `pedirEmissao`, `urlPdfBoletim`, `previaBoletim`; fixture.
+
+## Verificação
+
+- `pytest -q tests/db`: snapshot com um dia montado (serviços, pendências abertas e encerradas, observações, tardios, fuso), indicadores, fila (reivindicar, concluir idempotente, falhar com espera e limite), agendamento (antes/depois do horário, sem sigla, já emitido), pedido manual e retificação, publicação de boletim na fila.
+- Deno: `publish-outbox` envia documento ao grupo da etapa.
+- Vitest: template com um snapshot de exemplo (cabeçalho, número, seções, clima indisponível); captura com uma cópia reduzida da página gravada nos testes (linha certa, leitura antiga → reserva, ausente → indisponível); telas do site.
+- Gerar localmente um PDF de exemplo a partir de um snapshot de teste e da captura real da página (Chromium pré-instalado) e conferir visualmente.
