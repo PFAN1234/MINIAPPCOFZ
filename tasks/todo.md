@@ -225,3 +225,14 @@ Plano: `tasks/plano-visual.md` (decisões de 2026-11-12). Prancha de design com 
 - [ ] V5. Conferência com a prancha, contraste e toque, teste no Telegram real (Android e iPhone), limpeza do CSS antigo.
 
 Verificação: em cada fase, typecheck, lint, Vitest e e2e verdes e capturas 390×844 (Mini App) e 1440×900 (admin) comparadas com a prancha.
+
+## Organização de pastas e consolidação do repositório
+
+Plano: `tasks/plano-organizacao-pastas.md` (decisões de 2026-11-12; registrado em `docs/ROADMAP.md`).
+
+- [ ] Fase 1: mover `Screenshot 2026-11-06 *.png` da raiz para `docs/mockups/referencias/` e atualizar `README.md` e `docs/mockups/README.md`.
+- [ ] Fase 2: padronizar `DOCS COFZ/` e `DOCS HTO/` (e `public/ifc/`) → `obras/<slug>/`, atualizar `.gitignore`, `data/*/obra.json`, re-executar o pipeline Python (`extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `importar_config_obras.py`) e atualizar `app/e2e/planta.spec.ts` e scripts/docs.
+- [ ] Fase 3: atualizar o `README.md` raiz para refletir o estado atual do projeto.
+- [ ] Fase 4 (após estabilização das entregas de UI): organizar `app/src/` em `miniapp/` e `shared/` (mantendo `admin/` isolado) e validar `precache-manifest.json`.
+
+Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests/db`, `pytest -q tests/db`, Deno (`fmt`/`lint`/`check`/`test`) e `app/` (`typecheck`, `lint`, `test`, `build`, `build:fixture`, `test:e2e`) verdes.

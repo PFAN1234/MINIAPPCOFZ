@@ -55,6 +55,7 @@ flowchart LR
 | **7. Gestão & Pendências** | Encerramento de pendência por gestor com foto réplica, gestão de acessos. | **Concluído (85%)** | Homologar encerramento e aprovação no grupo de teste. |
 | **Multi-Obras (COFZ)** | Pipeline parametrizado (`--obra`), 19 ambientes extraídos, seed gerado. | **Concluído (90%)** | Revisão humana de `prova.png` e vínculo do tópico. |
 | **8. Piloto Assistido** | Testes de campo com equipe real, Android/iOS, rotinas de backup. | **Pendente** | Depende das fases 6 e 7 homologadas. |
+| **Organização de Pastas** | Limpeza da raiz, padronização `DOCS *` → `obras/<slug>/`, `README.md` e `app/src/` (`miniapp/` + `shared/`). | **Planejado** | Executar fases 1–4 de `tasks/plano-organizacao-pastas.md`. |
 | **9. Modelo Federado BIM** | Visualizador 3D Three.js, recortes GLB, integração 2D/3D IfcSpace. | **Planejado (Fase Final)** | Diagnósticos geométricos prontos em `artifacts/validation/`. |
 
 ---
@@ -86,6 +87,7 @@ flowchart TD
 
     subgraph M4["Marco 4: Escala Multi-Obras & Governança (Médio Prazo)"]
         AUTO["Esteira Automatizada de Onboarding de Obras"]
+        ORG["Organização de Pastas & Consolidação do Repo"]
         DASH["Dashboard de Indicadores & Gestão Corporativa"]
     end
 
@@ -170,7 +172,11 @@ flowchart TD
        python3 scripts/publicar_plantas.py --obra <slug>
        ```
      - Rito padronizado de validação de provas visuais e homologação de nomes operacionais antes da liberação do seed.
-  2. **Dashboard de Indicadores & Gestão:**
+  2. **Organização de Pastas e Consolidação do Repositório (`tasks/plano-organizacao-pastas.md`):**
+     - Limpeza da raiz (`Screenshot*.png` → `docs/mockups/referencias/`).
+     - Padronização de `DOCS COFZ/` e `DOCS HTO/` → `obras/<slug>/` (sem espaços/maiúsculas), com regeneração dos seeds/manifestos e atualização de E2E/scripts.
+     - Atualização do `README.md` raiz e separação interna de `app/src/` em `miniapp/` e `shared/` (mantendo `admin/` isolado).
+  3. **Dashboard de Indicadores & Gestão:**
      - Painel web gerencial para diretoria técnica: volume de pendências por obra, tempo médio até resolução e mapas de calor de ambientes mais demandados.
      - Gestão centralizada de solicitações de acesso e relatórios de auditoria.
 
@@ -215,3 +221,4 @@ flowchart TD
 4. [ ] **Configuração do Webhook Telegram:** Apontar o webhook do `@diarioobra_cofz_bot` para a Edge Function correspondente.
 5. [ ] **Vincular Tópico no Grupo de Homologação:** Executar `/vincular_obra hto` no tópico HTO e `/fixar_botao` no Geral.
 6. [ ] **Executar Teste Operacional Completo:** Validar autenticação, novo registro com foto, modo offline e encerramento de pendência.
+7. [ ] **Organização de Pastas (Fases 1–3 de `tasks/plano-organizacao-pastas.md`):** Mover capturas da raiz, padronizar `DOCS *` → `obras/<slug>/` com regeneração do pipeline/E2E e atualizar o `README.md`.
