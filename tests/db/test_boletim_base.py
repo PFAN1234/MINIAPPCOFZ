@@ -1,10 +1,12 @@
 """Testes da migration da base do boletim (20261113150000_boletim_base.sql).
 
+Com a parte 3 (20261114120000_boletim_emissao.sql), as estações do INMET viram as do Observatório
+(`estacao`/`estacao_reserva`) e saem `inmet_estacao`, `clima_dia` e `admin_sugerir_estacoes`.
+
 Contrato: docs/contrato-boletim.md ("Banco"). Cada cenário tem uma etapa própria (`c.etapa`, sem
 sigla) com as obras A (gestor_a, equipe_a) e B (gestor_b); `sem_obra` vira admin quando preciso.
 """
 import json
-import math
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
@@ -20,23 +22,22 @@ CABECALHO = ['COMANDO DA AERONÁUTICA', 'DIRETORIA DE INFRAESTRUTURA DA AERONÁU
              'COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)']
 LOCALIZACAO = {'latitude': -3.761, 'longitude': -38.5297, 'fuso': 'America/Fortaleza'}
 CONTRATO = {
-    'endereco': 'Av. Borges de Melo, s/n', 'inmet_estacao': 'A305', 'inmet_estacao_reserva': 'A356',
+    'endereco': 'Av. Borges de Melo, s/n', 'estacao': '8836', 'estacao_reserva': '9281',
     'boletim_horario': '22:15', 'objeto': 'Construção do campus', 'local': 'Fortaleza\nCE',
     'contratante': 'COMAER', 'contrato': '120/2025 - SOP', 'contratada': 'Construtora X',
     'contratada_cnpj': '12.345.678/0001-90', 'os_numero': 'OS 01', 'os_data': '2025-01-31',
     'vigencia_meses': 13, 'valor_original': 79499000, 'area_construida_m2': 86102.17,
 }
-FALTANDO_TODOS = ['sigla', 'localizacao', 'inmet_estacao', 'objeto', 'local', 'contratante', 'contrato',
+FALTANDO_TODOS = ['sigla', 'localizacao', 'estacao', 'objeto', 'local', 'contratante', 'contrato',
                   'contratada', 'contratada_cnpj', 'os_numero', 'os_data', 'vigencia_meses', 'valor_original',
                   'area_construida_m2', 'responsaveis']
 
 
 @pytest.fixture(autouse=True)
 def limpo(dsn):
-    """O banco é compartilhado na sessão: cada teste começa sem admins e sem estações."""
+    """O banco é compartilhado na sessão: cada teste começa sem admins."""
     with sessao(dsn, papel=None) as cur:
         cur.execute('delete from public.admin_app')
-        cur.execute('delete from public.inmet_estacao')
 
 
 def sql(c, comando, params=(), papel='authenticated', usuario=None):
@@ -116,7 +117,7 @@ def test_migracao_completa_a_2a_etapa_e_a_organizacao(cenario):
 @pytest.mark.parametrize('coluna,valor', [
     ('sigla', 'ab'), ('sigla', 'A' * 11), ('sigla', ''), ('sigla', 'A-1'),
     ('endereco', 'x' * 301), ('latitude', 7), ('longitude', -20), ('fuso', 'Europe/Lisbon'),
-    ('inmet_estacao', 'a305'), ('inmet_estacao_reserva', 'A30'), ('objeto', 'x' * 601), ('local', 'x' * 301),
+    ('estacao', 'A305'), ('estacao_reserva', '12'), ('objeto', 'x' * 601), ('local', 'x' * 301),
     ('contratante', 'x' * 201), ('contrato', 'x' * 61), ('contratada', 'x' * 201),
     ('contratada_cnpj', '12345678000190'), ('os_numero', 'x' * 41), ('vigencia_meses', 0),
     ('vigencia_meses', 241), ('valor_original', -1), ('area_construida_m2', 0),
@@ -133,7 +134,7 @@ def test_coordenadas_juntas_estacoes_diferentes_e_sigla_unica(cenario):
     with pytest.raises(errors.CheckViolation):
         su(c, 'update public.etapa set latitude = -3.7 where id = %s', (c.etapa,))
     with pytest.raises(errors.CheckViolation):
-        su(c, "update public.etapa set inmet_estacao = 'A305', inmet_estacao_reserva = 'A305' where id = %s",
+        su(c, "update public.etapa set estacao = '8836', estacao_reserva = '8836' where id = %s",
            (c.etapa,))
     with pytest.raises(errors.NotNullViolation):
         su(c, 'update public.etapa set fuso = null where id = %s', (c.etapa,))
@@ -244,12 +245,13 @@ def test_criar_etapa_completa_e_obter(cenario):
                           'termino_atual': '2026-02-28', 'valor_atual': 79499000.00}
     assert set(e) == {
         'id', 'slug', 'nome', 'ordem', 'arquivada_em', 'telegram_vinculado', 'telegram_chat_titulo', 'sigla',
-        'endereco', 'latitude', 'longitude', 'fuso', 'inmet_estacao', 'inmet_estacao_reserva', 'boletim_horario',
+        'endereco', 'latitude', 'longitude', 'fuso', 'estacao', 'estacao_reserva', 'boletim_horario',
         'objeto', 'local', 'contratante', 'contrato', 'contratada', 'contratada_cnpj', 'os_numero', 'os_data',
         'vigencia_meses', 'valor_original', 'area_construida_m2', 'aditivos', 'responsaveis', 'prazo', 'faltando'}
-    # só com os obrigatórios: horário padrão, sem prazo, falta o resto
+    # só com os obrigatórios: horário e estações padrão, sem prazo, falta o resto
     m = criar_etapa(c)
-    assert (m['boletim_horario'], m['prazo'], m['faltando']) == ('23:30', None, FALTANDO_TODOS[2:])
+    assert (m['boletim_horario'], m['prazo'], m['faltando']) == ('23:30', None, FALTANDO_TODOS[3:])
+    assert (m['estacao'], m['estacao_reserva']) == ('8836', '9281')
 
 
 def test_edicao_mantem_ausentes_e_apaga_nulos(cenario):
@@ -263,7 +265,7 @@ def test_edicao_mantem_ausentes_e_apaga_nulos(cenario):
         'Outro objeto', None, None, None)
     assert (editada['valor_original'], editada['contratada_cnpj'], editada['fuso'], editada['boletim_horario']) == (
         None, None, 'America/Manaus', '06:05')
-    for k in ('sigla', 'contrato', 'inmet_estacao', 'os_data', 'vigencia_meses', 'area_construida_m2', 'nome'):
+    for k in ('sigla', 'contrato', 'estacao', 'os_data', 'vigencia_meses', 'area_construida_m2', 'nome'):
         assert editada[k] == e[k], k
     assert editada['prazo']['valor_atual'] is None  # sem valor original
     assert editada['faltando'] == ['localizacao', 'contratada_cnpj', 'valor_original', 'responsaveis']
@@ -292,8 +294,8 @@ def test_sigla_repetida(cenario):
 
 @pytest.mark.parametrize('campo,valor', [
     ('sigla', 'abc'), ('sigla', 'A' * 11), ('sigla', 5), ('latitude', '-3.7'), ('latitude', -35),
-    ('longitude', -27), ('fuso', 'UTC'), ('fuso', 3), ('inmet_estacao', 'A30'), ('inmet_estacao_reserva', 'a356'),
-    ('inmet_estacao_reserva', 'A305'), ('boletim_horario', '24:00'), ('boletim_horario', '7:30'),
+    ('longitude', -27), ('fuso', 'UTC'), ('fuso', 3), ('estacao', 'A305'), ('estacao', '12'), ('estacao_reserva', '1234567'),
+    ('estacao_reserva', '8836'), ('estacao', 8836), ('boletim_horario', '24:00'), ('boletim_horario', '7:30'),
     ('endereco', 'x' * 301), ('objeto', 'x' * 601), ('local', 'x' * 301), ('contratante', 'x' * 201),
     ('contrato', 'x' * 61), ('contratada', 'x' * 201), ('contratada_cnpj', '12.345.678/0001-9'),
     ('os_numero', 'x' * 41), ('os_data', '2025-02-30'), ('os_data', '31/01/2025'), ('vigencia_meses', 0),
@@ -303,7 +305,7 @@ def test_sigla_repetida(cenario):
 def test_validacoes_da_etapa(cenario, campo, valor):
     c = cenario
     tornar_admin(c, c.sem_obra)
-    e = criar_etapa(c, inmet_estacao='A305')
+    e = criar_etapa(c, estacao='8836')
     with pytest.raises(errors.InvalidParameterValue):
         salvar_etapa(c, {'id': e['id'], campo: valor})
 
@@ -468,40 +470,6 @@ def test_responsaveis_etapa_inexistente(cenario):
     tornar_admin(c, c.sem_obra)
     with pytest.raises(errors.NoDataFound):
         definir_responsaveis(c, uuid.uuid4(), [])
-
-
-# --- Estações do INMET -----------------------------------------------------------------------------
-
-def haversine(lat1, lon1, lat2, lon2):
-    r = math.radians
-    a = math.sin(r(lat2 - lat1) / 2) ** 2 + math.cos(r(lat1)) * math.cos(r(lat2)) * math.sin(r(lon2 - lon1) / 2) ** 2
-    return round(2 * 6371 * math.asin(math.sqrt(a)), 1)
-
-
-def test_sugerir_estacoes(cenario):
-    c = cenario
-    tornar_admin(c, c.sem_obra)
-    sugerir = 'select public.admin_sugerir_estacoes(%s, %s, %s)'
-    assert rpc(c, c.sem_obra, sugerir, (-3.761, -38.5297, 5)) == []
-    estacoes = [('A305', 'FORTALEZA', 'CE', -3.8157, -38.5378, True),
-                ('A356', 'ITAPIPOCA', 'CE', -3.4989, -39.5806, True),
-                ('A360', 'PENTECOSTE', 'CE', -3.7928, -39.2689, True),
-                ('A307', 'PETROLINA', 'PE', -9.3889, -40.5233, True),
-                ('A999', 'DESATIVADA', 'CE', -3.762, -38.53, False)]
-    for e in estacoes:
-        su(c, 'insert into public.inmet_estacao (codigo, nome, uf, latitude, longitude, operante) '
-              'values (%s, %s, %s, %s, %s, %s)', e)
-    r = rpc(c, c.sem_obra, sugerir, (-3.761, -38.5297, 3))
-    assert [x['codigo'] for x in r] == ['A305', 'A360', 'A356']  # a desativada fica fora
-    assert r[0] == {'codigo': 'A305', 'nome': 'FORTALEZA', 'uf': 'CE', 'latitude': -3.8157, 'longitude': -38.5378,
-                    'distancia_km': haversine(-3.761, -38.5297, -3.8157, -38.5378)}
-    distancias = [x['distancia_km'] for x in rpc(c, c.sem_obra, 'select public.admin_sugerir_estacoes(%s, %s)',
-                                                 (-3.761, -38.5297))]
-    assert len(distancias) == 4 and distancias == sorted(distancias)
-    with pytest.raises(errors.InvalidParameterValue):
-        rpc(c, c.sem_obra, sugerir, (None, -38.5, 5))
-    with pytest.raises(errors.InsufficientPrivilege):
-        rpc(c, c.gestor_a, sugerir, (-3.761, -38.5297, 5))
 
 
 # --- Pessoas e nome de exibição --------------------------------------------------------------------
@@ -787,10 +755,8 @@ def test_rls_das_tabelas_da_etapa(cenario):
     c = cenario
     su(c, "insert into public.etapa_aditivo (etapa_id, numero, data) values (%s, '1', '2025-01-01')", (c.etapa,))
     su(c, 'insert into public.etapa_responsavel (etapa_id, usuario_id) values (%s, %s)', (c.etapa, c.gestor_a))
-    su(c, "insert into public.clima_dia (etapa_id, data, estacao, horario, resumo) "
-          "values (%s, '2025-01-01', 'A305', '[]', '{}')", (c.etapa,))
     boletim(c, c.etapa, '2025-01-01')
-    tabelas = ('etapa_aditivo', 'etapa_responsavel', 'clima_dia', 'boletim')
+    tabelas = ('etapa_aditivo', 'etapa_responsavel', 'boletim')
     for t in tabelas:
         assert visiveis(c, c.equipe_a, t, 'etapa_id', c.etapa) == 1, t
         assert visiveis(c, c.gestor_b, t, 'etapa_id', c.etapa) == 1, t  # outra obra da mesma etapa
@@ -809,22 +775,12 @@ def test_rls_das_tabelas_da_etapa(cenario):
     # etapa arquivada: participantes deixam de ver
     su(c, 'update public.etapa set arquivada_em = now() where id = %s', (c.etapa,))
     assert all(visiveis(c, c.equipe_a, t, 'etapa_id', c.etapa) == 0 for t in tabelas)
-    # service_role grava (coleta do clima e emissão)
-    sql(c, "insert into public.inmet_estacao (codigo, nome, uf, latitude, longitude) "
-           "values ('A305', 'FORTALEZA', 'CE', -3.8, -38.5)", papel='service_role')
-    sql(c, "update public.clima_dia set resumo = '{\"ok\": true}' where etapa_id = %s", (c.etapa,),
-        papel='service_role')
+    # service_role grava (emissão)
+    sql(c, "update public.boletim set pdf_path = null where etapa_id = %s", (c.etapa,), papel='service_role')
 
 
-def test_rls_das_estacoes_e_observacoes(cenario):
+def test_rls_das_observacoes(cenario):
     c = cenario
-    su(c, "insert into public.inmet_estacao (codigo, nome, uf, latitude, longitude) "
-          "values ('A305', 'FORTALEZA', 'CE', -3.8, -38.5)")
-    assert visiveis(c, c.equipe_a, 'inmet_estacao', 'codigo', 'A305') == 0
-    tornar_admin(c, c.sem_obra)
-    assert visiveis(c, c.sem_obra, 'inmet_estacao', 'codigo', 'A305') == 1
-    with pytest.raises(errors.InsufficientPrivilege):
-        sql(c, "delete from public.inmet_estacao", usuario=c.sem_obra)
     with pytest.raises(errors.InsufficientPrivilege):
         sql(c, "insert into public.observacao (id, obra_id, autor_id, data, texto, escrito_em) "
                "values (%s, %s, %s, current_date, 'x', now())", (uuid.uuid4(), c.obra_a, c.equipe_a),
@@ -866,7 +822,6 @@ RPCS_ADMIN = [
     "select public.admin_salvar_aditivo('{}'::jsonb)",
     "select public.admin_remover_aditivo('00000000-0000-0000-0000-000000000000')",
     "select public.admin_definir_responsaveis('00000000-0000-0000-0000-000000000000', '[]'::jsonb)",
-    'select public.admin_sugerir_estacoes(-3.7, -38.5)',
 ]
 
 
@@ -888,8 +843,6 @@ def test_excluir_etapa_com_boletim(cenario):
     e = criar_etapa(c, nome='Etapa com boletim')
     salvar_aditivo(c, {'etapa_id': e['id'], 'numero': '1', 'data': '2025-01-01'})
     definir_responsaveis(c, e['id'], [{'usuario_id': str(c.gestor_a)}])
-    su(c, "insert into public.clima_dia (etapa_id, data, estacao, horario, resumo) "
-          "values (%s, '2025-01-01', 'A305', '[]', '{}')", (e['id'],))
     boletim(c, e['id'], '2025-01-01')
     boletim(c, e['id'], '2025-01-01', 1)
     # por outro caminho o boletim protege a etapa
@@ -897,7 +850,7 @@ def test_excluir_etapa_com_boletim(cenario):
         su(c, 'delete from public.etapa where id = %s', (e['id'],))
     r = rpc(c, c.sem_obra, 'select public.admin_excluir_etapa(%s, %s)', (e['slug'], 'Etapa com boletim'))
     assert r['etapa_id'] == e['id']
-    for t in ('etapa', 'boletim', 'clima_dia', 'etapa_aditivo', 'etapa_responsavel'):
+    for t in ('etapa', 'boletim', 'etapa_aditivo', 'etapa_responsavel'):
         coluna = 'id' if t == 'etapa' else 'etapa_id'
         assert su(c, f'select count(*) from public.{t} where {coluna} = %s', (e['id'],)) == [(0,)], t
 

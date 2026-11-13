@@ -23,8 +23,8 @@ describe('fixture: cadastro da etapa (como admin_obter_etapa / admin_salvar_etap
       fuso: 'America/Fortaleza',
       latitude: -3.761,
       longitude: -38.5297,
-      inmet_estacao: 'A305',
-      inmet_estacao_reserva: null,
+      estacao: '8836',
+      estacao_reserva: '9281',
       boletim_horario: '23:30',
       contrato: '120/2025 - SOP',
       os_data: '2025-06-02',
@@ -64,8 +64,10 @@ describe('fixture: cadastro da etapa (como admin_obter_etapa / admin_salvar_etap
       await expect(repo.salvarEtapa(d)).rejects.toThrow(campo)
     }
     const e = await repo.salvarEtapa(nova())
-    expect(e).toMatchObject({ slug: 'teste', sigla: 'T1', boletim_horario: '23:30' })
-    expect(e.faltando).toContain('inmet_estacao')
+    // Sem estação informada: Montese e, de reserva, Benfica.
+    expect(e).toMatchObject({ slug: 'teste', sigla: 'T1', boletim_horario: '23:30', estacao: '8836', estacao_reserva: '9281' })
+    expect(e.faltando).not.toContain('estacao')
+    expect(e.faltando).toContain('objeto')
     expect(e.faltando).not.toContain('sigla')
     expect(e.faltando).not.toContain('localizacao')
   })
@@ -79,8 +81,10 @@ describe('fixture: cadastro da etapa (como admin_obter_etapa / admin_salvar_etap
       [{ latitude: 10 }, 'Latitude fora do Brasil'],
       [{ longitude: -20 }, 'Longitude fora do Brasil'],
       [{ fuso: 'America/New_York' }, 'Fuso inválido'],
-      [{ inmet_estacao: 'a30' }, 'estação do INMET inválido'],
-      [{ inmet_estacao: 'A305', inmet_estacao_reserva: 'A305' }, 'reserva precisa ser diferente'],
+      [{ estacao: 'A305' }, 'Código de estação inválido'],
+      [{ estacao: '12' }, 'Código de estação inválido'],
+      [{ estacao: '8836', estacao_reserva: '8836' }, 'reserva precisa ser diferente'],
+      [{ estacao_reserva: '8836' }, 'reserva precisa ser diferente'],
       [{ boletim_horario: '25:00' }, 'Horário do boletim inválido'],
       [{ boletim_horario: null }, 'não pode ser apagado'],
       [{ contratada_cnpj: '123' }, 'CNPJ inválido'],
@@ -163,15 +167,14 @@ describe('fixture: cadastro da etapa (como admin_obter_etapa / admin_salvar_etap
     expect((await repo.obterEtapa('2a-etapa')).faltando).toEqual(['responsaveis'])
   })
 
-  it('sugere as estações operantes mais próximas, por distância, com 1 casa decimal e limite', async () => {
+  it('estação: apaga com null (vira pendência do boletim) e aceita outra da lista', async () => {
     const repo = criarRepositorioAdminFixture()
-    const lista = await repo.sugerirEstacoes(-3.761, -38.5297)
-    expect(lista.map((e) => e.codigo)).toEqual(['A305', 'A360', 'A347'])
-    expect(lista[0]).toMatchObject({ nome: 'FORTALEZA', uf: 'CE' })
-    expect(lista[0].distancia_km).toBeCloseTo(6.3, 0)
-    expect(lista.every((e, i) => i === 0 || e.distancia_km >= lista[i - 1].distancia_km)).toBe(true)
-    expect(lista.every((e) => Number.isInteger(e.distancia_km * 10))).toBe(true)
-    expect(await repo.sugerirEstacoes(-3.761, -38.5297, 1)).toHaveLength(1)
+    const e = await repo.obterEtapa('2a-etapa')
+    const sem = await repo.salvarEtapa({ id: e.id, nome: e.nome, ordem: e.ordem, estacao: null })
+    expect(sem.estacao).toBeNull()
+    expect(sem.faltando).toEqual(['estacao'])
+    const outra = await repo.salvarEtapa({ id: e.id, nome: e.nome, ordem: e.ordem, estacao: '9137' })
+    expect(outra).toMatchObject({ estacao: '9137', estacao_reserva: '9281', faltando: [] })
   })
 
   it('nome de exibição: normaliza, tira com vazio, recusa mais de 60 e usuário inexistente', async () => {
@@ -198,7 +201,8 @@ describe('fixture: cadastro da etapa (como admin_obter_etapa / admin_salvar_etap
     await expect(repo.listarPessoas()).rejects.toThrow('Acesso negado')
     await expect(repo.obterEtapa('2a-etapa')).rejects.toThrow('Acesso negado')
     await expect(repo.definirNomeExibicao('usuario-maria', 'A')).rejects.toThrow('Acesso negado')
-    await expect(repo.sugerirEstacoes(0, 0)).rejects.toThrow('Acesso negado')
+    await expect(repo.listarBoletins('2a-etapa')).rejects.toThrow('Acesso negado')
+    await expect(repo.pedirEmissao('2a-etapa', '2026-01-01')).rejects.toThrow('Acesso negado')
     await expect(repo.removerAditivo('aditivo-1')).rejects.toThrow('Acesso negado')
   })
 

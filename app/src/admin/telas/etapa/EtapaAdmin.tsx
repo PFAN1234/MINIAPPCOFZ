@@ -1,7 +1,7 @@
 /**
  * Página de uma etapa (`/etapas/:slug`): cadastro (identificação, localização e contrato), o que
- * falta para o boletim, responsáveis, aditivos, grupo do Telegram, obras da etapa e arquivar ou
- * excluir. E a criação (`/nova-etapa`).
+ * falta para o boletim, responsáveis, aditivos, boletins (emitidos, prévia e emissão), grupo do
+ * Telegram, obras da etapa e arquivar ou excluir. E a criação (`/nova-etapa`).
  */
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -12,6 +12,7 @@ import { TabelaObras } from '../ObrasAdmin.tsx'
 import { data } from '../obra/ArquivarExcluir.tsx'
 import Aditivos from './Aditivos.tsx'
 import ArquivarExcluirEtapa from './ArquivarExcluirEtapa.tsx'
+import Boletins from './Boletins.tsx'
 import FormularioEtapa, { chaveDoCadastro } from './FormularioEtapa.tsx'
 import Responsaveis from './Responsaveis.tsx'
 
@@ -65,6 +66,7 @@ export default function EtapaAdmin() {
                   />
                   <Responsaveis etapaId={d.id} atuais={d.responsaveis} />
                   <Aditivos etapa={d} />
+                  <Boletins etapa={d} telegramVinculado={etapa.telegram_vinculado} />
                 </>
               )}
             </ComDados>

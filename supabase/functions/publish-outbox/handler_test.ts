@@ -6,6 +6,8 @@ import {
   cortarTexto,
   criarHandler,
   formatarData,
+  formatarDia,
+  legendaBoletim,
   nomeMostrado,
 } from "./handler.ts";
 
@@ -163,10 +165,10 @@ function montar(o: Opcoes = {}) {
     },
     storage: {
       from: (b: string) => {
-        assertEquals(b, "fotos");
+        assert(b === "fotos" || b === "boletins", b);
         return {
           download: (caminho: string) => {
-            baixadas.push(caminho);
+            baixadas.push(b === "fotos" ? caminho : `${b}:${caminho}`);
             return Promise.resolve(
               o.storageErro
                 ? { data: null, error: { message: "não achou" } }
@@ -723,4 +725,186 @@ Deno.test("aviso: nome de exibição e mantém o @username", async () => {
       "🔑 <b>CP PATRICIO</b> (@fulano) pediu acesso",
     ),
   );
+});
+
+// --- Boletim ------------------------------------------------------------------------------------
+
+const ETAPA = { id: "etapa-1", nome: "2ª ETAPA", telegram_chat_id: -1009 };
+const BOLETIM = {
+  id: "bol-1",
+  etapa_id: "etapa-1",
+  data: "2026-11-13",
+  revisao: 0,
+  numero: "BA2/261113/COFZ",
+  pdf_path: "etapa-1/BA2261113COFZ.pdf",
+};
+
+const pubBoletim = (extra = {}) => ({
+  id: 7,
+  obra_id: null,
+  registro_id: null,
+  encerramento_id: null,
+  boletim_id: "bol-1",
+  tentativas: 1,
+  ...extra,
+});
+
+function tabelasBoletim(etapa: Linha = ETAPA, boletim: Linha = BOLETIM) {
+  return { ...tabelasBase(), etapa: [etapa], boletim: [boletim] };
+}
+
+Deno.test("legenda do boletim: número, etapa, data e retificação", () => {
+  assertEquals(formatarDia("2026-11-13"), "13/11/2026");
+  assertEquals(
+    legendaBoletim(BOLETIM, "2ª ETAPA"),
+    "📄 <b>Boletim BA2/261113/COFZ</b>\n2ª ETAPA · 13/11/2026",
+  );
+  assertEquals(
+    legendaBoletim(
+      { ...BOLETIM, numero: "BA2/261113/COFZ-R1", revisao: 1 },
+      "Etapa <A> & B",
+    ),
+    "📄 <b>Boletim BA2/261113/COFZ-R1</b>\nEtapa &lt;A&gt; &amp; B · 13/11/2026 · retificação R1",
+  );
+});
+
+Deno.test("boletim: sendDocument no grupo da etapa (tópico Geral) com o PDF", async () => {
+  const m = montar({
+    publicacoes: [pubBoletim()],
+    tabelas: tabelasBoletim(),
+    respostas: [{ tipo: "ok", resultado: { message_id: 900 } }],
+  });
+  const r = await rodar(m.handler);
+  assertEquals((await r.json()).publicadas, 1);
+  assertEquals(m.baixadas, ["boletins:etapa-1/BA2261113COFZ.pdf"]);
+  assertEquals(m.chamadas.length, 1);
+  assertEquals(m.chamadas[0].metodo, "sendDocument");
+  const f = form(m.chamadas[0]);
+  assertEquals(f.get("chat_id"), "-1009");
+  assertFalse(f.has("message_thread_id"));
+  assertEquals(f.get("parse_mode"), "HTML");
+  assertEquals(
+    f.get("caption"),
+    "📄 <b>Boletim BA2/261113/COFZ</b>\n2ª ETAPA · 13/11/2026",
+  );
+  const doc = f.get("document");
+  assert(doc instanceof File);
+  assertEquals(doc.name, "BA2261113COFZ.pdf");
+  assertEquals(m.finalizacoes, [{
+    p_id: 7,
+    p_estado: "publicado",
+    p_message_ids: [900],
+    p_erro: null,
+    p_proxima: null,
+  }]);
+});
+
+Deno.test("boletim: retificação na legenda", async () => {
+  const m = montar({
+    publicacoes: [pubBoletim()],
+    tabelas: tabelasBoletim(ETAPA, {
+      ...BOLETIM,
+      revisao: 2,
+      numero: "BA2/261113/COFZ-R2",
+      pdf_path: "etapa-1/BA2261113COFZ-R2.pdf",
+    }),
+  });
+  await rodar(m.handler);
+  assertEquals(
+    form(m.chamadas[0]).get("caption"),
+    "📄 <b>Boletim BA2/261113/COFZ-R2</b>\n2ª ETAPA · 13/11/2026 · retificação R2",
+  );
+  assertEquals(m.baixadas, ["boletins:etapa-1/BA2261113COFZ-R2.pdf"]);
+});
+
+Deno.test("boletim: etapa sem grupo → pendente em 15 min, sem chamar o Telegram", async () => {
+  const m = montar({
+    publicacoes: [pubBoletim()],
+    tabelas: tabelasBoletim({ ...ETAPA, telegram_chat_id: null }),
+  });
+  const r = await rodar(m.handler);
+  assertEquals((await r.json()).pendentes, 1);
+  assertEquals(m.chamadas.length + m.baixadas.length, 0);
+  assertEquals(m.finalizacoes, [{
+    p_id: 7,
+    p_estado: "pendente",
+    p_message_ids: null,
+    p_erro: "Etapa sem grupo vinculado.",
+    p_proxima: new Date(AGORA.getTime() + 15 * 60_000).toISOString(),
+  }]);
+});
+
+Deno.test("boletim: falha ao baixar o PDF → backoff; na 8ª tentativa, falhou", async () => {
+  const m = montar({
+    publicacoes: [pubBoletim({ tentativas: 3 })],
+    tabelas: tabelasBoletim(),
+    storageErro: true,
+  });
+  await rodar(m.handler);
+  assertEquals(m.chamadas.length, 0);
+  assertEquals(m.finalizacoes[0].p_estado, "pendente");
+  assertEquals(m.finalizacoes[0].p_erro, "Falha ao baixar o PDF do Storage.");
+  assertEquals(
+    m.finalizacoes[0].p_proxima,
+    new Date(AGORA.getTime() + 4 * 60_000).toISOString(),
+  );
+  const m8 = montar({
+    publicacoes: [pubBoletim({ tentativas: 8 })],
+    tabelas: tabelasBoletim(),
+    storageErro: true,
+  });
+  await rodar(m8.handler);
+  assertEquals(m8.finalizacoes[0].p_estado, "falhou");
+});
+
+Deno.test("boletim: inexistente ou sem PDF → falhou; erros do Telegram como as demais", async () => {
+  const sem = montar({
+    publicacoes: [pubBoletim({ boletim_id: "outro" })],
+    tabelas: tabelasBoletim(),
+  });
+  await rodar(sem.handler);
+  assertEquals(sem.finalizacoes[0].p_estado, "falhou");
+  assertEquals(sem.finalizacoes[0].p_erro, "Boletim não encontrado.");
+
+  const semPdf = montar({
+    publicacoes: [pubBoletim()],
+    tabelas: tabelasBoletim(ETAPA, { ...BOLETIM, pdf_path: null }),
+  });
+  await rodar(semPdf.handler);
+  assertEquals(semPdf.finalizacoes[0].p_erro, "Boletim sem PDF.");
+
+  const rede = montar({
+    publicacoes: [pubBoletim()],
+    tabelas: tabelasBoletim(),
+    respostas: [{ tipo: "rede", motivo: "timeout" }],
+  });
+  await rodar(rede.handler);
+  assertEquals(rede.finalizacoes[0].p_estado, "incerto");
+
+  const limite = montar({
+    publicacoes: [pubBoletim()],
+    tabelas: tabelasBoletim(),
+    respostas: [{
+      tipo: "http",
+      status: 429,
+      description: "Too Many Requests",
+      retryAfter: 12,
+    }],
+  });
+  await rodar(limite.handler);
+  assertEquals(limite.finalizacoes[0].p_estado, "pendente");
+  assertEquals(
+    limite.finalizacoes[0].p_proxima,
+    new Date(AGORA.getTime() + 12_000).toISOString(),
+  );
+});
+
+Deno.test("boletim e registro na mesma rodada", async () => {
+  const m = montar({
+    publicacoes: [pub(), pubBoletim()],
+    tabelas: tabelasBoletim(),
+  });
+  const r = await rodar(m.handler);
+  assertEquals((await r.json()).publicadas, 2);
+  assertEquals(m.chamadas.map((c) => c.metodo), ["sendPhoto", "sendDocument"]);
 });

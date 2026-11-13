@@ -8,28 +8,24 @@ Ao fim de cada dia a etapa emite um boletim que compila tudo o que foi lançado 
 
 - **Abrangência:** um boletim por **etapa** por dia, com as seções separadas por obra (ex.: Bloco de Alojamento e Bloco Didático).
 - **Emissão:** **automática** em horário fixo (hora local da obra), sem revisão prévia; o fiscal pode emitir **retificação** (`-R1`, `-R2`…), que substitui a anterior e fica registrada.
-- **Clima:** **só INMET** (estação automática mais próxima, dado medido; decisão de 2026-11-13, substitui Open-Meteo + INMET). Exige pedir token ao INMET. A condição do céu (ensolarado/parcialmente nublado/nublado) é **estimada pela radiação solar** medida.
+- **Clima:** **Observatório de Riscos Climáticos de Fortaleza** (Prefeitura de Fortaleza; decisão de 2026-11-13, substitui o INMET, que estava fora do ar). **Por enquanto o boletim só copia o gráfico do site** (decisão de 2026-11-13, no lugar da coleta horária com gráficos próprios): uma imagem da linha da estação **Montese** (`8836`) na tabela "Últimas 24 horas", tirada logo antes da emissão; **Benfica** (`9281`) se a Montese estiver sem leitura recente. Com a fonte e os horários da leitura e da cópia. Só Fortaleza por enquanto.
 - **Nome de exibição:** cada pessoa tem um nome de exibição em texto livre, maiúsculas (ex.: Patricio Ferreira → `CP PATRICIO`), definido **só por admins** no site; vale no Mini App, nas publicações do Telegram e nos boletins.
 - **Observações:** várias notas por obra e por dia, escritas por **qualquer participante** na página inicial da obra no Mini App; o boletim compila as de todas as obras da etapa na seção Observações.
 - **Numeração:** `BA<sigla da etapa>/<YYMMDD>/<OM>`, ex.: `BA2/261111/COFZ`. Sigla = novo campo curto da etapa (`2`); OM = `organizacao.nome` em maiúsculas, sem acentos e só com letras e números (`CO-FZ` → `COFZ`). Retificação: `BA2/261111/COFZ-R1`.
 
-## Clima (INMET)
+## Clima (Observatório de Fortaleza)
 
-**Localização:** `etapa` ganha `latitude`, `longitude`, `endereco`, `fuso` e `inmet_estacao` (código, ex.: `A305`), mais `inmet_estacao_reserva` opcional. Preenchidos no formulário da etapa (ver abaixo): endereço/CEP → geocodificação → pino no mapa para confirmar; a estação é sugerida pela menor distância na lista de estações automáticas do INMET (a segunda mais próxima vira a reserva) e pode ser trocada. O `fuso` é escolhido numa lista dos fusos do Brasil (IANA, ex.: `America/Fortaleza`, `America/Manaus`, `America/Rio_Branco`, `America/Noronha`), pré-preenchido pela UF da estação.
+**Fonte:** página pública `https://observatorio.fortaleza.ce.gov.br/riscos-climaticos/estacoes-meteorologicas` (robots.txt libera; atualizada a cada 10 min; 11 estações). Não há API; a tabela "Últimas 24 horas" tem uma linha por estação (`tr` com `button.est-tabela-estacao[data-estacao="<id>"]`): nome e "há N min", temperatura, umidade, chuva em 24 h, vento com rumo e rajada, índice UV, cada um com um mini gráfico das últimas 24 h.
 
-**Dados usados** (`apitempo.inmet.gov.br`, estação automática, de hora em hora, em UTC): `CHUVA` (mm), `TEM_INS/MAX/MIN` (°C), `UMD_INS/MAX/MIN` (%), `PTO_INS` (ponto de orvalho), `PRE_INS` (hPa), `VEN_VEL`, `VEN_DIR`, `VEN_RAJ` (m/s → km/h) e `RAD_GLO` (kJ/m²). Dados brutos: horas faltando aparecem como "sem dado"; se faltar mais da metade das horas do expediente na estação principal, usa a reserva e o boletim indica qual estação valeu.
+**Cópia (versão atual):** na emissão, o mesmo Chromium que gera o PDF abre a página (fuso `America/Fortaleza`, `pt-BR`), espera a tabela, localiza a linha pela `data-estacao` da estação principal da etapa e tira a imagem só dessa linha (PNG, escala 2). Confere a idade da leitura ("há N min"); acima de 3 h, ou sem a linha, tenta a reserva; sem nenhuma, o boletim sai com "Dados meteorológicos indisponíveis (Observatório de Fortaleza)". A imagem vai para o bucket `boletins` junto com o PDF e entra no snapshot (`clima: {fonte, estacao, leitura_em, copiado_em, imagem}`).
 
-**Céu estimado pela radiação:** para cada período, razão entre a radiação medida e a de céu limpo calculada para a posição da estação e a hora (modelo de Haurwitz): ≥ 75% ensolarado; 45–75% parcialmente nublado; < 45% nublado. Limiares a calibrar com uma semana de dados reais da A305; o boletim diz que é estimativa.
+**No boletim** (substitui "SOL / CHUVA"): a imagem da linha da estação, com a legenda "Fonte: Observatório de Riscos Climáticos de Fortaleza (Prefeitura de Fortaleza), estação Montese — leitura das HH:MM, cópia de dd/mm/aaaa às HH:MM. Últimas 24 horas até a cópia."
 
-**Acesso:** em 2026-11-13 todos os endereços do INMET devolveram resposta vazia a partir do ambiente de desenvolvimento (provável bloqueio de acessos de fora do Brasil). A coleta precisa sair do Brasil: testar a Edge Function com a região fixada em `sa-east-1` assim que houver token; se não der, outra saída no Brasil.
+**Limitações aceitas por enquanto:** a janela é móvel (as 24 h até a cópia, não o dia 0h–24h); não há valores em números para indicadores (dias com chuva etc.) nem a divisão manhã/tarde; uma mudança de layout no site pode exigir ajuste do recorte (o boletim sai sem clima e avisa).
 
-**Coleta:** pg_cron + pg_net (mesmo padrão do `publish-outbox`) chamam a Edge Function `coletar-clima` antes da emissão e de novo na madrugada seguinte; grava `clima_dia` (etapa, data local, estação, horário em `jsonb`, resumo, `obtido_em`), `unique (etapa_id, data, estacao)`. Sem dado na emissão, o boletim sai com "Dados meteorológicos indisponíveis (INMET)"; se o dado chegar depois, o app sugere retificação ao fiscal.
+**Cadastro:** os campos `inmet_estacao`/`inmet_estacao_reserva` da etapa passam a ser `estacao`/`estacao_reserva` com o código numérico do Observatório (padrão Montese `8836` e Benfica `9281`), escolhidos numa lista fixa das 11 estações (sem a sugestão por distância).
 
-**No boletim** (substitui "SOL / CHUVA"):
-- Manhã (6h–12h) e Tarde (12h–18h): condição ("Sem chuva · ensolarado", "Chuva · nublado"), faixa de temperatura, umidade, chuva (mm e horário), vento médio / rajada, radiação (% do céu limpo).
-- Dia: mínima/máxima e ponto de orvalho, umidade média e mínima, chuva total e horas com chuva, vento máximo com direção, rajada, pressão.
-- Gráfico hora a hora (temperatura em linha, chuva em barras, radiação medida × céu limpo) e a fonte: estação, distância da obra, horário de obtenção.
-- Dia com chuva = chuva ≥ 0,2 mm no dia (conta nos indicadores de clima).
+**Evolução possível** (estudada em 2026-11-13, não implementada): coletar de hora em hora e ler os valores dos gráficos do próprio HTML (as séries de 24 h estão nos `path` dos SVG, com mínimo e máximo no `aria-label`; a chuva está nas barras, com o total no `aria-label`), para montar o dia 0h–24h, manhã/tarde, indicadores de chuva e céu estimado pelo UV.
 
 ## Dados administrativos da etapa
 
@@ -71,7 +67,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 
 ## Emissão
 
-- pg_cron por etapa no horário local configurado (padrão 23:30) → Edge Function `emitir-boletim`: coleta o clima do INMET (se faltar), monta o **snapshot** (`jsonb`) do dia, grava `boletim` (etapa, data, numero, revisao, snapshot, pdf_path, emitido_em, emitido_por = null quando automático) e gera o PDF.
+- pg_cron por etapa no horário local configurado (padrão 23:30) → Edge Function `emitir-boletim`: copia o gráfico do clima (Observatório), monta o **snapshot** (`jsonb`) do dia, grava `boletim` (etapa, data, numero, revisao, snapshot, pdf_path, emitido_em, emitido_por = null quando automático) e gera o PDF.
 - PDF: página HTML do boletim renderizada por Chromium em função da Vercel (fidelidade ao modelo da CO-FZ); arquivo no bucket privado `boletins` e envio ao grupo da etapa no Telegram (`sendDocument`, tópico Geral).
 - Emitido = imutável. Retificação: o fiscal edita observações/correções no app, gera `-R1` com novo snapshot; o anterior fica no histórico como substituído.
 - Lançamentos que chegam depois da emissão (registro offline com `capturado_em` do dia já emitido): aparecem no boletim seguinte em "Lançamentos recebidos após a emissão" e o app sugere retificação ao fiscal.
@@ -86,7 +82,7 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 1. Migration: campos da etapa (sigla, localização, fuso, estações INMET, dados administrativos), `etapa_aditivo`, `etapa_responsavel`, `usuario.nome_exibicao`, `observacao`, `organizacao.cabecalho`, `clima_dia`, `boletim`, bucket `boletins`, RLS (boletins: leitura para participantes da etapa; escrita só por service_role e RPC de retificação); função `numero_boletim(etapa, data, revisao)`.
 2. Admin: página Pessoas (nome de exibição); formulário de cadastro/edição da etapa com sigla, localização (mapa, estações INMET sugeridas, fuso), dados do contrato e responsáveis; aditivos na página da etapa; linhas do cabeçalho em `/admin/organizacao`.
 3. Mini App: nome de exibição em todas as telas e publicações; cartão Observações do dia na obra (com fila offline).
-4. `coletar-clima` (INMET, estação reserva, céu pela radiação) e testes Deno com respostas gravadas; teste real de acesso a partir de `sa-east-1`.
+4. Clima: migration das estações (`estacao`/`estacao_reserva`, padrão 8836/9281), lista fixa no cadastro da etapa e captura da linha da estação no gerador do PDF (teste com uma cópia gravada da página).
 5. RPC/consulta do snapshot do dia (indicadores, serviços, pendências, observações) + testes de banco.
 6. Template HTML do boletim + geração do PDF + bucket + envio ao Telegram.
 7. Agendamento por etapa, retificação e tela "Boletins" no Mini App (lista, abrir PDF, retificar).
@@ -95,13 +91,13 @@ Calculados: data de término prevista, dias decorridos desde a OS, % do prazo de
 
 - Testes de banco: snapshot de um dia com registros, pendências abertas/encerradas e lançamento tardio; contagens dos indicadores; número `BA2/261111/COFZ` e `-R1`; fuso diferente (ex.: `America/Rio_Branco`) muda o dia de um lançamento às 23h.
 - Testes de banco: nome de exibição só por admin e não sobrescrito no login; observação travada depois da emissão; participante de outra obra não lê observações.
-- Testes Deno: conversão UTC → fuso e m/s → km/h, resumo manhã/tarde, céu pela radiação, horas faltando e troca para a estação reserva, INMET indisponível.
+- Teste da captura: com uma cópia gravada da página, a linha certa é recortada; leitura antiga ou linha ausente → reserva; nenhuma → "indisponível".
 - Playwright: template do boletim com fixture → PDF com cabeçalho, tabela de clima e fotos.
 - Real: uma semana de boletins da 2ª etapa comparados com o boletim manual (inclusive a condição do céu estimada) para calibrar os limiares.
 
 ## Pendências externas
 
-- Token da API do INMET.
-- Confirmar que a coleta a partir do Supabase (`sa-east-1`) alcança o INMET.
+- Confirmar que a coleta a partir do Supabase alcança a página do Observatório.
+- Avisar o Observatório/IPPLAN do uso dos dados (e pedir um feed oficial, se houver).
 - Nomes de exibição de todos os participantes.
 - Coordenadas exatas do canteiro da 2ª etapa e preenchimento dos dados administrativos.

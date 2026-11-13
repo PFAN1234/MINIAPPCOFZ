@@ -6,7 +6,8 @@ import type {
   DadosAditivo,
   DadosEtapa,
   Aditivo,
-  EstacaoSugerida,
+  ListaBoletins,
+  PedidoEmissao,
   EtapaDetalhe,
   Pessoa,
   Responsavel,
@@ -57,8 +58,18 @@ export interface RepositorioAdmin {
   removerAditivo(id: string): Promise<void>
   /** Substitui os responsáveis da etapa, na ordem da lista (vazia = nenhum). */
   definirResponsaveis(etapaId: string, lista: { usuario_id: string; funcao: string }[]): Promise<Responsavel[]>
-  /** Estações do INMET operantes mais próximas do ponto (vazio até a primeira coleta de clima). */
-  sugerirEstacoes(latitude: number, longitude: number, limite?: number): Promise<EstacaoSugerida[]>
+
+  /** `admin_listar_boletins`: emitidos e pedidos ainda não emitidos (pendentes, gerando, com falha). */
+  listarBoletins(slug: string): Promise<ListaBoletins>
+  /**
+   * `admin_pedir_emissao`: pede a emissão do boletim da data ("AAAA-MM-DD"); se já houver boletim
+   * na data, é uma retificação. Data futura ou pedido em andamento para a data são recusados.
+   */
+  pedirEmissao(slug: string, data: string): Promise<PedidoEmissao>
+  /** URL (assinada, de curta duração) do PDF de um boletim no bucket `boletins`. */
+  urlPdfBoletim(caminho: string): Promise<string>
+  /** Gerador (`/api/previa-boletim`): PDF da prévia, sem número e sem gravar nada. */
+  previaBoletim(slug: string, data: string): Promise<Blob>
 
   /** Pessoas que já abriram o Mini App, com nome de exibição e participações nas obras. */
   listarPessoas(): Promise<Pessoa[]>

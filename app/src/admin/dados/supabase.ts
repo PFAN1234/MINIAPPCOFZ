@@ -15,7 +15,10 @@ import {
   type BucketObra,
   type ConfigObra,
   type Aditivo,
-  type EstacaoSugerida,
+  type BoletimEmitido,
+  type EstadoEmissao,
+  type ListaBoletins,
+  type PedidoEmissao,
   type EtapaDetalhe,
   type EtapaLista,
   type Pessoa,
@@ -44,6 +47,56 @@ import {
 } from './tipos.ts'
 
 export const CHAVE_SESSAO_ADMIN = 'miniappcofz-admin-auth'
+
+/** Validade da URL assinada do PDF de um boletim (abre numa aba nova logo em seguida). */
+const SEGUNDOS_URL_PDF = 300
+/** Gerador do boletim (função da Vercel no mesmo domínio do site). */
+const URL_PREVIA = '/api/previa-boletim'
+
+const ESTADOS: EstadoEmissao[] = ['pendente', 'gerando', 'emitido', 'falhou']
+
+type LinhaBoletim = Record<string, unknown>
+
+export function boletimDe(l: LinhaBoletim): BoletimEmitido {
+  return {
+    id: String(l.id),
+    data: String(l.data),
+    revisao: Number(l.revisao ?? 0),
+    numero: String(l.numero ?? ''),
+    emitido_em: String(l.emitido_em ?? ''),
+    emitido_por_nome: l.emitido_por_nome == null ? null : String(l.emitido_por_nome),
+    pdf_path: l.pdf_path == null ? null : String(l.pdf_path),
+    publicado: l.publicado === true,
+    publicacao_estado: l.publicacao_estado == null ? null : String(l.publicacao_estado),
+  }
+}
+
+export function pedidoDe(l: LinhaBoletim): PedidoEmissao {
+  const estado = ESTADOS.includes(l.estado as EstadoEmissao) ? (l.estado as EstadoEmissao) : 'pendente'
+  return {
+    id: Number(l.id ?? 0),
+    data: String(l.data ?? ''),
+    revisao: Number(l.revisao ?? 0),
+    estado,
+    tentativas: Number(l.tentativas ?? 0),
+    erro: l.erro == null ? null : String(l.erro),
+    atualizado_em: String(l.atualizado_em ?? ''),
+    ...(typeof l.numero === 'string' ? { numero: l.numero } : {}),
+  }
+}
+
+/**
+ * `admin_listar_boletins` devolve `{boletins: [...], pedidos: [...]}`; aceita também só a lista
+ * de boletins (sem pedidos).
+ */
+export function listaBoletinsDe(r: unknown): ListaBoletins {
+  if (Array.isArray(r)) return { boletins: (r as LinhaBoletim[]).map(boletimDe), pedidos: [] }
+  const o = (r && typeof r === 'object' ? r : {}) as { boletins?: unknown; pedidos?: unknown }
+  return {
+    boletins: Array.isArray(o.boletins) ? (o.boletins as LinhaBoletim[]).map(boletimDe) : [],
+    pedidos: Array.isArray(o.pedidos) ? (o.pedidos as LinhaBoletim[]).map(pedidoDe) : [],
+  }
+}
 
 const MENSAGEM_REDE = 'Sem conexão com o servidor. Verifique a internet e tente de novo.'
 
@@ -207,8 +260,8 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       latitude: numeroOuNulo(l.latitude),
       longitude: numeroOuNulo(l.longitude),
       fuso: textoOuNulo(l.fuso) ?? 'America/Sao_Paulo',
-      inmet_estacao: textoOuNulo(l.inmet_estacao),
-      inmet_estacao_reserva: textoOuNulo(l.inmet_estacao_reserva),
+      estacao: textoOuNulo(l.estacao),
+      estacao_reserva: textoOuNulo(l.estacao_reserva),
       boletim_horario: (textoOuNulo(l.boletim_horario) ?? '23:30').slice(0, 5),
       objeto: textoOuNulo(l.objeto),
       local: textoOuNulo(l.local),
@@ -337,18 +390,56 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       return (r ?? []).map(responsavelDe)
     },
 
-    async sugerirEstacoes(latitude, longitude, limite = 5) {
-      const r = await rpc<Linha[] | null>('admin_sugerir_estacoes', { p_lat: latitude, p_lon: longitude, p_limite: limite })
-      return (r ?? []).map(
-        (l): EstacaoSugerida => ({
-          codigo: String(l.codigo),
-          nome: String(l.nome ?? ''),
-          uf: String(l.uf ?? ''),
-          latitude: Number(l.latitude),
-          longitude: Number(l.longitude),
-          distancia_km: Number(l.distancia_km ?? 0),
-        }),
-      )
+    async listarBoletins(slug) {
+      const r = await rpc<unknown>('admin_listar_boletins', { p_slug: slug })
+      return listaBoletinsDe(r)
+    },
+
+    async pedirEmissao(slug, data) {
+      try {
+        const r = await rpc<Linha | null>('admin_pedir_emissao', { p_slug: slug, p_data: data })
+        return pedidoDe(r ?? {})
+      } catch (e) {
+        if (codigoDe(e) === '23505' && ehMensagemBruta((e as ErroAdmin).message)) {
+          throw new ErroAdmin('Já existe um pedido de emissão em andamento para esta data', { cause: e })
+        }
+        throw e
+      }
+    },
+
+    async urlPdfBoletim(caminho) {
+      try {
+        const { data, error } = await cliente.storage.from('boletins').createSignedUrl(caminho, SEGUNDOS_URL_PDF)
+        if (error) throw error
+        return data.signedUrl
+      } catch (e) {
+        throw erroDaRpc(e)
+      }
+    },
+
+    async previaBoletim(slug, data) {
+      const { data: sessao } = await cliente.auth.getSession()
+      const token = sessao.session?.access_token
+      if (!token) throw new ErroAdmin('Sua sessão expirou. Entre de novo.')
+      const consulta = new URLSearchParams({ etapa: slug, data })
+      let resposta: Response
+      try {
+        resposta = await fetch(`${URL_PREVIA}?${consulta}`, { headers: { Authorization: `Bearer ${token}` } })
+      } catch (e) {
+        throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
+      }
+      if (resposta.status !== 200) {
+        const json = (await resposta.json().catch(() => null)) as { erro?: unknown } | null
+        const padrao: Record<number, string> = {
+          401: 'Sua sessão expirou. Entre de novo.',
+          403: 'Acesso negado: apenas admins do Mini App.',
+          404: 'Etapa não encontrada',
+        }
+        throw new ErroAdmin(
+          typeof json?.erro === 'string' ? json.erro : (padrao[resposta.status] ?? 'Não foi possível gerar a prévia. Tente de novo.'),
+        )
+      }
+      return await resposta.blob()
     },
 
     async listarPessoas() {

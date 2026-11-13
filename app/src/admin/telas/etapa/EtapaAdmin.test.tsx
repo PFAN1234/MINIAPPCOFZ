@@ -72,7 +72,7 @@ describe('etapas (fixture)', () => {
     expect(screen.getByText('/vincular_etapa 4a-etapa')).toBeInTheDocument()
     expect(screen.getByText('Nenhuma obra nesta etapa.')).toBeInTheDocument()
     expect(screen.getByLabelText('Latitude')).toHaveValue('-3,761')
-    expect(screen.getByText(/Faltam para o boletim: estação do INMET, obra\/serviço/)).toBeInTheDocument()
+    expect(screen.getByText(/Faltam para o boletim: obra\/serviço/)).toBeInTheDocument()
   })
 
   it('edita nome e ordem da etapa', async () => {
