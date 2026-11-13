@@ -21,7 +21,7 @@ frag_z =  v
 frag_y = iz − 1,19
 ```
 
-Os outros modelos (ELT e demais) entram nesse referencial pela matriz `matriz · C_ARQ⁻¹ · C_modelo`, em que `C` é a matriz de coordenação que a That Open grava em cada `.frag` (`getCoordinates()`: 9 números) e `matriz` é a correção opcional guardada em `modelo.matriz`. As coordenadas do ARQ usadas no ajuste ficam em `ra_referencial`. Para o `ARQ.frag` R06 da HTO: `[201.82966, -1.19, -327.13588, 1, 0, 0, 0, 1, 0]`.
+Os outros modelos (ELT e demais) entram nesse referencial pela coordenação da That Open: cada `.frag` grava suas coordenadas (`getCoordinates()`: 9 números) e a biblioteca desloca o modelo em `coordenadas do ARQ − coordenadas do modelo`. Depois disso entra a correção opcional guardada em `modelo.matriz`. As coordenadas do ARQ usadas no ajuste ficam em `ra_referencial`. Para o `ARQ.frag` R06 da HTO: `[201.82966, -1.19, -327.13588, 1, 0, 0, 0, 1, 0]`.
 
 ## Banco
 

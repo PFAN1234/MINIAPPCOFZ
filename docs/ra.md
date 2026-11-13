@@ -38,7 +38,9 @@ Tela `/ra-teste`, também pelo link `https://t.me/<bot>/<app>?startapp=ra_teste`
 
 ## Outras disciplinas (ELT e demais)
 
-Os modelos entram no referencial do ARQ pela matriz de coordenação que a conversão grava em cada `.frag`. Isso basta quando o IFC da disciplina usa as mesmas coordenadas do IFC de arquitetura. Se o modelo aparecer deslocado (o caso de ANT e TLD em `docs/validacao-hto.md`), gravar a correção em `modelo.matriz` (16 números, ordem de `THREE.Matrix4.elements`), aplicada depois da coordenação.
+Os modelos entram no referencial do ARQ pela coordenação que a conversão grava em cada `.frag`. Isso basta quando o IFC da disciplina usa as mesmas coordenadas do IFC de arquitetura.
+
+Conferido em 2026-11-13 com os modelos publicados da HTO: o ARQ R06 (hash `497ec6abd4af7884`) tem as mesmas coordenadas e a mesma geometria do `.frag` usado no ajuste; o ELT R03 (hash `f625bb7739d2a982`) cai no lugar só com a coordenação, sem `modelo.matriz` — 82% das descidas verticais de eletroduto ficam a menos de 6 cm da face de uma parede (mediana de 2,6 cm), e um ajuste livre muda a posição em 1 cm. Se o modelo aparecer deslocado (o caso de ANT e TLD em `docs/validacao-hto.md`), gravar a correção em `modelo.matriz` (16 números, ordem de `THREE.Matrix4.elements`), aplicada depois da coordenação.
 
 ## Código
 
