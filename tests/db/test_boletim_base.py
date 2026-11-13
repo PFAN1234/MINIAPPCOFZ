@@ -111,7 +111,7 @@ def test_migracao_completa_a_2a_etapa_e_a_organizacao(cenario):
         (None, 'America/Sao_Paulo', '23:30:00')]
     assert su(c, 'select cabecalho from public.organizacao') == [(CABECALHO,)]
     assert su(c, "select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'boletins'") == [
-        (False, 10485760, ['application/pdf'])]
+        (False, 10485760, ['application/pdf', 'image/png'])]
 
 
 @pytest.mark.parametrize('coluna,valor', [
