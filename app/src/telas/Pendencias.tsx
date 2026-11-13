@@ -53,7 +53,6 @@ export default function Pendencias() {
   return (
     <section aria-labelledby="titulo-pendencias">
       <TopoTela
-        lista
         titulo="Pendências"
         idTitulo="titulo-pendencias"
         subtitulo={slug ? <LinkDaObra slug={slug} /> : undefined}

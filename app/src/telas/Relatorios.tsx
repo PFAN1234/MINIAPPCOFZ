@@ -189,7 +189,7 @@ export default function Relatorios() {
 
   return (
     <section aria-labelledby="titulo-relatorios">
-      <TopoTela lista titulo="Relatórios" idTitulo="titulo-relatorios" />
+      <TopoTela titulo="Relatórios" idTitulo="titulo-relatorios" />
       <EstadoConsulta consulta={consulta}>
         {({ admin, etapas, boletins }) => {
           const etapasVistas = filtro ? etapas.filter((e) => e.slug === filtro) : etapas

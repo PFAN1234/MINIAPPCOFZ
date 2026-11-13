@@ -62,66 +62,103 @@ textarea {
 .topo-tela {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding: var(--seguro-topo) 16px 16px;
+  padding: var(--seguro-topo) 16px 10px;
   color: var(--texto-no-azul);
-  background: var(--azul);
+  background: linear-gradient(180deg, var(--azul) 0%, var(--azul-area) 100%);
 }
 
-/* Faixa de identidade (FaixaIdentidade): OM à esquerda, logo no centro e "Fiscal Bot" à direita. */
-.identidade {
+/*
+ * Linha única do topo: assinatura à esquerda, título no centro e versão no canto de cima, à
+ * direita. As colunas dos lados têm a mesma largura enquanto o título couber (ele fica no centro
+ * da tela); título comprido toma o espaço que sobra ao lado da assinatura e quebra a linha.
+ */
+.topo-faixa {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
-  align-self: stretch;
-  min-height: 48px;
-  margin-bottom: 8px;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--azul-borda);
-  font-size: 14px;
-  line-height: 18px;
+  gap: 10px;
+  min-height: 64px;
+  padding-top: 8px;
 }
 
-.identidade-om {
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  overflow-wrap: anywhere;
-}
-
-.identidade-centro {
+/* Assinatura (MarcaOM): brasão, nome da OM e "Fiscal Bot". */
+.marca {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
-.identidade-logo {
+.marca-logo {
+  flex: none;
   width: auto;
-  height: 40px;
-  max-width: 140px;
+  height: 52px;
+  max-width: 96px;
   object-fit: contain;
 }
 
-.identidade-app {
-  color: var(--texto-suave-no-azul);
-  font-weight: 600;
-  text-align: right;
+.marca-textos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-/* Versão do app no pé do topo azul, à direita: pequena e apagada; o toque mostra o detalhe. */
+.marca-om {
+  max-width: 7.5em;
+  font-family: var(--fonte-titulo);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.1em;
+  overflow-wrap: anywhere;
+}
+
+.marca-app {
+  margin-top: 4px;
+  color: var(--texto-suave-no-azul);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Sem organização carregada, "Fiscal Bot" assume o lugar do nome da OM. */
+.marca-app:only-child {
+  margin: 0;
+  color: var(--texto-no-azul);
+  font-family: var(--fonte-titulo);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.topo-centro {
+  grid-column: 2;
+  min-width: 0;
+  text-align: center;
+}
+
+/* Versão do app no canto de cima da faixa, à direita, fora da grade para não tirar espaço do título: pequena e apagada; o toque mostra a data embaixo. */
 .selo-versao {
-  align-self: flex-end;
+  position: absolute;
+  top: 0;
+  right: -4px;
   min-height: 24px;
-  margin: 4px -4px -12px 0;
   padding: 4px;
   border: 0;
   background: transparent;
-  color: var(--texto-no-azul);
+  color: var(--texto-suave-no-azul);
   opacity: 0.55;
   font: inherit;
-  font-size: 11px;
-  line-height: 14px;
+  font-size: 9.5px;
+  line-height: 12px;
   text-align: right;
   cursor: pointer;
+}
+
+.selo-versao[aria-expanded='true'] {
+  opacity: 1;
 }
 
 .selo-versao-linha {
@@ -129,43 +166,66 @@ textarea {
   white-space: nowrap;
 }
 
-/* Topo só com a faixa (telas antes de entrar). */
-.topo-identidade {
-  padding-bottom: 12px;
+/* A data da publicação abre por cima, sem empurrar o título. */
+.selo-versao-linha + .selo-versao-linha {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1;
+  margin-top: -4px;
+  padding: 3px 4px 3px 8px;
+  background: var(--azul);
+  border-radius: 4px;
 }
 
-.topo-identidade .identidade {
-  margin-bottom: 0;
-  border-bottom: 0;
-}
-
-/* Abas de etapa da tela inicial, sobre o azul: lado a lado, com rolagem horizontal. */
+/* Abas da base do topo (etapas no Início, pavimentos na obra): texto com fio amarelo na ativa. */
+.topo-base .abas,
 .abas-etapa {
+  flex: 1 1 auto;
   display: flex;
-  gap: 8px;
+  gap: 24px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
   overflow-x: auto;
-  padding-bottom: 2px;
+  background: transparent;
+  border-radius: 0;
   scrollbar-width: none;
 }
 
+.topo-base .aba,
 .aba-etapa {
   flex: none;
-  min-height: 44px;
-  padding: 0 16px;
-  font: inherit;
-  font-size: 15px;
+  min-height: 46px;
+  padding: 2px 0 0;
+  color: #8fa4bf;
+  font-family: var(--fonte-titulo);
+  font-size: 14.5px;
   font-weight: 600;
-  color: var(--texto-suave-no-azul);
-  background: var(--azul-painel);
-  border: 1px solid var(--azul-borda);
-  border-radius: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
   cursor: pointer;
 }
 
+.topo-base .aba[aria-selected='true'],
 .aba-etapa[aria-selected='true'] {
-  color: var(--destaque-texto);
-  background: var(--destaque);
-  border-color: var(--destaque);
+  color: var(--texto-no-azul);
+  font-weight: 600;
+  background: transparent;
+  border-bottom-color: var(--destaque);
+  box-shadow: none;
+}
+
+/* O contorno de foco das abas fica para dentro: a linha rola na horizontal e cortaria o de fora. */
+.topo-base .aba:focus-visible,
+.aba-etapa:focus-visible {
+  outline-offset: -3px;
 }
 
 /* Equipe de serviço: espaço entre a lista e os botões, e antes da seção seguinte. */
@@ -199,16 +259,17 @@ textarea {
 
 /* "Voltar" fora do Telegram (dentro dele, vale o BackButton nativo). */
 .topo-voltar {
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-width: 44px;
   min-height: 44px;
-  margin: 0 0 4px -8px;
+  margin: 0 0 -6px -8px;
   padding: 0 12px 0 8px;
   color: var(--texto-no-azul);
   font: inherit;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   background: transparent;
   border: 0;
@@ -216,62 +277,135 @@ textarea {
   cursor: pointer;
 }
 
+/* Linha pequena acima do título (na obra, o link "Obras"). */
 .topo-sobretitulo {
-  margin: 0 0 2px;
+  margin: 0 0 3px;
   color: var(--texto-suave-no-azul);
-  font-size: 14px;
+  font-family: var(--fonte-titulo);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
+/* O link é pequeno: a área de toque passa do texto. */
 .topo-sobretitulo a {
-  color: var(--texto-suave-no-azul);
+  display: inline-block;
+  margin: -8px -10px;
+  padding: 8px 10px;
+  color: inherit;
+  text-decoration: none;
 }
 
-/* Telas de uma coisa (obra, ambiente, novo registro): o nome como é, 36 px. */
+/* Título no centro da faixa: maiúsculas, 32 px; com mais letras, diminui (ver TopoTela). */
 .topo-titulo {
-  max-width: 100%;
   margin: 0;
   font-family: var(--fonte-titulo);
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
-  line-height: 38px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   overflow-wrap: anywhere;
 }
 
-/* Telas de lista (Início, Registros, Pendências): maiúsculas, 34 px. */
-.topo-lista .topo-titulo {
-  font-size: 34px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+.topo-titulo[data-tamanho='medio'] {
+  font-size: min(28px, 7.4vw);
 }
 
-/* Nome longo: letra menor e quebra de linha, nunca reticências. */
+/* Título que pode ocupar duas linhas ou mais desce um pouco, para não encostar na versão. */
 .topo-titulo[data-tamanho='longo'] {
-  font-size: 30px;
-  line-height: 33px;
+  padding-top: 6px;
+  font-size: 21px;
+  line-height: 1.08;
+  text-wrap: balance;
 }
 
 .topo-titulo[data-tamanho='muito-longo'] {
-  font-size: 26px;
-  line-height: 29px;
+  padding-top: 10px;
+  font-size: 17px;
+  line-height: 1.12;
+  text-wrap: balance;
 }
 
+/* Linha de contexto abaixo da faixa, separada por um fio. */
 .topo-subtitulo {
-  margin: 2px 0 0;
+  margin: 8px -16px 0;
+  padding: 9px 16px 0;
   color: var(--texto-suave-no-azul);
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 1.35;
+  border-top: 1px solid rgb(255 255 255 / 0.09);
 }
 
 .topo-acoes {
-  align-self: stretch;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
+/* Base do topo: abas à esquerda e atalhos à direita, encostadas no fim do azul. */
+.topo-base {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  margin: 8px -16px -10px;
+  padding: 0 16px;
+  border-top: 1px solid rgb(255 255 255 / 0.09);
+}
+
+.topo-base .atalho {
+  position: relative;
+  flex: none;
+  gap: 7px;
+  min-height: 32px;
+  margin-left: auto;
+  padding: 0 4px 0 12px;
+  color: var(--texto-no-azul);
+  font-size: 13px;
+  text-decoration: none;
+  background: rgb(255 255 255 / 0.07);
+  border-color: rgb(255 255 255 / 0.22);
+}
+
+/* O atalho tem 32 px de altura; a área de toque ocupa a linha inteira (46 px). */
+.topo-base .atalho::after {
+  content: '';
+  position: absolute;
+  inset: -7px 0;
+}
+
+.topo-base .atalho-selo {
+  min-width: 24px;
+  padding: 3px 6px;
+  color: var(--destaque-texto);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+  background: var(--destaque);
+}
+
+/* Título de seção: quadradinho amarelo e letras espaçadas. */
 .app-main h2 {
-  margin: 0 0 12px;
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-family: var(--fonte-titulo);
+  font-size: 13.5px;
+  font-weight: 700;
   color: var(--texto-suave);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.16em;
+}
+
+.app-main h2::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--destaque);
+  border-radius: 2px;
 }
 
 /* Acessibilidade: foco visível */
@@ -284,6 +418,11 @@ textarea {
   min-height: 44px;
   padding: 0 16px;
   font: inherit;
+  font-family: var(--fonte-titulo);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--destaque-texto);
   background: var(--destaque);
   border: 0;
@@ -403,7 +542,8 @@ a.botao {
   color: inherit;
   text-decoration: none;
   background: var(--bg-secundario);
-  border-radius: 10px;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(11 22 37 / 0.07);
 }
 
 .lista-titulo {
@@ -1875,56 +2015,25 @@ a.botao {
   min-width: 120px;
 }
 
-/* Início: título e abas de etapa na mesma linha */
-.topo-linha-titulo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.topo-linha-titulo .topo-titulo {
-  flex: none;
-  max-width: none;
-  white-space: nowrap;
-}
-
-.topo-ao-lado {
-  display: flex;
-  justify-content: flex-end;
-  min-width: 0;
-}
-
-.topo-ao-lado .abas-etapa {
-  max-width: 100%;
-}
-
-/* Obra: o título pode quebrar e o botão Pendências fica ao lado */
-.topo-linha-titulo:has(.atalho) .topo-titulo {
-  flex: 1 1 auto;
-  min-width: 0;
-  white-space: normal;
-}
-
-.topo-ao-lado .atalho {
-  flex: none;
-  color: var(--texto);
-  text-decoration: none;
-}
-
-/* Início: linha de cada obra, com barrinhas e botão Gestão */
+/* Início: cartão de cada obra, com o nome, o botão Gestão e os 3 totais */
 .obra-linha {
-  flex-direction: row;
-  flex-wrap: nowrap;
+  position: relative;
+  gap: 0;
+  padding: 6px 16px 13px;
+}
+
+.obra-linha-cab {
+  display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px 6px 14px;
 }
 
 .obra-linha .atalho {
+  position: relative;
+  z-index: 1;
   flex: none;
   min-height: 32px;
-  padding: 0 10px;
+  padding: 0 6px 0 12px;
   gap: 6px;
   font-size: 0.85rem;
 }
@@ -1936,37 +2045,58 @@ a.botao {
   min-width: 0;
   min-height: 44px;
   color: inherit;
+  font-size: 19px;
   text-decoration: none;
   overflow-wrap: anywhere;
 }
 
+/* O toque em qualquer ponto do cartão abre a obra. */
+.obra-linha-nome::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+}
+
 .barrinhas {
-  display: inline-flex;
-  flex: none;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 2px;
 }
 
 .barrinha {
-  display: inline-block;
-  min-width: 32px;
-  padding: 3px 8px;
-  color: var(--barrinha-texto);
-  font-size: 0.8rem;
+  display: block;
+  padding-left: 9px;
+  border-left: 3px solid var(--barrinha-cor);
+}
+
+.barrinha b {
+  display: block;
+  font-family: var(--fonte-titulo);
+  font-size: 23px;
   font-weight: 700;
-  text-align: center;
-  border-radius: 999px;
+  line-height: 1;
+}
+
+.barrinha-rotulo {
+  color: var(--texto-suave);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .barrinha-servicos {
-  background: var(--barrinha-servicos);
+  --barrinha-cor: var(--servico);
 }
 
 .barrinha-abertas {
-  background: var(--barrinha-abertas);
+  --barrinha-cor: var(--pendencia);
 }
 
 .barrinha-resolvidas {
-  background: var(--barrinha-resolvidas);
+  --barrinha-cor: var(--ok);
 }
 
 /* Obra: prévia do modelo 3D (só ARQ) */

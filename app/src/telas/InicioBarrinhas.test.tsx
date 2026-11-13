@@ -32,25 +32,26 @@ describe('Início: textos por extenso', () => {
   })
 })
 
-describe('Início: abas ao lado do título', () => {
-  it('o título e as abas ficam na mesma linha', async () => {
+describe('Início: abas de etapa na base do topo', () => {
+  it('as abas ficam no mesmo cabeçalho do título, na linha da base', async () => {
     renderizarApp('/')
     const abas = await screen.findByRole('tablist', { name: 'Etapa' })
     const titulo = screen.getByRole('heading', { level: 1, name: 'Obras' })
-    expect(titulo.parentElement).toBe(abas.parentElement?.parentElement)
-    expect(titulo.parentElement).toHaveClass('topo-linha-titulo')
+    expect(abas.parentElement).toHaveClass('topo-base')
+    expect(titulo.closest('header')).toBe(abas.closest('header'))
+    expect(titulo.closest('header')!.lastElementChild).toBe(abas.parentElement)
   })
 })
 
 describe('Início: barrinhas', () => {
-  it('mostra as 3 barrinhas com número e descrição por extenso, e some o selo antigo', async () => {
+  it('mostra os 3 totais com número, rótulo curto e descrição por extenso, e some o selo antigo', async () => {
     renderizarApp('/')
     const linha = await linhaDaHto()
     const s = await within(linha).findByRole('img', { name: '2 serviços' })
-    expect(s).toHaveTextContent('2')
+    expect(s).toHaveTextContent(/^2Serviços$/)
     expect(s).toHaveAttribute('title', '2 serviços')
-    expect(within(linha).getByRole('img', { name: '3 pendências abertas' })).toHaveTextContent('3')
-    expect(within(linha).getByRole('img', { name: '1 pendência resolvida' })).toHaveTextContent('1')
+    expect(within(linha).getByRole('img', { name: '3 pendências abertas' })).toHaveTextContent(/^3Pendências$/)
+    expect(within(linha).getByRole('img', { name: '1 pendência resolvida' })).toHaveTextContent(/^1Resolvidas$/)
     expect(screen.queryByText('3 pendências abertas', { selector: '.selo' })).not.toBeInTheDocument()
   })
 
@@ -85,7 +86,8 @@ describe('Início: botão Gestão', () => {
     const linha = await linhaDaHto()
     const gestao = await within(linha).findByRole('link', { name: /Gestão/ })
     expect(gestao).toHaveAttribute('href', '/obras/hto/gestao')
-    expect(gestao.closest('a')?.parentElement).toBe(linha)
+    expect(gestao.parentElement).toBe(screen.getByRole('link', { name: 'HTO' }).parentElement)
+    expect(linha).toContainElement(gestao)
     expect(screen.getByRole('link', { name: 'HTO' })).not.toContainElement(gestao)
     expect(screen.getAllByRole('link', { name: /Gestão/ })).toHaveLength(1)
   })

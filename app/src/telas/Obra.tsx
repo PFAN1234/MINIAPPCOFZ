@@ -28,7 +28,7 @@ export default function Obra() {
   )
 }
 
-/** A volta para a lista de obras (antes "← Obras") fica na linha acima do título. */
+/** A volta para a lista de obras fica na linha pequena acima do título, no centro da faixa. */
 function LinkObras() {
   return <Link to="/">Obras</Link>
 }
@@ -59,10 +59,20 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
       titulo={obra.nome}
       idTitulo="titulo-obra"
       sobretitulo={<LinkObras />}
-      aoLado={
-        <Link className="atalho" to={`/obras/${obra.slug}/pendencias`}>
-          Pendências <span className="atalho-selo">{nPendencias}</span>
-        </Link>
+      base={
+        <>
+          {pav && (
+            <Abas
+              rotulo="Pavimento"
+              itens={pavimentos.map((p) => ({ id: p.codigo, rotulo: p.nome }))}
+              ativa={pav.codigo}
+              onMudar={(id) => atualizar({ pav: id, foco: null })}
+            />
+          )}
+          <Link className="atalho" to={`/obras/${obra.slug}/pendencias`}>
+            Pendências <span className="atalho-selo">{nPendencias}</span>
+          </Link>
+        </>
       }
     />
   )
@@ -90,12 +100,6 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
       {topo}
       <PreviaModelo slug={obra.slug} />
       <h3 className="secao-titulo">Ambientes</h3>
-      <Abas
-        rotulo="Pavimento"
-        itens={pavimentos.map((p) => ({ id: p.codigo, rotulo: p.nome }))}
-        ativa={pav.codigo}
-        onMudar={(id) => atualizar({ pav: id, foco: null })}
-      />
       <Abas
         rotulo="Modo de exibição"
         itens={MODOS}

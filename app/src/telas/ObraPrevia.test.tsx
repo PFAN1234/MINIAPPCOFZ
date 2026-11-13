@@ -34,11 +34,13 @@ vi.mock('../modelo/VisualizadorModelo.tsx', () => ({
 }))
 
 describe('Obra: topo e ordem da tela', () => {
-  it('Pendências fica no topo, na mesma linha do nome da obra', async () => {
+  it('os pavimentos e o atalho Pendências ficam na base do topo, no cabeçalho do nome da obra', async () => {
     renderizarApp('/obras/hto')
     const titulo = await screen.findByRole('heading', { level: 1, name: 'HTO' })
     const pendencias = await screen.findByRole('link', { name: 'Pendências 3' })
-    expect(titulo.parentElement).toContainElement(pendencias)
+    const pavimentos = screen.getByRole('tablist', { name: 'Pavimento' })
+    expect(pendencias.parentElement).toHaveClass('topo-base')
+    expect(pavimentos.parentElement).toBe(pendencias.parentElement)
     expect(titulo.closest('header')).toContainElement(pendencias)
   })
 

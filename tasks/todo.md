@@ -355,4 +355,5 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Etiqueta "v39 · 13/11" no canto direito da faixa de identidade, só na tela inicial: número do último PR (da mensagem do commit de merge, `VERCEL_GIT_COMMIT_MESSAGE`), dia do build; um toque mostra o commit curto e a data e hora. Sem PR na mensagem, mostra o commit curto.
 - [x] Formato trocado para `vPR.aammdd.commit` (ex.: `v41.261113.abc1234`); o toque mostra "Publicada em dd/mm/aaaa hh:mm". Sem PR: `vdev`.
 - [x] Faixa do topo reorganizada: OM à esquerda, logo (40 px) no centro, "Fiscal Bot" à direita; versão em todas as telas, no pé do topo azul, pequena, sem contorno e apagada.
-- [ ] Usuário: conferir no Telegram a nova faixa e a versão (número do PR desta entrega).
+- [x] Redesign "Farda" (conceito 1, revisão 2, aprovado pelo usuário): topo em uma linha só (brasão de 52 px, CO-FZ e Fiscal Bot à esquerda, título no centro, versão no canto); etapas e pavimentos como abas na base do topo, com o atalho Pendências à direita; cartões de obra com os 3 totais rotulados; títulos de seção com marcador amarelo; botões principais em maiúsculas.
+- [ ] Usuário: conferir no Telegram o novo topo (Início, obra, ambiente, Registros, Relatórios) e a versão (número do PR desta entrega).

@@ -57,10 +57,9 @@ export default function Obras() {
   return (
     <>
       <TopoTela
-        lista
         titulo="Obras"
         idTitulo="titulo-obras"
-        aoLado={
+        base={
           etapa && (
             <AbasEtapa
               etapas={etapas}
@@ -125,15 +124,17 @@ export default function Obras() {
   )
 }
 
-/** Uma obra do Início: o nome (link), as 3 barrinhas de totais e, para o gestor, o botão Gestão. */
+/** Uma obra do Início: o nome (link que cobre o cartão), o botão Gestão do gestor e os 3 totais. */
 function LinhaObra({ obra, resumo }: { obra: ObraDaLista; resumo: ResumoObra | undefined }) {
   const gestor = resumo?.papel === 'gestor'
   return (
     <li className="lista-item obra-linha">
-      <Link className="obra-linha-nome lista-titulo" to={`/obras/${obra.slug}`}>
-        {obra.nome}
-      </Link>
-      {gestor && <BotaoGestao obra={obra} />}
+      <div className="obra-linha-cab">
+        <Link className="obra-linha-nome lista-titulo" to={`/obras/${obra.slug}`}>
+          {obra.nome}
+        </Link>
+        {gestor && <BotaoGestao obra={obra} />}
+      </div>
       {resumo && (
         <span className="barrinhas">
           <Barrinha tipo="servicos" n={resumo.servicos} texto={textoServicos(resumo.servicos)} />
@@ -145,10 +146,14 @@ function LinhaObra({ obra, resumo }: { obra: ObraDaLista; resumo: ResumoObra | u
   )
 }
 
-function Barrinha({ tipo, n, texto }: { tipo: 'servicos' | 'abertas' | 'resolvidas'; n: number; texto: string }) {
+const ROTULO_BARRINHA = { servicos: 'Serviços', abertas: 'Pendências', resolvidas: 'Resolvidas' } as const
+
+/** Um total da obra: o número grande e o rótulo curto embaixo; o texto por extenso fica para o leitor de tela. */
+function Barrinha({ tipo, n, texto }: { tipo: keyof typeof ROTULO_BARRINHA; n: number; texto: string }) {
   return (
     <span className={`barrinha barrinha-${tipo}`} role="img" aria-label={texto} title={texto}>
-      {n}
+      <b>{n}</b>
+      <span className="barrinha-rotulo">{ROTULO_BARRINHA[tipo]}</span>
     </span>
   )
 }

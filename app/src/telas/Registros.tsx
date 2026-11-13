@@ -80,7 +80,7 @@ export default function Registros() {
 
   return (
     <section aria-labelledby="titulo-registros">
-      <TopoTela lista titulo="Registros" idTitulo="titulo-registros" />
+      <TopoTela titulo="Registros" idTitulo="titulo-registros" />
       {aviso && <Aviso texto={aviso} onFechar={fecharAviso} />}
       <div className="filtros-registros">
         <div className="filtros-linha">
