@@ -42,9 +42,11 @@ export type Estado = "publicado" | "pendente" | "incerto" | "falhou";
 
 interface Publicacao {
   id: number;
-  obra_id: string;
+  /** null na publicação de boletim (o destino é o grupo da etapa). */
+  obra_id: string | null;
   registro_id: string | null;
   encerramento_id: string | null;
+  boletim_id?: string | null;
   tentativas: number;
 }
 
@@ -83,6 +85,26 @@ export function formatarData(iso: string | Date): string {
   }).formatToParts(new Date(iso));
   const p = (t: string) => partes.find((x) => x.type === t)?.value ?? "";
   return `${p("day")}/${p("month")} ${p("hour")}:${p("minute")}`;
+}
+
+/** "AAAA-MM-DD" → "dd/mm/aaaa". */
+export function formatarDia(dia: string): string {
+  const [a, m, d] = dia.slice(0, 10).split("-");
+  return `${d}/${m}/${a}`;
+}
+
+/**
+ * Legenda do boletim no grupo da etapa:
+ * `📄 <b>Boletim BA2/261113/COFZ</b>\n2ª ETAPA · 13/11/2026` (+ ` · retificação R1`).
+ */
+export function legendaBoletim(
+  b: { numero: string; data: string; revisao: number },
+  etapaNome: string,
+): string {
+  const retificacao = b.revisao > 0 ? ` · retificação R${b.revisao}` : "";
+  return `📄 <b>Boletim ${escaparHtml(b.numero)}</b>\n${
+    escaparHtml(etapaNome)
+  } · ${formatarDia(b.data)}${retificacao}`;
 }
 
 /** Corta o texto (sem HTML) em `max` unidades UTF-16, terminando em "…" se foi cortado. */
@@ -343,6 +365,71 @@ export function criarHandler(deps: Deps) {
     return await telegram.chamar("sendMediaGroup", form);
   }
 
+  /**
+   * Boletim emitido: o PDF (bucket `boletins`) vai ao grupo da etapa com `sendDocument`, no tópico
+   * Geral (sem `message_thread_id`). Etapa sem grupo: espera, como obra sem tópico.
+   */
+  async function processarBoletim(pub: Publicacao): Promise<Resultado> {
+    const boletim = await um(
+      "boletim",
+      "id, etapa_id, data, revisao, numero, pdf_path",
+      "id",
+      pub.boletim_id!,
+    );
+    if (!boletim) return { estado: "falhou", erro: "Boletim não encontrado." };
+    const etapa = await um(
+      "etapa",
+      "nome, telegram_chat_id",
+      "id",
+      boletim.etapa_id,
+    );
+    if (!etapa) return { estado: "falhou", erro: "Etapa não encontrada." };
+    if (etapa.telegram_chat_id == null) {
+      return {
+        estado: "pendente",
+        erro: "Etapa sem grupo vinculado.",
+        proxima: new Date(agora().getTime() + ESPERA_SEM_TOPICO_MIN * 60_000),
+      };
+    }
+    if (!boletim.pdf_path) {
+      return { estado: "falhou", erro: "Boletim sem PDF." };
+    }
+    const { data: pdf, error } = await admin.storage.from("boletins")
+      .download(boletim.pdf_path);
+    if (error || !pdf) {
+      console.warn("publish-outbox: falha ao baixar o PDF do boletim");
+      const erro = "Falha ao baixar o PDF do Storage.";
+      if (pub.tentativas >= MAX_TENTATIVAS) return { estado: "falhou", erro };
+      return {
+        estado: "pendente",
+        erro,
+        proxima: new Date(
+          agora().getTime() + backoffMinutos(pub.tentativas) * 60_000,
+        ),
+      };
+    }
+    const form = new FormData();
+    form.append("chat_id", String(etapa.telegram_chat_id));
+    form.append("caption", legendaBoletim(boletim, etapa.nome));
+    form.append("parse_mode", "HTML");
+    form.append(
+      "document",
+      pdf,
+      `${String(boletim.numero).replaceAll("/", "")}.pdf`,
+    );
+    const r = await telegram.chamar("sendDocument", form);
+    if (r.tipo === "http") {
+      console.warn(
+        `publish-outbox: boletim da publicação ${pub.id} recusado pelo Telegram (${r.status}): ${r.description}`,
+      );
+    } else if (r.tipo === "rede") {
+      console.warn(
+        `publish-outbox: boletim da publicação ${pub.id} sem resposta (${r.motivo})`,
+      );
+    }
+    return classificar(r, pub.tentativas);
+  }
+
   function classificar(
     r: ResultadoTelegram<unknown>,
     tentativas: number,
@@ -387,6 +474,10 @@ export function criarHandler(deps: Deps) {
     const backoff = () =>
       new Date(agora().getTime() + backoffMinutos(pub.tentativas) * 60_000);
     try {
+      if (pub.boletim_id) return await processarBoletim(pub);
+      if (!pub.obra_id) {
+        return { estado: "falhou", erro: "Publicação sem obra." };
+      }
       const { obra, destino } = await destinoDaObra(pub.obra_id);
       if (!destino) {
         return {
