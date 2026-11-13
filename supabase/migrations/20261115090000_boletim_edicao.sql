@@ -25,11 +25,11 @@ revoke all on public.boletim_rascunho from public, anon, authenticated;
 alter table public.boletim_emissao
   add column base_boletim_id uuid references public.boletim (id) on delete set null,
   add column edicao jsonb,
-  add constraint boletim_emissao_edicao_coerente check ((base_boletim_id is null) = (edicao is null));
+  add constraint boletim_emissao_edicao_coerente check (base_boletim_id is null or edicao is not null);
 alter table public.boletim
   add column base_boletim_id uuid references public.boletim (id) on delete set null,
   add column edicao jsonb,
-  add constraint boletim_edicao_coerente check ((base_boletim_id is null) = (edicao is null));
+  add constraint boletim_edicao_coerente check (base_boletim_id is null or edicao is not null);
 comment on column public.boletim.base_boletim_id is 'Boletim editado que originou esta retificação (null = sem edição).';
 comment on column public.boletim.edicao is 'Edição aplicada ao snapshot do boletim de base: {textos, ocultos, fotos_ocultas}.';
 

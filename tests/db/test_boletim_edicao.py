@@ -248,11 +248,9 @@ def test_regra_base_e_edicao_juntas(cenario):
     with pytest.raises(errors.CheckViolation):
         pedido(c, DIA, 1, base_boletim_id=b)
     with pytest.raises(errors.CheckViolation):
-        pedido(c, DIA, 1, edicao=json.dumps(EDICAO))
-    with pytest.raises(errors.CheckViolation):
-        su(c, 'update public.boletim set edicao = %s::jsonb where id = %s', (json.dumps(EDICAO), b))
-    with pytest.raises(errors.CheckViolation):
         su(c, 'update public.boletim set base_boletim_id = %s where id = %s', (b, b))
+    # Base apagada (on delete set null) mantém a edição: só a edição sem base é permitida.
+    su(c, 'update public.boletim set edicao = %s::jsonb where id = %s', (json.dumps(EDICAO), b))
 
 
 def test_excluir_etapa_com_retificacao_editada(cenario):

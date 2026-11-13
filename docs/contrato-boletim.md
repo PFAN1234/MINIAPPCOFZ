@@ -322,7 +322,7 @@ Chaves, sobre o snapshot do boletim de base (por obra, em `obras[]`, e em `tardi
 ## Banco (migration `supabase/migrations/20261115090000_boletim_edicao.sql`; testes `tests/db/test_boletim_edicao.py`)
 
 - `public.boletim_rascunho (boletim_id uuid pk references boletim on delete cascade, edicao jsonb not null, atualizado_em timestamptz not null default now(), atualizado_por uuid references auth.users on delete set null)`: RLS ligada, sem políticas (só pelas RPCs).
-- `boletim_emissao` e `boletim` ganham `base_boletim_id uuid references public.boletim(id) on delete set null` e `edicao jsonb` (check: os dois nulos ou os dois preenchidos).
+- `boletim_emissao` e `boletim` ganham `base_boletim_id uuid references public.boletim(id) on delete set null` e `edicao jsonb` (check: base exige edição; a edição fica se a base for apagada).
 - Storage: política `fotos_admin_select` (select em `fotos` para `privado.eh_admin()`), para o site mostrar as fotos no editor por URL assinada.
 - RPCs do site (`privado.exigir_admin()`):
   - `admin_listar_todos_boletins(p_etapa text default null, p_de date default null, p_ate date default null) → {boletins, pedidos}`: como `admin_listar_boletins`, de todas as etapas (ou só da etapa `p_etapa`, slug; inexistente → `P0002`) e com data entre `p_de` e `p_ate` (inclusivo, quando dados). Cada boletim traz também `etapa_slug`, `etapa_nome`, `base_numero` (número do boletim editado, ou null), `editado` (edicao não nula) e `tem_rascunho`; cada pedido traz `etapa_slug`, `etapa_nome` e `editado`. Ordem: data desc, etapa, revisão desc. Até 300 boletins.
