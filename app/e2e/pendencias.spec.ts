@@ -71,8 +71,9 @@ test('encerrar sem sinal fica na fila e é enviado quando o sinal volta', async 
 })
 
 test('Gestão: mudar o papel de um participante e reenviar uma publicação', async ({ page }) => {
-  await page.goto('/obras/hto')
-  await page.getByRole('link', { name: /^Gestão/ }).tap()
+  // O atalho da Gestão fica no Início, na linha da obra (só para o gestor).
+  await page.goto('/')
+  await page.getByRole('listitem').filter({ hasText: 'HTO' }).getByRole('link', { name: /^Gestão/ }).tap()
   await expect(page.getByRole('heading', { name: 'Gestão', level: 1 })).toBeVisible()
 
   const papel = page.getByLabel('Papel de Marcos Teixeira')

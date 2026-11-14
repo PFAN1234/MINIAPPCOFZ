@@ -67,11 +67,13 @@ async function abrirAmbienteApto101(page: Page) {
   await expect(page.getByRole('heading', { name: 'Apto. 101', level: 1 })).toBeVisible()
 }
 
-/** Cor de fundo do primeiro ancestral do elemento que tem fundo (o topo azul, no caso do h1). */
+/** Fundo do primeiro ancestral do elemento que tem fundo: cor ou degradê (o topo azul, no caso do h1). */
 async function fundoDoAncestral(alvo: Locator): Promise<string> {
   return alvo.evaluate((el) => {
     for (let atual = el.parentElement; atual; atual = atual.parentElement) {
-      const cor = getComputedStyle(atual).backgroundColor
+      const estilo = getComputedStyle(atual)
+      if (estilo.backgroundImage !== 'none') return estilo.backgroundImage
+      const cor = estilo.backgroundColor
       if (cor !== 'rgba(0, 0, 0, 0)' && cor !== 'transparent') return cor
     }
     return ''
@@ -83,13 +85,13 @@ test.describe('topo azul', () => {
     ['/', 'Obras'],
     ['/obras/hto', 'HTO'],
     ['/obras/hto/ambientes/terreo-apto-101', 'Apto. 101'],
-    ['/pendencias', 'Pendências'],
+    ['/registros', 'Registros'],
   ]) {
     test(`o h1 "${titulo}" fica no topo azul, no alto da tela`, async ({ page }) => {
       await page.goto(rota)
       const h1 = page.getByRole('heading', { level: 1, name: titulo, exact: true })
       await expect(h1).toBeVisible()
-      expect(await fundoDoAncestral(h1)).toBe('rgb(11, 22, 37)')
+      expect(await fundoDoAncestral(h1)).toContain('rgb(11, 22, 37)')
       // Nada entre o topo e o cabeçalho do Telegram: o azul começa no y = 0.
       const topo = await h1.locator('xpath=ancestor::header[1]').boundingBox()
       expect(topo?.y).toBe(0)
@@ -115,7 +117,7 @@ test.describe('topo azul', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'HTO' })).toBeVisible()
     const alvos = [
       page.getByRole('button', { name: 'Voltar' }),
-      ...['Início', 'Registros', 'Pendências'].map((nome) =>
+      ...['Início', 'Registros', 'Relatórios'].map((nome) =>
         page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('link', { name: new RegExp(`^${nome}`) }),
       ),
     ]
