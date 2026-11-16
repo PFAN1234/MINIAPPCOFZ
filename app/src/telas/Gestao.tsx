@@ -43,6 +43,9 @@ function GestaoCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
               Pedidos de acesso
             </h3>
             <PedidosAcesso obraId={obra.id} />
+            <Link className="atalho" to="/acessos">
+              Lista de acessos da equipe
+            </Link>
           </section>
           <section aria-labelledby="gestao-participantes" className="gestao-secao">
             <h3 id="gestao-participantes" className="secao-titulo">

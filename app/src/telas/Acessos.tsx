@@ -1,4 +1,4 @@
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
 import { PedidosAcesso } from '../components/PedidosAcesso.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
@@ -24,7 +24,12 @@ function AcessosCarregados({ detalhe }: { detalhe: ObraDetalhe }) {
       {papel !== 'gestor' ? (
         <EstadoVazio titulo="Só gestores da obra veem os pedidos de acesso." />
       ) : (
-        <PedidosAcesso obraId={obra.id} />
+        <>
+          <PedidosAcesso obraId={obra.id} />
+          <Link className="atalho" to="/acessos">
+            Lista de acessos da equipe
+          </Link>
+        </>
       )}
     </section>
   )

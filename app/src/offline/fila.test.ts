@@ -110,6 +110,10 @@ function criarRepoFalso() {
       return []
     },
     async decidirSolicitacao() {},
+    async matrizAcessos() {
+      return { obras: [], pessoas: [] }
+    },
+    async definirAcesso() {},
     async localizarRegistro() {
       return null
     },

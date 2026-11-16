@@ -8,6 +8,7 @@ import { TopoTela } from '../components/TopoTela.tsx'
 import type { ObraDaLista, ObraDisponivel, ResumoObra } from '../dados/tipos.ts'
 import {
   useCriarLinkAdmin,
+  useEhGestorAlguma,
   useEtapasInicio,
   useObras,
   useObrasDisponiveis,
@@ -118,6 +119,7 @@ export default function Obras() {
         </EstadoConsulta>
       </section>
       {outras.length > 0 && <OutrasObras obras={outras} />}
+      <LinkAcessosEquipe />
       {etapa && <EquipeServico etapaId={etapa.id} />}
       <Administracao />
     </>
@@ -167,6 +169,17 @@ function BotaoGestao({ obra }: { obra: ObraDaLista }) {
     <Link className="atalho" to={`/obras/${obra.slug}/gestao`}>
       Gestão{' '}
       {n > 0 && <span className="atalho-selo atalho-selo-alerta">{n}</span>}
+    </Link>
+  )
+}
+
+/** Só para quem é gestor de alguma obra: abre a lista de acessos da equipe. */
+function LinkAcessosEquipe() {
+  const gestor = useEhGestorAlguma()
+  if (!gestor) return null
+  return (
+    <Link className="atalho" to="/acessos">
+      Acessos da equipe
     </Link>
   )
 }

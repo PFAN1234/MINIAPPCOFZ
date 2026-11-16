@@ -26,6 +26,8 @@ import type {
   RegistroResumo,
   ResumoObra,
   SolicitacaoAcesso,
+  MatrizAcessos,
+  PapelAcesso,
 } from './tipos.ts'
 import type { ModeloFrag } from '../modelo/modelos.ts'
 import type { GeometriaAmbiente } from '../ra/geometria.ts'
@@ -63,6 +65,10 @@ export interface Repositorio {
   listarSolicitacoes(obraId: string): Promise<SolicitacaoAcesso[]>
   /** Gestor aprova ou recusa um pedido. Falhas sobem como `ErroEnvio`. */
   decidirSolicitacao(id: string, aprovar: boolean): Promise<void>
+  /** Lista de pessoas x obras (só gestor de alguma obra). Falhas sobem como `ErroEnvio`. */
+  matrizAcessos(): Promise<MatrizAcessos>
+  /** Define o acesso de uma pessoa a uma obra (qualquer gestor, qualquer obra). Falhas sobem como `ErroEnvio`. */
+  definirAcesso(obraId: string, usuarioId: string, papel: PapelAcesso): Promise<void>
   /** Pendência com fotos, ambiente, pavimento, papel do usuário e encerramento; null se não houver acesso. */
   obterPendencia(id: string): Promise<PendenciaDetalhe | null>
   /** Idempotente pelo `id`. Falhas sobem como `ErroEnvio` (`conflito` se já encerrada). */

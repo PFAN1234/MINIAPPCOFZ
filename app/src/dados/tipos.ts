@@ -212,6 +212,28 @@ export interface SolicitacaoAcesso {
   criado_em: string
 }
 
+/** Pessoa da lista de acessos (RPC `matriz_acessos`). */
+export interface PessoaAcesso {
+  id: string
+  nome: string
+  username: string | null
+  /** Administradora do grupo: gestora de todas as obras. */
+  admin: boolean
+  /** Última vez que o bot viu a pessoa no grupo ou no app. */
+  vistoEm: string | null
+  /** Só as obras em que a pessoa participa, por id da obra. */
+  acessos: Record<string, 'equipe' | 'gestor'>
+  /** Ids das obras com pedido de acesso pendente. */
+  pedidos: string[]
+}
+
+export interface MatrizAcessos {
+  obras: { id: string; slug: string; nome: string }[]
+  pessoas: PessoaAcesso[]
+}
+
+export type PapelAcesso = 'nenhum' | 'equipe' | 'gestor'
+
 export interface RegistroLocalizado {
   slug: string
   /** Código do ambiente do registro. */
