@@ -750,6 +750,16 @@ Deno.test("entrada e saída pelo update 'message'", async () => {
   });
   assertEquals(sincs(rpcs).length, antes);
   assertEquals(criados, [10]);
+  // Quem sai sozinho vem também em `from`: a saída não pode virar "visto" em seguida.
+  await update(handler, {
+    ...servico,
+    from: { id: 20, first_name: "Duda" },
+    left_chat_member: { id: 20, first_name: "Duda" },
+  });
+  assertEquals(sincs(rpcs).at(-1)?.args, {
+    p_usuario: "u20",
+    p_itens: itens("fora"),
+  });
 });
 
 Deno.test("update 'chat_member' converte a situação como o auth-telegram", async () => {

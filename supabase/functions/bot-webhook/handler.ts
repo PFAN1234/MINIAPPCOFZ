@@ -384,7 +384,11 @@ export function criarHandler(deps: Deps) {
     // (o Telegram a envia como GroupAnonymousBot, com `sender_chat`).
     if (m.from?.is_bot && !m.sender_chat) return;
     // Mensagem comum ou comando de uma pessoa: conta como "visto" (sem resposta no grupo).
-    if (!m.sender_chat) await aplicar(m.chat.id, m.from, "visto");
+    // Mensagem de serviço de entrada/saída não conta: quem sai sozinho aparece em `from`
+    // e voltaria para a lista logo depois do "fora".
+    const servico = (m.new_chat_members?.length ?? 0) > 0 ||
+      !!m.left_chat_member;
+    if (!servico && !m.sender_chat) await aplicar(m.chat.id, m.from, "visto");
     const cmd = lerComando(m.text, deps.botUsername);
     if (!cmd) return;
     switch (cmd.comando) {
