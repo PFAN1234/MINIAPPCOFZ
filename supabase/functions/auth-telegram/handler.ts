@@ -3,29 +3,25 @@ import { validarInitData } from "../_shared/init_data.ts";
 import type { ClienteTelegram } from "../_shared/telegram.ts";
 import { type ClienteSessao, emitirSessao } from "../_shared/sessao.ts";
 import { cabecalhosCors, json, listarOrigens } from "../_shared/http.ts";
+import {
+  type ClienteUsuarios,
+  emailTelegram,
+  garantirUsuario,
+  nomeTelegram,
+  type Situacao,
+  situacaoDoMembro,
+} from "../_shared/usuario.ts";
 
 export type { ClienteSessao };
-export { listarOrigens };
+export { listarOrigens, situacaoDoMembro };
+export type { Situacao };
 
-// Contratos mínimos do cliente Supabase usados aqui.
-// deno-lint-ignore no-explicit-any
-type Resp<T = any> = Promise<{ data: T; error: { message: string } | null }>;
-
-export interface ClienteAdmin {
-  // deno-lint-ignore no-explicit-any
-  from(tabela: string): any;
+// Contrato mínimo do cliente Supabase usado aqui (inclui o de `garantirUsuario`).
+export interface ClienteAdmin extends ClienteUsuarios {
   rpc(
     nome: string,
     args?: Record<string, unknown>,
   ): PromiseLike<{ error: { message: string } | null }>;
-  auth: {
-    admin: {
-      // deno-lint-ignore no-explicit-any
-      createUser(attrs: any): Resp;
-      // deno-lint-ignore no-explicit-any
-      generateLink(params: any): Resp;
-    };
-  };
 }
 
 export interface Deps {
@@ -92,79 +88,16 @@ async function abrirSessao(
   tg: { id: number; first_name: string; last_name?: string; username?: string },
 ) {
   const { admin } = deps;
-  const nome = [tg.first_name, tg.last_name].filter(Boolean).join(" ");
-  const email = `tg${tg.id}@telegram.invalid`;
+  const nome = nomeTelegram(tg);
+  const email = emailTelegram(tg.id);
 
-  const buscar = async (): Promise<string | null> => {
-    const { data, error } = await admin.from("usuario").select("id")
-      .eq("telegram_id", tg.id).maybeSingle();
-    if (error) throw new Error(`consulta usuario: ${error.message}`);
-    return data?.id ?? null;
-  };
-
-  let id = await buscar();
-  if (!id) {
-    const { data, error } = await admin.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      app_metadata: { telegram_id: tg.id },
-      user_metadata: { nome },
-    });
-    if (error) {
-      // Corrida: outra requisição pode ter criado o mesmo usuário.
-      id = await buscar();
-      if (!id) {
-        // O usuário do Auth existe, mas a linha em `usuario` ainda não: o id vem do link.
-        const { data: l, error: e2 } = await admin.auth.admin.generateLink({
-          type: "magiclink",
-          email,
-        });
-        if (e2 || !l?.user?.id) {
-          throw new Error(`createUser: ${error.message}`);
-        }
-        id = l.user.id as string;
-      }
-    } else {
-      id = data.user.id as string;
-    }
-  }
-
-  const { error: eUp } = await admin.from("usuario").upsert({
-    id,
-    telegram_id: tg.id,
-    nome,
-    username: tg.username ?? null,
-    atualizado_em: (deps.agora?.() ?? new Date()).toISOString(),
-  }, { onConflict: "id" });
-  if (eUp) throw new Error(`upsert usuario: ${eUp.message}`);
+  const id = await garantirUsuario(admin, tg, deps.agora);
 
   await sincronizarAcesso(deps, id, tg.id);
 
   const sessao = await emitirSessao(admin, deps.criarClienteSessao, email);
 
   return { ...sessao, usuario: { id, nome, username: tg.username ?? null } };
-}
-
-export type Situacao = "admin" | "membro" | "fora";
-
-/** Converte o `ChatMember` do Telegram na situação do usuário no grupo (ou `null` se desconhecida). */
-export function situacaoDoMembro(
-  m: { status?: string; is_member?: boolean } | null | undefined,
-): Situacao | null {
-  switch (m?.status) {
-    case "creator":
-    case "administrator":
-      return "admin";
-    case "member":
-      return "membro";
-    case "restricted":
-      return m?.is_member ? "membro" : "fora";
-    case "left":
-    case "kicked":
-      return "fora";
-    default:
-      return null;
-  }
 }
 
 const TIMEOUT_CHAT_MEMBER_MS = 5000;

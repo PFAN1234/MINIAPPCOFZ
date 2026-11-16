@@ -5,15 +5,42 @@ import {
   linkApp,
   type ResultadoTelegram,
 } from "../_shared/telegram.ts";
+import {
+  buscarUsuario,
+  type ClienteUsuarios,
+  garantirUsuario,
+  type Situacao,
+  situacaoDoMembro,
+} from "../_shared/usuario.ts";
 
 export interface Deps {
   telegram: ClienteTelegram;
-  admin: ClienteRpc;
+  admin: ClienteRpc & ClienteUsuarios;
   segredos: Segredos;
   botUsername: string;
   appName: string;
   /** URL pública desta função, registrada no `setWebhook`. */
   urlFuncao: string;
+  agora?: () => Date;
+}
+
+interface UsuarioMsg {
+  id: number;
+  is_bot?: boolean;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+}
+
+interface MembroChat {
+  status?: string;
+  is_member?: boolean;
+  user?: UsuarioMsg;
+}
+
+interface MudancaMembro {
+  chat: { id: number };
+  new_chat_member?: MembroChat;
 }
 
 interface Mensagem {
@@ -21,9 +48,20 @@ interface Mensagem {
   text?: string;
   message_thread_id?: number;
   is_topic_message?: boolean;
-  from?: { id: number; is_bot?: boolean };
+  from?: UsuarioMsg;
   sender_chat?: { id: number };
+  new_chat_members?: UsuarioMsg[];
+  left_chat_member?: UsuarioMsg;
   chat: { id: number; type: string; is_forum?: boolean; title?: string };
+}
+
+// Pares `chat:usuário` já registrados como "visto" na última hora (evita ir ao banco a cada mensagem).
+const VISTO_TTL_MS = 60 * 60 * 1000;
+const vistos = new Map<string, number>();
+
+/** Esvazia o cache de "visto" (uso nos testes). */
+export function limparCacheVistos() {
+  vistos.clear();
 }
 
 const BOTAO = "Abrir Fiscal Bot";
@@ -231,7 +269,7 @@ export function criarHandler(deps: Deps) {
     const webhook = await telegram.chamar("setWebhook", {
       url: deps.urlFuncao,
       secret_token: secretToken,
-      allowed_updates: ["message"],
+      allowed_updates: ["message", "chat_member"],
     });
     const privados = await telegram.chamar("setMyCommands", {
       commands: [{ command: "start", description: "Abrir o Fiscal Bot" }],
@@ -263,11 +301,90 @@ export function criarHandler(deps: Deps) {
     return json({ ok: tudoOk, ...resultado }, tudoOk ? 200 : 502);
   }
 
+  const agora = () => (deps.agora?.() ?? new Date()).getTime();
+
+  /** Obras não arquivadas ligadas a este grupo. */
+  async function obrasDoChat(chatId: number): Promise<string[]> {
+    const { data, error } = await deps.admin.from("obra").select("id")
+      .eq("telegram_chat_id", chatId).is("arquivada_em", null);
+    if (error) throw new Error(`consulta obra: ${error.message}`);
+    // deno-lint-ignore no-explicit-any
+    return ((data ?? []) as any[]).map((o) => o.id as string);
+  }
+
+  async function sincronizar(
+    usuarioId: string,
+    obras: string[],
+    situacao: Situacao | "visto",
+  ) {
+    const { error } = await deps.admin.rpc("sincronizar_acesso", {
+      p_usuario: usuarioId,
+      p_itens: obras.map((obra_id) => ({ obra_id, situacao })),
+    });
+    if (error) throw new Error(`sincronizar_acesso: ${error.message}`);
+  }
+
+  const ehPessoa = (u?: UsuarioMsg): u is UsuarioMsg & { first_name: string } =>
+    !!u && !u.is_bot && typeof u.first_name === "string";
+
+  /** Aplica a situação de uma pessoa em todas as obras do grupo. Nunca lança (só log). */
+  async function aplicar(
+    chatId: number,
+    u: UsuarioMsg | undefined,
+    situacao: Situacao | "visto",
+  ) {
+    try {
+      if (!u || u.is_bot) return;
+      const chave = `${chatId}:${u.id}`;
+      if (situacao === "visto") {
+        const antes = vistos.get(chave);
+        if (antes !== undefined && agora() - antes < VISTO_TTL_MS) return;
+      }
+      const obras = await obrasDoChat(chatId);
+      if (obras.length === 0) return;
+      let id: string | null;
+      if (situacao === "fora") {
+        // Quem sai do grupo e nunca foi visto não vira usuário.
+        id = await buscarUsuario(deps.admin, u.id);
+        vistos.delete(chave);
+      } else {
+        if (!ehPessoa(u)) return;
+        id = await garantirUsuario(deps.admin, u, deps.agora);
+      }
+      if (!id) return;
+      await sincronizar(id, obras, situacao);
+      if (situacao === "visto") vistos.set(chave, agora());
+    } catch (e) {
+      console.warn(
+        "bot-webhook: falha ao registrar acesso:",
+        e instanceof Error ? e.message : "erro desconhecido",
+      );
+    }
+  }
+
+  /** Update `chat_member`: mudança de situação de alguém no grupo. */
+  async function processarMembro(c: MudancaMembro) {
+    const novo = c.new_chat_member;
+    const situacao = situacaoDoMembro(novo);
+    if (!situacao) return;
+    await aplicar(c.chat.id, novo?.user, situacao);
+  }
+
   async function processar(m: Mensagem) {
+    // Entrada e saída de pessoas no grupo (mensagens de serviço, sem texto).
+    for (const u of m.new_chat_members ?? []) {
+      await aplicar(m.chat.id, u, "membro");
+    }
+    if (m.left_chat_member) {
+      await aplicar(m.chat.id, m.left_chat_member, "fora");
+    }
+
     if (typeof m.text !== "string") return;
     // Mensagens de bots são ignoradas, exceto a do administrador anônimo
     // (o Telegram a envia como GroupAnonymousBot, com `sender_chat`).
     if (m.from?.is_bot && !m.sender_chat) return;
+    // Mensagem comum ou comando de uma pessoa: conta como "visto" (sem resposta no grupo).
+    if (!m.sender_chat) await aplicar(m.chat.id, m.from, "visto");
     const cmd = lerComando(m.text, deps.botUsername);
     if (!cmd) return;
     switch (cmd.comando) {
@@ -308,6 +425,9 @@ export function criarHandler(deps: Deps) {
     try {
       const update = await req.json();
       if (update?.message) await processar(update.message as Mensagem);
+      if (update?.chat_member) {
+        await processarMembro(update.chat_member as MudancaMembro);
+      }
     } catch (e) {
       console.error(
         "bot-webhook: erro ao processar update:",
