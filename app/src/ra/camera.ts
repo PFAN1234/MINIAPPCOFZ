@@ -61,6 +61,19 @@ function paraJpeg(canvas: HTMLCanvasElement): Promise<Blob> {
   })
 }
 
+/** Captura o quadro inteiro do vídeo em JPEG (lado maior até 1920). */
+export async function capturarQuadro(video: HTMLVideoElement): Promise<Blob> {
+  if (!video.videoWidth || !video.videoHeight) throw new Error('A câmera ainda não está pronta.')
+  const fator = Math.min(1, LADO_MAXIMO / Math.max(video.videoWidth, video.videoHeight))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.max(1, Math.round(video.videoWidth * fator))
+  canvas.height = Math.max(1, Math.round(video.videoHeight * fator))
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Não foi possível gerar a foto.')
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+  return paraJpeg(canvas)
+}
+
 export interface ParCapturado {
   limpa: Blob
   comModelo: Blob

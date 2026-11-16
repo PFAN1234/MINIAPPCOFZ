@@ -93,6 +93,12 @@ export function dentroDoTelegram(): boolean {
   return app !== undefined && app.initData !== ''
 }
 
+/** True no Telegram para Android, cujo WebView ignora `capture` do input de arquivo. */
+export function cameraNoApp(): boolean {
+  const plataforma = webApp()?.platform
+  return dentroDoTelegram() && (plataforma === 'android' || plataforma === 'android_x')
+}
+
 /** Avisa o Telegram que a interface está pronta. */
 export function ready(): void {
   webApp()?.ready()
