@@ -47,6 +47,8 @@ import type {
   RegistroResumo,
   ResumoObra,
   SolicitacaoAcesso,
+  MatrizAcessos,
+  PapelAcesso,
   BoletimRelatorio,
   EtapaRelatorio,
   PainelRelatorios,
@@ -119,6 +121,8 @@ const PARTICIPANTES_BASE: (Participante & { papel_inicial: PapelObra })[] = [
   { usuario_id: ID_JOAO, nome: 'João Lima', username: 'joao', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-25T09:10:00Z' },
   { usuario_id: ID_PATRICIO, nome: NOME_PATRICIO, username: 'patricio', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-26T11:00:00Z' },
 ]
+
+const ID_ANA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a05'
 
 const OBRAS: ObraDaLista[] = [
   { id: ID_HTO, slug: 'hto', nome: 'HTO', etapa: ETAPA_2 },
@@ -716,6 +720,23 @@ export function criarRepositorioFixture(
     )
   }
 
+  // Lista de acessos: só em memória. A HTO segue os participantes; as outras obras, esta tabela.
+  const acessosFora: Record<string, Record<string, 'equipe' | 'gestor'>> = {
+    [ID_AURORA]: { [ID_MARCOS]: 'equipe' },
+    [ID_ALOJAMENTOS]: {},
+  }
+  const adminsDoGrupo = [ID_ANA]
+  const outrasPessoas = { [ID_ANA]: { nome: 'Ana Prado', username: 'anaprado' }, [PEDIDO_MARIA.usuario_id]: { nome: PEDIDO_MARIA.nome, username: PEDIDO_MARIA.username } }
+
+  function papelNaObra(obraId: string, usuarioId: string): 'nenhum' | 'equipe' | 'gestor' {
+    if (adminsDoGrupo.includes(usuarioId)) return 'gestor'
+    if (obraId === ID_HTO) {
+      const p = participantesAtuais().find((x) => x.usuario_id === usuarioId)
+      return p ? p.papel : (acessosFora[ID_HTO]?.[usuarioId] ?? 'nenhum')
+    }
+    return acessosFora[obraId]?.[usuarioId] ?? 'nenhum'
+  }
+
   function exigirOutroGestor(usuarioId: string): void {
     const outros = participantesAtuais().filter(
       (p) => p.papel === 'gestor' && p.usuario_id !== usuarioId,
@@ -1039,6 +1060,76 @@ export function criarRepositorioFixture(
       const atual = decisoes[id]
       if (atual && atual !== nova) throw new ErroEnvio('conflito', 'Pedido já decidido.')
       decisoes[id] = nova
+      if (aprovar) (acessosFora[ID_HTO] ??= {})[PEDIDO_MARIA.usuario_id] ??= 'equipe'
+      persistir()
+    },
+
+    async matrizAcessos(): Promise<MatrizAcessos> {
+      if (papelUsuario() !== 'gestor') {
+        throw new ErroEnvio('permissao', 'Só gestores veem a lista de acessos.')
+      }
+      const nomes: Record<string, { nome: string; username: string | null }> = {
+        ...outrasPessoas,
+        ...Object.fromEntries(PARTICIPANTES_BASE.map((p) => [p.usuario_id, { nome: p.nome, username: p.username }])),
+      }
+      const pedidoMaria = decisoes[ID_PEDIDO_MARIA] ? [] : [ID_HTO]
+      const pessoas = Object.entries(nomes).map(([id, n]) => {
+        const acessos: Record<string, 'equipe' | 'gestor'> = {}
+        for (const o of OBRAS) {
+          const papel = papelNaObra(o.id, id)
+          if (papel !== 'nenhum') acessos[o.id] = papel
+        }
+        return {
+          id,
+          nome: n.nome,
+          username: n.username,
+          admin: adminsDoGrupo.includes(id),
+          vistoEm: '2026-11-15T14:00:00Z',
+          acessos,
+          pedidos: id === PEDIDO_MARIA.usuario_id ? pedidoMaria : [],
+        }
+      })
+      pessoas.sort(
+        (a, b) =>
+          Number(b.pedidos.length > 0) - Number(a.pedidos.length > 0) ||
+          a.nome.localeCompare(b.nome, 'pt-BR') ||
+          a.id.localeCompare(b.id),
+      )
+      return { obras: OBRAS.map((o) => ({ id: o.id, slug: o.slug, nome: o.nome })), pessoas }
+    },
+
+    async definirAcesso(obraId, usuarioId, papel: PapelAcesso) {
+      exigirRede()
+      if (papelUsuario() !== 'gestor') throw new ErroEnvio('permissao', 'Só gestores alteram acessos.')
+      if (papel !== 'nenhum' && papel !== 'equipe' && papel !== 'gestor') falhaValidacao('Acesso inválido.')
+      if (!OBRAS.some((o) => o.id === obraId)) throw new ErroEnvio('nao_encontrado', 'Obra não encontrada.')
+      if (adminsDoGrupo.includes(usuarioId) && papel !== 'gestor') {
+        falhaValidacao('Administradores do grupo são gestores de todas as obras.')
+      }
+      const atual = papelNaObra(obraId, usuarioId)
+      if (atual === 'gestor' && papel !== 'gestor') {
+        const gestores = [...PARTICIPANTES_BASE.map((p) => p.usuario_id), ...Object.keys(outrasPessoas)].filter(
+          (id) => id !== usuarioId && papelNaObra(obraId, id) === 'gestor',
+        )
+        if (gestores.length === 0) falhaValidacao('A obra precisa de pelo menos um gestor.')
+      }
+      const base = obraId === ID_HTO && PARTICIPANTES_BASE.some((p) => p.usuario_id === usuarioId)
+      if (base) {
+        const i = removidos.indexOf(usuarioId)
+        if (papel === 'nenhum') {
+          if (i < 0) removidos.push(usuarioId)
+        } else {
+          if (i >= 0) removidos.splice(i, 1)
+          papeis[usuarioId] = papel
+        }
+      } else {
+        const tabela = (acessosFora[obraId] ??= {})
+        if (papel === 'nenhum') delete tabela[usuarioId]
+        else tabela[usuarioId] = papel
+      }
+      if (papel !== 'nenhum' && obraId === ID_HTO && usuarioId === PEDIDO_MARIA.usuario_id) {
+        decisoes[ID_PEDIDO_MARIA] ??= 'aprovada'
+      }
       persistir()
     },
 

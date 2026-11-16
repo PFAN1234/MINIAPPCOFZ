@@ -42,6 +42,7 @@ import type {
   RegistroLocalizado,
   RegistroResumo,
   SolicitacaoAcesso,
+  MatrizAcessos,
   PainelRelatorios,
   Relatorios,
   ResultadoExclusaoBoletim,
@@ -1051,6 +1052,39 @@ export function criarRepositorioSupabase(
       } catch (e) {
         throw erroDoSupabase(e)
       }
+    },
+
+    async matrizAcessos(): Promise<MatrizAcessos> {
+      const dados = ((await chamar('matriz_acessos', {})) ?? {}) as Linha
+      return {
+        obras: ((dados.obras ?? []) as Linha[]).map((o) => ({
+          id: String(o.id),
+          slug: String(o.slug),
+          nome: String(o.nome),
+        })),
+        pessoas: ((dados.pessoas ?? []) as Linha[]).map((l) => ({
+          id: String(l.id),
+          nome: String(l.nome),
+          username: l.username ? String(l.username) : null,
+          admin: l.admin === true,
+          vistoEm: l.visto_em ? String(l.visto_em) : null,
+          acessos: Object.fromEntries(
+            Object.entries((l.acessos ?? {}) as Record<string, unknown>).map(([k, v]) => [
+              k,
+              v === 'gestor' ? 'gestor' : 'equipe',
+            ]),
+          ),
+          pedidos: ((l.pedidos ?? []) as unknown[]).map(String),
+        })),
+      }
+    },
+
+    async definirAcesso(obraId, usuarioId, papel) {
+      await chamar('definir_acesso', {
+        p_obra: exigirUuid(obraId, 'obra'),
+        p_usuario: exigirUuid(usuarioId, 'usuário'),
+        p_papel: papel,
+      })
     },
 
     async localizarRegistro(id): Promise<RegistroLocalizado | null> {

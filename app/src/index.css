@@ -2288,3 +2288,55 @@ a.botao {
   white-space: nowrap;
   padding: 0 14px;
 }
+
+/* Lista de acessos da equipe */
+.acesso-cartao {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.acesso-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.acesso-obra {
+  font-weight: 600;
+}
+
+.acesso-seletor {
+  display: flex;
+  gap: 4px;
+}
+
+.acesso-opcao {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.85rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+
+.acesso-opcao[aria-pressed='true'] {
+  color: #fff;
+  font-weight: 600;
+  background: var(--info);
+  border-color: var(--info);
+}
+
+.acesso-opcao:disabled {
+  opacity: 0.6;
+}
+
+.atalho + .atalho,
+.estado-vazio + .atalho {
+  margin-top: 8px;
+}

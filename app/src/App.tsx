@@ -5,6 +5,7 @@ import { AberturaPorLink } from './components/AberturaPorLink.tsx'
 import { Layout } from './components/Layout.tsx'
 import { OfflineProvider } from './offline/contexto.tsx'
 import Acessos from './telas/Acessos.tsx'
+import AcessosEquipe from './telas/AcessosEquipe.tsx'
 import Ambiente from './telas/Ambiente.tsx'
 import Gestao from './telas/Gestao.tsx'
 import Modelo from './telas/Modelo.tsx'
@@ -29,6 +30,7 @@ export default function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Obras />} />
+            <Route path="acessos" element={<AcessosEquipe />} />
             <Route path="registros" element={<Registros />} />
             <Route path="pendencias" element={<Navigate replace to="/registros?tipo=abertas" />} />
             <Route path="relatorios" element={<Relatorios />} />

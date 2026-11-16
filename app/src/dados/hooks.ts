@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorio } from './contexto.tsx'
-import type { EquipeServico, FiltroRegistros, NovaObservacao, PapelObra, Posicao } from './tipos.ts'
+import type { EquipeServico, FiltroRegistros, NovaObservacao, PapelAcesso, PapelObra, Posicao } from './tipos.ts'
 
 export function useObras() {
   const repo = useRepositorio()
@@ -123,6 +123,33 @@ export function useDecidirSolicitacao() {
     mutationFn: ({ id, aprovar }: { id: string; aprovar: boolean }) =>
       repo.decidirSolicitacao(id, aprovar),
     onSettled: () => qc.invalidateQueries({ queryKey: ['solicitacoes'] }),
+  })
+}
+
+/** Lista de acessos (pessoas x obras); falha com `permissao` para quem não é gestor. */
+export function useMatrizAcessos() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['matriz-acessos'], queryFn: () => repo.matrizAcessos() })
+}
+
+/** O usuário é gestor de alguma obra? `undefined` enquanto as obras não carregam. */
+export function useEhGestorAlguma(): boolean | undefined {
+  const resumo = useResumoObras()
+  return resumo.data ? resumo.data.some((r) => r.papel === 'gestor') : undefined
+}
+
+export function useDefinirAcesso() {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ obraId, usuarioId, papel }: { obraId: string; usuarioId: string; papel: PapelAcesso }) =>
+      repo.definirAcesso(obraId, usuarioId, papel),
+    onSettled: () =>
+      Promise.all(
+        ['matriz-acessos', 'obras', 'resumo-obras', 'participantes', 'solicitacoes', 'obras-disponiveis'].map(
+          (k) => qc.invalidateQueries({ queryKey: [k] }),
+        ),
+      ),
   })
 }
 
