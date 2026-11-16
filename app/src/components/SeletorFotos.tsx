@@ -90,6 +90,7 @@ export function SeletorFotos({
       {cameraAberta && (
         <CameraFotos
           jaEscolhidas={itens.length}
+          limite={MAX_FOTOS}
           onFoto={(arquivo) => onAdicionar([arquivo])}
           onFechar={() => setCameraAberta(false)}
           onUsarGaleria={() => {

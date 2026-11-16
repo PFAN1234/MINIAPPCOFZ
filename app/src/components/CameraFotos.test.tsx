@@ -57,7 +57,7 @@ describe('CameraFotos', () => {
     const onFechar = vi.fn()
     const onUsarGaleria = vi.fn()
     const r = render(
-      <CameraFotos jaEscolhidas={jaEscolhidas} onFoto={onFoto} onFechar={onFechar} onUsarGaleria={onUsarGaleria} />,
+      <CameraFotos jaEscolhidas={jaEscolhidas} limite={10} onFoto={onFoto} onFechar={onFechar} onUsarGaleria={onUsarGaleria} />,
     )
     await waitFor(() => expect(getUserMedia).toHaveBeenCalled())
     await act(async () => {})
@@ -85,7 +85,7 @@ describe('CameraFotos', () => {
     getUserMedia.mockRejectedValue(new DOMException('no', 'NotAllowedError'))
     const onUsarGaleria = vi.fn()
     const onFechar = vi.fn()
-    render(<CameraFotos jaEscolhidas={0} onFoto={vi.fn()} onFechar={onFechar} onUsarGaleria={onUsarGaleria} />)
+    render(<CameraFotos jaEscolhidas={0} limite={10} onFoto={vi.fn()} onFechar={onFechar} onUsarGaleria={onUsarGaleria} />)
     expect(await screen.findByRole('alert')).toHaveTextContent(/acesso à câmera foi negado/)
     await userEvent.click(screen.getByRole('button', { name: 'Usar galeria' }))
     expect(onUsarGaleria).toHaveBeenCalled()

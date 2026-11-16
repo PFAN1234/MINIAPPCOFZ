@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { abrirCamera, capturarQuadro, fecharCamera } from '../ra/camera.ts'
-import { MAX_FOTOS } from './SeletorFotos.tsx'
 
 /** Câmera em tela cheia para o Telegram Android, que ignora `capture` no input de arquivo. */
 export function CameraFotos({
   jaEscolhidas,
+  limite,
   onFoto,
   onFechar,
   onUsarGaleria,
 }: {
   jaEscolhidas: number
+  limite: number
   onFoto: (arquivo: File) => void
   onFechar: () => void
   onUsarGaleria: () => void
@@ -44,7 +46,7 @@ export function CameraFotos({
 
   async function disparar() {
     const el = video.current
-    if (!el || ocupado || total >= MAX_FOTOS) return
+    if (!el || ocupado || total >= limite) return
     setOcupado(true)
     try {
       const blob = await capturarQuadro(el)
@@ -65,7 +67,7 @@ export function CameraFotos({
     onFechar()
   }
 
-  return (
+  return createPortal(
     <div className="camera-fotos" role="dialog" aria-modal="true" aria-label="Câmera">
       {erro ? (
         <div className="camera-fotos-erro">
@@ -83,13 +85,13 @@ export function CameraFotos({
           {flash && <div className="camera-fotos-flash" data-testid="camera-flash" />}
           <div className="camera-fotos-barra">
             <span className="camera-fotos-contador">
-              {total} de {MAX_FOTOS}
+              {total} de {limite}
             </span>
             <button
               type="button"
               className="camera-fotos-disparo"
               aria-label="Tirar foto"
-              disabled={total >= MAX_FOTOS || ocupado}
+              disabled={total >= limite || ocupado}
               onClick={disparar}
             />
             <button type="button" className="camera-fotos-concluir" onClick={concluir}>
@@ -98,6 +100,7 @@ export function CameraFotos({
           </div>
         </>
       )}
-    </div>
+    </div>,
+    document.body,
   )
 }
