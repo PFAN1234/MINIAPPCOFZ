@@ -1,4 +1,6 @@
-import { useRef, type ChangeEvent } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
+import { cameraNoApp } from '../telegram.ts'
+import { CameraFotos } from './CameraFotos.tsx'
 
 export const MAX_FOTOS = 10
 
@@ -24,6 +26,7 @@ export function SeletorFotos({
 }) {
   const camera = useRef<HTMLInputElement>(null)
   const galeria = useRef<HTMLInputElement>(null)
+  const [cameraAberta, setCameraAberta] = useState(false)
   const cheio = itens.length >= MAX_FOTOS
 
   function escolher(e: ChangeEvent<HTMLInputElement>) {
@@ -70,7 +73,7 @@ export function SeletorFotos({
           type="button"
           className="botao botao-secundario"
           disabled={desabilitado || cheio}
-          onClick={() => camera.current?.click()}
+          onClick={() => (cameraNoApp() ? setCameraAberta(true) : camera.current?.click())}
         >
           Câmera
         </button>
@@ -84,6 +87,18 @@ export function SeletorFotos({
         </button>
       </div>
       {cheio && <p className="campo-dica">Limite de {MAX_FOTOS} fotos atingido.</p>}
+      {cameraAberta && (
+        <CameraFotos
+          jaEscolhidas={itens.length}
+          limite={MAX_FOTOS}
+          onFoto={(arquivo) => onAdicionar([arquivo])}
+          onFechar={() => setCameraAberta(false)}
+          onUsarGaleria={() => {
+            setCameraAberta(false)
+            galeria.current?.click()
+          }}
+        />
+      )}
       <input
         ref={camera}
         type="file"
