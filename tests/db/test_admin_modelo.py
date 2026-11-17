@@ -241,6 +241,22 @@ def test_registrar_cria_e_atualiza(cenario, admin):
     assert modelos(cenario, obra) == [('ARQ', None, p2['caminho'], 3_000_000_000, 'd' * 16)]
     assert historico(cenario, obra) == 2
 
+
+def test_republicar_limpa_matriz_da_revisao_anterior(cenario, admin):
+    obra = cenario.obra_a
+    p1 = payload(obra, sigla='ANT', hash_='a', bytes_=100)
+    subir(cenario, p1['caminho'], 100)
+    registrar(cenario, admin, obra, p1)
+    with sessao(cenario.dsn, papel=None) as cur:
+        cur.execute("update public.modelo set matriz = %s::jsonb where obra_id = %s and sigla = 'ANT'",
+                    (json.dumps([1] * 16), obra))
+    p2 = payload(obra, sigla='ANT', revisao='R02', hash_='b', bytes_=200)
+    subir(cenario, p2['caminho'], 200)
+    registrar(cenario, admin, obra, p2)
+    with sessao(cenario.dsn, papel=None) as cur:
+        cur.execute("select matriz from public.modelo where obra_id = %s and sigla = 'ANT'", (obra,))
+        assert cur.fetchone()[0] is None
+
     lista = listar(cenario, admin, obra)
     assert [h['hash'] for h in lista['historico']] == ['d' * 16, 'a' * 16]
     assert lista['historico'][0]['publicado_por_nome'] == 'Usuário 3'
