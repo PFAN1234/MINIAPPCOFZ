@@ -83,6 +83,15 @@ function AmbienteCarregado({ detalhe }: { detalhe: AmbienteDetalhe }) {
         <button
           type="button"
           className="botao botao-secundario botao-bloco"
+          onClick={() => navigate(`/obras/${obra.slug}/ambientes/${ambiente.codigo}/modelo`)}
+        >
+          Visualizar modelo
+        </button>
+      )}
+      {temRA && (
+        <button
+          type="button"
+          className="botao botao-secundario botao-bloco"
           onClick={() => navigate(`/obras/${obra.slug}/ambientes/${ambiente.codigo}/novo?ra=1`)}
         >
           Comparar com o modelo (RA)
