@@ -182,3 +182,16 @@ export function projetar(
   const t = Math.tan((fovGraus * Math.PI) / 360)
   return [local.x / (-local.z * t * aspecto), local.y / (-local.z * t)]
 }
+
+/** Distância (m) e giro (rad, sempre positivo) entre duas poses. */
+export function distanciaEntrePoses(a: Pose, b: Pose): { metros: number; rad: number } {
+  return { metros: a.posicao.distanceTo(b.posicao), rad: Math.abs(normalizarAngulo(b.rumo - a.rumo)) }
+}
+
+/** Média ponderada entre duas poses (`peso` = parte da nova), pelo caminho mais curto no rumo. */
+export function suavizarPose(atual: Pose, nova: Pose, peso: number): Pose {
+  return {
+    posicao: atual.posicao.clone().lerp(nova.posicao, peso),
+    rumo: normalizarAngulo(atual.rumo + normalizarAngulo(nova.rumo - atual.rumo) * peso),
+  }
+}

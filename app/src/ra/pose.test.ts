@@ -10,11 +10,13 @@ import {
 } from './geometria.ts'
 import { orientacaoFixa, quaternionDoAparelho } from './orientacao.ts'
 import {
+  distanciaEntrePoses,
   erroDoToque,
   normalizarAngulo,
   projetar,
   resolverPorCantos,
   resolverPorQr,
+  suavizarPose,
   type LeituraQr,
   type Ponto2,
   type Pose,
@@ -178,5 +180,24 @@ describe('quaternionDoAparelho', () => {
   it('aparelho deitado com a tela para cima olha para o chão', () => {
     const frente = new Vector3(0, 0, -1).applyQuaternion(quaternionDoAparelho(0, 0, 0, 0))
     expect(frente.y).toBeCloseTo(-1, 6)
+  })
+})
+
+describe('re-localização por QR', () => {
+  it('suavizarPose anda a fração pedida e gira pelo caminho curto', () => {
+    const a: Pose = { posicao: new Vector3(0, 1, 0), rumo: 3 }
+    const b: Pose = { posicao: new Vector3(1, 1, 0), rumo: -3 }
+    const m = suavizarPose(a, b, 0.5)
+    expect(m.posicao.x).toBeCloseTo(0.5)
+    expect(Math.abs(normalizarAngulo(m.rumo - Math.PI))).toBeLessThan(0.01)
+    expect(suavizarPose(a, b, 1).posicao.x).toBeCloseTo(1)
+  })
+
+  it('distanciaEntrePoses mede metros e giro', () => {
+    const a: Pose = { posicao: new Vector3(0, 0, 0), rumo: 0.1 }
+    const b: Pose = { posicao: new Vector3(3, 4, 0), rumo: -0.1 }
+    const d = distanciaEntrePoses(a, b)
+    expect(d.metros).toBeCloseTo(5)
+    expect(d.rad).toBeCloseTo(0.2)
   })
 })

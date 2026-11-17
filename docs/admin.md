@@ -361,7 +361,7 @@ Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra,
 
 1. Abra a página da obra e clique em "Realidade aumentada". Os ambientes aparecem por pavimento, com a marca "Com QR" ou "Sem QR".
 2. Clique em "Abrir" no ambiente. O desenho mostra o contorno visto de cima (x para a direita, z para baixo), com os cantos numerados a partir de 1 e o comprimento de cada parede (a parede *n* vai do canto *n* ao canto *n+1*).
-3. Escolha a **parede** onde o QR será fixado e informe a **distância** em metros a partir do canto inicial da parede (entre 0 e o comprimento dela), a **altura** do centro do QR acima do piso (padrão 1,50 m; entre 0 e 5 m) e o **lado** do QR em centímetros (padrão 18 cm; entre 5 e 100 cm). A marca vermelha no desenho acompanha o formulário. O lado é gravado em metros e se refere ao quadrado do QR, sem a margem branca.
+3. Escolha a **parede** onde o QR será fixado e informe a **distância** em metros a partir do canto inicial da parede (entre 0 e o comprimento dela), a **altura** do centro do QR acima do piso (padrão 1,50 m; entre 0 e 5 m) e o **lado** do QR em centímetros (padrão 15 cm; entre 5 e 100 cm). A marca vermelha no desenho acompanha o formulário. O lado é gravado em metros e se refere ao quadrado do QR, sem a margem branca.
 4. Clique em "Salvar". "Remover QR" (com confirmação) apaga o cadastro.
 5. Com o QR salvo, clique em "Imprimir" (o botão só fica ativo quando o formulário bate com o que está salvo).
 
@@ -369,7 +369,7 @@ Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra,
 
 - A folha é A4 (`@page { size: A4; margin: 0 }`); o resto da página some na impressão. Na janela de impressão do navegador, escolha **escala 100% / tamanho real** e desligue "ajustar à página" e cabeçalhos e rodapés.
 - Confira a **régua de 10 cm** impressa ao lado do QR: se não medir 10 cm, a escala está errada e o alinhamento da RA fica errado.
-- Lados acima de 18 cm não cabem numa folha A4 com a margem branca (a tela avisa).
+- Lados acima de 15 cm não cabem numa folha A4 com a margem branca (a tela avisa).
 - Fixe a folha na parede indicada, na distância e na altura da instrução impressa ("Fixar na parede *n*, a *d* m do canto *n*, com o centro a *h* m do piso. Bordas no prumo."), virada para dentro do ambiente.
 
 ### Peças

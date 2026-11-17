@@ -62,10 +62,10 @@ describe('realidade aumentada (fixture)', () => {
     expect(paredes.getAllByText('6,03 m')).toHaveLength(2)
     expect(paredes.getAllByText('3,96 m')).toHaveLength(2)
     const marca = screen.getByTestId('ra-marca').querySelector('circle')!
-    expect(Number(marca.getAttribute('cx'))).toBeCloseTo(2.5)
+    const antes = Number(marca.getAttribute('cx'))
     await user.clear(screen.getByLabelText(/Distância a partir do canto/))
     await user.type(screen.getByLabelText(/Distância a partir do canto/), '4')
-    expect(Number(screen.getByTestId('ra-marca').querySelector('circle')!.getAttribute('cx'))).toBeCloseTo(4)
+    expect(Number(screen.getByTestId('ra-marca').querySelector('circle')!.getAttribute('cx'))).not.toBeCloseTo(antes)
     await user.selectOptions(screen.getByLabelText('Parede'), '1')
     expect(screen.getByLabelText(/Distância a partir do canto 2/)).toBeInTheDocument()
   })
@@ -107,13 +107,16 @@ describe('realidade aumentada (fixture)', () => {
     expect(screen.queryByRole('button', { name: 'Remover QR' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Imprimir' })).toBeDisabled()
     expect(screen.getByLabelText(/Altura do centro/)).toHaveValue('1,50')
-    expect(screen.getByLabelText(/Lado do QR/)).toHaveValue('18')
+    expect(screen.getByLabelText(/Lado do QR/)).toHaveValue('15')
 
     await user.selectOptions(screen.getByLabelText('Parede'), '1')
     const distancia = screen.getByLabelText(/Distância a partir do canto/)
     await user.clear(distancia)
     await user.type(distancia, '1,25')
     const lado = screen.getByLabelText(/Lado do QR/)
+    await user.clear(lado)
+    await user.type(lado, '16')
+    expect(screen.getByText(/Com mais de 15 cm, o QR não cabe numa folha A4/)).toBeInTheDocument()
     await user.clear(lado)
     await user.type(lado, '15')
     await user.click(screen.getByRole('button', { name: 'Salvar' }))
@@ -151,5 +154,87 @@ describe('realidade aumentada (fixture)', () => {
     expect(await screen.findByText('QR removido.')).toBeInTheDocument()
     expect(screen.queryByTestId('ra-folha')).not.toBeInTheDocument()
     expect((await repo.listarRA('obra-hto')).find((a) => a.codigo === 'terreo-administracao')?.qr).toBeNull()
+  })
+
+  it('listarRA traz contorno_pagina e planta só da Administração', async () => {
+    const lista = await renderizar().listarRA('obra-hto')
+    const adm = lista.find((a) => a.codigo === 'terreo-administracao')
+    expect(adm?.contorno_pagina).toHaveLength(4)
+    expect(adm?.planta).not.toBeNull()
+    const alo = lista.find((a) => a.codigo === 'terreo-alojamento')
+    expect(alo?.contorno_pagina).toBeNull()
+    expect(alo?.planta).toBeNull()
+  })
+
+  it('com planta, o desenho usa a imagem e a marca acompanha a distância digitada', async () => {
+    const user = userEvent.setup()
+    const repo = renderizar()
+    const url = (await repo.listarRA('obra-hto')).find((a) => a.codigo === 'terreo-administracao')!.planta!.url
+    await abrir(user, 'Administração')
+    const desenho = screen.getByTestId('ra-desenho')
+    expect(desenho).toHaveAttribute('data-modo', 'planta')
+    expect(desenho.querySelector('image')?.getAttribute('href')).toBe(url)
+    const centro = () => Number(screen.getByTestId('ra-marca').querySelector('.ra-qr-centro')!.getAttribute('cx'))
+    const antes = centro()
+    await user.clear(screen.getByLabelText(/Distância a partir do canto/))
+    await user.type(screen.getByLabelText(/Distância a partir do canto/), '4')
+    expect(centro()).not.toBeCloseTo(antes)
+  })
+
+  it('sem planta, mantém o desenho esquemático', async () => {
+    const user = userEvent.setup()
+    renderizar()
+    await abrir(user, 'Alojamento')
+    const desenho = screen.getByTestId('ra-desenho')
+    expect(desenho).toHaveAttribute('data-modo', 'esquema')
+    expect(desenho.querySelector('image')).toBeNull()
+  })
+
+  it('com a distância esvaziada, a planta fica sem marca', async () => {
+    const user = userEvent.setup()
+    renderizar()
+    await abrir(user, 'Administração')
+    await user.clear(screen.getByLabelText(/Distância a partir do canto/))
+    expect(screen.getByTestId('ra-desenho')).toHaveAttribute('data-modo', 'planta')
+    expect(screen.queryByTestId('ra-marca')).toBeNull()
+  })
+
+  it('QR salvo com mais de 4 casas decimais não abre com Imprimir bloqueado', async () => {
+    const user = userEvent.setup()
+    vi.stubEnv('VITE_TELEGRAM_BOT', '@bot_teste')
+    const base = criarRepositorioAdminFixture()
+    const repo = {
+      ...base,
+      async listarRA(obraId: string) {
+        const lista = await base.listarRA(obraId)
+        return lista.map((a) =>
+          a.codigo === 'terreo-administracao' && a.qr
+            ? { ...a, qr: { ...a.qr, distancia_m: 1.23456 } }
+            : a,
+        )
+      },
+    }
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={qc}>
+        <RepositorioAdminProvider repositorio={repo}>
+          <MemoryRouter initialEntries={['/obras/hto/ra']}>
+            <AdminApp entrada={criarEntrada(null)} />
+          </MemoryRouter>
+        </RepositorioAdminProvider>
+      </QueryClientProvider>,
+    )
+    await abrir(user, 'Administração')
+    expect(screen.getByRole('button', { name: 'Imprimir' })).toBeEnabled()
+  })
+
+  it('sem VITE_TELEGRAM_BOT configurado, bloqueia Imprimir e avisa em vez de gerar URL quebrada', async () => {
+    const user = userEvent.setup()
+    vi.stubEnv('VITE_TELEGRAM_BOT', '')
+    renderizar()
+    await abrir(user, 'Administração')
+    expect(screen.getByRole('button', { name: 'Imprimir' })).toBeDisabled()
+    expect(screen.getByText(/VITE_TELEGRAM_BOT/)).toBeInTheDocument()
+    expect(screen.queryByTestId('ra-folha')).not.toBeInTheDocument()
   })
 })

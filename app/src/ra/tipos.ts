@@ -4,8 +4,8 @@ export type OrigemFoto = 'normal' | 'ra_limpa' | 'ra_modelo'
 
 /** Conteúdo de `foto.ra` (ver `docs/contrato-ra.md`). */
 export interface DadosRA {
-  /** Id da outra foto do par. */
-  par: string
+  /** Id da outra foto do par (omitido se o par foi desfeito antes do envio). */
+  par?: string
   modelos: { sigla: string; revisao: string | null; hash: string }[]
   alinhamento: 'cantos' | 'qr'
   pose: { posicao: [number, number, number]; rumo: number; fov: number }

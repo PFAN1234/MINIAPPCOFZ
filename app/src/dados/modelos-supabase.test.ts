@@ -47,6 +47,20 @@ describe('Supabase: modelos', () => {
     expect(baixar).toHaveBeenCalledWith(`${OBRA}/ARQ.frag`)
   })
 
+  it('inclui a matriz de correção de 16 elementos quando cadastrada no modelo', async () => {
+    const matriz = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.5, 0, -0.2, 1]
+    const { fake } = cliente(
+      [
+        { sigla: 'ANT', revisao: 'R01', caminho: `${OBRA}/ANT.frag`, bytes: 10, hash: 'h1', matriz },
+        { sigla: 'ARQ', revisao: 'R06', caminho: `${OBRA}/ARQ.frag`, bytes: 20, hash: 'h2', matriz: null },
+      ],
+      { data: null, error: null },
+    )
+    const modelos = await criarRepositorioSupabase(fake as never).listarModelos('hto')
+    expect(modelos[0].matriz).toEqual(matriz)
+    expect(modelos[1].matriz).toBeUndefined()
+  })
+
   it('erro de acesso do Storage vira ErroEnvio de permissão', async () => {
     const { fake } = cliente([], { data: null, error: { statusCode: '403', message: 'Unauthorized' } })
     const m = { sigla: 'ARQ', revisao: null, arquivo: 'x', bytes: 1, hash: 'h' }

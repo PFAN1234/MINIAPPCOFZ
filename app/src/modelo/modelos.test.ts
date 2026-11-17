@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { baixarModeloLocal, listarModelosLocais, urlModelo } from './modelos.ts'
+import { baixarModeloLocal, listarModelosLocais, ordenarPorReferencia, urlModelo } from './modelos.ts'
 
 function resposta(corpo: string, tipo: string, status = 200) {
   return new Response(corpo, { status, headers: { 'content-type': tipo } })
@@ -41,4 +41,12 @@ it('baixarModeloLocal devolve os bytes e falha com a sigla na mensagem', async (
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('x', { status: 500 })))
   await expect(baixarModeloLocal('hto', m)).rejects.toThrow('Falha ao baixar ARQ.')
   vi.unstubAllGlobals()
+})
+
+it('ordenarPorReferencia coloca a sigla de referência (ARQ) antes das demais preservando a ordem', () => {
+  const ant = { sigla: 'ANT', revisao: 'R01', arquivo: 'ANT.frag', bytes: 1, hash: 'a' }
+  const arq = { sigla: 'ARQ', revisao: 'R06', arquivo: 'ARQ.frag', bytes: 1, hash: 'b' }
+  const elt = { sigla: 'ELT', revisao: 'R03', arquivo: 'ELT.frag', bytes: 1, hash: 'c' }
+  expect(ordenarPorReferencia([ant, arq, elt]).map((m) => m.sigla)).toEqual(['ARQ', 'ANT', 'ELT'])
+  expect(ordenarPorReferencia([ant, elt], 'ELT').map((m) => m.sigla)).toEqual(['ELT', 'ANT'])
 })
