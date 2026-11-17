@@ -90,6 +90,14 @@ function checar<T>(resposta: { data: T | null; error: { message: string } | null
   return resposta.data as T
 }
 
+function erroDeEsquemaAusente(err: { code?: string } | null): boolean {
+  return Boolean(err && (err.code === '42P01' || err.code === '42703' || err.code === 'PGRST204' || err.code === 'PGRST205'))
+}
+
+function erroDeColunaAusente(err: { code?: string } | null): boolean {
+  return Boolean(err && (err.code === '42703' || err.code === 'PGRST204'))
+}
+
 type Linha = Record<string, unknown>
 
 function lerEquipeServico(dado: unknown): EquipeServico {
@@ -889,13 +897,15 @@ export function criarRepositorioSupabase(
 
     async listarModelos(slug) {
       const obra = await obraPorSlug(slug)
-      const linhas = checar(
-        await cliente
-          .from('modelo')
-          .select('sigla, revisao, caminho, bytes, hash')
-          .eq('obra_id', obra.id)
-          .order('sigla'),
-      ) as Linha[]
+      const comMatriz = await cliente
+        .from('modelo')
+        .select('sigla, revisao, caminho, bytes, hash, matriz')
+        .eq('obra_id', obra.id)
+        .order('sigla')
+      const resposta = erroDeColunaAusente(comMatriz.error)
+        ? await cliente.from('modelo').select('sigla, revisao, caminho, bytes, hash').eq('obra_id', obra.id).order('sigla')
+        : comMatriz
+      const linhas = checar(resposta) as Linha[]
       return linhas.map(
         (l): ModeloFrag => ({
           sigla: String(l.sigla),
@@ -903,20 +913,20 @@ export function criarRepositorioSupabase(
           arquivo: String(l.caminho),
           bytes: Number(l.bytes),
           hash: String(l.hash),
+          ...(Array.isArray(l.matriz) && l.matriz.length === 16 ? { matriz: l.matriz.map(Number) } : {}),
         }),
       )
     },
 
     async obterGeometria(obra, ambiente) {
-      // Tabelas da RA: se a migration ainda não foi aplicada, o ambiente fica sem RA.
-      // `contorno_pagina` vem de migration posterior: sem ela, repete o select sem a coluna.
+      // Tabelas/colunas da RA podem não existir em bancos sem a migration correspondente.
       const comPagina = await cliente
         .from('ambiente_geometria')
         .select('contorno, contorno_pagina, y_piso, y_teto')
         .eq('ambiente_id', ambiente.id)
         .maybeSingle()
       let { data: g, error } = comPagina
-      if (error) {
+      if (erroDeColunaAusente(error)) {
         const semPagina = await cliente
           .from('ambiente_geometria')
           .select('contorno, y_piso, y_teto')
@@ -925,13 +935,20 @@ export function criarRepositorioSupabase(
         g = semPagina.data as typeof g
         error = semPagina.error
       }
-      if (error || !g) return null
+      if (error) {
+        if (erroDeEsquemaAusente(error)) return null
+        throw new Error(error.message)
+      }
+      if (!g) return null
       const pagina = (g as Linha).contorno_pagina as [number, number][] | null | undefined
       const [qr, referencial, modelos] = await Promise.all([
         cliente.from('ambiente_qr').select('parede, distancia_m, altura_m, lado_m').eq('ambiente_id', ambiente.id).maybeSingle(),
         cliente.from('ra_referencial').select('sigla, coordenadas').eq('obra_id', obra.id).maybeSingle(),
         cliente.from('modelo').select('sigla, matriz').eq('obra_id', obra.id).not('matriz', 'is', null),
       ])
+      if (qr.error && !erroDeEsquemaAusente(qr.error)) throw new Error(qr.error.message)
+      if (referencial.error && !erroDeEsquemaAusente(referencial.error)) throw new Error(referencial.error.message)
+      if (modelos.error && !erroDeEsquemaAusente(modelos.error)) throw new Error(modelos.error.message)
       const linhaQr = qr.data as Linha | null
       const linhaRef = referencial.data as Linha | null
       return {

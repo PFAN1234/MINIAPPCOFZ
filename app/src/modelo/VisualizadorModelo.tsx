@@ -2,7 +2,7 @@ import * as OBC from '@thatopen/components'
 import workerUrl from '@thatopen/fragments/worker?url'
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import type { ModeloFrag } from './modelos.ts'
+import { ordenarPorReferencia, temWebGL, type ModeloFrag } from './modelos.ts'
 
 type Estado = { tipo: 'carregando'; texto: string } | { tipo: 'pronto' } | { tipo: 'erro'; texto: string }
 
@@ -20,14 +20,6 @@ interface Motor {
   components: OBC.Components
   world: OBC.SimpleWorld<OBC.SimpleScene, OBC.SimpleCamera, OBC.SimpleRenderer>
   fragments: OBC.FragmentsManager
-}
-
-function temWebGL(): boolean {
-  try {
-    return Boolean(document.createElement('canvas').getContext('webgl2'))
-  } catch {
-    return false
-  }
 }
 
 function mostrar(objeto: THREE.Object3D, visivel: boolean) {
@@ -85,12 +77,14 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
 
     void (async () => {
       try {
-        for (const [i, m] of modelos.entries()) {
-          setEstado({ tipo: 'carregando', texto: `Carregando ${m.sigla} (${i + 1} de ${modelos.length})…` })
+        const ordem = ordenarPorReferencia(modelos)
+        for (const [i, m] of ordem.entries()) {
+          setEstado({ tipo: 'carregando', texto: `Carregando ${m.sigla} (${i + 1} de ${ordem.length})…` })
           const buffer = await baixar(m)
           if (cancelado) return
           const modelo = await fragments.core.load(buffer, { modelId: m.sigla })
           if (cancelado) return
+          if (m.matriz?.length === 16) modelo.object.applyMatrix4(new THREE.Matrix4().fromArray(m.matriz))
           mostrar(modelo.object, ativosRef.current.has(m.sigla))
         }
         await fragments.core.update(true)

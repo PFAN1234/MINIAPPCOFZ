@@ -2,7 +2,7 @@
 import { FragmentsModels, type FragmentsModel } from '@thatopen/fragments'
 import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
-import type { ModeloFrag } from '../modelo/modelos.ts'
+import { ordenarPorReferencia, temWebGL, type ModeloFrag } from '../modelo/modelos.ts'
 import { arestasDoAmbiente, caixaDeCorte, type GeometriaAmbiente } from './geometria.ts'
 import { gradeDeProcura, malhaDoAmbiente } from './malha.ts'
 import { orientacaoNoMundo, type Pose } from './pose.ts'
@@ -44,6 +44,7 @@ export class MotorRA {
   private descartado = false
 
   constructor(canvas: HTMLCanvasElement, geometria: GeometriaAmbiente) {
+    if (!temWebGL()) throw new Error('Este aparelho não permite exibir o modelo 3D.')
     this.geometria = geometria
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -107,8 +108,8 @@ export class MotorRA {
     baixar: (m: ModeloFrag) => Promise<ArrayBuffer>,
     aoProgredir: (texto: string) => void,
   ): Promise<void> {
-    const referencia = this.geometria.referencial?.sigla
-    const ordem = [...modelos].sort((a, b) => Number(b.sigla === referencia) - Number(a.sigla === referencia))
+    const referencia = this.geometria.referencial?.sigla ?? 'ARQ'
+    const ordem = ordenarPorReferencia(modelos, referencia)
     for (const [i, m] of ordem.entries()) {
       aoProgredir(`Carregando ${m.sigla} (${i + 1} de ${ordem.length})…`)
       const buffer = await baixar(m)
@@ -119,7 +120,7 @@ export class MotorRA {
         clippingPlanes: this.planos,
       })
       if (this.descartado) return
-      const correcao = this.geometria.matrizes[m.sigla]
+      const correcao = this.geometria.matrizes[m.sigla] ?? m.matriz
       if (correcao?.length === 16) modelo.object.applyMatrix4(new THREE.Matrix4().fromArray(correcao))
       modelo.object.visible = !this.emProcura && (this.siglasVisiveis?.has(m.sigla) ?? true)
       this.cena.add(modelo.object)
@@ -159,6 +160,7 @@ export class MotorRA {
   redimensionar(largura: number, altura: number): void {
     this.renderer.setSize(largura, altura, false)
     this.camera.aspect = largura / Math.max(1, altura)
+    this.camera.updateProjectionMatrix()
   }
 
   /** Posiciona a câmera pela pose e pela orientação atual do aparelho. */
@@ -168,6 +170,7 @@ export class MotorRA {
   }
 
   private ajustarCamera(pose: Pose, q: THREE.Quaternion, fovGraus: number): void {
+    if (this.descartado) return
     this.camera.fov = fovGraus
     this.camera.position.copy(pose.posicao)
     this.camera.quaternion.copy(orientacaoNoMundo(pose, q))
@@ -210,6 +213,13 @@ export class MotorRA {
 
   descartar(): void {
     this.descartado = true
+    this.cena.traverse((obj) => {
+      if (obj instanceof THREE.LineSegments) {
+        obj.geometry.dispose()
+        if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose())
+        else obj.material.dispose()
+      }
+    })
     void this.fragments.dispose()
     this.renderer.dispose()
   }
