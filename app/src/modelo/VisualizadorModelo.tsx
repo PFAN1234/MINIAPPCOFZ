@@ -2,6 +2,8 @@ import * as OBC from '@thatopen/components'
 import workerUrl from '@thatopen/fragments/worker?url'
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { caixaDeCorte, type GeometriaAmbiente } from '../ra/geometria.ts'
+import { caixaBox3, planosDeCorte } from './corte.ts'
 import { ordenarPorReferencia, temWebGL, type ModeloFrag } from './modelos.ts'
 
 type Estado = { tipo: 'carregando'; texto: string } | { tipo: 'pronto' } | { tipo: 'erro'; texto: string }
@@ -14,6 +16,8 @@ interface Props {
   ativos: ReadonlySet<string>
   /** Prévia da tela da obra: sem botão Enquadrar e sem resposta a toque ou arrasto. */
   previa?: boolean
+  /** Ambiente do QR: o modelo é cortado em volta dele e a câmera enquadra só ele (chip liga/desliga). */
+  ambiente?: GeometriaAmbiente
 }
 
 interface Motor {
@@ -27,7 +31,7 @@ function mostrar(objeto: THREE.Object3D, visivel: boolean) {
 }
 
 /** Visualizador 3D do modelo federado (That Open Engine). Carregado sob demanda pela tela Modelo. */
-export default function VisualizadorModelo({ modelos, baixar, ativos, previa = false }: Props) {
+export default function VisualizadorModelo({ modelos, baixar, ativos, previa = false, ambiente }: Props) {
   const contenedor = useRef<HTMLDivElement>(null)
   const motor = useRef<Motor | null>(null)
   const [estado, setEstado] = useState<Estado>(() =>
@@ -36,10 +40,20 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
       : { tipo: 'erro', texto: 'Este aparelho não permite exibir o modelo 3D.' },
   )
   const ativosRef = useRef(ativos)
+  const [soAmbiente, setSoAmbiente] = useState(true)
+  const soAmbienteRef = useRef(true)
+  // Mesmo array passado ao load e ao renderer: esvaziar/preencher liga/desliga o corte sem recarregar.
+  const planosRef = useRef<THREE.Plane[]>([])
+  const ambienteRef = useRef(ambiente)
 
   function enquadrar(animar: boolean) {
     const m = motor.current
     if (!m) return
+    const amb = ambienteRef.current
+    if (amb && soAmbienteRef.current) {
+      void m.world.camera.controls.fitToBox(caixaBox3(caixaDeCorte(amb)), animar, { paddingLeft: 0.1, paddingRight: 0.1, paddingTop: 0.1, paddingBottom: 0.1 })
+      return
+    }
     const caixa = new THREE.Box3()
     for (const [id, modelo] of m.fragments.list) {
       if (!ativosRef.current.has(id)) continue
@@ -54,6 +68,10 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
     const el = contenedor.current
     if (!el || !temWebGL()) return
     let cancelado = false
+    ambienteRef.current = ambiente
+    const planos = planosRef.current
+    planos.length = 0
+    if (ambiente && soAmbienteRef.current) planos.push(...planosDeCorte(caixaDeCorte(ambiente)))
 
     const components = new OBC.Components()
     const world = components.get(OBC.Worlds).create<OBC.SimpleScene, OBC.SimpleCamera, OBC.SimpleRenderer>()
@@ -62,11 +80,14 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
     world.renderer = new OBC.SimpleRenderer(components, el)
     world.renderer.showLogo = false
     world.camera = new OBC.SimpleCamera(components)
+    if (ambiente) world.renderer.three.clippingPlanes = planos
     components.init()
     if (previa) world.camera.controls.enabled = false
 
     const fragments = components.get(OBC.FragmentsManager)
     fragments.init(workerUrl)
+    // Todos os modelos entram no referencial do .frag de referência (igual ao motor da RA).
+    if (ambiente?.referencial) fragments.core.baseCoordinates = [...ambiente.referencial.coordenadas]
     world.camera.controls.addEventListener('update', () => fragments.core.update())
     fragments.list.onItemSet.add(({ value: modelo }) => {
       modelo.useCamera(world.camera.three)
@@ -77,14 +98,15 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
 
     void (async () => {
       try {
-        const ordem = ordenarPorReferencia(modelos)
+        const ordem = ordenarPorReferencia(modelos, ambiente?.referencial?.sigla ?? 'ARQ')
         for (const [i, m] of ordem.entries()) {
           setEstado({ tipo: 'carregando', texto: `Carregando ${m.sigla} (${i + 1} de ${ordem.length})…` })
           const buffer = await baixar(m)
           if (cancelado) return
-          const modelo = await fragments.core.load(buffer, { modelId: m.sigla })
+          const modelo = await fragments.core.load(buffer, { modelId: m.sigla, clippingPlanes: planos })
           if (cancelado) return
-          if (m.matriz?.length === 16) modelo.object.applyMatrix4(new THREE.Matrix4().fromArray(m.matriz))
+          const correcao = ambiente?.matrizes[m.sigla] ?? m.matriz
+          if (correcao?.length === 16) modelo.object.applyMatrix4(new THREE.Matrix4().fromArray(correcao))
           mostrar(modelo.object, ativosRef.current.has(m.sigla))
         }
         await fragments.core.update(true)
@@ -102,7 +124,7 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
       components.dispose()
     }
     // enquadrar só lê refs; o motor é recriado apenas se a obra ou a lista mudarem.
-  }, [modelos, baixar, previa])
+  }, [modelos, baixar, previa, ambiente])
 
   useEffect(() => {
     ativosRef.current = ativos
@@ -111,6 +133,19 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
     for (const [id, modelo] of m.fragments.list) mostrar(modelo.object, ativos.has(id))
     void m.fragments.core.update(true)
   }, [ativos])
+
+  useEffect(() => {
+    soAmbienteRef.current = soAmbiente
+    const amb = ambienteRef.current
+    const m = motor.current
+    if (!amb || !m) return
+    const planos = planosRef.current
+    planos.length = 0
+    if (soAmbiente) planos.push(...planosDeCorte(caixaDeCorte(amb)))
+    void m.fragments.core.update(true)
+    enquadrar(true)
+    // enquadrar só lê refs.
+  }, [soAmbiente])
 
   return (
     <div className={previa ? 'visualizador-modelo visualizador-previa' : 'visualizador-modelo'}>
@@ -128,6 +163,11 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
       {estado.tipo === 'pronto' && !previa && (
         <button type="button" className="botao visualizador-enquadrar" onClick={() => enquadrar(true)}>
           Enquadrar
+        </button>
+      )}
+      {estado.tipo === 'pronto' && !previa && ambiente && (
+        <button type="button" className="botao visualizador-chip" aria-pressed={soAmbiente} onClick={() => setSoAmbiente((v) => !v)}>
+          Só este ambiente
         </button>
       )}
     </div>
