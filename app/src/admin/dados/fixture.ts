@@ -259,6 +259,19 @@ function geometriaHto(): AmbienteRA[] {
       y_piso: -0.805,
       y_teto: 1.795,
       qr: { parede: 0, distancia_m: 2.5, altura_m: 1.5, lado_m: 0.18 },
+      contorno_pagina: [
+        [0.3, 0.3],
+        [0.6, 0.3],
+        [0.6, 0.6],
+        [0.3, 0.6],
+      ],
+      planta: {
+        url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400'%3E%3Crect width='800' height='400' fill='%23eee'/%3E%3C/svg%3E",
+        pagina_pt: [1000, 500],
+        recorte_pt: [100, 50, 900, 450],
+        largura: 800,
+        altura: 400,
+      },
     },
     {
       ambiente_id: 'terreo-alojamento',
@@ -276,6 +289,8 @@ function geometriaHto(): AmbienteRA[] {
       y_piso: -0.805,
       y_teto: 1.795,
       qr: null,
+      contorno_pagina: null,
+      planta: null,
     },
   ]
 }

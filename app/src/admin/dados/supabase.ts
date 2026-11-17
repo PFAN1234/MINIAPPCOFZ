@@ -6,6 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { criarClienteSupabase } from '../../dados/supabase.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
+import type { PlantaAdmin } from '../ra/planta.ts'
 import {
   ErroAdmin,
   CAMINHO_LOGO,
@@ -63,6 +64,10 @@ const URL_PREVIA = '/api/previa-boletim'
 const ESTADOS: EstadoEmissao[] = ['pendente', 'gerando', 'emitido', 'falhou']
 
 type LinhaBoletim = Record<string, unknown>
+
+type LinhaRA = Omit<AmbienteRA, 'planta'> & {
+  planta: (Omit<PlantaAdmin, 'url'> & { imagem_path: string }) | null
+}
 
 export function boletimDe(l: LinhaBoletim): BoletimEmitido {
   return {
@@ -824,21 +829,47 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     },
 
     async listarRA(obraId) {
-      const lista = (await rpc<AmbienteRA[] | null>('admin_listar_ra', { p_obra: obraId })) ?? []
-      return lista.map((a) => ({
-        ...a,
-        y_piso: Number(a.y_piso),
-        y_teto: Number(a.y_teto),
-        contorno: a.contorno.map(([x, z]): [number, number] => [Number(x), Number(z)]),
-        qr: a.qr
-          ? {
-              parede: Number(a.qr.parede),
-              distancia_m: Number(a.qr.distancia_m),
-              altura_m: Number(a.qr.altura_m),
-              lado_m: Number(a.qr.lado_m),
-            }
-          : null,
-      }))
+      const lista = (await rpc<LinhaRA[] | null>('admin_listar_ra', { p_obra: obraId })) ?? []
+      // Assina em lote as imagens das plantas; falha ou caminho ausente deixa `planta` nula.
+      const caminhos = [...new Set(lista.map((a) => a.planta?.imagem_path).filter((c): c is string => !!c))]
+      const urls: Record<string, string> = {}
+      if (caminhos.length > 0) {
+        try {
+          const { data, error } = await cliente.storage.from('plantas').createSignedUrls(caminhos, 3600)
+          if (error) throw error
+          for (const x of data ?? []) if (x.path && x.signedUrl && !x.error) urls[x.path] = x.signedUrl
+        } catch {
+          /* sem URL, sem planta */
+        }
+      }
+      return lista.map(({ planta: p, ...a }): AmbienteRA => {
+        const url = p ? urls[p.imagem_path] : undefined
+        return {
+          ...a,
+          y_piso: Number(a.y_piso),
+          y_teto: Number(a.y_teto),
+          contorno: a.contorno.map(([x, z]): [number, number] => [Number(x), Number(z)]),
+          qr: a.qr
+            ? {
+                parede: Number(a.qr.parede),
+                distancia_m: Number(a.qr.distancia_m),
+                altura_m: Number(a.qr.altura_m),
+                lado_m: Number(a.qr.lado_m),
+              }
+            : null,
+          contorno_pagina: a.contorno_pagina?.map(([x, y]): [number, number] => [Number(x), Number(y)]) ?? null,
+          planta:
+            p && url
+              ? {
+                  url,
+                  pagina_pt: [Number(p.pagina_pt[0]), Number(p.pagina_pt[1])],
+                  recorte_pt: p.recorte_pt.map(Number) as [number, number, number, number],
+                  largura: Number(p.largura),
+                  altura: Number(p.altura),
+                }
+              : null,
+        }
+      })
     },
 
     async definirQr(ambienteId, qr: QrAmbiente) {
