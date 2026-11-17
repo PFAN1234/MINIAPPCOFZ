@@ -20,6 +20,7 @@ import {
   type CamposQr,
   type Ponto,
 } from '../../ra/geometria.ts'
+import { enquadrarPlanta, marcaNaPlanta } from '../../ra/planta.ts'
 import { APP_PADRAO, gerarQr, textoQr } from '../../ra/qr.ts'
 
 const SEM_GEOMETRIA = 'Esta obra ainda não tem a geometria dos ambientes. Rode scripts/gerar_geometria.py e aplique o seed.'
@@ -205,7 +206,7 @@ function Ambiente({ obra, ambiente, onVoltar }: { obra: ObraAdmin; ambiente: Amb
           {ambiente.nome} <span className="adm-dica">· {ambiente.pavimento} · {ambiente.codigo}</span>
         </h2>
         <div className="ra-ambiente">
-          <Desenho contorno={ambiente.contorno} qr={qr} />
+          <Desenho ambiente={ambiente} qr={qr} />
           <div>
             <table className="adm-tabela adm-tabela-compacta" aria-label="Paredes">
               <thead>
@@ -322,7 +323,45 @@ function Ambiente({ obra, ambiente, onVoltar }: { obra: ObraAdmin; ambiente: Amb
 
 // --- Desenho ---------------------------------------------------------------------------------
 
-function Desenho({ contorno, qr }: { contorno: Ponto[]; qr: { parede: number; distancia_m: number; lado_m: number } | null }) {
+function Desenho({
+  ambiente,
+  qr,
+}: {
+  ambiente: AmbienteRA
+  qr: { parede: number; distancia_m: number; lado_m: number } | null
+}) {
+  const { contorno } = ambiente
+  const planta = ambiente.planta ? enquadrarPlanta(contorno, ambiente.contorno_pagina, ambiente.planta) : null
+  if (planta && ambiente.planta) {
+    const m = qr ? marcaNaPlanta(contorno, planta.pontos, qr) : null
+    return (
+      <svg
+        className="ra-desenho"
+        viewBox={planta.viewBox}
+        role="img"
+        aria-label="Planta do pavimento com o cômodo destacado"
+        data-testid="ra-desenho"
+        data-modo="planta"
+      >
+        <image href={ambiente.planta.url} x={0} y={0} width={ambiente.planta.largura} height={ambiente.planta.altura} />
+        <polygon points={planta.pontos.map(([x, y]) => `${x},${y}`).join(' ')} className="ra-planta-comodo" strokeWidth={planta.raio * 0.3} />
+        {planta.pontos.map(([x, y], i) => (
+          <g key={`c${i}`}>
+            <circle cx={x} cy={y} r={planta.raio} className="ra-canto" />
+            <text x={x} y={y} fontSize={planta.raio * 1.2} textAnchor="middle" dominantBaseline="central" fill="#fff">
+              {i + 1}
+            </text>
+          </g>
+        ))}
+        {m && (
+          <g data-testid="ra-marca">
+            <line x1={m.a[0]} y1={m.a[1]} x2={m.b[0]} y2={m.b[1]} className="ra-qr" strokeWidth={planta.raio * 0.7} />
+            <circle cx={m.centro[0]} cy={m.centro[1]} r={planta.raio * 0.5} className="ra-qr-centro" />
+          </g>
+        )}
+      </svg>
+    )
+  }
   const xs = contorno.map((p) => p[0])
   const zs = contorno.map((p) => p[1])
   const minX = Math.min(...xs)
@@ -354,6 +393,7 @@ function Desenho({ contorno, qr }: { contorno: Ponto[]; qr: { parede: number; di
       role="img"
       aria-label="Contorno do ambiente visto de cima"
       data-testid="ra-desenho"
+      data-modo="esquema"
     >
       <polygon points={pontos} className="ra-piso" />
       {contorno.map((_, i) => {

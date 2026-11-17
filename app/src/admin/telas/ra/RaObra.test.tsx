@@ -62,10 +62,10 @@ describe('realidade aumentada (fixture)', () => {
     expect(paredes.getAllByText('6,03 m')).toHaveLength(2)
     expect(paredes.getAllByText('3,96 m')).toHaveLength(2)
     const marca = screen.getByTestId('ra-marca').querySelector('circle')!
-    expect(Number(marca.getAttribute('cx'))).toBeCloseTo(2.5)
+    const antes = Number(marca.getAttribute('cx'))
     await user.clear(screen.getByLabelText(/Distância a partir do canto/))
     await user.type(screen.getByLabelText(/Distância a partir do canto/), '4')
-    expect(Number(screen.getByTestId('ra-marca').querySelector('circle')!.getAttribute('cx'))).toBeCloseTo(4)
+    expect(Number(screen.getByTestId('ra-marca').querySelector('circle')!.getAttribute('cx'))).not.toBeCloseTo(antes)
     await user.selectOptions(screen.getByLabelText('Parede'), '1')
     expect(screen.getByLabelText(/Distância a partir do canto 2/)).toBeInTheDocument()
   })
@@ -161,5 +161,38 @@ describe('realidade aumentada (fixture)', () => {
     const alo = lista.find((a) => a.codigo === 'terreo-alojamento')
     expect(alo?.contorno_pagina).toBeNull()
     expect(alo?.planta).toBeNull()
+  })
+
+  it('com planta, o desenho usa a imagem e a marca acompanha a distância digitada', async () => {
+    const user = userEvent.setup()
+    const repo = renderizar()
+    const url = (await repo.listarRA('obra-hto')).find((a) => a.codigo === 'terreo-administracao')!.planta!.url
+    await abrir(user, 'Administração')
+    const desenho = screen.getByTestId('ra-desenho')
+    expect(desenho).toHaveAttribute('data-modo', 'planta')
+    expect(desenho.querySelector('image')?.getAttribute('href')).toBe(url)
+    const centro = () => Number(screen.getByTestId('ra-marca').querySelector('.ra-qr-centro')!.getAttribute('cx'))
+    const antes = centro()
+    await user.clear(screen.getByLabelText(/Distância a partir do canto/))
+    await user.type(screen.getByLabelText(/Distância a partir do canto/), '4')
+    expect(centro()).not.toBeCloseTo(antes)
+  })
+
+  it('sem planta, mantém o desenho esquemático', async () => {
+    const user = userEvent.setup()
+    renderizar()
+    await abrir(user, 'Alojamento')
+    const desenho = screen.getByTestId('ra-desenho')
+    expect(desenho).toHaveAttribute('data-modo', 'esquema')
+    expect(desenho.querySelector('image')).toBeNull()
+  })
+
+  it('com a distância esvaziada, a planta fica sem marca', async () => {
+    const user = userEvent.setup()
+    renderizar()
+    await abrir(user, 'Administração')
+    await user.clear(screen.getByLabelText(/Distância a partir do canto/))
+    expect(screen.getByTestId('ra-desenho')).toHaveAttribute('data-modo', 'planta')
+    expect(screen.queryByTestId('ra-marca')).toBeNull()
   })
 })
