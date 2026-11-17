@@ -25,8 +25,14 @@ describe('montarManifesto', () => {
     expect(arquivos.some((a) => a.endsWith('.map') || a.includes('precache-manifest'))).toBe(false)
   })
 
-  it('exclui o visualizador 3D (chunk e worker)', () => {
-    const { arquivos } = montarManifesto([...nomes, 'assets/VisualizadorModelo-x1.js', 'assets/worker-y2.mjs'])
+  it('exclui o motor 3D e o leitor de QR (chunks pesados e worker)', () => {
+    const { arquivos } = montarManifesto([
+      ...nomes,
+      'assets/VisualizadorModelo-x1.js',
+      'assets/motor-3d-z9.js',
+      'assets/jsQR-q1.js',
+      'assets/worker-y2.mjs',
+    ])
     expect(arquivos).toEqual(montarManifesto(nomes).arquivos)
   })
 
