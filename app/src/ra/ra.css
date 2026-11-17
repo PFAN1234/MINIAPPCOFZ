@@ -343,7 +343,7 @@
 .ra-planta-mini {
   position: absolute;
   z-index: 1;
-  top: 64px;
+  top: calc(64px + var(--seguro-topo));
   right: 8px;
   width: 110px;
   max-height: 110px;
