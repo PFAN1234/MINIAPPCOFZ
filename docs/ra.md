@@ -50,3 +50,7 @@ Conferido em 2026-11-13 com os modelos publicados da HTO: o ARQ R06 (hash `497ec
 - `app/src/ra/camera.ts`, `leitorQr.ts`: câmera, captura do par e leitura do QR.
 - `app/src/ra/TelaRA.tsx`: a tela; `DiagnosticoRA.tsx`: teste do aparelho.
 - `scripts/gerar_geometria.py`: vínculo ambiente ↔ IfcSpace e geometria.
+
+## Planta baixa no ajuste do QR (admin)
+
+Na página de RA do admin, o ambiente aberto mostra a planta real do pavimento, enquadrada no cômodo, com os cantos numerados e a marca do QR, que acompanha parede, distância e lado digitados. Sem `contorno_pagina` ou sem planta ativa, mostra o desenho esquemático. Depende da migration `20261122090000_ra_admin_planta.sql`.

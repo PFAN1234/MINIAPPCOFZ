@@ -819,6 +819,13 @@ a.adm-botao {
   border-radius: 8px;
 }
 
+.ra-planta-comodo {
+  fill: var(--adm-info-bg);
+  fill-opacity: 0.45;
+  stroke: var(--adm-destaque);
+  stroke-linejoin: round;
+}
+
 .ra-piso {
   fill: var(--adm-info-bg);
   stroke: var(--adm-texto);
