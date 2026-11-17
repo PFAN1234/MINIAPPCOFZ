@@ -1,6 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
-import type { ConfigObra, DadosAditivo, DadosEtapa, DadosObra, EdicaoBoletim, FiltroBoletins, PavimentoResumo, QrAmbiente } from './tipos.ts'
+import type {
+  ConfigObra,
+  DadosAditivo,
+  DadosEtapa,
+  DadosObra,
+  EdicaoBoletim,
+  FiltroBoletins,
+  PapelAcesso,
+  PavimentoResumo,
+  QrAmbiente,
+} from './tipos.ts'
 
 export function useObrasAdmin() {
   const repo = useRepositorioAdmin()
@@ -161,7 +171,10 @@ function useInvalidarBoletim(id: string) {
 export function useSalvarRascunhoBoletim(id: string) {
   const repo = useRepositorioAdmin()
   const invalidar = useInvalidarBoletim(id)
-  return useMutation({ mutationFn: (edicao: EdicaoBoletim) => repo.salvarRascunhoBoletim(id, edicao), onSuccess: invalidar })
+  return useMutation({
+    mutationFn: (edicao: EdicaoBoletim) => repo.salvarRascunhoBoletim(id, edicao),
+    onSuccess: invalidar,
+  })
 }
 
 export function useRetificarBoletim(id: string) {
@@ -211,6 +224,31 @@ export function useDefinirNomeExibicao() {
   return useMutation({
     mutationFn: (p: { id: string; nome: string | null }) => repo.definirNomeExibicao(p.id, p.nome),
     onSuccess: invalidar,
+  })
+}
+
+export function useMatrizAcessos() {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'matriz-acessos'], queryFn: () => repo.matrizAcessos() })
+}
+
+export function useMeuId() {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'meu-id'], queryFn: () => repo.meuId(), staleTime: Infinity })
+}
+
+export function useDefinirAcesso() {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (p: { obraId: string; usuarioId: string; papel: PapelAcesso }) =>
+      repo.definirAcesso(p.obraId, p.usuarioId, p.papel),
+    onSettled: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['admin', 'matriz-acessos'] }),
+        qc.invalidateQueries({ queryKey: ['admin', 'pessoas'] }),
+      ])
+    },
   })
 }
 

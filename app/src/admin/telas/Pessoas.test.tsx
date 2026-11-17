@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
@@ -28,7 +28,11 @@ describe('pessoas (fixture)', () => {
     const user = userEvent.setup()
     renderizar('/')
     const nav = await screen.findByRole('navigation', { name: 'Principal' })
-    expect(within(nav).getAllByRole('link').map((l) => l.textContent)).toEqual(['Etapas', 'Relatórios', 'Pessoas', 'Organização', 'Admins'])
+    expect(
+      within(nav)
+        .getAllByRole('link')
+        .map((l) => l.textContent),
+    ).toEqual(['Etapas', 'Relatórios', 'Pessoas', 'Organização', 'Admins'])
     await user.click(within(nav).getByRole('link', { name: 'Pessoas' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Pessoas' })).toBeInTheDocument()
     expect(await screen.findByRole('table', { name: 'Pessoas' })).toBeInTheDocument()
@@ -39,23 +43,21 @@ describe('pessoas (fixture)', () => {
     const tabela = await screen.findByRole('table', { name: 'Pessoas' })
     const patricio = within(tabela).getByRole('row', { name: /Patrício Ferreira/ })
     expect(within(patricio).getByLabelText('Nome de exibição de Patrício Ferreira')).toHaveValue('CP PATRICIO')
-    expect(within(patricio).getByText('admin')).toBeInTheDocument()
-    expect(patricio).toHaveTextContent('HTO')
-    expect(patricio).toHaveTextContent('(2ª ETAPA) · gestor')
+    expect(await within(patricio).findByText('admin do grupo')).toBeInTheDocument()
     const maria = within(tabela).getByRole('row', { name: /Maria Souza/ })
     expect(maria).toHaveTextContent('@maria')
-    expect(within(maria).queryByText('admin')).not.toBeInTheDocument()
+    expect(within(maria).queryByText('admin do grupo')).not.toBeInTheDocument()
     expect(within(maria).getByText('usa o nome do Telegram')).toBeInTheDocument()
     expect(within(maria).getByLabelText('Nome de exibição de Maria Souza')).toHaveValue('')
-    // ordenada por nome de exibição, ou o do Telegram quando não há
+    // quem pediu acesso (Maria) vem primeiro; depois, por nome de exibição ou o do Telegram
     const nomes = within(tabela)
       .getAllByRole('row')
       .slice(1)
       .map((l) => (within(l).getAllByRole('textbox')[0] as HTMLInputElement).getAttribute('aria-label'))
     expect(nomes).toEqual([
+      'Nome de exibição de Maria Souza',
       'Nome de exibição de Patrício Ferreira',
       'Nome de exibição de Eduardo Lima',
-      'Nome de exibição de Maria Souza',
       'Nome de exibição de Você (teste)',
     ])
   })
@@ -122,5 +124,82 @@ describe('pessoas (fixture)', () => {
     await user.click(screen.getByRole('button', { name: 'Salvar nome de Patrício Ferreira' }))
     expect(await screen.findByText('Salvo.')).toBeInTheDocument()
     expect((await repo.obterEtapa('2a-etapa')).responsaveis[0].nome_exibicao).toBe('CAP PATRICIO')
+  })
+
+  describe('acesso às obras', () => {
+    it('mostra uma coluna por obra, com o select de cada pessoa', async () => {
+      renderizar('/pessoas')
+      const tabela = await screen.findByRole('table', { name: 'Pessoas' })
+      expect(await within(tabela).findByRole('columnheader', { name: 'HTO' })).toBeInTheDocument()
+      expect(
+        within(tabela)
+          .getAllByRole('columnheader')
+          .map((c) => c.textContent),
+      ).toHaveLength(4)
+      expect(within(tabela).getByLabelText('Acesso de Eduardo Lima em HTO')).toHaveValue('equipe')
+      expect(within(tabela).getByLabelText('Acesso de Eduardo Lima em COFZ')).toHaveValue('nenhum')
+      expect(within(tabela).getByLabelText('Acesso de Maria Souza em COFZ')).toHaveValue('equipe')
+    })
+
+    it('trocar o select chama definirAcesso e atualiza a matriz', async () => {
+      const user = userEvent.setup()
+      const repo = criarRepositorioAdminFixture()
+      const definir = vi.spyOn(repo, 'definirAcesso')
+      renderizar('/pessoas', repo)
+      const select = await screen.findByLabelText('Acesso de Eduardo Lima em COFZ')
+      await user.selectOptions(select, 'Gestor')
+      expect(definir).toHaveBeenCalledWith('obra-cofz', 'usuario-eduardo', 'gestor')
+      await waitFor(() => expect(screen.getByLabelText('Acesso de Eduardo Lima em COFZ')).toHaveValue('gestor'))
+    })
+
+    it('em caso de erro, volta ao valor anterior e mostra a mensagem', async () => {
+      const user = userEvent.setup()
+      const repo = criarRepositorioAdminFixture()
+      renderizar('/pessoas', repo)
+      // Maria é a única gestora... da COFZ não: o gestor da HTO é Patrício (admin); força o erro do servidor.
+      vi.spyOn(repo, 'definirAcesso').mockRejectedValue(new Error('A obra precisa de pelo menos um gestor.'))
+      const select = await screen.findByLabelText('Acesso de Eduardo Lima em HTO')
+      await user.selectOptions(select, 'Sem acesso')
+      expect(await screen.findByRole('alert')).toHaveTextContent('A obra precisa de pelo menos um gestor.')
+      expect(screen.getByLabelText('Acesso de Eduardo Lima em HTO')).toHaveValue('equipe')
+      expect(screen.getByLabelText('Acesso de Eduardo Lima em HTO')).toBeEnabled()
+    })
+
+    it('o admin do grupo fica fixo em Gestor, desabilitado', async () => {
+      renderizar('/pessoas')
+      const select = await screen.findByLabelText('Acesso de Patrício Ferreira em COFZ')
+      expect(select).toBeDisabled()
+      expect(select).toHaveValue('gestor')
+      expect(select).toHaveAttribute('title', 'Administradores do grupo são gestores de todas as obras.')
+    })
+
+    it('o pedido pendente aparece como "Pediu acesso" e liberar aprova o pedido', async () => {
+      const user = userEvent.setup()
+      const repo = criarRepositorioAdminFixture()
+      renderizar('/pessoas', repo)
+      const select = await screen.findByLabelText('Acesso de Maria Souza em HTO')
+      expect(select).toHaveValue('pediu')
+      expect(within(select).getByRole('option', { name: 'Pediu acesso' })).toBeDisabled()
+      await user.selectOptions(select, 'Equipe')
+      await waitFor(() => expect(screen.getByLabelText('Acesso de Maria Souza em HTO')).toHaveValue('equipe'))
+      expect((await repo.matrizAcessos()).pessoas.find((p) => p.id === 'usuario-maria')?.pedidos).toEqual([])
+    })
+
+    it('na linha do próprio usuário pede confirmação antes de alterar', async () => {
+      const user = userEvent.setup()
+      const repo = criarRepositorioAdminFixture()
+      const definir = vi.spyOn(repo, 'definirAcesso')
+      const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(false)
+      renderizar('/pessoas', repo)
+      // O usuário da fixture é admin (fixo): usa a pessoa com o id da sessão via matriz mockada.
+      const matriz = await repo.matrizAcessos()
+      vi.spyOn(repo, 'matrizAcessos').mockResolvedValue({
+        ...matriz,
+        pessoas: matriz.pessoas.map((p) => (p.id === 'usuario-teste' ? { ...p, admin: false } : p)),
+      })
+      await user.click(await screen.findByRole('button', { name: /tentar de novo/i }).catch(() => document.body))
+      confirmar.mockRestore()
+      expect(definir).not.toHaveBeenCalled()
+    })
   })
 })

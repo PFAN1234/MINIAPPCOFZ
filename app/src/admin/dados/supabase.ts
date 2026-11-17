@@ -29,6 +29,7 @@ import {
   type EtapaDetalhe,
   type EtapaLista,
   type Pessoa,
+  type MatrizAcessosAdmin,
   type Responsavel,
   type Organizacao,
   type ResultadoExclusaoEtapa,
@@ -610,6 +611,40 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
             : [],
         }),
       )
+    },
+
+    async matrizAcessos(): Promise<MatrizAcessosAdmin> {
+      const dados = ((await rpc<Linha | null>('matriz_acessos')) ?? {}) as Linha
+      return {
+        obras: ((dados.obras ?? []) as Linha[]).map((o) => ({
+          id: String(o.id),
+          slug: String(o.slug),
+          nome: String(o.nome),
+        })),
+        pessoas: ((dados.pessoas ?? []) as Linha[]).map((l) => ({
+          id: String(l.id),
+          nome: String(l.nome),
+          username: textoOuNulo(l.username),
+          admin: l.admin === true,
+          vistoEm: textoOuNulo(l.visto_em),
+          acessos: Object.fromEntries(
+            Object.entries((l.acessos ?? {}) as Record<string, unknown>).map(([k, v]) => [
+              k,
+              v === 'gestor' ? 'gestor' : 'equipe',
+            ]),
+          ),
+          pedidos: ((l.pedidos ?? []) as unknown[]).map(String),
+        })),
+      }
+    },
+
+    async definirAcesso(obraId, usuarioId, papel) {
+      await rpc('definir_acesso', { p_obra: obraId, p_usuario: usuarioId, p_papel: papel })
+    },
+
+    async meuId() {
+      const { data } = await cliente.auth.getSession()
+      return data.session?.user.id ?? null
     },
 
     async definirNomeExibicao(usuarioId, nome) {

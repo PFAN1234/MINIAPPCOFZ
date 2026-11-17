@@ -297,6 +297,24 @@ export interface Pessoa {
 
 export const NOME_EXIBICAO_MAX = 60
 
+/** Acesso de uma pessoa a uma obra (RPC `definir_acesso`). */
+export type PapelAcesso = 'nenhum' | 'equipe' | 'gestor'
+
+/** `matriz_acessos()`: obras e, por pessoa, o papel em cada obra (por id) e os pedidos pendentes. */
+export interface MatrizAcessosAdmin {
+  obras: { id: string; slug: string; nome: string }[]
+  pessoas: {
+    id: string
+    nome: string
+    username: string | null
+    admin: boolean
+    vistoEm: string | null
+    acessos: Record<string, 'equipe' | 'gestor'>
+    /** Ids das obras em que a pessoa pediu acesso e ainda não foi decidido. */
+    pedidos: string[]
+  }[]
+}
+
 /**
  * Estações meteorológicas do Observatório de Riscos Climáticos de Fortaleza (lista fixa, só no
  * site; o gerador do boletim tem a mesma lista em `servidor/boletim/estacoes.ts`).
