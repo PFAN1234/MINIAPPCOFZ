@@ -152,4 +152,14 @@ describe('realidade aumentada (fixture)', () => {
     expect(screen.queryByTestId('ra-folha')).not.toBeInTheDocument()
     expect((await repo.listarRA('obra-hto')).find((a) => a.codigo === 'terreo-administracao')?.qr).toBeNull()
   })
+
+  it('listarRA traz contorno_pagina e planta só da Administração', async () => {
+    const lista = await renderizar().listarRA('obra-hto')
+    const adm = lista.find((a) => a.codigo === 'terreo-administracao')
+    expect(adm?.contorno_pagina).toHaveLength(4)
+    expect(adm?.planta).not.toBeNull()
+    const alo = lista.find((a) => a.codigo === 'terreo-alojamento')
+    expect(alo?.contorno_pagina).toBeNull()
+    expect(alo?.planta).toBeNull()
+  })
 })

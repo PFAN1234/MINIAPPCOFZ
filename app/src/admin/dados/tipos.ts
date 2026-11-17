@@ -1,3 +1,4 @@
+import type { PlantaAdmin } from '../ra/planta.ts'
 /** Tipos do site de administração (/admin/). RPCs em supabase/migrations/20261111170000_admin.sql. */
 
 export type StatusObra = 'aguardando_revisao_humana' | 'revisado'
@@ -767,6 +768,10 @@ export interface AmbienteRA {
   y_piso: number
   y_teto: number
   qr: QrAmbiente | null
+  /** Contorno normalizado (0..1) na página do PDF; null sem planta. */
+  contorno_pagina: [number, number][] | null
+  /** Planta do pavimento já com URL assinada; null se ausente. */
+  planta: PlantaAdmin | null
 }
 
 /** Erro já com a mensagem para a tela. */
