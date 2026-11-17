@@ -429,9 +429,11 @@ function Fotos({ ctx, fotos }: { ctx: Ctx; fotos: FotoBoletim[] }) {
       {fotos.map((f) => {
         const oculta = ctx.fotoOculta(f.path)
         const nome = f.path.split('/').pop()
+        const seloRa = f.origem === 'ra_limpa' ? 'real (RA)' : f.origem === 'ra_modelo' ? 'modelo (RA)' : null
         return (
           <li key={f.path} className={oculta ? 'adm-editor-oculto' : undefined}>
             {ctx.urls[f.path] ? <img src={ctx.urls[f.path]} alt={`Foto ${nome}`} width={96} /> : <span className="adm-dica">{nome}</span>}
+            {seloRa && <span className="adm-selo">{seloRa}</span>}
             {oculta && <span className="adm-selo">oculta</span>}
             {!ctx.leitura && (
               <button

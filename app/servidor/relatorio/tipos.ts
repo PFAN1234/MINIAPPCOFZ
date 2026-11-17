@@ -4,6 +4,7 @@ export interface FotoRelatorio {
   path: string
   largura: number
   altura: number
+  origem?: 'normal' | 'ra_limpa' | 'ra_modelo'
 }
 
 export interface EncerramentoRelatorio {

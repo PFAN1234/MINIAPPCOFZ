@@ -86,6 +86,29 @@ describe('template do boletim', () => {
     expect(caminhosDasFotos(s)).toHaveLength(22)
   })
 
+  it('mantém o par da RA rotulado como real (RA) e modelo (RA) nos serviços e pendências', () => {
+    const s = snapshot()
+    s.obras[0].servicos[0].fotos = [
+      { path: 'ra/limpa.jpg', largura: 1200, altura: 900, origem: 'ra_limpa' },
+      { path: 'ra/modelo.jpg', largura: 1200, altura: 900, origem: 'ra_modelo' },
+    ]
+    s.obras[0].pendencias_abertas = [
+      {
+        ...s.obras[0].pendencias_abertas[0],
+        fotos: [{ path: 'ra/unica-modelo.jpg', largura: 1200, altura: 900, origem: 'ra_modelo' }],
+      },
+    ]
+    s.obras[0].pendencias_encerradas[0].fotos_registro = [
+      { path: 'ra/enc-limpa.jpg', largura: 1200, altura: 900, origem: 'ra_limpa' },
+    ]
+    const fotos = new Map(caminhosDasFotos(s).map((c) => [c, `data:image/jpeg;base64,${c}`]))
+    const t = texto(montarHtml(s, opcoes({ fotos })))
+    expect(t).toContain('Foto 1 · real (RA) · 08:14')
+    expect(t).toContain('Foto 2 · modelo (RA) · 08:14')
+    expect(t).toContain('Foto modelo (RA)')
+    expect(t).toContain('Antes (registro original) · real (RA)')
+  })
+
   it('escapa o texto do usuário', () => {
     const s = snapshot()
     s.obras[0].observacoes[0].texto = '<script>alert(1)</script> & "aspas"'

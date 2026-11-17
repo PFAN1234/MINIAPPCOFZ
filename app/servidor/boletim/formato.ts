@@ -121,3 +121,10 @@ export function cidadeDoFuso(fuso: string): string {
 export function numeroSemBarras(numero: string): string {
   return numero.replace(/\//g, '')
 }
+
+/** Rótulo das fotos de realidade aumentada; vazio para fotos normais. */
+export function rotuloOrigemRA(origem?: string | null): string {
+  if (origem === 'ra_limpa') return 'real (RA)'
+  if (origem === 'ra_modelo') return 'modelo (RA)'
+  return ''
+}
