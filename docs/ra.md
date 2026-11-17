@@ -54,3 +54,7 @@ Conferido em 2026-11-13 com os modelos publicados da HTO: o ARQ R06 (hash `497ec
 ## Planta baixa no ajuste do QR (admin)
 
 Na página de RA do admin, o ambiente aberto mostra a planta real do pavimento, enquadrada no cômodo, com os cantos numerados e a marca do QR, que acompanha parede, distância e lado digitados. Sem `contorno_pagina` ou sem planta ativa, mostra o desenho esquemático. Depende da migration `20261122090000_ra_admin_planta.sql`.
+
+## Visualizar modelo (sem RA)
+
+Na tela do ambiente, o botão **Visualizar modelo** abre o modelo 3D federado, sem câmera nem sensores, cortado em volta do ambiente (a mesma caixa de corte da RA) e com a câmera enquadrada nele; dá para girar, dar zoom e ligar/desligar disciplinas. O chip **Só este ambiente** liga/desliga o corte. Aparece com as mesmas condições do botão da RA (ambiente ativo com geometria e obra com modelo). Código: `app/src/telas/AmbienteModelo.tsx`, `app/src/modelo/VisualizadorModelo.tsx` (prop `ambiente`) e `app/src/modelo/corte.ts`.
