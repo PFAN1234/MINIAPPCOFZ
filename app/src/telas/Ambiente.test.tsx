@@ -48,4 +48,23 @@ describe('ambiente inativo (saiu da planta numa revisão)', () => {
     expect(screen.queryByRole('link', { name: /Apto\. 101/ })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /^Pendências\s*3$/ })).toBeInTheDocument()
   })
+
+  it('ambiente inativo não libera Comparar com o modelo (RA) no Novo registro', async () => {
+    const base = comInativo('terreo-apto-101')
+    const modelosChamados = new Promise<void>((resolve) => {
+      const repo: Repositorio = {
+        ...base,
+        listarModelos: async () => {
+          resolve()
+          return [{ sigla: 'ARQ', revisao: 'R06', arquivo: 'ARQ.frag', bytes: 1, hash: 'h' }]
+        },
+      }
+      renderizarApp('/obras/hto/ambientes/terreo-apto-101/novo?ra=1', repo)
+    })
+    await screen.findByLabelText('Legenda')
+    await Promise.race([modelosChamados, new Promise((r) => setTimeout(r, 30))])
+    await new Promise((r) => setTimeout(r, 20))
+    expect(screen.queryByRole('button', { name: 'Comparar com o modelo (RA)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Comparar com o modelo' })).not.toBeInTheDocument()
+  })
 })

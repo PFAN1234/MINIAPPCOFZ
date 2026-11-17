@@ -3,6 +3,15 @@ import { useUrlsImagens } from '../dados/hooks.ts'
 import type { RegistroResumo } from '../dados/tipos.ts'
 import { VisualizadorFotos } from './VisualizadorFotos.tsx'
 
+export function SeloRA({ fotos }: { fotos: readonly { origem?: string }[] }) {
+  if (!fotos.some((f) => f.origem === 'ra_modelo')) return null
+  return (
+    <span className="miniatura-ra" title="Comparado com o modelo (realidade aumentada)">
+      RA
+    </span>
+  )
+}
+
 /** Miniatura da primeira foto do registro, com "+N" quando houver mais; toca para abrir o visualizador. */
 export function MiniaturaRegistro({
   registro,
@@ -30,11 +39,7 @@ export function MiniaturaRegistro({
         onClick={() => setAberto(true)}
       >
         {url && <img src={url} alt="" loading="lazy" />}
-        {fotos.some((f) => f.origem === 'ra_modelo') && (
-          <span className="miniatura-ra" title="Comparado com o modelo (realidade aumentada)">
-            RA
-          </span>
-        )}
+        <SeloRA fotos={fotos} />
         {extras > 0 && (
           <span className="miniatura-extras" aria-hidden="true">
             +{extras}

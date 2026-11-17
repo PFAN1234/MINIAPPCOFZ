@@ -255,4 +255,20 @@ describe('Novo registro', () => {
     await usuario.click(screen.getByRole('button', { name: 'Voltar' }))
     expect(confirmar).not.toHaveBeenCalled()
   })
+
+  it('com 9 fotos já anexadas, desabilita Comparar com o modelo (RA) e explica que faltam 2 vagas', async () => {
+    const usuario = userEvent.setup()
+    const base = criarRepositorioFixture()
+    const repo: Repositorio = {
+      ...base,
+      listarModelos: async () => [{ sigla: 'ARQ', revisao: 'R06', arquivo: 'ARQ.frag', bytes: 1, hash: 'h' }],
+    }
+    renderizar(repo)
+    const input = await screen.findByLabelText('Escolher fotos da galeria')
+    const nove = Array.from({ length: 9 }, (_, i) => foto(`f${i}.jpg`))
+    await usuario.upload(input, nove)
+    const botaoRa = await screen.findByRole('button', { name: 'Comparar com o modelo (RA)' })
+    expect(botaoRa).toBeDisabled()
+    expect(screen.getByText(/gera 2 fotos/i)).toBeInTheDocument()
+  })
 })

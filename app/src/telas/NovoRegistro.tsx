@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { EstadoConsulta } from '../components/Estado.tsx'
 import { MAX_FOTOS, SeletorFotos } from '../components/SeletorFotos.tsx'
@@ -20,6 +20,28 @@ import type { FotoRA } from '../ra/tipos.ts'
 
 // Three.js, That Open e a tela de RA ficam fora do pacote inicial.
 const TelaRA = lazy(() => import('../ra/TelaRA.tsx'))
+
+class LimitrofeRA extends Component<{ onFechar: () => void; children: ReactNode }, { erro: boolean }> {
+  state = { erro: false }
+
+  static getDerivedStateFromError() {
+    return { erro: true }
+  }
+
+  render() {
+    if (!this.state.erro) return this.props.children
+    return (
+      <div className="ra" role="alertdialog" aria-modal="true" aria-label="Comparar com o modelo">
+        <div className="ra-cartao" role="alert">
+          <p>Não foi possível abrir a realidade aumentada sem sinal.</p>
+          <button type="button" className="botao botao-bloco" onClick={this.props.onFechar}>
+            Voltar
+          </button>
+        </div>
+      </div>
+    )
+  }
+}
 
 const MAX_LEGENDA = 1000
 
@@ -44,10 +66,11 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
   const [erro, setErro] = useState<string | null>(null)
   const saindo = useRef(false)
 
-  // Realidade aumentada: disponível quando o ambiente tem geometria e a obra tem modelo.
+  // Realidade aumentada: disponível quando o ambiente está ativo, tem geometria e a obra tem modelo.
   const repo = useRepositorio()
   const [params, setParams] = useSearchParams()
-  const geometria = useGeometria(obra, ambiente, recursos.ra)
+  const comRA = recursos.ra && ambiente.ativo
+  const geometria = useGeometria(obra, ambiente, comRA)
   // Planta do pavimento (HD quando houver), enquadrada no cômodo pela tela de RA.
   const { planta } = detalhe
   const imagemPlanta = planta ? (planta.imagem_hd ?? planta.imagem) : null
@@ -62,8 +85,8 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
           altura: imagemPlanta.altura,
         }
       : null
-  const modelos = useModelos(obra.slug, recursos.ra)
-  const temRA = recursos.ra && Boolean(geometria.data) && (modelos.data?.length ?? 0) > 0
+  const modelos = useModelos(obra.slug, comRA)
+  const temRA = comRA && Boolean(geometria.data) && (modelos.data?.length ?? 0) > 0
   const raAberta = temRA && params.get('ra') === '1'
   const baixarModelo = useCallback(
     (m: ModeloFrag) => modeloComCache(`${obra.slug}/${m.sigla}@${m.hash}`, () => repo.baixarModelo(obra.slug, m)),
@@ -166,14 +189,19 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
             {aviso}
           </p>
           {temRA && (
-            <button
-              type="button"
-              className="botao botao-secundario botao-bloco"
-              disabled={guardando || MAX_FOTOS - fotos.length < 2}
-              onClick={() => alternarRA(true)}
-            >
-              Comparar com o modelo (RA)
-            </button>
+            <>
+              <button
+                type="button"
+                className="botao botao-secundario botao-bloco"
+                disabled={guardando || MAX_FOTOS - fotos.length < 2}
+                onClick={() => alternarRA(true)}
+              >
+                Comparar com o modelo (RA)
+              </button>
+              {MAX_FOTOS - fotos.length === 1 && (
+                <p className="campo-dica">A comparação em RA gera 2 fotos; remova uma foto para liberar.</p>
+              )}
+            </>
           )}
 
           <fieldset className="campo tipo-registro">
@@ -238,23 +266,25 @@ function Formulario({ detalhe }: { detalhe: AmbienteDetalhe }) {
         </button>
       </form>
       {raAberta && geometria.data && modelos.data && (
-        <Suspense fallback={null}>
-          <TelaRA
-            obra={obra}
-            pavimento={pavimento.nome}
-            ambiente={{
-              codigo: ambiente.codigo,
-              nome: ambiente.nome_operacional,
-            }}
-            geometria={geometria.data}
-            modelos={modelos.data}
-            baixar={baixarModelo}
-            vagas={MAX_FOTOS - fotos.length}
-            planta={plantaRA}
-            onConcluir={receberDaRA}
-            onFechar={() => alternarRA(false)}
-          />
-        </Suspense>
+        <LimitrofeRA onFechar={() => alternarRA(false)}>
+          <Suspense fallback={null}>
+            <TelaRA
+              obra={obra}
+              pavimento={pavimento.nome}
+              ambiente={{
+                codigo: ambiente.codigo,
+                nome: ambiente.nome_operacional,
+              }}
+              geometria={geometria.data}
+              modelos={modelos.data}
+              baixar={baixarModelo}
+              vagas={MAX_FOTOS - fotos.length}
+              planta={plantaRA}
+              onConcluir={receberDaRA}
+              onFechar={() => alternarRA(false)}
+            />
+          </Suspense>
+        </LimitrofeRA>
       )}
     </section>
   )
