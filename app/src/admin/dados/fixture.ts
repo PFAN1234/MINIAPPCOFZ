@@ -38,6 +38,8 @@ import {
   type EtapaDetalhe,
   type EtapaLista,
   type Pessoa,
+  type MatrizAcessosAdmin,
+  type PapelAcesso,
   type Responsavel,
   type Organizacao,
   type AmbienteRA,
@@ -509,6 +511,14 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     { usuario_id: 'usuario-eduardo', obra_id: 'obra-hto', papel: 'equipe' },
     { usuario_id: 'usuario-maria', obra_id: 'obra-cofz', papel: 'equipe' },
   ]
+  /** Pedidos de acesso pendentes: usuário → obras. */
+  const pedidosAcesso = new Map<string, Set<string>>([['usuario-maria', new Set(['obra-hto'])]])
+  /** Admin do grupo é gestor de todas as obras. */
+  const papelEfetivo = (obraId: string, usuarioId: string): PapelAcesso => {
+    if (admins.has(usuarioId)) return 'gestor'
+    const p = participantes.find((x) => x.usuario_id === usuarioId && x.obra_id === obraId)?.papel
+    return p === 'gestor' ? 'gestor' : p === 'equipe' ? 'equipe' : 'nenhum'
+  }
   /** Logos enviados: caminho → data URL. */
   const logos = new Map<string, string>()
   const organizacaoAtual = (): Organizacao => ({
@@ -1007,6 +1017,59 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
             return { obra_slug: o.slug, obra_nome: o.nome, etapa_nome: etapaDe(o).nome, papel: p.papel }
           }),
       })).sort((a, b) => (a.nome_exibicao ?? a.nome).localeCompare(b.nome_exibicao ?? b.nome))
+    },
+
+    async matrizAcessos(): Promise<MatrizAcessosAdmin> {
+      exigirAdmin()
+      const pessoas = USUARIOS_BASE.map((u) => {
+        const acessos: Record<string, 'equipe' | 'gestor'> = {}
+        for (const o of obras) {
+          const papel = papelEfetivo(o.id, u.id)
+          if (papel !== 'nenhum') acessos[o.id] = papel
+        }
+        return {
+          id: u.id,
+          nome: u.nome,
+          username: u.username,
+          admin: admins.has(u.id),
+          vistoEm: '2026-11-15T14:00:00Z',
+          acessos,
+          pedidos: [...(pedidosAcesso.get(u.id) ?? [])],
+        }
+      })
+      pessoas.sort(
+        (a, b) =>
+          Number(b.pedidos.length > 0) - Number(a.pedidos.length > 0) ||
+          a.nome.localeCompare(b.nome, 'pt-BR') ||
+          a.id.localeCompare(b.id),
+      )
+      return { obras: obras.map((o) => ({ id: o.id, slug: o.slug, nome: o.nome })), pessoas }
+    },
+
+    async definirAcesso(obraId, usuarioId, papel: PapelAcesso) {
+      exigirAdmin()
+      if (papel !== 'nenhum' && papel !== 'equipe' && papel !== 'gestor') throw new ErroAdmin('Acesso inválido.')
+      if (!obras.some((o) => o.id === obraId)) throw new ErroAdmin('Obra não encontrada.')
+      if (admins.has(usuarioId) && papel !== 'gestor') {
+        throw new ErroAdmin('Administradores do grupo são gestores de todas as obras.')
+      }
+      if (papelEfetivo(obraId, usuarioId) === 'gestor' && papel !== 'gestor') {
+        const outros = USUARIOS_BASE.filter((u) => u.id !== usuarioId && papelEfetivo(obraId, u.id) === 'gestor')
+        if (outros.length === 0) throw new ErroAdmin('A obra precisa de pelo menos um gestor.')
+      }
+      const i = participantes.findIndex((p) => p.usuario_id === usuarioId && p.obra_id === obraId)
+      if (papel === 'nenhum') {
+        if (i >= 0) participantes.splice(i, 1)
+      } else if (i >= 0) {
+        participantes[i].papel = papel
+      } else {
+        participantes.push({ usuario_id: usuarioId, obra_id: obraId, papel })
+      }
+      pedidosAcesso.get(usuarioId)?.delete(obraId)
+    },
+
+    async meuId() {
+      return sessao ? VOCE.id : null
     },
 
     async definirNomeExibicao(usuarioId, nome) {

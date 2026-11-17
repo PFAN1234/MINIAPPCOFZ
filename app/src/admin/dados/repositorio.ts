@@ -14,6 +14,8 @@ import type {
   PedidoEmissao,
   EtapaDetalhe,
   Pessoa,
+  MatrizAcessosAdmin,
+  PapelAcesso,
   Responsavel,
   DadosModelos,
   DadosObra,
@@ -102,6 +104,12 @@ export interface RepositorioAdmin {
   listarPessoas(): Promise<Pessoa[]>
   /** Normaliza (maiúsculas, espaços); texto vazio ou null tira o nome de exibição. */
   definirNomeExibicao(usuarioId: string, nome: string | null): Promise<{ id: string; nome: string; nome_exibicao: string | null }>
+  /** RPC `matriz_acessos`: obras, pessoas, acessos por obra e pedidos pendentes. */
+  matrizAcessos(): Promise<MatrizAcessosAdmin>
+  /** RPC `definir_acesso`: `nenhum` tira o acesso (e recusa o pedido pendente); liberar aprova o pedido. */
+  definirAcesso(obraId: string, usuarioId: string, papel: PapelAcesso): Promise<void>
+  /** Id do usuário da sessão atual (para confirmar a alteração do próprio acesso). */
+  meuId(): Promise<string | null>
   /** Arquiva (true) ou desarquiva (false) a etapa; devolve `arquivada_em`. Não mexe no arquivamento das obras. */
   arquivarEtapa(slug: string, arquivada: boolean): Promise<string | null>
   /** Desliga o grupo do Telegram da etapa e os tópicos das obras dela. */

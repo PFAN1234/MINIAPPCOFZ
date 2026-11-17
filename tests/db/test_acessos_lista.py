@@ -262,3 +262,40 @@ def test_sincronizar_fora_continua(cenario):
     sincronizar(c, c.equipe_a, c.obra_a, 'membro')
     sincronizar(c, c.equipe_a, c.obra_a, 'fora')
     assert grupo(c, c.obra_a, c.equipe_a) is None and papel(c, c.obra_a, c.equipe_a) is None
+
+
+# --- controle de acesso (docs/contrato-controle-acesso.md, A) ----------------------------------
+
+def test_admin_do_portal_sem_participacao_controla_acesso(cenario):
+    c = cenario
+    admin = novo_usuario(c, 'Admin do portal')
+    su(c, 'insert into public.admin_app (usuario_id) values (%s)', (admin,))
+    try:
+        m = matriz(c, admin)
+        assert pessoa(m, c.gestor_a) is not None
+        definir(c, admin, c.obra_a, c.sem_obra, 'equipe')
+        assert papel(c, c.obra_a, c.sem_obra) == 'equipe'
+    finally:
+        su(c, 'delete from public.admin_app where usuario_id = %s', (admin,))
+
+
+def test_sem_admin_nem_gestor_recebe_42501(cenario):
+    c = cenario
+    with pytest.raises(errors.InsufficientPrivilege):
+        matriz(c, c.sem_obra)
+    with pytest.raises(errors.InsufficientPrivilege):
+        definir(c, c.equipe_a, c.obra_a, c.sem_obra, 'equipe')
+
+
+def test_nenhum_recusa_pedido_pendente(cenario):
+    c = cenario
+    su(c, 'insert into privado.membro_grupo (obra_id, usuario_id) values (%s, %s)', (c.obra_a, c.sem_obra))
+    su(c, "insert into public.solicitacao_acesso (obra_id, usuario_id, estado) values (%s, %s, 'pendente')",
+       (c.obra_a, c.sem_obra))
+    assert pessoa(matriz(c, c.gestor_a), c.sem_obra)['pedidos'] == [str(c.obra_a)]
+    definir(c, c.gestor_a, c.obra_a, c.sem_obra, 'nenhum')
+    r = su(c, 'select estado, decidido_por, decidido_em is not null from public.solicitacao_acesso '
+              'where obra_id = %s and usuario_id = %s', (c.obra_a, c.sem_obra))
+    assert r == [('recusada', c.gestor_a, True)]
+    p = pessoa(matriz(c, c.gestor_a), c.sem_obra)
+    assert p is not None and p['pedidos'] == []

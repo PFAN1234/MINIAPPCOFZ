@@ -27,7 +27,7 @@ export default function AcessosEquipe() {
   const online = useOnline()
   return (
     <section aria-labelledby="titulo-acessos-equipe">
-      <TopoTela titulo="Acessos da equipe" idTitulo="titulo-acessos-equipe" />
+      <TopoTela titulo="Controle de acesso" idTitulo="titulo-acessos-equipe" />
       <p className="lista-sub">
         Marque o acesso de cada pessoa às obras. A lista mostra quem já abriu o app ou falou no grupo.
       </p>
@@ -120,7 +120,9 @@ function CartaoPessoa({
       </span>
       {obras.map((o) => {
         const atual: PapelAcesso = pessoa.admin ? 'gestor' : (pessoa.acessos[o.id] ?? 'nenhum')
-        const valor = salvando?.obraId === o.id ? salvando.papel : atual
+        // Pedido pendente sem acesso: nenhum botão marcado.
+        const pediu = !pessoa.admin && pessoa.pedidos.includes(o.id) && !pessoa.acessos[o.id]
+        const valor = salvando?.obraId === o.id ? salvando.papel : pediu ? null : atual
         const travado = definir.isPending || !online || pessoa.admin
         return (
           <div key={o.id} className="acesso-linha">
@@ -137,7 +139,7 @@ function CartaoPessoa({
                   aria-pressed={valor === papel}
                   disabled={travado}
                   onClick={() => {
-                    if (papel !== atual) void escolher(o.id, papel)
+                    if (papel !== atual || pediu) void escolher(o.id, papel)
                   }}
                 >
                   {rotulo}

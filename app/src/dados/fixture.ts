@@ -1065,7 +1065,7 @@ export function criarRepositorioFixture(
     },
 
     async matrizAcessos(): Promise<MatrizAcessos> {
-      if (papelUsuario() !== 'gestor') {
+      if (papelUsuario() !== 'gestor' && opcoes.admin !== true) {
         throw new ErroEnvio('permissao', 'Só gestores veem a lista de acessos.')
       }
       const nomes: Record<string, { nome: string; username: string | null }> = {
@@ -1100,7 +1100,9 @@ export function criarRepositorioFixture(
 
     async definirAcesso(obraId, usuarioId, papel: PapelAcesso) {
       exigirRede()
-      if (papelUsuario() !== 'gestor') throw new ErroEnvio('permissao', 'Só gestores alteram acessos.')
+      if (papelUsuario() !== 'gestor' && opcoes.admin !== true) {
+        throw new ErroEnvio('permissao', 'Só gestores alteram acessos.')
+      }
       if (papel !== 'nenhum' && papel !== 'equipe' && papel !== 'gestor') falhaValidacao('Acesso inválido.')
       if (!OBRAS.some((o) => o.id === obraId)) throw new ErroEnvio('nao_encontrado', 'Obra não encontrada.')
       if (adminsDoGrupo.includes(usuarioId) && papel !== 'gestor') {
@@ -1127,8 +1129,8 @@ export function criarRepositorioFixture(
         if (papel === 'nenhum') delete tabela[usuarioId]
         else tabela[usuarioId] = papel
       }
-      if (papel !== 'nenhum' && obraId === ID_HTO && usuarioId === PEDIDO_MARIA.usuario_id) {
-        decisoes[ID_PEDIDO_MARIA] ??= 'aprovada'
+      if (obraId === ID_HTO && usuarioId === PEDIDO_MARIA.usuario_id) {
+        decisoes[ID_PEDIDO_MARIA] ??= papel === 'nenhum' ? 'recusada' : 'aprovada'
       }
       persistir()
     },

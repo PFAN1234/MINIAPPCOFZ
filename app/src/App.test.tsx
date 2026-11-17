@@ -223,11 +223,13 @@ describe('acesso às obras', () => {
     ).toBeInTheDocument()
   })
 
-  it('Início (gestor) mostra o atalho da Gestão com o selo e a rota de Acessos aprova', async () => {
+  it('Início (gestor) mostra o aviso de publicações e a rota de Acessos aprova', async () => {
     const usuario = userEvent.setup()
     renderizar('/')
-    // 1 pedido de acesso + 2 publicações com problema.
-    expect(await screen.findByRole('link', { name: 'Gestão 3' })).toHaveAttribute('href', '/obras/hto/gestao')
+    expect(await screen.findByRole('link', { name: '2 publicações com problema' })).toHaveAttribute(
+      'href',
+      '/obras/hto/publicacoes',
+    )
     cleanup()
     renderizar('/obras/hto/acessos')
     expect(await screen.findByRole('heading', { level: 1, name: 'Pedidos de acesso' })).toBeInTheDocument()
