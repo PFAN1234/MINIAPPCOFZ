@@ -2,6 +2,7 @@
 // de administração (/admin/).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { listarOrigens } from "../_shared/http.ts";
+import { criarClienteTelegram } from "../_shared/telegram.ts";
 import { criarHandler } from "./handler.ts";
 
 const opcoes = { auth: { persistSession: false, autoRefreshToken: false } };
@@ -29,6 +30,7 @@ const handler = criarHandler({
   ),
   admin: criarClienteServico(),
   clienteUsuario: criarClienteUsuario,
+  telegram: criarClienteTelegram(Deno.env.get("TELEGRAM_BOT_TOKEN") ?? ""),
 });
 
 Deno.serve(handler);

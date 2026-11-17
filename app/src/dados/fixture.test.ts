@@ -4,6 +4,18 @@ import { criarRepositorioFixture, urlLocalDaImagem } from './fixture.ts'
 const repo = criarRepositorioFixture()
 
 describe('repositório fixture', () => {
+  it('geometria da RA traz contornoPagina com os mesmos cantos do contorno, de 0 a 1', async () => {
+    const g = await repo.obterGeometria({ id: 'o', slug: 'hto' }, { id: 'a', codigo: 'terreo-apto-101' })
+    const pagina = g?.contornoPagina
+    expect(pagina).toHaveLength(g!.contorno.length)
+    for (const [x, y] of pagina!) {
+      expect(x).toBeGreaterThanOrEqual(0)
+      expect(x).toBeLessThanOrEqual(1)
+      expect(y).toBeGreaterThanOrEqual(0)
+      expect(y).toBeLessThanOrEqual(1)
+    }
+  })
+
   it('lista três obras em duas etapas; só a HTO tem ambientes', async () => {
     const obras = await repo.listarObras()
     expect(obras.map((o) => [o.slug, o.etapa.nome])).toEqual([

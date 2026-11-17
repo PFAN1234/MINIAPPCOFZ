@@ -42,10 +42,10 @@ textarea {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: var(--seguro-base);
 }
 
-/* Sem padding em cima: o topo azul de cada tela (TopoTela) encosta no cabeçalho do Telegram. */
+/* Sem padding em cima: o topo azul de cada tela (TopoTela) vai até o alto da tela (tela cheia) ou encosta no cabeçalho do Telegram. */
 .app-main {
   flex: 1;
   padding: 0 16px 16px;
@@ -62,108 +62,187 @@ textarea {
 .topo-tela {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding: env(safe-area-inset-top) 16px 16px;
+  padding: var(--seguro-topo) 16px 10px;
   color: var(--texto-no-azul);
-  background: var(--azul);
+  background: linear-gradient(180deg, var(--azul) 0%, var(--azul-area) 100%);
 }
 
-/* Faixa de identidade (FaixaIdentidade): logo, nome da OM e "Fiscal Bot", no alto do azul. */
-.identidade {
+/*
+ * Linha única do topo: assinatura à esquerda, título no centro e versão no canto de cima, à
+ * direita. As colunas dos lados têm a mesma largura enquanto o título couber (ele fica no centro
+ * da tela); título comprido toma o espaço que sobra ao lado da assinatura e quebra a linha.
+ */
+.topo-faixa {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 64px;
+  padding-top: 8px;
+}
+
+/* Assinatura (MarcaOM): brasão, nome da OM e "Fiscal Bot". */
+.marca {
   display: flex;
   align-items: center;
   gap: 10px;
-  align-self: stretch;
-  min-height: 40px;
-  margin-bottom: 8px;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--azul-borda);
+  min-width: 0;
 }
 
-.identidade-logo {
+.marca-logo {
   flex: none;
   width: auto;
-  height: 28px;
-  max-width: 112px;
+  height: 52px;
+  max-width: 96px;
   object-fit: contain;
 }
 
-.identidade-textos {
+.marca-textos {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 8px;
+  flex-direction: column;
   min-width: 0;
-  margin: 0;
-  font-size: 14px;
-  line-height: 18px;
 }
 
-.identidade-om {
+.marca-om {
+  max-width: 7.5em;
+  font-family: var(--fonte-titulo);
+  font-size: 21px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  line-height: 1.05;
+  letter-spacing: 0.1em;
   overflow-wrap: anywhere;
 }
 
-.identidade-app {
+.marca-app {
+  margin-top: 4px;
   color: var(--texto-suave-no-azul);
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
-.identidade-om + .identidade-app {
-  padding-left: 8px;
-  border-left: 1px solid var(--azul-borda);
-}
-
-/* Topo só com a faixa (telas antes de entrar). */
-.topo-identidade {
-  padding-bottom: 0;
-}
-
-.topo-identidade .identidade {
-  margin-bottom: 0;
-  border-bottom: 0;
-}
-
-/* Seletor de etapa da tela inicial: select nativo sobre o azul. */
-.seletor-etapa {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.seletor-etapa-rotulo {
-  flex: none;
-  color: var(--texto-suave-no-azul);
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.seletor-etapa select {
-  flex: 1;
-  min-width: 0;
-  min-height: 44px;
-  padding: 0 40px 0 12px;
-  font: inherit;
-  font-size: 16px;
-  font-weight: 600;
+/* Sem organização carregada, "Fiscal Bot" assume o lugar do nome da OM. */
+.marca-app:only-child {
+  margin: 0;
   color: var(--texto-no-azul);
-  background-color: var(--azul-painel);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  border: 1px solid var(--azul-borda);
-  border-radius: 10px;
-  appearance: none;
+  font-family: var(--fonte-titulo);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.topo-centro {
+  grid-column: 2;
+  min-width: 0;
+  text-align: center;
+}
+
+/* Versão do app no canto de cima da faixa, à direita, fora da grade para não tirar espaço do título: pequena e apagada; o toque mostra a data embaixo. */
+.selo-versao {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  min-height: 24px;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--texto-suave-no-azul);
+  opacity: 0.55;
+  font: inherit;
+  font-size: 9.5px;
+  line-height: 12px;
+  text-align: right;
   cursor: pointer;
 }
 
-/* A lista que o sistema abre usa as cores normais (fundo claro). */
-.seletor-etapa option {
-  color: var(--texto);
-  background: var(--superficie);
+.selo-versao[aria-expanded='true'] {
+  opacity: 1;
+}
+
+.selo-versao-linha {
+  display: block;
+  white-space: nowrap;
+}
+
+/* A data da publicação abre por cima, sem empurrar o título. */
+.selo-versao-linha + .selo-versao-linha {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1;
+  margin-top: -4px;
+  padding: 3px 4px 3px 8px;
+  background: var(--azul);
+  border-radius: 4px;
+}
+
+/* Abas da base do topo (etapas no Início, pavimentos na obra): texto com fio amarelo na ativa. */
+.topo-base .abas,
+.abas-etapa {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 24px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  background: transparent;
+  border-radius: 0;
+  scrollbar-width: none;
+}
+
+.topo-base .aba,
+.aba-etapa {
+  flex: none;
+  min-height: 46px;
+  padding: 2px 0 0;
+  color: #8fa4bf;
+  font-family: var(--fonte-titulo);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.topo-base .aba[aria-selected='true'],
+.aba-etapa[aria-selected='true'] {
+  color: var(--texto-no-azul);
+  font-weight: 600;
+  background: transparent;
+  border-bottom-color: var(--destaque);
+  box-shadow: none;
+}
+
+/* O contorno de foco das abas fica para dentro: a linha rola na horizontal e cortaria o de fora. */
+.topo-base .aba:focus-visible,
+.aba-etapa:focus-visible {
+  outline-offset: -3px;
+}
+
+/* Equipe de serviço: espaço entre a lista e os botões, e antes da seção seguinte. */
+.equipe-servico {
+  margin-bottom: 24px;
+}
+
+.equipe-servico > .botao,
+.equipe-servico > .equipe-confirmar {
+  margin-top: 12px;
+}
+
+.equipe-confirmar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Sobre o azul, o anel de foco azul some: usa o amarelo. */
@@ -180,16 +259,17 @@ textarea {
 
 /* "Voltar" fora do Telegram (dentro dele, vale o BackButton nativo). */
 .topo-voltar {
+  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-width: 44px;
   min-height: 44px;
-  margin: 0 0 4px -8px;
+  margin: 0 0 -6px -8px;
   padding: 0 12px 0 8px;
   color: var(--texto-no-azul);
   font: inherit;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   background: transparent;
   border: 0;
@@ -197,62 +277,135 @@ textarea {
   cursor: pointer;
 }
 
+/* Linha pequena acima do título (na obra, o link "Obras"). */
 .topo-sobretitulo {
-  margin: 0 0 2px;
+  margin: 0 0 3px;
   color: var(--texto-suave-no-azul);
-  font-size: 14px;
+  font-family: var(--fonte-titulo);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
+/* O link é pequeno: a área de toque passa do texto. */
 .topo-sobretitulo a {
-  color: var(--texto-suave-no-azul);
+  display: inline-block;
+  margin: -8px -10px;
+  padding: 8px 10px;
+  color: inherit;
+  text-decoration: none;
 }
 
-/* Telas de uma coisa (obra, ambiente, novo registro): o nome como é, 36 px. */
+/* Título no centro da faixa: maiúsculas, 32 px; com mais letras, diminui (ver TopoTela). */
 .topo-titulo {
-  max-width: 100%;
   margin: 0;
   font-family: var(--fonte-titulo);
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
-  line-height: 38px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   overflow-wrap: anywhere;
 }
 
-/* Telas de lista (Início, Registros, Pendências): maiúsculas, 34 px. */
-.topo-lista .topo-titulo {
-  font-size: 34px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+.topo-titulo[data-tamanho='medio'] {
+  font-size: min(28px, 7.4vw);
 }
 
-/* Nome longo: letra menor e quebra de linha, nunca reticências. */
+/* Título que pode ocupar duas linhas ou mais desce um pouco, para não encostar na versão. */
 .topo-titulo[data-tamanho='longo'] {
-  font-size: 30px;
-  line-height: 33px;
+  padding-top: 6px;
+  font-size: 21px;
+  line-height: 1.08;
+  text-wrap: balance;
 }
 
 .topo-titulo[data-tamanho='muito-longo'] {
-  font-size: 26px;
-  line-height: 29px;
+  padding-top: 10px;
+  font-size: 17px;
+  line-height: 1.12;
+  text-wrap: balance;
 }
 
+/* Linha de contexto abaixo da faixa, separada por um fio. */
 .topo-subtitulo {
-  margin: 2px 0 0;
+  margin: 8px -16px 0;
+  padding: 9px 16px 0;
   color: var(--texto-suave-no-azul);
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 1.35;
+  border-top: 1px solid rgb(255 255 255 / 0.09);
 }
 
 .topo-acoes {
-  align-self: stretch;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
+/* Base do topo: abas à esquerda e atalhos à direita, encostadas no fim do azul. */
+.topo-base {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  margin: 8px -16px -10px;
+  padding: 0 16px;
+  border-top: 1px solid rgb(255 255 255 / 0.09);
+}
+
+.topo-base .atalho {
+  position: relative;
+  flex: none;
+  gap: 7px;
+  min-height: 32px;
+  margin-left: auto;
+  padding: 0 4px 0 12px;
+  color: var(--texto-no-azul);
+  font-size: 13px;
+  text-decoration: none;
+  background: rgb(255 255 255 / 0.07);
+  border-color: rgb(255 255 255 / 0.22);
+}
+
+/* O atalho tem 32 px de altura; a área de toque ocupa a linha inteira (46 px). */
+.topo-base .atalho::after {
+  content: '';
+  position: absolute;
+  inset: -7px 0;
+}
+
+.topo-base .atalho-selo {
+  min-width: 24px;
+  padding: 3px 6px;
+  color: var(--destaque-texto);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+  background: var(--destaque);
+}
+
+/* Título de seção: quadradinho amarelo e letras espaçadas. */
 .app-main h2 {
-  margin: 0 0 12px;
-  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-family: var(--fonte-titulo);
+  font-size: 13.5px;
+  font-weight: 700;
   color: var(--texto-suave);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.16em;
+}
+
+.app-main h2::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--destaque);
+  border-radius: 2px;
 }
 
 /* Acessibilidade: foco visível */
@@ -265,6 +418,11 @@ textarea {
   min-height: 44px;
   padding: 0 16px;
   font: inherit;
+  font-family: var(--fonte-titulo);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--destaque-texto);
   background: var(--destaque);
   border: 0;
@@ -384,7 +542,8 @@ a.botao {
   color: inherit;
   text-decoration: none;
   background: var(--bg-secundario);
-  border-radius: 10px;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgb(11 22 37 / 0.07);
 }
 
 .lista-titulo {
@@ -403,8 +562,8 @@ a.botao {
   left: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  height: calc(72px + env(safe-area-inset-bottom));
-  padding-bottom: env(safe-area-inset-bottom);
+  height: calc(72px + var(--seguro-base));
+  padding-bottom: var(--seguro-base);
   background: var(--superficie);
   border-top: 2px solid var(--azul);
 }
@@ -912,6 +1071,88 @@ a.botao {
   gap: 8px;
 }
 
+.camera-fotos {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  color: #fff;
+  padding-top: var(--seguro-topo);
+}
+
+.camera-fotos-video {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  object-fit: contain;
+}
+
+.camera-fotos-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.camera-fotos-barra {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.camera-fotos-contador {
+  font-weight: 600;
+}
+
+.camera-fotos-concluir {
+  justify-self: end;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 16px;
+  color: #fff;
+  background: transparent;
+  border: 1px solid #fff;
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.camera-fotos-disparo {
+  width: 72px;
+  height: 72px;
+  background: #fff;
+  border: 4px solid #000;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px #fff;
+  cursor: pointer;
+}
+
+.camera-fotos-disparo:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.camera-fotos-erro {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.camera-fotos-erro .botao {
+  min-height: 44px;
+  min-width: 44px;
+}
+
 .segmentado {
   display: flex;
   gap: 4px;
@@ -1093,8 +1334,8 @@ a.botao {
   flex-direction: column;
   color: #fff;
   background: var(--azul);
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: var(--seguro-topo);
+  padding-bottom: var(--seguro-base);
 }
 
 .visualizador-topo,
@@ -1260,7 +1501,7 @@ a.botao {
 
 .aviso-fixo {
   position: fixed;
-  top: 8px;
+  top: calc(8px + var(--seguro-topo));
   right: 12px;
   left: 12px;
   z-index: 50;
@@ -1436,6 +1677,51 @@ a.botao {
   margin: 0 0 12px;
   padding: 0;
   border: 0;
+}
+
+.filtros-registros .filtro-tipo {
+  min-width: 0;
+  margin: 0 0 8px;
+}
+
+.filtros-registros .segmentado span {
+  min-width: 0;
+  padding: 0 2px;
+  font-size: 0.875rem;
+}
+
+.filtros-linha {
+  display: flex;
+  gap: 8px;
+}
+
+.filtros-linha > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.filtro-data {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  color: var(--texto-suave);
+}
+
+.filtro-data input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 8px;
+  font: inherit;
+  color: var(--texto);
+  background: var(--bg-secundario);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+}
+
+.filtros-registros > .botao {
+  margin: 0 0 12px;
 }
 
 .lista-cartoes {
@@ -1809,4 +2095,248 @@ a.botao {
 .obs-salvar {
   align-self: flex-end;
   min-width: 120px;
+}
+
+/* Início: cartão de cada obra, com o nome, o botão Gestão e os 3 totais */
+.obra-linha {
+  position: relative;
+  gap: 0;
+  padding: 6px 16px 13px;
+}
+
+.obra-linha-cab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.obra-linha .atalho {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  min-height: 32px;
+  padding: 0 6px 0 12px;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.obra-linha-nome {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 44px;
+  color: inherit;
+  font-size: 19px;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+/* O toque em qualquer ponto do cartão abre a obra. */
+.obra-linha-nome::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+}
+
+.barrinhas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.barrinha {
+  display: block;
+  padding-left: 9px;
+  border-left: 3px solid var(--barrinha-cor);
+}
+
+.barrinha b {
+  display: block;
+  font-family: var(--fonte-titulo);
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.barrinha-rotulo {
+  color: var(--texto-suave);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.barrinha-servicos {
+  --barrinha-cor: var(--servico);
+}
+
+.barrinha-abertas {
+  --barrinha-cor: var(--pendencia);
+}
+
+.barrinha-resolvidas {
+  --barrinha-cor: var(--ok);
+}
+
+/* Obra: prévia do modelo 3D (só ARQ) */
+.previa-modelo {
+  position: relative;
+  display: block;
+  height: 200px;
+  margin: 0 0 12px;
+  overflow: hidden;
+  background: var(--bg-secundario);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+}
+
+.previa-modelo .visualizador-modelo,
+.previa-modelo .visualizador-tela {
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.previa-modelo .visualizador-tela {
+  pointer-events: none;
+}
+
+.previa-modelo-rotulo {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 2px 10px;
+  color: var(--texto);
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--superficie) 85%, transparent);
+  border-radius: 999px;
+}
+
+/* Relatórios: boletins diários */
+.relatorio-secao { margin: 16px 0 8px; font-size: 1rem; }
+.relatorio-titulo { margin: 0 0 4px; font-size: 1rem; }
+.relatorio-dica { font-size: 0.875rem; font-weight: 400; color: var(--texto-suave, var(--texto)); }
+.relatorio-lista { padding: 0; list-style: none; }
+.relatorio-linha-topo { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.relatorio-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.relatorio-acoes .botao { margin: 0; }
+.relatorio-erro { margin-top: 8px; font-size: 0.875rem; color: var(--erro); }
+.relatorio-aviso { padding: 10px 12px; margin: 0 0 12px; font-size: 0.875rem; background: var(--bg-secundario); border: 1px solid var(--borda); border-radius: 10px; }
+.botao-perigo { color: #fff; background: var(--erro); }
+
+/* Painel de relatórios */
+.painel-cartoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 12px; }
+.painel-numero { min-width: 0; padding: 8px 8px 8px 10px; background: var(--superficie, var(--bg-secundario)); border-left: 3px solid var(--painel-cor); border-radius: 8px; color: var(--texto); }
+.painel-numero b { display: block; font-family: var(--fonte-titulo); font-size: 24px; line-height: 1.1; }
+.painel-numero span { display: block; font-size: 11px; font-weight: 600; }
+.painel-numero small { display: block; font-size: 11px; color: var(--texto-suave); }
+.painel-servicos { --painel-cor: var(--servico); }
+.painel-abertas { --painel-cor: var(--pendencia); }
+.painel-resolvidas { --painel-cor: var(--ok); }
+.painel-subtitulo { margin: 12px 0 4px; font-family: var(--fonte-titulo); font-size: 0.95rem; color: var(--texto); }
+.grafico { margin: 0 0 8px; }
+.grafico-legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 0; margin: 0 0 4px; list-style: none; font-size: 12px; color: var(--texto); }
+.grafico-legenda li { display: flex; align-items: center; gap: 6px; }
+.grafico-chave { width: 18px; height: 0; border-top: 2px solid var(--cor-serie); border-radius: 2px; }
+.serie-servicos { --cor-serie: var(--servico); }
+.serie-pendencias { --cor-serie: var(--pendencia); }
+.serie-resolvidas { --cor-serie: var(--ok); }
+.grafico-chave.serie-resolvidas { border-top-style: dashed; }
+.grafico-dica { min-height: 1.4em; margin: 0 0 2px; font-size: 12px; color: var(--texto); }
+.grafico-dica[data-visivel='nao'] { visibility: hidden; }
+.grafico-svg { display: block; width: 100%; height: auto; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.grafico-grade { stroke: var(--borda-fraca); stroke-width: 1; }
+.grafico-eixo { font-family: var(--fonte-texto); font-size: 11px; fill: var(--texto-suave); }
+.grafico-valor { font-family: var(--fonte-texto); font-size: 11px; font-weight: 700; fill: var(--texto); }
+.grafico-linha { stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.grafico-linha.serie-resolvidas { stroke-dasharray: 5 3; }
+.grafico-cursor { stroke: var(--texto-suave); stroke-width: 1; }
+.por-obra { padding: 0; margin: 0 0 8px; list-style: none; }
+.por-obra-linha { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin: 0 0 10px; color: var(--texto); }
+.por-obra-nome { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.por-obra-numeros { font-size: 12px; text-align: right; }
+.por-obra-trilho { grid-column: 1 / -1; display: block; }
+.por-obra-barra { display: flex; gap: 2px; height: 14px; min-width: 6px; }
+.por-obra-seg { display: block; min-width: 4px; }
+.por-obra-resolvidas { background: var(--ok); }
+.por-obra-abertas { background: var(--pendencia); }
+.por-obra-seg:first-child { border-radius: 4px 0 0 4px; }
+.por-obra-seg:last-child { border-radius: 0 4px 4px 0; }
+.por-obra-seg:only-child { border-radius: 4px; }
+.painel-tabela { margin: 8px 0 0; font-size: 13px; color: var(--texto); }
+.painel-tabela summary { cursor: pointer; padding: 6px 0; }
+.painel-tabela table { width: 100%; border-collapse: collapse; }
+.painel-tabela th, .painel-tabela td { padding: 4px 6px; text-align: right; border-bottom: 1px solid var(--borda-fraca); font-weight: 400; font-variant-numeric: tabular-nums; }
+.painel-tabela th:first-child { text-align: left; }
+.painel-tabela thead th { font-size: 11px; color: var(--texto-suave); }
+
+/* Filtro de obra: os nomes não quebram linha; se não couberem, a linha rola na horizontal. */
+.filtro-obra .abas {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.filtro-obra .abas::-webkit-scrollbar {
+  display: none;
+}
+.filtro-obra .aba {
+  flex: 1 0 auto;
+  white-space: nowrap;
+  padding: 0 14px;
+}
+
+/* Lista de acessos da equipe */
+.acesso-cartao {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.acesso-linha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.acesso-obra {
+  font-weight: 600;
+}
+
+.acesso-seletor {
+  display: flex;
+  gap: 4px;
+}
+
+.acesso-opcao {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.85rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+
+.acesso-opcao[aria-pressed='true'] {
+  color: #fff;
+  font-weight: 600;
+  background: var(--info);
+  border-color: var(--info);
+}
+
+.acesso-opcao:disabled {
+  opacity: 0.6;
+}
+
+.atalho + .atalho,
+.estado-vazio + .atalho {
+  margin-top: 8px;
 }

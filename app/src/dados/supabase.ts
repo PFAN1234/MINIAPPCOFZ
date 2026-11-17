@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import { entrarComTelegram } from './login.ts'
+import { limitesPeriodo } from '../util/periodo.ts'
 import { nomeMostrado } from './nome.ts'
 import { FUSO_PADRAO, dataNoFuso } from '../util/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
@@ -10,7 +11,10 @@ import type {
   Ambiente,
   AmbienteDetalhe,
   DetalhePlanta,
+  EquipeServico,
   EstadoPublicacao,
+  EtapaInicio,
+  MembroServico,
   FiltroRegistros,
   LinkAdmin,
   FotoRegistro,
@@ -28,6 +32,7 @@ import type {
   ObraResumo,
   Organizacao,
   PapelObra,
+  ResumoObra,
   Participante,
   Pavimento,
   PendenciaDetalhe,
@@ -37,6 +42,10 @@ import type {
   RegistroLocalizado,
   RegistroResumo,
   SolicitacaoAcesso,
+  MatrizAcessos,
+  PainelRelatorios,
+  Relatorios,
+  ResultadoExclusaoBoletim,
 } from './tipos.ts'
 
 const SEGUNDOS_URL_ASSINADA = 3600
@@ -82,6 +91,35 @@ function checar<T>(resposta: { data: T | null; error: { message: string } | null
 }
 
 type Linha = Record<string, unknown>
+
+function lerEquipeServico(dado: unknown): EquipeServico {
+  const d = (dado ?? {}) as Linha
+  const meu = d.meu_servico as Linha | null | undefined
+  return {
+    etapa_id: String(d.etapa_id ?? ''),
+    participa: d.participa === true,
+    tem_localizacao: d.tem_localizacao === true,
+    meu_servico: meu
+      ? {
+          id: String(meu.id),
+          etapa_id: String(meu.etapa_id),
+          etapa_nome: String(meu.etapa_nome ?? ''),
+          entrada_em: String(meu.entrada_em),
+        }
+      : null,
+    equipe: ((d.equipe ?? []) as Linha[]).map(
+      (m): MembroServico => ({
+        id: String(m.id),
+        usuario_id: String(m.usuario_id),
+        nome: String(m.nome ?? ''),
+        entrada_em: String(m.entrada_em),
+        saida_em: m.saida_em ? String(m.saida_em) : null,
+        saida_automatica: m.saida_automatica === true,
+        eu: m.eu === true,
+      }),
+    ),
+  }
+}
 
 function lotes<T>(itens: T[]): T[][] {
   const saida: T[][] = []
@@ -304,6 +342,77 @@ export function criarRepositorioSupabase(
       return data.session?.user.id ?? null
     },
 
+    async resumoObras() {
+      try {
+        const { data, error } = await cliente.rpc('resumo_obras')
+        if (error) throw error
+        return ((data ?? []) as Linha[]).map(
+          (l): ResumoObra => ({
+            obra_id: String(l.obra_id),
+            papel: l.papel === 'gestor' || l.papel === 'equipe' ? l.papel : null,
+            servicos: Number(l.servicos ?? 0),
+            abertas: Number(l.abertas ?? 0),
+            resolvidas: Number(l.resolvidas ?? 0),
+          }),
+        )
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async etapasInicio() {
+      try {
+        const { data, error } = await cliente.rpc('etapas_inicio')
+        if (error) throw error
+        return ((data ?? []) as Linha[]).map(
+          (l): EtapaInicio => ({
+            id: String(l.id),
+            slug: String(l.slug ?? ''),
+            nome: String(l.nome),
+            ordem: Number(l.ordem ?? 0),
+            participa: l.participa === true,
+          }),
+        )
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async equipeServico(etapaId) {
+      try {
+        const { data, error } = await cliente.rpc('equipe_servico', { p_etapa: exigirUuid(etapaId, 'etapa') })
+        if (error) throw error
+        return lerEquipeServico(data)
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async fazerCheckin(etapaId, posicao) {
+      try {
+        const { data, error } = await cliente.rpc('fazer_checkin', {
+          p_etapa: exigirUuid(etapaId, 'etapa'),
+          p_latitude: posicao.latitude,
+          p_longitude: posicao.longitude,
+          p_precisao: posicao.precisao,
+        })
+        if (error) throw error
+        return lerEquipeServico(data)
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async fazerCheckout() {
+      try {
+        const { data, error } = await cliente.rpc('fazer_checkout')
+        if (error) throw error
+        return lerEquipeServico(data)
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
     async souAdmin() {
       try {
         const { data, error } = await cliente.rpc('sou_admin')
@@ -341,6 +450,146 @@ export function criarRepositorioSupabase(
         throw new ErroEnvio('desconhecido', 'Não foi possível abrir a administração. Tente de novo.')
       }
       return { url: corpo.url, expira_em: String(corpo.expira_em ?? '') }
+    },
+
+    async relatorios(): Promise<Relatorios> {
+      const d = (await chamar('listar_relatorios', {})) as Linha | null
+      const texto = (v: unknown) => (v == null ? null : String(v))
+      return {
+        admin: d?.admin === true,
+        etapas: ((d?.etapas as Linha[] | null) ?? []).map((e) => {
+          const b = e.boletim_hoje as Linha | null
+          const p = e.pedido_hoje as Linha | null
+          return {
+            id: String(e.id),
+            slug: String(e.slug),
+            nome: String(e.nome),
+            sigla: texto(e.sigla),
+            horario: String(e.horario ?? '').slice(0, 5),
+            hoje: String(e.hoje),
+            registros_hoje: Number(e.registros_hoje ?? 0),
+            boletim_hoje: b
+              ? { id: String(b.id), numero: String(b.numero), revisao: Number(b.revisao ?? 0), emitido_em: String(b.emitido_em) }
+              : null,
+            pedido_hoje: p ? { estado: String(p.estado), erro: texto(p.erro) } : null,
+          }
+        }),
+        boletins: ((d?.boletins as Linha[] | null) ?? []).map((b) => ({
+          id: String(b.id),
+          etapa_id: String(b.etapa_id),
+          etapa_slug: String(b.etapa_slug),
+          etapa_nome: String(b.etapa_nome),
+          data: String(b.data),
+          revisao: Number(b.revisao ?? 0),
+          numero: String(b.numero),
+          emitido_em: String(b.emitido_em),
+          pdf_path: texto(b.pdf_path),
+          publicado: b.publicado === true,
+          ultima_revisao: b.ultima_revisao === true,
+        })),
+      }
+    },
+
+    async painelRelatorios(etapaId): Promise<PainelRelatorios> {
+      const d = (await chamar('painel_relatorios', { p_etapa: etapaId })) as Linha | null
+      const e = (d?.etapa ?? {}) as Linha
+      return {
+        etapa: { id: String(e.id), slug: String(e.slug), nome: String(e.nome), hoje: String(e.hoje) },
+        obras: ((d?.obras as Linha[] | null) ?? []).map((o) => ({ id: String(o.id), slug: String(o.slug), nome: String(o.nome) })),
+        dias: ((d?.dias as Linha[] | null) ?? []).map((x) => ({
+          obra_id: String(x.obra_id),
+          dia: String(x.dia),
+          servicos: Number(x.servicos ?? 0),
+          pendencias: Number(x.pendencias ?? 0),
+          resolvidas: Number(x.resolvidas ?? 0),
+        })),
+      }
+    },
+
+    async exportarPendencias(etapaId, obraId): Promise<string> {
+      const { data } = await cliente.auth.getSession()
+      const jwt = data.session?.access_token
+      if (!jwt) throw new ErroEnvio('sessao', 'Sua sessão expirou. Abra o app novamente pelo Telegram.')
+      const padrao = 'Não foi possível gerar o relatório. Tente de novo.'
+      let resposta: Response
+      try {
+        resposta = await fetch('/api/relatorio-pendencias', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwt}` },
+          body: JSON.stringify({ etapa_id: etapaId, obra_id: obraId }),
+        })
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+      const json = (await resposta.json().catch(() => null)) as Linha | null
+      if (!resposta.ok) {
+        throw new Error(typeof json?.erro === 'string' && json.erro ? json.erro : padrao)
+      }
+      if (typeof json?.url !== 'string' || !json.url) throw new Error(padrao)
+      return json.url
+    },
+
+    async urlPdfBoletim(caminho) {
+      try {
+        const { data, error } = await cliente.storage.from('boletins').createSignedUrl(caminho, 300)
+        if (error) throw error
+        return data.signedUrl
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async emitirBoletim(slug, data) {
+      try {
+        const { error } = await cliente.rpc('admin_pedir_emissao', { p_slug: slug, p_data: data })
+        if (error) throw error
+      } catch (e) {
+        const codigo = (e as { code?: unknown } | null)?.code
+        if (codigo === '23505') {
+          throw new ErroEnvio('conflito', 'Já existe uma emissão em andamento para esta data.', { cause: e })
+        }
+        throw erroDoSupabase(e)
+      }
+    },
+
+    async excluirBoletim(id): Promise<ResultadoExclusaoBoletim> {
+      const { data } = await cliente.auth.getSession()
+      const jwt = data.session?.access_token
+      if (!jwt) throw new ErroEnvio('sessao', 'Sua sessão expirou. Abra o app novamente pelo Telegram.')
+      const base = String(import.meta.env.VITE_SUPABASE_URL).replace(/\/+$/, '')
+      let resposta: Response
+      try {
+        resposta = await fetch(`${base}/functions/v1/admin-excluir-obra`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY),
+            Authorization: `Bearer ${jwt}`,
+          },
+          body: JSON.stringify({ acao: 'excluir_boletim', boletim_id: id }),
+        })
+      } catch (e) {
+        throw erroDoSupabase(e)
+      }
+      const json = (await resposta.json().catch(() => null)) as Linha | null
+      if (resposta.status !== 200 || !json) {
+        const falhas: Record<number, ErroEnvio> = {
+          401: new ErroEnvio('sessao', 'Sua sessão expirou. Abra o app novamente pelo Telegram.'),
+          403: new ErroEnvio('permissao', 'Apenas admins do Mini App podem excluir boletins.'),
+          404: new ErroEnvio('nao_encontrado', 'Boletim não encontrado.'),
+          409: new ErroEnvio('conflito', 'O boletim está sendo gerado ou enviado. Tente de novo em alguns minutos.'),
+        }
+        const texto = typeof json?.erro === 'string' ? json.erro : null
+        throw falhas[resposta.status] ?? new ErroEnvio('desconhecido', texto ?? 'Não foi possível excluir. Tente de novo.')
+      }
+      const m = (json.mensagens ?? {}) as { apagadas?: unknown; falhas?: unknown }
+      return {
+        numero: String(json.numero),
+        data: String(json.data),
+        revisoes: Number(json.revisoes ?? 0),
+        mensagens: { apagadas: Number(m.apagadas ?? 0), falhas: Number(m.falhas ?? 0) },
+        arquivos_erro: typeof json.arquivos_erro === 'string' ? json.arquivos_erro : null,
+      }
     },
 
     async listarObras() {
@@ -466,12 +715,13 @@ export function criarRepositorioSupabase(
     async listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]> {
       // `!inner` faz o filtro pelo ambiente/obra descartar os registros, e não só o embed.
       const ambInner = filtro.ambienteCodigo ? '!inner' : ''
-      const obraInner = filtro.obraSlug ? '!inner' : ''
+      const obraInner = filtro.obraSlug || filtro.etapaId ? '!inner' : ''
+      const colunasObra = filtro.etapaId ? 'id, slug, nome, etapa_id' : 'id, slug, nome'
       let q = cliente
         .from('registro')
         .select(
           COLUNAS_REGISTRO +
-            `ambiente${ambInner}(id, codigo, nome_operacional, pavimento(nome)), obra${obraInner}(id, slug, nome)`,
+            `ambiente${ambInner}(id, codigo, nome_operacional, pavimento(nome)), obra${obraInner}(${colunasObra})`,
         )
         .order('recebido_em', { ascending: false })
       if (filtro.obraId) q = q.eq('obra_id', filtro.obraId)
@@ -480,8 +730,22 @@ export function criarRepositorioSupabase(
       if (filtro.ambienteCodigo) q = q.eq('ambiente.codigo', filtro.ambienteCodigo)
       if (filtro.tipo) q = q.eq('tipo', filtro.tipo)
       if (filtro.situacao) q = q.eq('situacao', filtro.situacao)
+      if (filtro.etapaId) q = q.eq('obra.etapa_id', filtro.etapaId)
+      if (filtro.autorId) q = q.eq('autor_id', filtro.autorId)
+      const { desde, antes } = limitesPeriodo(filtro.de, filtro.ate)
+      if (desde) q = q.gte('capturado_em', desde)
+      if (antes) q = q.lt('capturado_em', antes)
       if (filtro.limite) q = q.limit(filtro.limite)
       return resumirRegistros(checar(await q) as unknown as Linha[])
+    },
+
+    async autoresRegistros() {
+      const { data, error } = await cliente.rpc('autores_registros')
+      if (error) throw error
+      return ((data ?? []) as Linha[]).map((l) => ({
+        id: String(l.id),
+        nome: nomeMostrado(l) ?? 'Autor desconhecido',
+      }))
     },
 
     async obterPendencia(id): Promise<PendenciaDetalhe | null> {
@@ -645,12 +909,24 @@ export function criarRepositorioSupabase(
 
     async obterGeometria(obra, ambiente) {
       // Tabelas da RA: se a migration ainda não foi aplicada, o ambiente fica sem RA.
-      const { data: g, error } = await cliente
+      // `contorno_pagina` vem de migration posterior: sem ela, repete o select sem a coluna.
+      const comPagina = await cliente
         .from('ambiente_geometria')
-        .select('contorno, y_piso, y_teto')
+        .select('contorno, contorno_pagina, y_piso, y_teto')
         .eq('ambiente_id', ambiente.id)
         .maybeSingle()
+      let { data: g, error } = comPagina
+      if (error) {
+        const semPagina = await cliente
+          .from('ambiente_geometria')
+          .select('contorno, y_piso, y_teto')
+          .eq('ambiente_id', ambiente.id)
+          .maybeSingle()
+        g = semPagina.data as typeof g
+        error = semPagina.error
+      }
       if (error || !g) return null
+      const pagina = (g as Linha).contorno_pagina as [number, number][] | null | undefined
       const [qr, referencial, modelos] = await Promise.all([
         cliente.from('ambiente_qr').select('parede, distancia_m, altura_m, lado_m').eq('ambiente_id', ambiente.id).maybeSingle(),
         cliente.from('ra_referencial').select('sigla, coordenadas').eq('obra_id', obra.id).maybeSingle(),
@@ -660,6 +936,9 @@ export function criarRepositorioSupabase(
       const linhaRef = referencial.data as Linha | null
       return {
         contorno: (g.contorno as [number, number][]).map(([x, z]) => [Number(x), Number(z)]),
+        ...(Array.isArray(pagina) && pagina.length >= 3
+          ? { contornoPagina: pagina.map(([x, y]) => [Number(x), Number(y)] as [number, number]) }
+          : {}),
         yPiso: Number(g.y_piso),
         yTeto: Number(g.y_teto),
         qr: linhaQr
@@ -773,6 +1052,39 @@ export function criarRepositorioSupabase(
       } catch (e) {
         throw erroDoSupabase(e)
       }
+    },
+
+    async matrizAcessos(): Promise<MatrizAcessos> {
+      const dados = ((await chamar('matriz_acessos', {})) ?? {}) as Linha
+      return {
+        obras: ((dados.obras ?? []) as Linha[]).map((o) => ({
+          id: String(o.id),
+          slug: String(o.slug),
+          nome: String(o.nome),
+        })),
+        pessoas: ((dados.pessoas ?? []) as Linha[]).map((l) => ({
+          id: String(l.id),
+          nome: String(l.nome),
+          username: l.username ? String(l.username) : null,
+          admin: l.admin === true,
+          vistoEm: l.visto_em ? String(l.visto_em) : null,
+          acessos: Object.fromEntries(
+            Object.entries((l.acessos ?? {}) as Record<string, unknown>).map(([k, v]) => [
+              k,
+              v === 'gestor' ? 'gestor' : 'equipe',
+            ]),
+          ),
+          pedidos: ((l.pedidos ?? []) as unknown[]).map(String),
+        })),
+      }
+    },
+
+    async definirAcesso(obraId, usuarioId, papel) {
+      await chamar('definir_acesso', {
+        p_obra: exigirUuid(obraId, 'obra'),
+        p_usuario: exigirUuid(usuarioId, 'usuário'),
+        p_papel: papel,
+      })
     },
 
     async localizarRegistro(id): Promise<RegistroLocalizado | null> {

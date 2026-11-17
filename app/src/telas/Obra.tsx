@@ -5,9 +5,9 @@ import { AbaPlanta } from '../components/AbaPlanta.tsx'
 import { CartaoObservacoes } from '../components/CartaoObservacoes.tsx'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
-import { IconeChevron, IconeCubo } from '../components/Icones.tsx'
+import { PreviaModelo } from '../components/PreviaModelo.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
-import { useObra, usePublicacoesProblema, useSolicitacoes } from '../dados/hooks.ts'
+import { useObra } from '../dados/hooks.ts'
 import type { ObraDetalhe } from '../dados/tipos.ts'
 import { filtrarAmbientes } from '../util/busca.ts'
 import { formatarArea, textoPendencias } from '../util/formato.ts'
@@ -28,7 +28,7 @@ export default function Obra() {
   )
 }
 
-/** A volta para a lista de obras (antes "← Obras") fica na linha acima do título. */
+/** A volta para a lista de obras fica na linha pequena acima do título, no centro da faixa. */
 function LinkObras() {
   return <Link to="/">Obras</Link>
 }
@@ -43,10 +43,6 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
   const pav = pavimentos.find((p) => p.codigo === pavParam) ?? pavimentos[0]
   const foco = params.get('foco')
   const [busca, setBusca] = useState(params.get('q') ?? '')
-  const gestor = detalhe.papel === 'gestor'
-  const pedidos = useSolicitacoes(obra.id, gestor)
-  const problemas = usePublicacoesProblema(obra.id, gestor)
-  const nGestao = (pedidos.data?.length ?? 0) + (problemas.data?.length ?? 0)
   const nPendencias = ambientes.reduce((soma, a) => soma + a.pendencias_abertas, 0)
 
   function atualizar(mudancas: Record<string, string | null>, replace = false) {
@@ -58,46 +54,40 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
     setParams(prox, { replace })
   }
 
-  const cabecalho = (
-    <>
-      <TopoTela titulo={obra.nome} idTitulo="titulo-obra" sobretitulo={<LinkObras />} />
-      <Link className="cartao-modelo" to={`/obras/${obra.slug}/modelo`}>
-        <span className="cartao-modelo-icone">
-          <IconeCubo tamanho={32} />
-        </span>
-        <span className="cartao-modelo-texto">Visualizar modelo federado</span>
-        <IconeChevron />
-      </Link>
-      <div className="atalhos">
-        <Link className="atalho" to={`/obras/${obra.slug}/pendencias`}>
-          Pendências{' '}
-          <span className="atalho-selo">
-            {nPendencias}
-          </span>
-        </Link>
-        {gestor && (
-          <Link className="atalho" to={`/obras/${obra.slug}/gestao`}>
-            Gestão{' '}
-            {nGestao > 0 && (
-              <span className="atalho-selo atalho-selo-alerta">
-                {nGestao}
-              </span>
-            )}
+  const topo = (
+    <TopoTela
+      titulo={obra.nome}
+      idTitulo="titulo-obra"
+      sobretitulo={<LinkObras />}
+      base={
+        <>
+          {pav && (
+            <Abas
+              rotulo="Pavimento"
+              itens={pavimentos.map((p) => ({ id: p.codigo, rotulo: p.nome }))}
+              ativa={pav.codigo}
+              onMudar={(id) => atualizar({ pav: id, foco: null })}
+            />
+          )}
+          <Link className="atalho" to={`/obras/${obra.slug}/pendencias`}>
+            Pendências <span className="atalho-selo">{nPendencias}</span>
           </Link>
-        )}
-      </div>
-      <CartaoObservacoes obra={obra} />
-    </>
+        </>
+      }
+    />
   )
+  const observacoes = <CartaoObservacoes obra={obra} />
 
   if (!pav) {
     return (
       <section aria-labelledby="titulo-obra">
-        {cabecalho}
+        {topo}
+        <PreviaModelo slug={obra.slug} />
         <EstadoVazio
           titulo="Nenhum ambiente cadastrado"
           texto="Esta obra ainda não tem pavimentos nem ambientes."
         />
+        {observacoes}
       </section>
     )
   }
@@ -107,14 +97,9 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
 
   return (
     <section aria-labelledby="titulo-obra" className={modo === 'planta' ? 'obra-planta' : undefined}>
-      {cabecalho}
+      {topo}
+      <PreviaModelo slug={obra.slug} />
       <h3 className="secao-titulo">Ambientes</h3>
-      <Abas
-        rotulo="Pavimento"
-        itens={pavimentos.map((p) => ({ id: p.codigo, rotulo: p.nome }))}
-        ativa={pav.codigo}
-        onMudar={(id) => atualizar({ pav: id, foco: null })}
-      />
       <Abas
         rotulo="Modo de exibição"
         itens={MODOS}
@@ -170,6 +155,7 @@ function ObraCarregada({ detalhe }: { detalhe: ObraDetalhe }) {
           )}
         </>
       )}
+      {observacoes}
     </section>
   )
 }

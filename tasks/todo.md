@@ -189,6 +189,10 @@ Plano: `tasks/plano-ra.md` (decisões de 2026-11-12: modelo ELT fornecido pelo u
 - [ ] Jardim 2 sem geometria (sem área na planta); Lobby e Circulação do 1º pavimento usam só o contorno externo (o IfcSpace tem furo).
 - [ ] Cadastrar e fixar os QRs dos ambientes do piloto.
 - [ ] RA5. Piloto em campo em quatro ambientes, medição do erro.
+  - [x] Depois do 1º teste em campo (2026-11-13): mira no centro + "Marcar canto", planta real enquadrada no cômodo com os cantos numerados (folha e miniatura), malha triangular (piso estimado antes de alinhar; piso, paredes e teto do modelo depois, chip "Malha").
+  - [x] Produção (2026-11-13): migration `20261119090000_ra_contorno_pagina.sql` aplicada e registrada; seed `hto_geometria.sql` reaplicado; 86 de 86 ambientes com `contorno_pagina` (Apto. 101 conferido com o json).
+  - [ ] Repetir o teste em campo (depois do merge do PR #44).
+  - [ ] PR à parte: atualizar os e2e antigos que falham também na main (`etapas`, `navegacao`, `pendencias`).
 
 Verificação: Vitest recupera poses sintéticas (< 1 cm, < 0,5°); e2e com câmera falsa salva o par de fotos; no aparelho, o contorno do Apto. 101 encaixa nas arestas reais. Dependência: 9 (federação validada e vínculo com o IfcSpace); o RA0 pode ser feito já.
 
@@ -291,6 +295,18 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
 - [ ] Externo: avisar o Observatório/IPPLAN do uso dos dados; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.
 
+## Aba Boletins e edição do boletim (contrato: `docs/contrato-boletim.md`, parte 4)
+
+- [x] Parte A: banco (rascunho, retificação editada, listagem geral, `admin_boletim`), gerador (`aplicarEdicao`, prévia por POST) e publish-outbox (retificação apaga a mensagem anterior).
+- [x] Aplicar a migration em produção e publicar a publish-outbox (2026-11-13).
+- [x] Parte B: site (aba Boletins com filtros, editor `/boletins/:id`, cartão na página da etapa).
+- [ ] Usuário: testar no site a edição de um boletim (Salvar, Pré-visualizar, Salvar e reenviar) e conferir no grupo que a mensagem anterior foi substituída.
+
+## Mini App em tela cheia
+
+- [x] Arrasto para baixo travado (7.7+) e tela cheia no celular (8.0+), com áreas seguras `--seguro-topo`/`--seguro-base` (PR #34, merge).
+- [ ] Usuário: abrir o Mini App no celular e conferir o topo (logo abaixo dos botões X e ⋯) e que arrastar para baixo só rola.
+
 ## Organização de pastas e consolidação do repositório
 
 Plano: `tasks/plano-organizacao-pastas.md` (decisões de 2026-11-12; registrado em `docs/ROADMAP.md`).
@@ -301,3 +317,58 @@ Plano: `tasks/plano-organizacao-pastas.md` (decisões de 2026-11-12; registrado 
 - [ ] Fase 4 (após estabilização das entregas de UI): organizar `app/src/` em `miniapp/` e `shared/` (mantendo `admin/` isolado) e validar `precache-manifest.json`.
 
 Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests/db`, `pytest -q tests/db`, Deno (`fmt`/`lint`/`check`/`test`) e `app/` (`typecheck`, `lint`, `test`, `build`, `build:fixture`, `test:e2e`) verdes.
+
+## Equipe de serviço e abas de etapa
+
+- [x] Contrato `docs/contrato-servico.md`; banco (tabela `servico`, RPCs, snapshot), boletim (seção 8) e aviso no grupo; Mini App (abas de etapa, Equipe de serviço, sem "Últimos registros") (PR #35, merge).
+- [x] Produção: migração `20261116090000_equipe_servico` aplicada e registrada; `publish-outbox` publicada.
+- [ ] Usuário: cadastrar latitude e longitude da 2ª ETAPA no site (sem elas o check-in é recusado).
+- [ ] Usuário: testar check-in e check-out no celular e conferir o aviso no grupo.
+
+
+## Início, tela da obra e Registros (contrato: `docs/contrato-inicio-registros.md`)
+
+- [x] Banco: `resumo_obras()` e `autores_registros()` (migração `20261117090000`, aplicada e registrada em produção).
+- [x] Início: abas de etapa ao lado de "OBRAS"; por obra, Gestão (gestor) ao lado do nome e 3 barrinhas (serviços, abertas, resolvidas).
+- [x] Obra: Pendências no topo, prévia 3D só com ARQ (abre o visualizador), Observações por último.
+- [x] Registros: filtros por etapa, obra, tipo (serviços/abertas/resolvidas), pessoa e período; aba Pendências removida (`/pendencias` → `/registros?tipo=abertas`).
+- [ ] Usuário: conferir no celular o início, a prévia do modelo e os filtros de Registros.
+
+## Site: mapa clicável, dados da 2ª ETAPA e aba Relatórios
+
+- [x] Cadastro da etapa: mapa Leaflet (Mapa/Satélite) em que o toque preenche latitude e longitude.
+- [x] 2ª ETAPA em produção: objeto, local, endereço, contratante, contrato, contratada, CNPJ, OS, vigência, valor e área (do boletim de 12/11/26).
+- [x] Aba "Boletins" do site passa a se chamar "Relatórios" (rota `/boletins` mantida).
+- [ ] Usuário: marcar no mapa o local da 2ª ETAPA, salvar e preencher os responsáveis.
+
+## Site: excluir boletim publicado
+
+- [x] Banco: `admin_excluir_boletim(p_id)` apaga o dia inteiro (revisões, pedidos, publicações, rascunho); 55006 se houver emissão ou envio em andamento (migração `20261118090000`, aplicada e registrada em produção).
+- [x] Edge Function `admin-excluir-obra` (v3 em produção): ação `excluir_boletim` apaga a mensagem no grupo (`deleteMessage`) e os PDFs/PNG do bucket `boletins`.
+- [x] Relatórios: botão "Excluir" em cada boletim, com confirmação e aviso se a mensagem não puder ser apagada (limite de 48 h do Telegram). O agendador pode reemitir o dia de hoje.
+- [ ] Usuário: testar a exclusão de um boletim no site.
+
+## Mini app: aba Relatórios
+
+- [x] Banco: RPC `listar_relatorios()` (etapas do usuário com o boletim/pedido de hoje e registros do dia; boletins emitidos), aplicada em produção.
+- [x] Mini app: aba Relatórios na barra inferior: cartão "Hoje" por etapa, lista dos emitidos com Abrir PDF; admin: Emitir agora / Emitir revisão e Excluir (dia inteiro, com a mensagem no grupo).
+- [ ] Usuário: testar a aba no Telegram (abrir PDF, emitir e excluir como admin).
+
+## Mini app: versão na tela inicial
+
+- [x] Etiqueta "v39 · 13/11" no canto direito da faixa de identidade, só na tela inicial: número do último PR (da mensagem do commit de merge, `VERCEL_GIT_COMMIT_MESSAGE`), dia do build; um toque mostra o commit curto e a data e hora. Sem PR na mensagem, mostra o commit curto.
+- [x] Formato trocado para `vPR.aammdd.commit` (ex.: `v41.261113.abc1234`); o toque mostra "Publicada em dd/mm/aaaa hh:mm". Sem PR: `vdev`.
+- [x] Faixa do topo reorganizada: OM à esquerda, logo (40 px) no centro, "Fiscal Bot" à direita; versão em todas as telas, no pé do topo azul, pequena, sem contorno e apagada.
+- [x] Redesign "Farda" (conceito 1, revisão 2, aprovado pelo usuário): topo em uma linha só (brasão de 52 px, CO-FZ e Fiscal Bot à esquerda, título no centro, versão no canto); etapas e pavimentos como abas na base do topo, com o atalho Pendências à direita; cartões de obra com os 3 totais rotulados; títulos de seção com marcador amarelo; botões principais em maiúsculas.
+- [ ] Usuário: conferir no Telegram o novo topo (Início, obra, ambiente, Registros, Relatórios) e a versão (número do PR desta entrega).
+
+## Mini app: painel e exportação de pendências na aba Relatórios (contrato: `docs/contrato-relatorios-painel.md`)
+
+- [x] Banco: RPCs `painel_relatorios` e `relatorio_pendencias` e bucket privado `relatorios` (migration `20261119100000_relatorios_painel.sql`, testes em `tests/db/test_relatorios_painel.py`).
+- [x] Servidor: rota `api/relatorio-pendencias` gera o PDF com fotos (visual do boletim), grava em `relatorios/pendencias/<usuário>/` e devolve URL assinada de 10 min.
+- [x] Tela: abas de etapa no topo, filtro de obra, cartões (serviços, pendências abertas, resolvidas), gráfico acumulado com toque, barras por obra, tabela e botão "Relatório de pendências (PDF)".
+- [ ] Usuário: no Telegram, abrir Relatórios, conferir os números com o Início e exportar o PDF da etapa e de uma obra.
+- [x] PDF de pendências com o mesmo cabeçalho do boletim diário (linhas da OM, obra/serviço, local, responsáveis; abrangência e posição à direita). Migration `20261120090000_relatorio_pendencias_cabecalho.sql` aplicada em produção e conferida (md5 e chamada como admin).
+- [x] Câmera no Telegram Android: o WebView ignora `capture` do input e abria a galeria. No Android (`cameraNoApp()`), o botão Câmera abre `CameraFotos`, câmera em tela cheia por getUserMedia (várias fotos seguidas, "Concluir", erro com "Usar galeria"). iOS e navegador seguem com o input nativo. Falta testar em aparelho Android.
+- [x] Acessos por lista (`docs/contrato-acessos.md`): tela `/acessos` "Acessos da equipe" (pessoas × obras, Sem acesso/Equipe/Gestor; qualquer gestor altera qualquer obra; admin do grupo fixo em Gestor). RPCs `matriz_acessos`/`definir_acesso`; `membro_grupo.admin`; `sincronizar_acesso` com `visto`. O `bot-webhook` registra quem fala, entra ou sai do grupo (`allowed_updates` com `chat_member`). "Solicitar acesso" continua. Falta: bot como administrador do grupo e teste no Telegram.
+- [ ] Exclusão de etapa/obra: remover também os PDFs do bucket `relatorios`.

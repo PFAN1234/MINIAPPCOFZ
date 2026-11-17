@@ -9,6 +9,7 @@ import geometriaJson from '../../../data/hto/geometria.json'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
 import { nomeMostrado } from './nome.ts'
 import { dataNoFuso, formatarDia } from '../util/fuso.ts'
+import { dentroDoPeriodo } from '../util/periodo.ts'
 import { baixarModeloLocal, listarModelosLocais } from '../modelo/modelos.ts'
 import type { Repositorio } from './repositorio.ts'
 import type {
@@ -16,7 +17,10 @@ import type {
   AmbienteDetalhe,
   Encerramento,
   DetalhePlanta,
+  EquipeServico,
   EstadoPublicacao,
+  EtapaInicio,
+  MembroServico,
   FiltroRegistros,
   LinkAdmin,
   FotoRegistro,
@@ -41,7 +45,15 @@ import type {
   RecortePt,
   RegistroLocalizado,
   RegistroResumo,
+  ResumoObra,
   SolicitacaoAcesso,
+  MatrizAcessos,
+  PapelAcesso,
+  BoletimRelatorio,
+  EtapaRelatorio,
+  PainelRelatorios,
+  Relatorios,
+  ResultadoExclusaoBoletim,
 } from './tipos.ts'
 
 const ID_HTO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
@@ -63,6 +75,14 @@ export const ETAPA_3: Etapa = {
   slug: '3a-etapa',
   nome: '3ª ETAPA',
   ordem: 3,
+}
+
+/** Etapa em que o usuário da fixture não participa (equipe de serviço só para leitura). */
+export const ETAPA_4: Etapa = {
+  id: '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4b04',
+  slug: '4a-etapa',
+  nome: '4ª ETAPA',
+  ordem: 4,
 }
 
 /** Como a linha padrão de `organizacao` no banco: "CO-FZ", sem logo. */
@@ -101,6 +121,8 @@ const PARTICIPANTES_BASE: (Participante & { papel_inicial: PapelObra })[] = [
   { usuario_id: ID_JOAO, nome: 'João Lima', username: 'joao', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-25T09:10:00Z' },
   { usuario_id: ID_PATRICIO, nome: NOME_PATRICIO, username: 'patricio', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-26T11:00:00Z' },
 ]
+
+const ID_ANA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a05'
 
 const OBRAS: ObraDaLista[] = [
   { id: ID_HTO, slug: 'hto', nome: 'HTO', etapa: ETAPA_2 },
@@ -353,6 +375,7 @@ export function urlLocalDaImagem(path: string): string {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LIMITE_BLOB = 10 * 1024 * 1024
 const AUTOR_FIXTURE = 'Você (teste)'
+const NOME_POR_ID: Record<string, string> = { [ID_USUARIO]: AUTOR_FIXTURE, [ID_PATRICIO]: NOME_PATRICIO }
 
 function falhaValidacao(msg: string): never {
   throw new ErroEnvio('validacao', msg)
@@ -488,6 +511,73 @@ function carregarEstado(persistencia: Storage | null): EstadoSalvo {
   }
 }
 
+const ETAPAS_RELATORIO = [
+  { id: ETAPA_2.id, slug: '2a-etapa', nome: ETAPA_2.nome, sigla: '2ª', horario: '18:00' },
+  { id: ETAPA_3.id, slug: '3a-etapa', nome: ETAPA_3.nome, sigla: '3ª', horario: '17:30' },
+]
+
+function boletimFixture(
+  etapa: { id: string; slug: string; nome: string },
+  data: string,
+  revisao: number,
+  emitidoEm: string,
+): BoletimRelatorio {
+  const numero = `${etapa.slug.slice(0, 2).toUpperCase()}-${data.replaceAll('-', '')}${revisao > 0 ? `-R${revisao}` : ''}`
+  return {
+    id: `boletim-${etapa.slug}-${data}-${revisao}`,
+    etapa_id: etapa.id,
+    etapa_slug: etapa.slug,
+    etapa_nome: etapa.nome,
+    data,
+    revisao,
+    numero,
+    emitido_em: emitidoEm,
+    pdf_path: `${etapa.id}/${data}-${revisao}.pdf`,
+    publicado: true,
+    ultima_revisao: true,
+  }
+}
+
+/** Boletins de dias anteriores (o de hoje nasce na emissão); o de dois dias atrás da 2ª etapa tem retificação. */
+function boletinsIniciais(dia: string): BoletimRelatorio[] {
+  const antes = (n: number) => dataNoFuso(new Date(new Date(`${dia}T12:00:00Z`).getTime() - n * 86_400_000), 'UTC')
+  const [e2, e3] = ETAPAS_RELATORIO
+  return [
+    boletimFixture(e2, antes(1), 0, `${antes(1)}T21:00:00Z`),
+    boletimFixture(e3, antes(1), 0, `${antes(1)}T20:30:00Z`),
+    boletimFixture(e2, antes(2), 1, `${antes(2)}T22:10:00Z`),
+    boletimFixture(e2, antes(2), 0, `${antes(2)}T21:00:00Z`),
+  ]
+}
+
+/** Painel determinístico: ~5 semanas até `hoje`, 3 obras da 2ª etapa, pendências em parte resolvidas. */
+export function painelFixture(hoje: string): PainelRelatorios {
+  const obras = [
+    { id: ID_HTO, slug: 'hto', nome: 'HTO' },
+    { id: ID_AURORA, slug: 'aurora', nome: 'Residencial Aurora' },
+    { id: 'obra-quadra-fixture', slug: 'quadra', nome: 'Quadra Poliesportiva' },
+  ]
+  const base = new Date(`${hoje}T12:00:00Z`).getTime()
+  const dias: PainelRelatorios['dias'] = []
+  const total = 35
+  for (let i = total - 1; i >= 0; i--) {
+    const d = new Date(base - i * 86_400_000)
+    const dow = d.getUTCDay()
+    if (dow === 0) continue // domingo sem movimento
+    const dia = d.toISOString().slice(0, 10)
+    const k = total - 1 - i
+    obras.forEach((obra, o) => {
+      if (dow === 6 && o !== 0) return
+      if ((k + o) % 5 === 4) return // alguns dias sem movimento
+      const servicos = 1 + ((k * 3 + o * 2) % 4)
+      const pendencias = (k * 7 + o * 3) % 5 === 0 ? 2 : (k + o) % 3 === 0 ? 1 : 0
+      const resolvidas = k > 6 && (k * 5 + o) % 4 === 0 ? 1 : 0
+      if (servicos + pendencias + resolvidas > 0) dias.push({ obra_id: obra.id, dia, servicos, pendencias, resolvidas })
+    })
+  }
+  return { etapa: { id: ETAPA_2.id, slug: '2a-etapa', nome: ETAPA_2.nome, hoje }, obras, dias }
+}
+
 export function criarRepositorioFixture(
   opcoes: {
     persistencia?: Storage | null
@@ -521,6 +611,48 @@ export function criarRepositorioFixture(
   const removidos = salvo.removidos
   const publicacoes = salvo.publicacoes
   const observacoes = salvo.observacoes
+  // Equipe de serviço: só em memória. A 4ª etapa já tem um colega de serviço (usuário não participa dela).
+  const etapasServico = [ETAPA_2, ETAPA_3, ETAPA_4]
+  let servicos: (MembroServico & { etapa_id: string })[] = [
+    {
+      id: 'servico-colega',
+      etapa_id: ETAPA_4.id,
+      usuario_id: 'usuario-colega',
+      nome: 'SD COLEGA',
+      entrada_em: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+      saida_em: null,
+      saida_automatica: false,
+      eu: false,
+    },
+  ]
+  let proximoServico = 1
+  function equipeDaEtapa(etapaId: string): EquipeServico {
+    const etapa = etapasServico.find((e) => e.id === etapaId)
+    if (!etapa) throw new ErroEnvio('nao_encontrado', 'Etapa não encontrada')
+    const aberto = servicos.find((s) => s.eu && s.saida_em === null)
+    const etapaAberto = aberto && etapasServico.find((e) => e.id === aberto.etapa_id)
+    return {
+      etapa_id: etapa.id,
+      participa: etapa.id !== ETAPA_4.id,
+      tem_localizacao: true,
+      meu_servico:
+        aberto && etapaAberto
+          ? { id: aberto.id, etapa_id: aberto.etapa_id, etapa_nome: etapaAberto.nome, entrada_em: aberto.entrada_em }
+          : null,
+      equipe: servicos
+        .filter((s) => s.etapa_id === etapa.id)
+        .sort((a, b) => Number(b.saida_em === null) - Number(a.saida_em === null) || b.entrada_em.localeCompare(a.entrada_em))
+        .map((s) => ({
+          id: s.id,
+          usuario_id: s.usuario_id,
+          nome: s.nome,
+          entrada_em: s.entrada_em,
+          saida_em: s.saida_em,
+          saida_automatica: s.saida_automatica,
+          eu: s.eu,
+        })),
+    }
+  }
 
   function persistir(): void {
     if (!persistencia) return
@@ -588,6 +720,23 @@ export function criarRepositorioFixture(
     )
   }
 
+  // Lista de acessos: só em memória. A HTO segue os participantes; as outras obras, esta tabela.
+  const acessosFora: Record<string, Record<string, 'equipe' | 'gestor'>> = {
+    [ID_AURORA]: { [ID_MARCOS]: 'equipe' },
+    [ID_ALOJAMENTOS]: {},
+  }
+  const adminsDoGrupo = [ID_ANA]
+  const outrasPessoas = { [ID_ANA]: { nome: 'Ana Prado', username: 'anaprado' }, [PEDIDO_MARIA.usuario_id]: { nome: PEDIDO_MARIA.nome, username: PEDIDO_MARIA.username } }
+
+  function papelNaObra(obraId: string, usuarioId: string): 'nenhum' | 'equipe' | 'gestor' {
+    if (adminsDoGrupo.includes(usuarioId)) return 'gestor'
+    if (obraId === ID_HTO) {
+      const p = participantesAtuais().find((x) => x.usuario_id === usuarioId)
+      return p ? p.papel : (acessosFora[ID_HTO]?.[usuarioId] ?? 'nenhum')
+    }
+    return acessosFora[obraId]?.[usuarioId] ?? 'nenhum'
+  }
+
   function exigirOutroGestor(usuarioId: string): void {
     const outros = participantesAtuais().filter(
       (p) => p.papel === 'gestor' && p.usuario_id !== usuarioId,
@@ -598,6 +747,7 @@ export function criarRepositorioFixture(
   }
 
   const hoje = () => dataNoFuso(new Date(), FUSO_FIXTURE)
+  const boletinsRel: BoletimRelatorio[] = boletinsIniciais(hoje())
   /** Como `privado.boletim_emitido`: só o dia de hoje pode estar emitido na fixture. */
   const diaTravado = (data: string) => opcoes.boletimEmitido === true && data === hoje()
 
@@ -638,12 +788,13 @@ export function criarRepositorioFixture(
     baixarModelo: baixarModeloLocal,
     async obterGeometria(obra, ambiente) {
       if (obra.slug !== geometriaJson.obra) return null
-      const g = (geometriaJson.ambientes as Record<string, { contorno: number[][]; y_piso: number; y_teto: number }>)[
+      const g = (geometriaJson.ambientes as Record<string, { contorno: number[][]; contorno_pagina?: number[][]; y_piso: number; y_teto: number }>)[
         ambiente.codigo
       ]
       if (!g) return null
       return {
         contorno: g.contorno.map(([x, z]) => [x, z]),
+        ...(g.contorno_pagina ? { contornoPagina: g.contorno_pagina.map(([x, y]) => [x, y] as [number, number]) } : {}),
         yPiso: g.y_piso,
         yTeto: g.y_teto,
         // QR de teste só no Apto. 101: parede 1, a 1,20 m do canto, centro a 1,50 m.
@@ -660,6 +811,103 @@ export function criarRepositorioFixture(
       return opcoes.admin === true
     },
 
+    async etapasInicio(): Promise<EtapaInicio[]> {
+      return etapasServico.map((e) => ({ ...e, participa: e.id !== ETAPA_4.id }))
+    },
+
+    async equipeServico(etapaId) {
+      return equipeDaEtapa(etapaId)
+    },
+
+    async fazerCheckin(etapaId) {
+      exigirRede()
+      const atual = equipeDaEtapa(etapaId)
+      if (!atual.participa) throw new ErroEnvio('permissao', 'Você não participa desta etapa')
+      if (atual.meu_servico) {
+        throw new ErroEnvio('conflito', `Você já está de serviço na ${atual.meu_servico.etapa_nome}`)
+      }
+      servicos = [
+        ...servicos,
+        {
+          id: `servico-${proximoServico++}`,
+          etapa_id: etapaId,
+          usuario_id: 'usuario-teste',
+          nome: 'CP TESTE',
+          entrada_em: new Date().toISOString(),
+          saida_em: null,
+          saida_automatica: false,
+          eu: true,
+        },
+      ]
+      return equipeDaEtapa(etapaId)
+    },
+
+    async fazerCheckout() {
+      exigirRede()
+      const aberto = servicos.find((s) => s.eu && s.saida_em === null)
+      if (!aberto) throw new ErroEnvio('nao_encontrado', 'Você não está de serviço')
+      servicos = servicos.map((s) => (s === aberto ? { ...s, saida_em: new Date().toISOString() } : s))
+      return equipeDaEtapa(aberto.etapa_id)
+    },
+
+    async relatorios(): Promise<Relatorios> {
+      const dia = hoje()
+      const etapas: EtapaRelatorio[] = ETAPAS_RELATORIO.map((e) => {
+        const ultimo = boletinsRel.find((b) => b.etapa_slug === e.slug && b.data === dia)
+        return {
+          ...e,
+          hoje: dia,
+          registros_hoje: e.slug === '2a-etapa' ? 4 : 0,
+          boletim_hoje: ultimo
+            ? { id: ultimo.id, numero: ultimo.numero, revisao: ultimo.revisao, emitido_em: ultimo.emitido_em }
+            : null,
+          pedido_hoje: null,
+        }
+      })
+      const boletins = boletinsRel.map((b) => ({
+        ...b,
+        ultima_revisao: !boletinsRel.some((o) => o.etapa_slug === b.etapa_slug && o.data === b.data && o.revisao > b.revisao),
+      }))
+      return { admin: opcoes.admin === true, etapas, boletins }
+    },
+
+    async painelRelatorios(etapaId): Promise<PainelRelatorios> {
+      if (etapaId !== ETAPA_2.id) {
+        return { etapa: { id: etapaId, slug: '', nome: '', hoje: hoje() }, obras: [], dias: [] }
+      }
+      return painelFixture(hoje())
+    },
+
+    async exportarPendencias() {
+      await new Promise((r) => setTimeout(r, 800))
+      return 'https://exemplo.invalid/relatorios/pendencias-exemplo.pdf'
+    },
+
+    async urlPdfBoletim(caminho) {
+      return `https://exemplo.invalid/boletins/${caminho}`
+    },
+
+    async emitirBoletim(slug, data) {
+      exigirRede()
+      if (opcoes.admin !== true) throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem emitir boletins.')
+      const etapa = ETAPAS_RELATORIO.find((e) => e.slug === slug)
+      if (!etapa) throw new ErroEnvio('nao_encontrado', 'Etapa não encontrada.')
+      const doDia = boletinsRel.filter((b) => b.etapa_slug === slug && b.data === data)
+      const revisao = doDia.length === 0 ? 0 : Math.max(...doDia.map((b) => b.revisao)) + 1
+      boletinsRel.push(boletimFixture(etapa, data, revisao, new Date().toISOString()))
+      boletinsRel.sort((a, b) => b.data.localeCompare(a.data) || b.revisao - a.revisao)
+    },
+
+    async excluirBoletim(id): Promise<ResultadoExclusaoBoletim> {
+      exigirRede()
+      if (opcoes.admin !== true) throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem excluir boletins.')
+      const alvo = boletinsRel.find((b) => b.id === id)
+      if (!alvo) throw new ErroEnvio('nao_encontrado', 'Boletim não encontrado.')
+      const dia = boletinsRel.filter((b) => b.etapa_slug === alvo.etapa_slug && b.data === alvo.data)
+      for (const b of dia) boletinsRel.splice(boletinsRel.indexOf(b), 1)
+      return { numero: alvo.numero, data: alvo.data, revisoes: dia.length, mensagens: { apagadas: 1, falhas: 0 }, arquivos_erro: null }
+    },
+
     async criarLinkAdmin(): Promise<LinkAdmin> {
       exigirRede()
       if (opcoes.admin !== true) {
@@ -670,6 +918,21 @@ export function criarRepositorioFixture(
         url: `${base}/admin/#entrar=fixture`,
         expira_em: new Date(Date.now() + 120_000).toISOString(),
       }
+    },
+
+    async resumoObras(): Promise<ResumoObra[]> {
+      const registros = todos()
+      return OBRAS.map((o) => {
+        const dela = registros.filter((x) => x.obra.id === o.id)
+        return {
+          obra_id: o.id,
+          // No fixture só a HTO tem participação; nas outras o usuário só vê a obra.
+          papel: o.id === ID_HTO ? papelUsuario() : null,
+          servicos: dela.filter((x) => x.tipo === 'servico').length,
+          abertas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'aberta').length,
+          resolvidas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'resolvida').length,
+        }
+      })
     },
 
     async listarObras() {
@@ -709,11 +972,22 @@ export function criarRepositorioFixture(
             (!filtro.ambienteId || x.ambiente.id === filtro.ambienteId) &&
             (!filtro.ambienteCodigo || x.ambiente.codigo === filtro.ambienteCodigo) &&
             (!filtro.tipo || x.tipo === filtro.tipo) &&
-            (!filtro.situacao || x.situacao === filtro.situacao),
+            (!filtro.situacao || x.situacao === filtro.situacao) &&
+            (!filtro.etapaId || OBRAS.find((o) => o.id === x.obra.id)?.etapa.id === filtro.etapaId) &&
+            (!filtro.autorId || x.autor === NOME_POR_ID[filtro.autorId]) &&
+            dentroDoPeriodo(x.capturado_em, filtro.de, filtro.ate),
         )
         .sort(porRecente)
       if (filtro.limite) lista = lista.slice(0, filtro.limite)
       return lista.map((x) => ({ ...x, fotos: x.fotos.map((f) => ({ ...f })) }))
+    },
+
+    async autoresRegistros() {
+      const nomes = new Set(todos().map((x) => x.autor))
+      return Object.entries(NOME_POR_ID)
+        .filter(([, nome]) => nomes.has(nome))
+        .map(([id, nome]) => ({ id, nome }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     },
 
     async urlsImagens(paths, bucket = 'plantas') {
@@ -786,6 +1060,76 @@ export function criarRepositorioFixture(
       const atual = decisoes[id]
       if (atual && atual !== nova) throw new ErroEnvio('conflito', 'Pedido já decidido.')
       decisoes[id] = nova
+      if (aprovar) (acessosFora[ID_HTO] ??= {})[PEDIDO_MARIA.usuario_id] ??= 'equipe'
+      persistir()
+    },
+
+    async matrizAcessos(): Promise<MatrizAcessos> {
+      if (papelUsuario() !== 'gestor') {
+        throw new ErroEnvio('permissao', 'Só gestores veem a lista de acessos.')
+      }
+      const nomes: Record<string, { nome: string; username: string | null }> = {
+        ...outrasPessoas,
+        ...Object.fromEntries(PARTICIPANTES_BASE.map((p) => [p.usuario_id, { nome: p.nome, username: p.username }])),
+      }
+      const pedidoMaria = decisoes[ID_PEDIDO_MARIA] ? [] : [ID_HTO]
+      const pessoas = Object.entries(nomes).map(([id, n]) => {
+        const acessos: Record<string, 'equipe' | 'gestor'> = {}
+        for (const o of OBRAS) {
+          const papel = papelNaObra(o.id, id)
+          if (papel !== 'nenhum') acessos[o.id] = papel
+        }
+        return {
+          id,
+          nome: n.nome,
+          username: n.username,
+          admin: adminsDoGrupo.includes(id),
+          vistoEm: '2026-11-15T14:00:00Z',
+          acessos,
+          pedidos: id === PEDIDO_MARIA.usuario_id ? pedidoMaria : [],
+        }
+      })
+      pessoas.sort(
+        (a, b) =>
+          Number(b.pedidos.length > 0) - Number(a.pedidos.length > 0) ||
+          a.nome.localeCompare(b.nome, 'pt-BR') ||
+          a.id.localeCompare(b.id),
+      )
+      return { obras: OBRAS.map((o) => ({ id: o.id, slug: o.slug, nome: o.nome })), pessoas }
+    },
+
+    async definirAcesso(obraId, usuarioId, papel: PapelAcesso) {
+      exigirRede()
+      if (papelUsuario() !== 'gestor') throw new ErroEnvio('permissao', 'Só gestores alteram acessos.')
+      if (papel !== 'nenhum' && papel !== 'equipe' && papel !== 'gestor') falhaValidacao('Acesso inválido.')
+      if (!OBRAS.some((o) => o.id === obraId)) throw new ErroEnvio('nao_encontrado', 'Obra não encontrada.')
+      if (adminsDoGrupo.includes(usuarioId) && papel !== 'gestor') {
+        falhaValidacao('Administradores do grupo são gestores de todas as obras.')
+      }
+      const atual = papelNaObra(obraId, usuarioId)
+      if (atual === 'gestor' && papel !== 'gestor') {
+        const gestores = [...PARTICIPANTES_BASE.map((p) => p.usuario_id), ...Object.keys(outrasPessoas)].filter(
+          (id) => id !== usuarioId && papelNaObra(obraId, id) === 'gestor',
+        )
+        if (gestores.length === 0) falhaValidacao('A obra precisa de pelo menos um gestor.')
+      }
+      const base = obraId === ID_HTO && PARTICIPANTES_BASE.some((p) => p.usuario_id === usuarioId)
+      if (base) {
+        const i = removidos.indexOf(usuarioId)
+        if (papel === 'nenhum') {
+          if (i < 0) removidos.push(usuarioId)
+        } else {
+          if (i >= 0) removidos.splice(i, 1)
+          papeis[usuarioId] = papel
+        }
+      } else {
+        const tabela = (acessosFora[obraId] ??= {})
+        if (papel === 'nenhum') delete tabela[usuarioId]
+        else tabela[usuarioId] = papel
+      }
+      if (papel !== 'nenhum' && obraId === ID_HTO && usuarioId === PEDIDO_MARIA.usuario_id) {
+        decisoes[ID_PEDIDO_MARIA] ??= 'aprovada'
+      }
       persistir()
     },
 

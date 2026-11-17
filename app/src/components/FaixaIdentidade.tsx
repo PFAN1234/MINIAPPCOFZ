@@ -1,11 +1,12 @@
 import { useContext, useState, type ReactNode } from 'react'
 import { NOME_APP, OrganizacaoContexto } from './identidade.ts'
+import { SeloVersao } from './SeloVersao.tsx'
 
 /**
- * Faixa fina no alto do topo azul: logo da organização militar (se houver), nome da OM e
- * "Fiscal Bot". Sem organização carregada ou com o logo indisponível, mostra só os textos.
+ * Assinatura do topo azul, à esquerda: brasão da organização militar (se houver), com o nome da
+ * OM e "Fiscal Bot" ao lado. Sem organização carregada ou com o logo indisponível, ficam só os textos.
  */
-export function FaixaIdentidade() {
+export function MarcaOM() {
   const organizacao = useContext(OrganizacaoContexto)
   const nome = organizacao?.nome.trim() ?? ''
   const logo = organizacao?.logo_url ?? null
@@ -14,25 +15,28 @@ export function FaixaIdentidade() {
   const mostrarLogo = logo !== null && logoComFalha !== logo
 
   return (
-    <div className="identidade" data-testid="faixa-identidade">
+    <div className="marca" data-testid="faixa-identidade">
       {mostrarLogo && (
-        // O nome da OM vem logo ao lado: o logo é decorativo.
-        <img className="identidade-logo" src={logo} alt="" height={28} onError={() => setLogoComFalha(logo)} />
+        // O nome da OM vem ao lado: o logo é decorativo.
+        <img className="marca-logo" src={logo} alt="" height={52} onError={() => setLogoComFalha(logo)} />
       )}
-      <p className="identidade-textos">
-        {nome && <span className="identidade-om">{nome}</span>}
-        <span className="identidade-app">{NOME_APP}</span>
-      </p>
+      <span className="marca-textos">
+        {nome && <span className="marca-om">{nome}</span>}
+        <span className="marca-app">{NOME_APP}</span>
+      </span>
     </div>
   )
 }
 
-/** Topo azul só com a faixa de identidade, para as telas fora do `Layout` (entrada, carregamento). */
+/** Topo azul só com a assinatura e a versão, para as telas fora do `Layout` (entrada, carregamento). */
 export function TopoIdentidade() {
   return (
     <div className="topo">
       <div className="topo-tela topo-identidade">
-        <FaixaIdentidade />
+        <div className="topo-faixa">
+          <MarcaOM />
+          <SeloVersao />
+        </div>
       </div>
     </div>
   )

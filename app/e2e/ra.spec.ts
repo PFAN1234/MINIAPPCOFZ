@@ -32,15 +32,31 @@ test.describe('com modelo', () => {
     await page.route('**/modelos/hto/ARQ.frag*', (rota) =>
       rota.fulfill({ body: readFileSync(FRAG_LOCAL), contentType: 'application/octet-stream' }),
     )
+    // O Chromium sem sensor nega a permissão de orientação: libera para o teste enviar leituras.
+    await page.addInitScript(() => {
+      ;(DeviceOrientationEvent as unknown as { requestPermission: () => Promise<string> }).requestPermission =
+        async () => 'granted'
+    })
     await page.goto('/obras/hto/ambientes/terreo-apto-101')
     await page.getByRole('button', { name: 'Comparar com o modelo (RA)' }).click()
     await page.getByRole('button', { name: 'Abrir câmera' }).click()
 
-    const toque = page.getByTestId('ra-toque')
-    await toque.click({ position: { x: 80, y: 600 } })
+    // A mira fica no centro; tocar na imagem não marca canto.
+    await expect(page.getByTestId('ra-mira')).toBeVisible()
+    await page.getByTestId('ra-toque').click({ position: { x: 80, y: 300 } })
+    await expect(page.getByRole('button', { name: 'Canto 1' })).toHaveCount(0)
+    const girar = (alpha: number) =>
+      page.evaluate(
+        (a) => window.dispatchEvent(new DeviceOrientationEvent('deviceorientation', { alpha: a, beta: 55, gamma: 0 })),
+        alpha,
+      )
+    await girar(0)
+    await page.getByRole('button', { name: 'Marcar canto' }).click()
     await page.getByRole('button', { name: 'Canto 1' }).click()
     await expect(page.getByText(/Canto 1 marcado/)).toBeVisible()
-    await toque.click({ position: { x: 320, y: 620 } })
+    // Sem girar o aparelho a mira aponta para o mesmo lugar: o teste gira antes do segundo canto.
+    await girar(120)
+    await page.getByRole('button', { name: 'Marcar canto' }).click()
     // O canto já usado fica bloqueado.
     await expect(page.getByRole('button', { name: 'Canto 1' })).toHaveAttribute('aria-disabled', 'true')
     await page.getByRole('button', { name: 'Canto 2' }).click()

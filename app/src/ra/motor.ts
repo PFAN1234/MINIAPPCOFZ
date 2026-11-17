@@ -4,7 +4,28 @@ import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
 import type { ModeloFrag } from '../modelo/modelos.ts'
 import { arestasDoAmbiente, caixaDeCorte, type GeometriaAmbiente } from './geometria.ts'
+import { gradeDeProcura, malhaDoAmbiente } from './malha.ts'
 import { orientacaoNoMundo, type Pose } from './pose.ts'
+
+/** Altura da câmera acima do piso na grade de procura (a do celular na mão). */
+const ALTURA_PROCURA = 1.4
+
+function segmentosDeLinha(vertices: number[], cor: number, opacidade: number): THREE.LineSegments {
+  const g = new THREE.BufferGeometry()
+  g.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+  const l = new THREE.LineSegments(
+    g,
+    new THREE.LineBasicMaterial({
+      color: cor,
+      transparent: true,
+      opacity: opacidade,
+      depthTest: false,
+    }),
+  )
+  l.renderOrder = 5
+  l.frustumCulled = false
+  return l
+}
 
 export class MotorRA {
   private readonly renderer: THREE.WebGLRenderer
@@ -14,11 +35,21 @@ export class MotorRA {
   private readonly modelos = new Map<string, FragmentsModel>()
   private readonly planos: THREE.Plane[]
   private readonly geometria: GeometriaAmbiente
+  private readonly contorno: THREE.LineSegments
+  private readonly grupoMalha = new THREE.Group()
+  private readonly grupoProcura = new THREE.Group()
+  private siglasVisiveis: ReadonlySet<string> | null = null
+  private malhaLigada = true
+  private emProcura = false
   private descartado = false
 
   constructor(canvas: HTMLCanvasElement, geometria: GeometriaAmbiente) {
     this.geometria = geometria
-    this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+    })
     this.renderer.setClearColor(0x000000, 0)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
 
@@ -42,11 +73,28 @@ export class MotorRA {
     linhas.setAttribute('position', new THREE.Float32BufferAttribute(arestasDoAmbiente(geometria), 3))
     const contorno = new THREE.LineSegments(
       linhas,
-      new THREE.LineBasicMaterial({ color: 0xf5b700, depthTest: false, transparent: true }),
+      new THREE.LineBasicMaterial({
+        color: 0xf5b700,
+        depthTest: false,
+        transparent: true,
+      }),
     )
     contorno.renderOrder = 10
     contorno.frustumCulled = false
+    this.contorno = contorno
     this.cena.add(contorno)
+
+    const malha = malhaDoAmbiente(geometria)
+    this.grupoMalha.add(
+      segmentosDeLinha(malha.piso, 0x34d1ff, 0.35),
+      segmentosDeLinha(malha.paredes, 0xffffff, 0.35),
+      segmentosDeLinha(malha.teto, 0xffffff, 0.2),
+    )
+    this.cena.add(this.grupoMalha)
+
+    this.grupoProcura.add(segmentosDeLinha(gradeDeProcura(), 0x34d1ff, 0.35))
+    this.grupoProcura.visible = false
+    this.cena.add(this.grupoProcura)
 
     this.fragments = new FragmentsModels(workerUrl)
     // Todos os modelos entram no referencial do .frag de referência (ARQ).
@@ -73,6 +121,7 @@ export class MotorRA {
       if (this.descartado) return
       const correcao = this.geometria.matrizes[m.sigla]
       if (correcao?.length === 16) modelo.object.applyMatrix4(new THREE.Matrix4().fromArray(correcao))
+      modelo.object.visible = !this.emProcura && (this.siglasVisiveis?.has(m.sigla) ?? true)
       this.cena.add(modelo.object)
       this.modelos.set(m.sigla, modelo)
     }
@@ -80,7 +129,30 @@ export class MotorRA {
   }
 
   definirVisiveis(siglas: ReadonlySet<string>): void {
-    for (const [sigla, modelo] of this.modelos) modelo.object.visible = siglas.has(sigla)
+    this.siglasVisiveis = siglas
+    this.aplicarVisibilidade()
+    void this.fragments.update(true)
+  }
+
+  /** Liga ou desliga a malha do ambiente (piso, paredes e teto). */
+  definirMalha(visivel: boolean): void {
+    this.malhaLigada = visivel
+    this.aplicarVisibilidade()
+  }
+
+  private aplicarVisibilidade(): void {
+    for (const [sigla, modelo] of this.modelos) {
+      modelo.object.visible = !this.emProcura && (this.siglasVisiveis?.has(sigla) ?? true)
+    }
+    this.contorno.visible = !this.emProcura
+    this.grupoMalha.visible = !this.emProcura && this.malhaLigada
+    this.grupoProcura.visible = this.emProcura
+  }
+
+  private mudarModo(procura: boolean): void {
+    if (this.emProcura === procura) return
+    this.emProcura = procura
+    this.aplicarVisibilidade()
     void this.fragments.update(true)
   }
 
@@ -91,6 +163,11 @@ export class MotorRA {
 
   /** Posiciona a câmera pela pose e pela orientação atual do aparelho. */
   posicionar(pose: Pose, q: THREE.Quaternion, fovGraus: number): void {
+    this.mudarModo(false)
+    this.ajustarCamera(pose, q, fovGraus)
+  }
+
+  private ajustarCamera(pose: Pose, q: THREE.Quaternion, fovGraus: number): void {
     this.camera.fov = fovGraus
     this.camera.position.copy(pose.posicao)
     this.camera.quaternion.copy(orientacaoNoMundo(pose, q))
@@ -99,8 +176,32 @@ export class MotorRA {
     void this.fragments.update()
   }
 
-  renderizar(): void {
+  /**
+   * Sem pose: só a grade de procura no piso, com a câmera a 1,4 m acima dela,
+   * em volta do centroide do contorno e com rumo 0.
+   */
+  posicionarProcura(q: THREE.Quaternion, fovGraus: number): void {
+    this.mudarModo(true)
+    const n = this.geometria.contorno.length || 1
+    const cx = this.geometria.contorno.reduce((s, p) => s + p[0], 0) / n
+    const cz = this.geometria.contorno.reduce((s, p) => s + p[1], 0) / n
+    this.grupoProcura.position.set(cx, this.geometria.yPiso, cz)
+    this.grupoProcura.updateMatrixWorld(true)
+    this.ajustarCamera(
+      {
+        posicao: new THREE.Vector3(cx, this.geometria.yPiso + ALTURA_PROCURA, cz),
+        rumo: 0,
+      },
+      q,
+      fovGraus,
+    )
+  }
+
+  renderizar(opcoes?: { semMalha?: boolean }): void {
+    const visivel = this.grupoMalha.visible
+    if (opcoes?.semMalha) this.grupoMalha.visible = false
     this.renderer.render(this.cena, this.camera)
+    this.grupoMalha.visible = visivel
   }
 
   limpar(): void {

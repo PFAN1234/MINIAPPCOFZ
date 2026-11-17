@@ -4,6 +4,7 @@
  * Variáveis: `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (ver app/.env.example).
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Edicao } from './edicao.js'
 import type { ClimaComDados, PedidoReivindicado, Snapshot } from './tipos.js'
 
 export interface Configuracao {
@@ -25,6 +26,8 @@ export interface FonteBoletim {
   segredoInterno(): Promise<string | null>
   reivindicar(limite: number): Promise<PedidoReivindicado[]>
   snapshot(etapaId: string, data: string): Promise<Snapshot>
+  /** Snapshot gravado de um boletim emitido (base de uma retificação). */
+  snapshotDoBoletim(id: string): Promise<Snapshot>
   concluir(id: number, snapshot: Snapshot, pdfPath: string): Promise<{ boletim_id: string; numero: string }>
   falhar(id: number, erro: string): Promise<void>
   /** Clima do boletim de maior revisão da data que tem imagem copiada (null se não houver). */
@@ -37,6 +40,8 @@ export interface FonteBoletim {
 export interface AcessoAdmin {
   souAdmin(): Promise<boolean>
   snapshot(slug: string, data: string): Promise<Snapshot>
+  /** `admin_boletim`: o boletim emitido com o snapshot gravado (e os demais campos). */
+  boletim(id: string): Promise<{ snapshot: Snapshot; [campo: string]: unknown }>
 }
 
 /** Erro de RPC com o código do Postgres (22023, P0002, 42501...). */
@@ -76,10 +81,15 @@ export function criarFonteSupabase(c: Configuracao): FonteBoletim {
         data: String(l.data),
         revisao: Number(l.revisao ?? 0),
         numero: String(l.numero),
+        base_boletim_id: typeof l.base_boletim_id === 'string' ? l.base_boletim_id : null,
+        edicao: l.edicao && typeof l.edicao === 'object' ? (l.edicao as Edicao) : null,
       }))
     },
     snapshot(etapaId, data) {
       return chamar<Snapshot>(cliente, 'boletim_snapshot', { p_etapa: etapaId, p_data: data })
+    },
+    snapshotDoBoletim(id) {
+      return chamar<Snapshot>(cliente, 'boletim_snapshot_emitido', { p_boletim: id })
     },
     concluir(id, snapshot, pdfPath) {
       return chamar(cliente, 'concluir_emissao', { p_id: id, p_snapshot: snapshot, p_pdf_path: pdfPath })
@@ -125,6 +135,9 @@ export function criarAcessoAdmin(c: Configuracao, jwt: string): AcessoAdmin {
     },
     snapshot(slug, data) {
       return chamar<Snapshot>(cliente, 'admin_boletim_snapshot', { p_slug: slug, p_data: data })
+    },
+    boletim(id) {
+      return chamar<{ snapshot: Snapshot }>(cliente, 'admin_boletim', { p_id: id })
     },
   }
 }

@@ -7,10 +7,11 @@ import App from './App.tsx'
 import { EstadoCarregando } from './components/Estado.tsx'
 import { RepositorioProvider } from './dados/contexto.tsx'
 import { registrarSw } from './registrarSw.ts'
-import { aplicarCoresTelegram, expand, ready } from './telegram.ts'
+import { aplicarCoresTelegram, expand, ready, telaCheia } from './telegram.ts'
 
 ready()
 expand()
+telaCheia()
 aplicarCoresTelegram()
 registrarSw()
 

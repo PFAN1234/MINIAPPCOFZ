@@ -16,6 +16,11 @@ export interface QrAmbiente {
 export interface GeometriaAmbiente {
   /** `[x, z]` de cada canto, sem repetir o primeiro. */
   contorno: Ponto2[]
+  /**
+   * Os mesmos cantos de `contorno`, na mesma ordem, na página da planta do pavimento
+   * (`[x, y]` de 0 a 1, como os marcadores). Ausente quando não há calibração da planta.
+   */
+  contornoPagina?: Ponto2[]
   yPiso: number
   yTeto: number
   qr: QrAmbiente | null

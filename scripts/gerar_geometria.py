@@ -184,6 +184,22 @@ def ifc_para_frag(t: dict, ix: float, iy: float, iz: float = 0.0) -> tuple[float
     return -u, iz + t["dy"], v
 
 
+def frag_para_ifc(t: dict, x: float, z: float) -> tuple[float, float]:
+    """Inversa de `ifc_para_frag` no plano: (frag_x, frag_z) → (ix, iy)."""
+    c, s = math.cos(t["theta"]), math.sin(t["theta"])
+    u, v = -x, z
+    return t["tx"] + c * u - s * v, t["ty"] + s * u + c * v
+
+
+def contorno_pagina(contorno: list, t: dict, cal: dict, pagina_pt: tuple[float, float]) -> list[list[float]]:
+    """Cantos do contorno (mesma ordem) como [x, y] normalizados de 0 a 1 na página da planta."""
+    saida = []
+    for x, z in contorno:
+        px, py = ifc_para_pdf(cal, *frag_para_ifc(t, x, z))
+        saida.append([round(px / pagina_pt[0], 5), round(py / pagina_pt[1], 5)])
+    return saida
+
+
 def contorno_frag(anel_ifc: list, t: dict) -> list[list[float]]:
     """Contorno [[x, z], ...] anti-horário (área do laço > 0), simplificado, 4 casas, sem fechar."""
     pts = [list(ifc_para_frag(t, p[0], p[1])[0::2]) for p in sem_fechamento(anel_ifc)]
@@ -436,7 +452,9 @@ def calcular(slug: str, dados: dict | None = None, plantas: dict | None = None,
         piso = esp["zmin"] + ra["piso_acabado_m"]
         y_piso = round(ifc_para_frag(t, 0, 0, piso)[1], CASAS)
         y_teto = round(ifc_para_frag(t, 0, 0, piso + ra["pe_direito_m"])[1], CASAS)
-        ambientes[amb["id"]] = {"guid": esp["guid"], "contorno": contorno, "y_piso": y_piso, "y_teto": y_teto,
+        ambientes[amb["id"]] = {"guid": esp["guid"], "contorno": contorno,
+                                "contorno_pagina": contorno_pagina(contorno, t, cals[amb["pavimento"]], pag[amb["pavimento"]]),
+                                "y_piso": y_piso, "y_teto": y_teto,
                                 "area_m2": round(abs(area_laco(contorno)), 2)}
     ref = ra["referencial"]
     geo = {
@@ -472,12 +490,12 @@ def gerar_sql(geo: dict) -> str:
     ]
     for cod, g in geo["ambientes"].items():
         linhas.append(
-            "insert into public.ambiente_geometria (ambiente_id, guid, contorno, y_piso, y_teto, origem) "
-            f"select a.id, {literal(g['guid'])}, {literal(g['contorno'])}, {literal(g['y_piso'])}, "
+            "insert into public.ambiente_geometria (ambiente_id, guid, contorno, contorno_pagina, y_piso, y_teto, origem) "
+            f"select a.id, {literal(g['guid'])}, {literal(g['contorno'])}, {literal(g['contorno_pagina'])}, {literal(g['y_piso'])}, "
             f"{literal(g['y_teto'])}, 'ifcspace' "
             "from public.obra o join public.ambiente a on a.obra_id = o.id "
             f"and a.codigo = {literal(cod)} where o.slug = {literal(slug)} "
-            "on conflict (ambiente_id) do update set guid = excluded.guid, contorno = excluded.contorno, "
+            "on conflict (ambiente_id) do update set guid = excluded.guid, contorno = excluded.contorno, contorno_pagina = excluded.contorno_pagina, "
             "y_piso = excluded.y_piso, y_teto = excluded.y_teto, origem = excluded.origem, "
             "atualizado_em = now();"
         )

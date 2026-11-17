@@ -81,6 +81,16 @@ export interface Ambiente {
 
 export type PapelObra = 'equipe' | 'gestor'
 
+/** Totais de uma obra para o Início (`resumo_obras`): serviços de sempre, pendências abertas e resolvidas. */
+export interface ResumoObra {
+  obra_id: string
+  /** Papel do usuário na obra; `null` quando vê a obra sem participar (admin). */
+  papel: PapelObra | null
+  servicos: number
+  abertas: number
+  resolvidas: number
+}
+
 export interface ObraDetalhe {
   obra: ObraResumo
   /** Papel do usuário na obra (da própria participação). */
@@ -171,6 +181,13 @@ export interface FiltroRegistros {
   ambienteCodigo?: string
   tipo?: TipoRegistro
   situacao?: SituacaoRegistro
+  /** Etapa da obra do registro. */
+  etapaId?: string
+  /** Id do autor. */
+  autorId?: string
+  /** Período de `capturado_em` (`AAAA-MM-DD`, fuso de Fortaleza); cada lado é opcional. */
+  de?: string
+  ate?: string
   limite?: number
 }
 
@@ -194,6 +211,28 @@ export interface SolicitacaoAcesso {
   username: string | null
   criado_em: string
 }
+
+/** Pessoa da lista de acessos (RPC `matriz_acessos`). */
+export interface PessoaAcesso {
+  id: string
+  nome: string
+  username: string | null
+  /** Administradora do grupo: gestora de todas as obras. */
+  admin: boolean
+  /** Última vez que o bot viu a pessoa no grupo ou no app. */
+  vistoEm: string | null
+  /** Só as obras em que a pessoa participa, por id da obra. */
+  acessos: Record<string, 'equipe' | 'gestor'>
+  /** Ids das obras com pedido de acesso pendente. */
+  pedidos: string[]
+}
+
+export interface MatrizAcessos {
+  obras: { id: string; slug: string; nome: string }[]
+  pessoas: PessoaAcesso[]
+}
+
+export type PapelAcesso = 'nenhum' | 'equipe' | 'gestor'
 
 export interface RegistroLocalizado {
   slug: string
@@ -293,6 +332,53 @@ export interface ObservacoesDoDia {
   observacoes: Observacao[]
 }
 
+/** Etapa da tela inicial (`etapas_inicio`): todas as ativas, com a participação do usuário. */
+export interface EtapaInicio {
+  id: string
+  slug: string
+  nome: string
+  ordem: number
+  participa: boolean
+}
+
+/** Um serviço (entrada e saída) da equipe de uma etapa. */
+export interface MembroServico {
+  id: string
+  usuario_id: string
+  nome: string
+  entrada_em: string
+  saida_em: string | null
+  /** Fechado sozinho 24 h depois da entrada ("saída não registrada"). */
+  saida_automatica: boolean
+  /** É o próprio usuário. */
+  eu: boolean
+}
+
+export interface ServicoAberto {
+  id: string
+  etapa_id: string
+  etapa_nome: string
+  entrada_em: string
+}
+
+/** Equipe de serviço de uma etapa (`equipe_servico`, `fazer_checkin`, `fazer_checkout`). */
+export interface EquipeServico {
+  etapa_id: string
+  participa: boolean
+  /** A etapa tem coordenada cadastrada (sem ela, o check-in não vale). */
+  tem_localizacao: boolean
+  /** Serviço aberto do usuário em qualquer etapa. */
+  meu_servico: ServicoAberto | null
+  equipe: MembroServico[]
+}
+
+/** Posição do GPS do aparelho. */
+export interface Posicao {
+  latitude: number
+  longitude: number
+  precisao: number | null
+}
+
 /** Dados de `salvar_observacao`: id novo cria; id existente edita o texto (só o autor). */
 export interface NovaObservacao {
   /** Gerado no aparelho (chave de idempotência). */
@@ -301,4 +387,80 @@ export interface NovaObservacao {
   texto: string
   /** ISO, hora do aparelho. */
   escritoEm: string
+}
+
+/** Pedido de emissão de hoje de uma etapa (`pendente`/`gerando`/`falhou`). */
+export interface PedidoRelatorio {
+  estado: string
+  erro: string | null
+}
+
+/** Cartão "Hoje" de uma etapa na aba Relatórios. */
+export interface EtapaRelatorio {
+  id: string
+  slug: string
+  nome: string
+  sigla: string | null
+  /** Hora da emissão automática, `HH:MM`. */
+  horario: string
+  /** Hoje no fuso da etapa, `AAAA-MM-DD`. */
+  hoje: string
+  registros_hoje: number
+  boletim_hoje: { id: string; numero: string; revisao: number; emitido_em: string } | null
+  pedido_hoje: PedidoRelatorio | null
+}
+
+/** Boletim emitido (uma linha por revisão). A primeira revisão do dia é a 0. */
+export interface BoletimRelatorio {
+  id: string
+  etapa_id: string
+  etapa_slug: string
+  etapa_nome: string
+  data: string
+  revisao: number
+  numero: string
+  emitido_em: string
+  pdf_path: string | null
+  publicado: boolean
+  /** Última revisão do dia: só nela vale excluir (a exclusão apaga o dia inteiro). */
+  ultima_revisao: boolean
+}
+
+/** Resposta de `listar_relatorios`. */
+export interface Relatorios {
+  admin: boolean
+  etapas: EtapaRelatorio[]
+  boletins: BoletimRelatorio[]
+}
+
+/** Obra da etapa no painel da aba Relatórios. */
+export interface ObraPainel {
+  id: string
+  slug: string
+  nome: string
+}
+
+/** Movimento de uma obra em um dia (no fuso da etapa). */
+export interface DiaPainel {
+  obra_id: string
+  dia: string
+  servicos: number
+  pendencias: number
+  resolvidas: number
+}
+
+/** Resposta de `painel_relatorios`. */
+export interface PainelRelatorios {
+  etapa: { id: string; slug: string; nome: string; hoje: string }
+  obras: ObraPainel[]
+  dias: DiaPainel[]
+}
+
+/** Resultado de excluir um boletim (o dia inteiro). */
+export interface ResultadoExclusaoBoletim {
+  numero: string
+  data: string
+  revisoes: number
+  mensagens: { apagadas: number; falhas: number }
+  arquivos_erro: string | null
 }

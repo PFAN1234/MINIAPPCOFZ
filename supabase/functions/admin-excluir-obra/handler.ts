@@ -6,10 +6,15 @@
 // - `limpar` `{exclusao_id}`: repete só a remoção dos arquivos (quando a primeira falhou);
 // - `excluir_etapa` `{slug, confirmacao}`: chama `admin_excluir_etapa` como o admin (apaga a
 //   etapa e todas as obras dela, uma linha de `obra_excluida` por obra) e limpa o Storage de
-//   cada exclusão devolvida, como em `excluir`.
+//   cada exclusão devolvida, como em `excluir`;
+// - `excluir_boletim` `{boletim_id}`: chama `admin_excluir_boletim` como o admin (apaga o dia
+//   inteiro do boletim no banco e devolve as mensagens do Telegram e os arquivos do bucket
+//   `boletins`); depois apaga as mensagens no grupo (`deleteMessage`) e remove os arquivos.
+//   Falhas dessa limpeza não derrubam a resposta: viram contagem (`falhas`) e `arquivos_erro`.
 // Os arquivos de todos os buckets ficam em `<obra_id>/...`; o resultado vai para
 // `admin_registrar_limpeza`. O token nunca vai para o log.
 import { cabecalhosCors, json } from "../_shared/http.ts";
+import type { ClienteTelegram } from "../_shared/telegram.ts";
 
 export const BUCKETS = ["fotos", "plantas", "originais", "modelos"] as const;
 export type Bucket = typeof BUCKETS[number];
@@ -65,6 +70,8 @@ export interface Deps {
   admin: ClienteServico;
   /** Cliente que fala com o banco como o dono do JWT (auth.uid() e exigir_admin valem). */
   clienteUsuario: (jwt: string) => ClienteRpc;
+  /** Bot do Telegram, para apagar as mensagens de um boletim excluído. */
+  telegram: ClienteTelegram;
 }
 
 class ErroLimpeza extends Error {}
@@ -366,6 +373,116 @@ export function criarHandler(deps: Deps) {
     );
   }
 
+  async function excluirBoletim(
+    jwt: string,
+    corpo: Record<string, unknown>,
+    cors: Record<string, string>,
+  ) {
+    const { boletim_id: boletimId } = corpo;
+    if (typeof boletimId !== "string" || !UUID.test(boletimId)) {
+      return json(CORPO_INVALIDO, 400, cors);
+    }
+    const { data, error } = await deps.clienteUsuario(jwt).rpc(
+      "admin_excluir_boletim",
+      { p_id: boletimId },
+    );
+    if (error) {
+      switch (error.code) {
+        case "28000":
+          return json(NAO_AUTORIZADO, 401, cors);
+        case "42501":
+          return json(ACESSO_NEGADO, 403, cors);
+        case "P0002":
+          return json({ erro: "Boletim não encontrado." }, 404, cors);
+        case "55006":
+          return json({ erro: error.message }, 409, cors);
+        case "22023":
+          return json({ erro: error.message }, 400, cors);
+        default:
+          throw new Error(`admin_excluir_boletim: ${error.message}`);
+      }
+    }
+    const r = (data ?? {}) as Record<string, unknown>;
+    if (
+      typeof r.numero !== "string" || typeof r.data !== "string" ||
+      typeof r.revisoes !== "number" || !Array.isArray(r.mensagens) ||
+      !Array.isArray(r.arquivos)
+    ) {
+      throw new Error("admin_excluir_boletim: resposta inesperada");
+    }
+    const mensagens = r.mensagens as (number | string)[];
+    const arquivos = (r.arquivos as unknown[]).filter((a): a is string =>
+      typeof a === "string" && a !== ""
+    );
+    const chatId = r.chat_id ?? null;
+
+    // O boletim já saiu do banco: o que falhar daqui para a frente só é contado.
+    let apagadas = 0;
+    let falhas = 0;
+    for (const messageId of mensagens) {
+      if (chatId === null) {
+        falhas++;
+        continue;
+      }
+      try {
+        const d = await deps.telegram.chamar("deleteMessage", {
+          chat_id: chatId,
+          message_id: messageId,
+        });
+        if (
+          d.tipo === "ok" ||
+          (d.tipo === "http" && d.status === 400 &&
+            /not found/i.test(d.description))
+        ) {
+          apagadas++;
+        } else {
+          falhas++;
+          console.warn(
+            `admin-excluir-obra: mensagem ${messageId} do boletim não apagada (${
+              d.tipo === "http" ? `${d.status}: ${d.description}` : d.motivo
+            })`,
+          );
+        }
+      } catch (e) {
+        falhas++;
+        console.warn(
+          `admin-excluir-obra: mensagem ${messageId} do boletim sem resposta (${
+            e instanceof Error ? e.name : "erro desconhecido"
+          })`,
+        );
+      }
+    }
+
+    let arquivosErro: string | undefined;
+    if (arquivos.length > 0) {
+      try {
+        const { error: eRem } = await deps.admin.storage.from("boletins")
+          .remove(arquivos);
+        if (eRem) arquivosErro = eRem.message;
+      } catch (e) {
+        arquivosErro = e instanceof Error ? e.message : "erro desconhecido";
+      }
+      if (arquivosErro !== undefined) {
+        console.warn(
+          `admin-excluir-obra: arquivos do boletim não removidos: ${arquivosErro}`,
+        );
+      }
+    }
+
+    return json(
+      {
+        ok: true,
+        numero: r.numero,
+        data: r.data,
+        revisoes: r.revisoes,
+        mensagens: { apagadas, falhas },
+        ...(arquivosErro !== undefined ? { arquivos_erro: arquivosErro } : {}),
+      },
+      200,
+      cors,
+    );
+  }
+
   return async (req: Request): Promise<Response> => {
     const cors = cabecalhosCors(
       req.headers.get("Origin"),
@@ -405,6 +522,8 @@ export function criarHandler(deps: Deps) {
           return await limpar(jwt, corpo, cors);
         case "excluir_etapa":
           return await excluirEtapa(jwt, corpo, cors);
+        case "excluir_boletim":
+          return await excluirBoletim(jwt, corpo, cors);
         default:
           return json(CORPO_INVALIDO, 400, cors);
       }

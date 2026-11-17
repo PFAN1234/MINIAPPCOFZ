@@ -196,3 +196,12 @@ export function IconePessoas({ tamanho }: { tamanho?: number }) {
     </Icone>
   )
 }
+
+export function IconeDocumento({ tamanho }: { tamanho?: number }) {
+  return (
+    <Icone tamanho={tamanho}>
+      <path d="M7 3h7l5 5v13H7V3Z" />
+      <path d="M14 3v5h5M10 13h6M10 17h6" />
+    </Icone>
+  )
+}

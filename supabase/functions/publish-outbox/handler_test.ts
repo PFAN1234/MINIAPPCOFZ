@@ -26,7 +26,11 @@ type Linha = Record<string, any>;
 type Tabelas = Record<string, Linha[]>;
 
 /** Banco falso: filtros `eq`, `is`, `not`, `in`, `order`, `limit` e `update`. */
-function tabelaFalsa(tabelas: Tabelas, atualizacoes: Linha[]) {
+function tabelaFalsa(
+  tabelas: Tabelas,
+  atualizacoes: Linha[],
+  listaComErro: string[] = [],
+) {
   return (nome: string) => {
     let linhas = [...(tabelas[nome] ?? [])];
     let alteracao: Linha | null = null;
@@ -46,6 +50,10 @@ function tabelaFalsa(tabelas: Tabelas, atualizacoes: Linha[]) {
       },
       not: (c: string, _op: string, v: unknown) => {
         linhas = linhas.filter((l) => (l[c] ?? null) !== v);
+        return b;
+      },
+      lt: (c: string, v: number) => {
+        linhas = linhas.filter((l) => l[c] < v);
         return b;
       },
       in: (c: string, vs: unknown[]) => {
@@ -69,6 +77,10 @@ function tabelaFalsa(tabelas: Tabelas, atualizacoes: Linha[]) {
           });
           return Promise.resolve({ data: null, error: null }).then(res, rej);
         }
+        if (listaComErro.includes(nome)) {
+          return Promise.resolve({ data: null, error: { message: "caiu" } })
+            .then(res, rej);
+        }
         return Promise.resolve({ data: linhas, error: null }).then(res, rej);
       },
     };
@@ -85,6 +97,8 @@ interface Opcoes {
   obra?: Linha;
   finalizarErro?: boolean;
   reivindicarErro?: boolean;
+  /** Tabelas cuja leitura de lista (sem `maybeSingle`) devolve erro. */
+  listaComErro?: string[];
 }
 
 const fotoLinha = (registro: string, i: number, extra = {}) => ({
@@ -140,7 +154,7 @@ function montar(o: Opcoes = {}) {
     tipo: "ok",
     resultado: { message_id: 500 },
   }];
-  const from = tabelaFalsa(tabelas, atualizacoes);
+  const from = tabelaFalsa(tabelas, atualizacoes, o.listaComErro);
   const admin = {
     from,
     rpc: (nome: string, args: Linha = {}) => {
@@ -817,6 +831,114 @@ Deno.test("boletim: retificação na legenda", async () => {
   assertEquals(m.baixadas, ["boletins:etapa-1/BA2261113COFZ-R2.pdf"]);
 });
 
+const BOLETIM_R1 = {
+  ...BOLETIM,
+  id: "bol-2",
+  revisao: 1,
+  numero: "BA2/261113/COFZ-R1",
+  pdf_path: "etapa-1/BA2261113COFZ-R1.pdf",
+};
+
+/** Retificação R1 (publicação 7) com o original publicado (mensagens 900 e 901) e outras linhas que não devem ser tocadas. */
+function cenarioRetificacao(extra: Partial<Opcoes> = {}, revisao = 1) {
+  const atual = revisao > 0 ? BOLETIM_R1 : BOLETIM;
+  const tabelas: Tabelas = tabelasBoletim(ETAPA, atual);
+  tabelas.boletim = [
+    atual,
+    BOLETIM,
+    { ...BOLETIM, id: "bol-outro-dia", data: "2026-11-12", revisao: 0 },
+    { ...BOLETIM, id: "bol-outra-etapa", etapa_id: "etapa-2", revisao: 0 },
+  ];
+  tabelas.publicacao_telegram = [
+    {
+      id: 1,
+      boletim_id: "bol-1",
+      estado: "publicado",
+      message_ids: [900, 901],
+    },
+    { id: 2, boletim_id: "bol-1", estado: "falhou", message_ids: [777] },
+    {
+      id: 3,
+      boletim_id: "bol-outro-dia",
+      estado: "publicado",
+      message_ids: [555],
+    },
+    {
+      id: 4,
+      boletim_id: "bol-outra-etapa",
+      estado: "publicado",
+      message_ids: [666],
+    },
+  ];
+  return montar({
+    publicacoes: [pubBoletim({ boletim_id: atual.id })],
+    tabelas,
+    ...extra,
+  });
+}
+
+Deno.test("boletim: retificação apaga a mensagem da revisão anterior depois de enviar", async () => {
+  const m = cenarioRetificacao({
+    respostas: [
+      { tipo: "ok", resultado: { message_id: 950 } },
+      { tipo: "ok", resultado: true },
+    ],
+  });
+  const r = await rodar(m.handler);
+  assertEquals((await r.json()).publicadas, 1);
+  assertEquals(m.chamadas.map((c) => c.metodo), [
+    "sendDocument",
+    "deleteMessage",
+    "deleteMessage",
+  ]);
+  assertEquals(m.chamadas[1].corpo, { chat_id: -1009, message_id: 900 });
+  assertEquals(m.chamadas[2].corpo, { chat_id: -1009, message_id: 901 });
+  assertEquals(m.finalizacoes[0].p_estado, "publicado");
+  assertEquals(m.finalizacoes[0].p_message_ids, [950]);
+});
+
+Deno.test("boletim: falha ao apagar a anterior só vai para o log; a nova continua publicada", async () => {
+  const aviso = console.warn;
+  const avisos: string[] = [];
+  console.warn = (...a: unknown[]) => avisos.push(a.join(" "));
+  try {
+    const http = cenarioRetificacao({
+      respostas: [
+        { tipo: "ok", resultado: { message_id: 950 } },
+        {
+          tipo: "http",
+          status: 400,
+          description: "message can't be deleted",
+        },
+        { tipo: "rede", motivo: "timeout" },
+      ],
+    });
+    await rodar(http.handler);
+    assertEquals(http.chamadas.length, 3);
+    assertEquals(http.finalizacoes[0].p_estado, "publicado");
+    assertEquals(http.finalizacoes[0].p_message_ids, [950]);
+    assert(avisos.some((a) => a.includes("não apagada (400)")));
+    assert(avisos.some((a) => a.includes("sem resposta ao apagar")));
+
+    const leitura = cenarioRetificacao({
+      listaComErro: ["publicacao_telegram"],
+    });
+    await rodar(leitura.handler);
+    assertEquals(leitura.chamadas.map((c) => c.metodo), ["sendDocument"]);
+    assertEquals(leitura.finalizacoes[0].p_estado, "publicado");
+    assert(avisos.some((a) => a.includes("não foi possível apagar")));
+  } finally {
+    console.warn = aviso;
+  }
+});
+
+Deno.test("boletim: revisão 0 não apaga nada", async () => {
+  const m = cenarioRetificacao({}, 0);
+  await rodar(m.handler);
+  assertEquals(m.chamadas.map((c) => c.metodo), ["sendDocument"]);
+  assertEquals(m.finalizacoes[0].p_estado, "publicado");
+});
+
 Deno.test("boletim: etapa sem grupo → pendente em 15 min, sem chamar o Telegram", async () => {
   const m = montar({
     publicacoes: [pubBoletim()],
@@ -907,4 +1029,96 @@ Deno.test("boletim e registro na mesma rodada", async () => {
   const r = await rodar(m.handler);
   assertEquals((await r.json()).publicadas, 2);
   assertEquals(m.chamadas.map((c) => c.metodo), ["sendPhoto", "sendDocument"]);
+});
+
+// --- Serviço (check-in e check-out) -------------------------------------------------------------
+
+const ETAPA_SERVICO = { ...ETAPA, fuso: "America/Manaus" };
+const SERVICO = {
+  id: "serv-1",
+  etapa_id: "etapa-1",
+  usuario_id: "u1",
+  entrada_em: "2026-11-13T11:05:00Z",
+  saida_em: "2026-11-13T21:30:00Z",
+};
+
+const pubServico = (evento: "entrada" | "saida", extra = {}) => ({
+  id: 8,
+  obra_id: null,
+  registro_id: null,
+  encerramento_id: null,
+  boletim_id: null,
+  servico_id: "serv-1",
+  servico_evento: evento,
+  tentativas: 1,
+  ...extra,
+});
+
+function tabelasServico(
+  etapa: Linha = ETAPA_SERVICO,
+  servico: Linha[] = [SERVICO],
+) {
+  return { ...tabelasBase(), etapa: [etapa], servico } as Tabelas;
+}
+
+Deno.test("serviço: entrada avisa no grupo (Geral) com a hora no fuso da etapa", async () => {
+  const m = montar({
+    publicacoes: [pubServico("entrada")],
+    tabelas: tabelasServico(),
+    respostas: [{ tipo: "ok", resultado: { message_id: 950 } }],
+  });
+  const r = await rodar(m.handler);
+  assertEquals((await r.json()).publicadas, 1);
+  assertEquals(m.chamadas.length, 1);
+  assertEquals(m.chamadas[0].metodo, "sendMessage");
+  assertEquals(m.chamadas[0].corpo as Linha, {
+    chat_id: -1009,
+    text: "🟢 <b>Fulano</b> entrou de serviço às 07:05 · 2ª ETAPA",
+    parse_mode: "HTML",
+  });
+  assertEquals(m.finalizacoes[0].p_estado, "publicado");
+  assertEquals(m.finalizacoes[0].p_message_ids, [950]);
+});
+
+Deno.test("serviço: saída usa saida_em, escapa nome e etapa e prefere o nome de exibição", async () => {
+  const t = tabelasServico({ ...ETAPA_SERVICO, nome: "Etapa <A> & B" });
+  t.usuario = [{ id: "u1", nome: "Fulano", nome_exibicao: "CB <X>" }];
+  const m = montar({
+    publicacoes: [pubServico("saida")],
+    tabelas: t,
+    respostas: [{ tipo: "ok", resultado: { message_id: 951 } }],
+  });
+  await rodar(m.handler);
+  assertEquals(
+    (m.chamadas[0].corpo as Linha).text,
+    "🔴 <b>CB &lt;X&gt;</b> saiu do serviço às 17:30 · Etapa &lt;A&gt; &amp; B",
+  );
+});
+
+Deno.test("serviço: etapa sem grupo → pendente em 15 min, sem chamar o Telegram", async () => {
+  const m = montar({
+    publicacoes: [pubServico("entrada")],
+    tabelas: tabelasServico({ ...ETAPA_SERVICO, telegram_chat_id: null }),
+  });
+  const r = await rodar(m.handler);
+  assertEquals((await r.json()).pendentes, 1);
+  assertEquals(m.chamadas.length, 0);
+  assertEquals(m.finalizacoes, [{
+    p_id: 8,
+    p_estado: "pendente",
+    p_message_ids: null,
+    p_erro: "Etapa sem grupo vinculado.",
+    p_proxima: new Date(AGORA.getTime() + 15 * 60_000).toISOString(),
+  }]);
+});
+
+Deno.test("serviço: não encontrado → falhou, sem chamar o Telegram", async () => {
+  const m = montar({
+    publicacoes: [pubServico("entrada")],
+    tabelas: tabelasServico(ETAPA_SERVICO, []),
+  });
+  await rodar(m.handler);
+  assertEquals(m.chamadas.length, 0);
+  assertEquals(m.finalizacoes[0].p_estado, "falhou");
+  assertEquals(m.finalizacoes[0].p_erro, "Serviço não encontrado.");
 });

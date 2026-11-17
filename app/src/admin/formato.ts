@@ -149,6 +149,12 @@ export function codigoOm(nome: string): string {
 }
 
 /** "BA2/261111/COFZ" para a sigla, a data "AAAA-MM-DD" e o nome da OM. */
+/** Soma (ou subtrai) dias a uma data "AAAA-MM-DD". */
+export function somarDiasIso(iso: string, dias: number): string {
+  const [a, m, d] = iso.split('-').map(Number)
+  return new Date(Date.UTC(a, m - 1, d + dias)).toISOString().slice(0, 10)
+}
+
 export function numeroBoletim(sigla: string, dataIso: string, nomeOm: string): string {
   return `BA${sigla}/${dataIso.slice(2, 4)}${dataIso.slice(5, 7)}${dataIso.slice(8, 10)}/${codigoOm(nomeOm)}`
 }

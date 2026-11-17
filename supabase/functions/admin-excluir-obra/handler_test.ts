@@ -1,4 +1,8 @@
 import { assert, assertEquals, assertMatch } from "jsr:@std/assert@1";
+import type {
+  ClienteTelegram,
+  ResultadoTelegram,
+} from "../_shared/telegram.ts";
 import {
   type BucketStorage,
   criarHandler,
@@ -16,6 +20,17 @@ const EXCLUSAO_2 = "bbbbbbbb-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 const NOME = "HTO Torre";
 const ETAPA = "2ª ETAPA";
 const RESUMO = { registros: 3, arquivos: { fotos: 2 } };
+
+const BOLETIM_ID = "cccccccc-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+const BOLETIM_RETORNO = {
+  numero: "CO-FZ/2026-001",
+  data: "2026-11-10",
+  etapa_id: OBRA_ID,
+  revisoes: 2,
+  chat_id: -1001234,
+  mensagens: [10, 11],
+  arquivos: ["e/n.pdf", "e/n-clima.png"],
+};
 
 type Arquivos = Record<string, string[]>;
 
@@ -78,9 +93,28 @@ function montar(
     falharListar?: string;
     registrarErro?: boolean;
     rpcInesperada?: boolean;
+    /** Retorno da RPC admin_excluir_boletim (padrão: um boletim com 2 mensagens). */
+    boletim?: Record<string, unknown>;
+    /** Erro da RPC admin_excluir_boletim: [mensagem, código]. */
+    boletimErro?: [string, string];
+    /** Resposta do Telegram por message_id (padrão: ok). */
+    telegram?: Record<number, ResultadoTelegram>;
+    removerBoletinsErro?: string;
   } = {},
 ) {
   const storage = storageFalso(arquivos, opts);
+  const delecoes: { chat_id: unknown; message_id: number }[] = [];
+  const removidosBoletins: string[][] = [];
+  const telegram: ClienteTelegram = {
+    chamar(metodo, corpo) {
+      const c = corpo as { chat_id: unknown; message_id: number };
+      assertEquals(metodo, "deleteMessage");
+      delecoes.push(c);
+      const r = opts.telegram?.[c.message_id] ??
+        { tipo: "ok" as const, resultado: true };
+      return Promise.resolve(r as never);
+    },
+  };
   const rpcs: Rpc[] = [];
   const ok = (data: unknown) => Promise.resolve({ data, error: null });
   const erro = (message: string, code?: string) =>
@@ -95,7 +129,22 @@ function montar(
             : { data: { user: null }, error: { message: "jwt inválido" } },
         ),
     },
-    storage: { from: storage.from },
+    storage: {
+      from: (bucket: string) => {
+        if (bucket !== "boletins") return storage.from(bucket);
+        return {
+          ...storage.from(bucket),
+          remove: (caminhos: string[]) => {
+            removidosBoletins.push(caminhos);
+            return Promise.resolve(
+              opts.removerBoletinsErro
+                ? { data: null, error: { message: opts.removerBoletinsErro } }
+                : { data: caminhos.map((name) => ({ name })), error: null },
+            );
+          },
+        };
+      },
+    },
     rpc: (nome: string, args: Record<string, unknown> = {}) => {
       rpcs.push({ jwt: null, nome, args });
       if (nome === "admin_registrar_limpeza") {
@@ -128,6 +177,12 @@ function montar(
         }
         return ok({ exclusao_id: EXCLUSAO, obra_id: OBRA_ID, resumo: RESUMO });
       }
+      if (nome === "admin_excluir_boletim") {
+        if (opts.boletimErro) {
+          return erro(opts.boletimErro[0], opts.boletimErro[1]);
+        }
+        return ok(opts.boletim ?? BOLETIM_RETORNO);
+      }
       if (nome === "admin_excluir_etapa") {
         if (jwt !== JWT_ADMIN) return erro("Apenas admins", "42501");
         if (args.p_slug === "vazia") {
@@ -156,8 +211,9 @@ function montar(
     origensPermitidas: [ORIGEM],
     admin,
     clienteUsuario,
+    telegram,
   });
-  return { handler, storage, rpcs };
+  return { handler, storage, rpcs, delecoes, removidosBoletins };
 }
 
 function pedir(
@@ -524,4 +580,123 @@ Deno.test("CORS: preflight e respostas só ecoam origem permitida", async () => 
   r = await m.handler(pedir(EXCLUIR, { origem: "https://intruso.example" }));
   assertEquals(r.headers.get("Access-Control-Allow-Origin"), null);
   assertEquals(r.headers.get("Vary"), "Origin");
+});
+
+// --- excluir_boletim ---------------------------------------------------------------------------
+
+const EXCLUIR_BOLETIM = { acao: "excluir_boletim", boletim_id: BOLETIM_ID };
+
+Deno.test("excluir_boletim: apaga mensagens e arquivos e responde com o resumo", async () => {
+  const { handler, delecoes, removidosBoletins, rpcs } = montar();
+  const res = await handler(pedir(EXCLUIR_BOLETIM));
+  assertEquals(res.status, 200);
+  assertEquals(await res.json(), {
+    ok: true,
+    numero: "CO-FZ/2026-001",
+    data: "2026-11-10",
+    revisoes: 2,
+    mensagens: { apagadas: 2, falhas: 0 },
+  });
+  assertEquals(delecoes, [
+    { chat_id: -1001234, message_id: 10 },
+    { chat_id: -1001234, message_id: 11 },
+  ]);
+  assertEquals(removidosBoletins, [["e/n.pdf", "e/n-clima.png"]]);
+  assertEquals(rpcs[rpcs.length - 1], {
+    jwt: JWT_ADMIN,
+    nome: "admin_excluir_boletim",
+    args: { p_id: BOLETIM_ID },
+  });
+});
+
+Deno.test("excluir_boletim: 'not found' conta como apagada; outras falhas contam como falha", async () => {
+  const { handler } = montar({}, {
+    telegram: {
+      10: {
+        tipo: "http",
+        status: 400,
+        description: "Bad Request: message to delete not found",
+      },
+      11: { tipo: "http", status: 403, description: "Forbidden" },
+    },
+  });
+  const res = await handler(pedir(EXCLUIR_BOLETIM));
+  assertEquals(res.status, 200);
+  assertEquals((await res.json()).mensagens, { apagadas: 1, falhas: 1 });
+});
+
+Deno.test("excluir_boletim: falha de rede no Telegram não derruba a resposta", async () => {
+  const { handler } = montar({}, {
+    telegram: { 10: { tipo: "rede", motivo: "timeout" } },
+  });
+  const res = await handler(pedir(EXCLUIR_BOLETIM));
+  assertEquals(res.status, 200);
+  assertEquals((await res.json()).mensagens, { apagadas: 1, falhas: 1 });
+});
+
+Deno.test("excluir_boletim: chat nulo conta todas as mensagens como falha sem chamar o Telegram", async () => {
+  const { handler, delecoes } = montar({}, {
+    boletim: { ...BOLETIM_RETORNO, chat_id: null },
+  });
+  const res = await handler(pedir(EXCLUIR_BOLETIM));
+  assertEquals(res.status, 200);
+  assertEquals((await res.json()).mensagens, { apagadas: 0, falhas: 2 });
+  assertEquals(delecoes, []);
+});
+
+Deno.test("excluir_boletim: erro ao remover arquivos vira arquivos_erro; sem arquivos não chama o Storage", async () => {
+  const falho = montar({}, { removerBoletinsErro: "503" });
+  const r1 = await (await falho.handler(pedir(EXCLUIR_BOLETIM))).json();
+  assertEquals(r1.ok, true);
+  assertEquals(r1.arquivos_erro, "503");
+
+  const vazio = montar({}, {
+    boletim: { ...BOLETIM_RETORNO, arquivos: [], mensagens: [] },
+  });
+  const r2 = await (await vazio.handler(pedir(EXCLUIR_BOLETIM))).json();
+  assertEquals(r2.mensagens, { apagadas: 0, falhas: 0 });
+  assertEquals("arquivos_erro" in r2, false);
+  assertEquals(vazio.removidosBoletins, []);
+});
+
+Deno.test("excluir_boletim: erros do banco viram 401, 403, 404, 409 e 400", async () => {
+  const casos: [string, string, number, string?][] = [
+    ["x", "28000", 401],
+    ["Apenas admins", "42501", 403],
+    ["Boletim não encontrado", "P0002", 404, "Boletim não encontrado."],
+    [
+      "Há uma emissão ou um envio em andamento para este dia.",
+      "55006",
+      409,
+      "Há uma emissão ou um envio em andamento para este dia.",
+    ],
+    ["inválido", "22023", 400, "inválido"],
+  ];
+  for (const [msg, code, status, erro] of casos) {
+    const { handler, delecoes } = montar({}, { boletimErro: [msg, code] });
+    const res = await handler(pedir(EXCLUIR_BOLETIM));
+    assertEquals(res.status, status, code);
+    if (erro) assertEquals((await res.json()).erro, erro);
+    else await res.body?.cancel();
+    assertEquals(delecoes, []);
+  }
+  const { handler } = montar({}, { boletimErro: ["boom", "XX000"] });
+  const res = await handler(pedir(EXCLUIR_BOLETIM));
+  assertEquals(res.status, 500);
+  await res.body?.cancel();
+});
+
+Deno.test("excluir_boletim: boletim_id ausente ou que não é UUID dá 400 sem chamar o banco", async () => {
+  for (
+    const corpo of [{ acao: "excluir_boletim" }, {
+      acao: "excluir_boletim",
+      boletim_id: "abc",
+    }, { acao: "excluir_boletim", boletim_id: 3 }]
+  ) {
+    const { handler, rpcs } = montar();
+    const res = await handler(pedir(corpo));
+    assertEquals(res.status, 400);
+    await res.body?.cancel();
+    assertEquals(rpcs.filter((r) => r.nome === "admin_excluir_boletim"), []);
+  }
 });

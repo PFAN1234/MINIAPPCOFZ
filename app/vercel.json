@@ -10,6 +10,11 @@
       "memory": 2048,
       "maxDuration": 90,
       "includeFiles": "node_modules/{@sparticuz/chromium/bin/**,@fontsource/tinos/files/tinos-latin-*.woff2,@fontsource/arimo/files/arimo-latin-*.woff2}"
+    },
+    "api/relatorio-pendencias.ts": {
+      "memory": 2048,
+      "maxDuration": 120,
+      "includeFiles": "node_modules/{@sparticuz/chromium/bin/**,@fontsource/tinos/files/tinos-latin-*.woff2,@fontsource/arimo/files/arimo-latin-*.woff2}"
     }
   },
   "rewrites": [

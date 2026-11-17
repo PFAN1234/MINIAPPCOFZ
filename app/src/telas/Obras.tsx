@@ -2,33 +2,34 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { CampoBusca } from '../components/CampoBusca.tsx'
 import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
-import { ListaRegistros } from '../components/ListaRegistros.tsx'
-import { SeletorEtapa } from '../components/SeletorEtapa.tsx'
+import { AbasEtapa } from '../components/AbasEtapa.tsx'
+import { EquipeServico } from '../components/EquipeServico.tsx'
 import { TopoTela } from '../components/TopoTela.tsx'
-import type { ObraDisponivel } from '../dados/tipos.ts'
+import type { ObraDaLista, ObraDisponivel, ResumoObra } from '../dados/tipos.ts'
 import {
-  FILTRO_PENDENCIAS_ABERTAS,
   useCriarLinkAdmin,
+  useEhGestorAlguma,
+  useEtapasInicio,
   useObras,
   useObrasDisponiveis,
-  useRegistros,
+  usePublicacoesProblema,
+  useResumoObras,
+  useSolicitacoes,
   useSolicitarAcesso,
   useSouAdmin,
 } from '../dados/hooks.ts'
 import { abrirLink } from '../telegram.ts'
-import { useRegistrosLocais, useUsuarioId } from '../offline/contexto.tsx'
-import { etapasDasObras, useEtapaEscolhida } from '../util/etapas.ts'
+import { useUsuarioId } from '../offline/contexto.tsx'
+import { etapasDasAbas, useEtapaEscolhida } from '../util/etapas.ts'
 import { useOnline } from '../util/online.ts'
 import { normalizarTexto } from '../util/busca.ts'
-import { textoPendencias } from '../util/formato.ts'
+import { textoPendencias, textoPendenciasResolvidas, textoServicos } from '../util/formato.ts'
 
 const MINIMO_PARA_BUSCA = 5
 
 export default function Obras() {
   const obras = useObras()
-  const recentes = useRegistros({ limite: 5 })
-  const locais = useRegistrosLocais()
-  const abertas = useRegistros(FILTRO_PENDENCIAS_ABERTAS)
+  const resumo = useResumoObras()
   const [busca, setBusca] = useState('')
   const online = useOnline()
   const disponiveis = useObrasDisponiveis()
@@ -36,39 +37,42 @@ export default function Obras() {
   // Só afirma que não há obras depois de saber se há outras para pedir acesso.
   const outrasConhecidas = !online || !disponiveis.isPending
 
-  // Uma etapa por vez: a lista, a busca e "Outras obras" seguem a escolhida.
+  // Uma etapa por vez: a lista, a busca, "Outras obras" e a equipe de serviço seguem a escolhida.
+  const inicio = useEtapasInicio()
   const etapas = useMemo(
-    () => etapasDasObras(obras.data ?? [], todasOutras),
-    [obras.data, todasOutras],
+    () => etapasDasAbas(inicio.data ?? [], obras.data ?? [], todasOutras),
+    [inicio.data, obras.data, todasOutras],
   )
   const [etapa, escolherEtapa] = useEtapaEscolhida(useUsuarioId(), etapas)
+  // Sem a resposta de `etapas_inicio` (sinal ou cache), vale ter obra própria na etapa.
+  const participa = etapa
+    ? (inicio.data?.find((e) => e.id === etapa.id)?.participa ??
+      (obras.data ?? []).some((o) => o.etapa?.id === etapa.id))
+    : true
   const outras = etapa ? todasOutras.filter((o) => o.etapa_id === etapa.id) : todasOutras
 
   const porObra = useMemo(() => {
-    const m = new Map<string, number>()
-    for (const r of abertas.data ?? []) m.set(r.obra.id, (m.get(r.obra.id) ?? 0) + 1)
-    return m
-  }, [abertas.data])
+    return new Map((resumo.data ?? []).map((r) => [r.obra_id, r]))
+  }, [resumo.data])
 
   return (
     <>
       <TopoTela
-        lista
         titulo="Obras"
         idTitulo="titulo-obras"
-        subtitulo={etapas.length === 1 ? etapas[0].nome : undefined}
-      >
-        {etapas.length > 1 && etapa && (
-          <SeletorEtapa
-            etapas={etapas}
-            valor={etapa.id}
-            onMudar={(id) => {
-              escolherEtapa(id)
-              setBusca('')
-            }}
-          />
-        )}
-      </TopoTela>
+        base={
+          etapa && (
+            <AbasEtapa
+              etapas={etapas}
+              valor={etapa.id}
+              onMudar={(id) => {
+                escolherEtapa(id)
+                setBusca('')
+              }}
+            />
+          )
+        }
+      />
       <section aria-labelledby="titulo-obras">
         <EstadoConsulta consulta={obras}>
           {(todas) => {
@@ -76,6 +80,14 @@ export default function Obras() {
             if (lista.length === 0) {
               if (!outrasConhecidas) return <EstadoCarregando />
               if (outras.length > 0) return null
+              if (!participa) {
+                return (
+                  <EstadoVazio
+                    titulo="Você não participa desta etapa"
+                    texto="Entre no grupo dela no Telegram e abra o app de novo para pedir acesso."
+                  />
+                )
+              }
               return (
                 <EstadoVazio
                   titulo="Você ainda não tem acesso a nenhuma obra"
@@ -96,17 +108,9 @@ export default function Obras() {
                   <EstadoVazio titulo="Nenhuma obra encontrada" texto="Tente outro nome." />
                 ) : (
                   <ul className="lista">
-                    {visiveis.map((o) => {
-                      const n = porObra.get(o.id) ?? 0
-                      return (
-                        <li key={o.id}>
-                          <Link className="lista-item lista-item-linha" to={`/obras/${o.slug}`}>
-                            <span className="lista-titulo">{o.nome}</span>
-                            {n > 0 && <span className="selo selo-aberta">{textoPendencias(n)}</span>}
-                          </Link>
-                        </li>
-                      )
-                    })}
+                    {visiveis.map((o) => (
+                      <LinhaObra key={o.id} obra={o} resumo={porObra.get(o.id)} />
+                    ))}
                   </ul>
                 )}
               </>
@@ -115,14 +119,68 @@ export default function Obras() {
         </EstadoConsulta>
       </section>
       {outras.length > 0 && <OutrasObras obras={outras} />}
-      <section aria-labelledby="titulo-recentes">
-        <h2 id="titulo-recentes">Últimos registros</h2>
-        <EstadoConsulta consulta={recentes}>
-          {(lista) => <ListaRegistros registros={lista} locais={locais} limite={5} vazio="Nenhum registro ainda" />}
-        </EstadoConsulta>
-      </section>
+      <LinkAcessosEquipe />
+      {etapa && <EquipeServico etapaId={etapa.id} />}
       <Administracao />
     </>
+  )
+}
+
+/** Uma obra do Início: o nome (link que cobre o cartão), o botão Gestão do gestor e os 3 totais. */
+function LinhaObra({ obra, resumo }: { obra: ObraDaLista; resumo: ResumoObra | undefined }) {
+  const gestor = resumo?.papel === 'gestor'
+  return (
+    <li className="lista-item obra-linha">
+      <div className="obra-linha-cab">
+        <Link className="obra-linha-nome lista-titulo" to={`/obras/${obra.slug}`}>
+          {obra.nome}
+        </Link>
+        {gestor && <BotaoGestao obra={obra} />}
+      </div>
+      {resumo && (
+        <span className="barrinhas">
+          <Barrinha tipo="servicos" n={resumo.servicos} texto={textoServicos(resumo.servicos)} />
+          <Barrinha tipo="abertas" n={resumo.abertas} texto={textoPendencias(resumo.abertas)} />
+          <Barrinha tipo="resolvidas" n={resumo.resolvidas} texto={textoPendenciasResolvidas(resumo.resolvidas)} />
+        </span>
+      )}
+    </li>
+  )
+}
+
+const ROTULO_BARRINHA = { servicos: 'Serviços', abertas: 'Pendências', resolvidas: 'Resolvidas' } as const
+
+/** Um total da obra: o número grande e o rótulo curto embaixo; o texto por extenso fica para o leitor de tela. */
+function Barrinha({ tipo, n, texto }: { tipo: keyof typeof ROTULO_BARRINHA; n: number; texto: string }) {
+  return (
+    <span className={`barrinha barrinha-${tipo}`} role="img" aria-label={texto} title={texto}>
+      <b>{n}</b>
+      <span className="barrinha-rotulo">{ROTULO_BARRINHA[tipo]}</span>
+    </span>
+  )
+}
+
+/** Atalho da Gestão, com selo de alerta (pedidos de acesso e publicações com problema). */
+function BotaoGestao({ obra }: { obra: ObraDaLista }) {
+  const pedidos = useSolicitacoes(obra.id, true)
+  const problemas = usePublicacoesProblema(obra.id, true)
+  const n = (pedidos.data?.length ?? 0) + (problemas.data?.length ?? 0)
+  return (
+    <Link className="atalho" to={`/obras/${obra.slug}/gestao`}>
+      Gestão{' '}
+      {n > 0 && <span className="atalho-selo atalho-selo-alerta">{n}</span>}
+    </Link>
+  )
+}
+
+/** Só para quem é gestor de alguma obra: abre a lista de acessos da equipe. */
+function LinkAcessosEquipe() {
+  const gestor = useEhGestorAlguma()
+  if (!gestor) return null
+  return (
+    <Link className="atalho" to="/acessos">
+      Acessos da equipe
+    </Link>
   )
 }
 

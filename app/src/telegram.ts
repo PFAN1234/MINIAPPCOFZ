@@ -11,6 +11,25 @@ export interface TelegramBackButton {
   offClick(callback: () => void): void
 }
 
+/** Dados de `LocationManager.getLocation` (Bot API 8.0+). */
+export interface TelegramLocalizacao {
+  latitude: number
+  longitude: number
+  horizontal_accuracy?: number | null
+}
+
+/** `WebApp.LocationManager` (Bot API 8.0+). */
+export interface TelegramLocationManager {
+  isInited: boolean
+  isLocationAvailable: boolean
+  isAccessRequested: boolean
+  isAccessGranted: boolean
+  init(callback?: () => void): void
+  /** Pede a posição (e a permissão, se faltar); o callback recebe null se o acesso for negado. */
+  getLocation(callback: (dados: TelegramLocalizacao | null) => void): void
+  openSettings(): void
+}
+
 export interface TelegramThemeParams {
   bg_color?: string
   text_color?: string
@@ -44,6 +63,14 @@ export interface TelegramWebApp {
   setBackgroundColor?(cor: string): void
   /** Cor da barra inferior do Telegram (7.10+). */
   setBottomBarColor?(cor: string): void
+  /** Plataforma do cliente: 'ios', 'android', 'android_x', 'tdesktop', 'macos', 'weba', 'webk'... */
+  platform?: string
+  /** Impede que arrastar para baixo feche ou minimize o Mini App (7.7+). */
+  disableVerticalSwipes?(): void
+  /** Ocupa a tela inteira, sem o cabeçalho do Telegram (8.0+). */
+  requestFullscreen?(): void
+  /** Localização do aparelho (8.0+). */
+  LocationManager?: TelegramLocationManager
 }
 
 declare global {
@@ -66,6 +93,12 @@ export function dentroDoTelegram(): boolean {
   return app !== undefined && app.initData !== ''
 }
 
+/** True no Telegram para Android, cujo WebView ignora `capture` do input de arquivo. */
+export function cameraNoApp(): boolean {
+  const plataforma = webApp()?.platform
+  return dentroDoTelegram() && (plataforma === 'android' || plataforma === 'android_x')
+}
+
 /** Avisa o Telegram que a interface está pronta. */
 export function ready(): void {
   webApp()?.ready()
@@ -74,6 +107,31 @@ export function ready(): void {
 /** Expande o Mini App para a altura máxima. */
 export function expand(): void {
   webApp()?.expand()
+}
+
+/** Plataformas em que o app abre em tela cheia (no computador, tela cheia tomaria o monitor todo). */
+const PLATAFORMAS_CELULAR = new Set(['ios', 'android', 'android_x'])
+
+/** Chama um método do cliente só se a versão aceitar; erro do cliente não derruba o app. */
+function pedirSeAceitar(app: TelegramWebApp, versaoMinima: string, metodo: (() => void) | undefined) {
+  try {
+    if (typeof metodo !== 'function' || typeof app.isVersionAtLeast !== 'function') return
+    if (!app.isVersionAtLeast(versaoMinima)) return
+    metodo.call(app)
+  } catch {
+    /* cliente antigo ou fora do Telegram: fica o comportamento padrão */
+  }
+}
+
+/**
+ * Trava o arrasto para baixo (só rola a página; fechar fica no X) e, no celular, abre em tela cheia.
+ * O espaço da barra de status e dos botões flutuantes do Telegram vem em `--seguro-topo` (tokens.css).
+ */
+export function telaCheia(): void {
+  const app = webApp()
+  if (!app) return
+  pedirSeAceitar(app, '7.7', app.disableVerticalSwipes)
+  if (PLATAFORMAS_CELULAR.has(app.platform ?? '')) pedirSeAceitar(app, '8.0', app.requestFullscreen)
 }
 
 /** Cores que o app pede ao Telegram (as mesmas de `estilo/tokens.css`: --azul, --fundo, --superficie). */
@@ -104,6 +162,21 @@ export function aplicarCoresTelegram(): void {
   pedirCor(app, '6.9', app.setHeaderColor, CORES_TELEGRAM.cabecalho)
   pedirCor(app, '6.1', app.setBackgroundColor, CORES_TELEGRAM.fundo)
   pedirCor(app, '7.10', app.setBottomBarColor, CORES_TELEGRAM.barraInferior)
+}
+
+/**
+ * `LocationManager` do Telegram, só se o cliente tiver a Bot API 8.0+ (senão undefined e o
+ * chamador usa o GPS do navegador). Erro do cliente não derruba o app.
+ */
+export function localizacaoDoTelegram(): TelegramLocationManager | undefined {
+  try {
+    const app = webApp()
+    if (!app || !dentroDoTelegram()) return undefined
+    if (typeof app.isVersionAtLeast !== 'function' || !app.isVersionAtLeast('8.0')) return undefined
+    return app.LocationManager
+  } catch {
+    return undefined
+  }
 }
 
 /** `initData` bruto a ser validado no servidor; string vazia fora do Telegram. */

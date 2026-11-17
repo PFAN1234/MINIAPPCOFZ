@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Etapa, ObraDaLista, ObraDisponivel } from '../dados/tipos.ts'
+import type { Etapa, EtapaInicio, ObraDaLista, ObraDisponivel } from '../dados/tipos.ts'
 import { compararNatural } from './ordenacao.ts'
 
 /**
@@ -15,6 +15,21 @@ export function etapasDasObras(obras: readonly ObraDaLista[], outras: readonly O
       porId.set(o.etapa_id, { id: o.etapa_id, slug: '', nome: o.etapa_nome, ordem: o.etapa_ordem })
     }
   }
+  return [...porId.values()].sort((a, b) => a.ordem - b.ordem || compararNatural(a.nome, b.nome))
+}
+
+/**
+ * Abas do Início: todas as etapas ativas (`etapas_inicio`) unidas às das obras em cache e das
+ * "Outras obras" (para funcionar sem sinal), por `ordem` e depois por nome.
+ */
+export function etapasDasAbas(
+  inicio: readonly EtapaInicio[],
+  obras: readonly ObraDaLista[],
+  outras: readonly ObraDisponivel[],
+): Etapa[] {
+  const porId = new Map<string, Etapa>()
+  for (const e of inicio) porId.set(e.id, { id: e.id, slug: e.slug, nome: e.nome, ordem: e.ordem })
+  for (const e of etapasDasObras(obras, outras)) if (!porId.has(e.id)) porId.set(e.id, e)
   return [...porId.values()].sort((a, b) => a.ordem - b.ordem || compararNatural(a.nome, b.nome))
 }
 

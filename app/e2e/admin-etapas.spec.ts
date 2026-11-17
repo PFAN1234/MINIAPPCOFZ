@@ -114,7 +114,10 @@ test('boletins da etapa: estação do Observatório, lista, prévia e emissão m
   await expect(page.getByRole('combobox', { name: 'Estação meteorológica' })).toHaveValue('8836')
   await expect(page.getByRole('combobox', { name: 'Estação de reserva' })).toHaveValue('9281')
 
-  const boletins = page.getByRole('region', { name: 'Boletins' })
+  // A lista, a prévia e a emissão ficam na aba Relatórios, filtrada pela etapa.
+  await page.getByRole('link', { name: 'Ver boletins da etapa' }).click()
+  await expect(page).toHaveURL(/\/admin\/boletins\?etapa=2a-etapa$/)
+  const boletins = page.getByRole('region', { name: 'Relatórios' })
   await expect(boletins.getByRole('table', { name: 'Boletins emitidos' }).getByRole('row')).toHaveCount(4)
   await expect(boletins.getByRole('table', { name: 'Pedidos de emissão' })).toContainText('Tempo esgotado ao gerar o PDF')
 

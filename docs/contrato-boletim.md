@@ -294,3 +294,64 @@ Regras: dia = `[data 00:00, data+1 00:00)` no fuso da etapa, por `registro.captu
 - Deno: `publish-outbox` envia documento ao grupo da etapa.
 - Vitest: template com um snapshot de exemplo (cabeçalho, número, seções, clima indisponível); captura com uma cópia reduzida da página gravada nos testes (linha certa, leitura antiga → reserva, ausente → indisponível); telas do site.
 - Gerar localmente um PDF de exemplo a partir de um snapshot de teste e da captura real da página (Chromium pré-instalado) e conferir visualmente.
+
+# Parte 4: aba Boletins e edição do boletim emitido
+
+Decisões de 2026-11-13: os boletins saem da página da etapa e ganham uma aba própria no site (a etapa fica com um link para a aba já filtrada). Um boletim emitido pode ser editado clicando nos textos da página: a edição vale **só para o boletim** (os lançamentos da equipe não mudam), permite trocar os textos dos registros e ocultar registros e fotos, e tem "Salvar" (rascunho) e "Salvar e reenviar", que gera a retificação e **substitui a mensagem no grupo** (o bot apaga a anterior; o Telegram só deixa apagar até 48 h depois do envio).
+
+## Edição (`edicao`, jsonb)
+
+```json
+{ "textos": { "<chave>": "novo texto" }, "ocultos": ["<chave>"], "fotos_ocultas": ["<path no bucket fotos>"] }
+```
+
+Chaves, sobre o snapshot do boletim de base (por obra, em `obras[]`, e em `tardios[]`):
+
+| Chave | Item | Texto trocado |
+|---|---|---|
+| `servico:<id>` | `servicos[]` | `legenda` |
+| `aberta:<id>` | `pendencias_abertas[]` | `legenda` |
+| `encerrada:<id>` | `pendencias_encerradas[]` | `legenda` |
+| `encerramento:<id>` | `pendencias_encerradas[].encerramento` (id da pendência) | `observacao` (não pode ser ocultado) |
+| `observacao:<obra_id>:<índice>` | `observacoes[índice]` (índice a partir de 0) | `texto` |
+| `tardio:<id>` | `tardios[]` | `texto` |
+
+- Formato (conferido no banco por `privado.validar_edicao(jsonb)`, erro `22023` "Edição do boletim inválida"): objeto só com as chaves `textos` (objeto de strings de até 2000 caracteres), `ocultos` e `fotos_ocultas` (arrays de strings, até 500 itens cada); todas opcionais. Edição vazia = sem `textos`, `ocultos` e `fotos_ocultas` com conteúdo.
+- Aplicação (`aplicarEdicao(snapshot, edicao)` em `app/servidor/boletim/edicao.ts`, função pura): texto com espaços nas pontas removidos; vazio vira `null` nas legendas e no `observacao` do encerramento, e oculta o item nas observações e nos tardios. Itens em `ocultos` saem das listas; fotos cujo `path` está em `fotos_ocultas` saem de `fotos`, `fotos_registro` e `encerramento.fotos`. Chaves que não existem no snapshot são ignoradas. Indicadores e clima não mudam. Não altera o objeto recebido.
+
+## Banco (migration `supabase/migrations/20261115090000_boletim_edicao.sql`; testes `tests/db/test_boletim_edicao.py`)
+
+- `public.boletim_rascunho (boletim_id uuid pk references boletim on delete cascade, edicao jsonb not null, atualizado_em timestamptz not null default now(), atualizado_por uuid references auth.users on delete set null)`: RLS ligada, sem políticas (só pelas RPCs).
+- `boletim_emissao` e `boletim` ganham `base_boletim_id uuid references public.boletim(id) on delete set null` e `edicao jsonb` (check: base exige edição; a edição fica se a base for apagada).
+- Storage: política `fotos_admin_select` (select em `fotos` para `privado.eh_admin()`), para o site mostrar as fotos no editor por URL assinada.
+- RPCs do site (`privado.exigir_admin()`):
+  - `admin_listar_todos_boletins(p_etapa text default null, p_de date default null, p_ate date default null) → {boletins, pedidos}`: como `admin_listar_boletins`, de todas as etapas (ou só da etapa `p_etapa`, slug; inexistente → `P0002`) e com data entre `p_de` e `p_ate` (inclusivo, quando dados). Cada boletim traz também `etapa_slug`, `etapa_nome`, `base_numero` (número do boletim editado, ou null), `editado` (edicao não nula) e `tem_rascunho`; cada pedido traz `etapa_slug`, `etapa_nome` e `editado`. Ordem: data desc, etapa, revisão desc. Até 300 boletins.
+  - `admin_boletim(p_id uuid) → {id, etapa_slug, etapa_nome, data, revisao, numero, emitido_em, emitido_por_nome, pdf_path, publicado, publicacao_estado, ultima_revisao, emissao_em_andamento, base_numero, edicao, snapshot, rascunho}`: `ultima_revisao` = não há boletim da mesma etapa e data com revisão maior; `emissao_em_andamento` = há pedido `pendente` ou `gerando` da etapa e data; `rascunho` = `{edicao, atualizado_em, atualizado_por_nome}` ou null. Inexistente → `P0002` "Boletim não encontrado".
+  - `admin_salvar_rascunho_boletim(p_id uuid, p_edicao jsonb) → {atualizado_em} | null`: valida o formato; só a última revisão do dia (`22023` "Só a última revisão do dia pode ser editada"); edição vazia apaga o rascunho e devolve null; senão grava (upsert) com `auth.uid()`.
+  - `admin_retificar_boletim(p_id uuid, p_edicao jsonb) → pedido` (mesmo formato de `admin_pedir_emissao`): valida; última revisão (mesmo erro); edição vazia → `22023` "Nenhuma alteração para enviar"; pedido `pendente`/`gerando` da etapa e data → `23505` "Já há uma emissão em andamento para este dia"; cria o pedido com a próxima revisão (mesma regra de `admin_pedir_emissao`), `base_boletim_id = p_id`, `edicao = p_edicao`, `pedido_por = auth.uid()`, grava também o rascunho, e chama `privado.disparar_gerador()`.
+- Gerador (`service_role`):
+  - `reivindicar_emissoes` passa a devolver também `base_boletim_id` e `edicao` em cada pedido.
+  - `boletim_snapshot_emitido(p_boletim uuid) → jsonb`: o `snapshot` gravado do boletim (`P0002` se não existir).
+  - `concluir_emissao` copia `base_boletim_id` e `edicao` do pedido para o boletim e apaga o rascunho do boletim de base.
+
+## Gerador e prévia (`app/servidor/boletim/`, `app/api/`)
+
+- `emitirPedido`: pedido com `base_boletim_id` → snapshot = `aplicarEdicao(await fonte.snapshotDoBoletim(base), edicao)` e o clima é sempre reaproveitado (o caminho de `reaproveitarClima`, sem nova captura). Sem base, como hoje.
+- Prévia da edição: `previa-boletim.ts` aceita também `POST` com corpo `{boletim_id, edicao}` (JWT de admin): lê `admin_boletim` com o JWT, aplica a edição e devolve o PDF com a marca de prévia, clima reaproveitado. Edição inválida → 400.
+
+## Telegram (`supabase/functions/publish-outbox`)
+
+- Toda retificação (revisão > 0, editada ou não) substitui a mensagem anterior: depois do `sendDocument` bem-sucedido, a função busca os boletins da mesma etapa e data com revisão menor cuja publicação está `publicado` e chama `deleteMessage` (`chat_id` da etapa, cada `message_id`). Falha ao apagar (mais de 48 h, mensagem já apagada) só vai para o log: a publicação nova continua `publicado`.
+
+## Site de administração
+
+- Menu: item **Boletins** (`/boletins`). Filtros: etapa (todas ou uma; `?etapa=<slug>` na URL), período (padrão: últimos 30 dias). Mostra os pedidos não emitidos (na fila, gerando, falhou, com o erro), a lista dos emitidos (número, etapa, data, emitido em, por, Telegram, marcas "editado" e "rascunho", Abrir PDF, Reenviar ao Telegram como hoje, Editar) e, com uma etapa escolhida, o bloco atual de Pré-visualizar / Emitir agora.
+- Página da etapa: a seção Boletins vira um cartão com o horário da emissão automática e o link "Ver boletins da etapa" (`/boletins?etapa=<slug>`).
+- `/boletins/:id` (editor): cabeçalho com número, etapa, data, situação no Telegram e Abrir PDF; o conteúdo do snapshot em blocos parecidos com o PDF (por obra: Serviços, Pendências abertas, Pendências encerradas, Observações; depois Lançamentos tardios), com as fotos em miniatura (URLs assinadas do bucket `fotos`). Clicar num texto abre a edição no lugar (textarea; Esc cancela, fora do campo confirma); cada item tem "Ocultar"/"Mostrar" e cada foto um botão para ocultar; itens alterados ficam marcados e ocultos aparecem esmaecidos. Botões: **Salvar** (rascunho), **Pré-visualizar** (PDF da prévia com as alterações), **Salvar e reenviar** (confirmação: "Gera a retificação R<n> com as alterações e substitui a mensagem no grupo. Mensagens com mais de 48 h não podem ser apagadas e ficam no grupo.") e **Descartar alterações**. Começa pelo rascunho, se houver. Revisão que não é a última, ou emissão em andamento: só leitura, com aviso (e link para a última revisão). Sair com alterações não salvas pede confirmação.
+- `RepositorioAdmin`: `listarTodosBoletins(filtro)`, `boletim(id)`, `salvarRascunhoBoletim(id, edicao)`, `retificarBoletim(id, edicao)`, `previaBoletimEditado(id, edicao)`, `urlsFotos(paths)`; fixture.
+
+## Verificação
+
+- `pytest -q tests/db`: formato da edição, rascunho (última revisão, vazio apaga), retificação (próxima revisão, base e edição no pedido e no boletim, em andamento, sem alteração), listagem geral com filtros, `admin_boletim`, não-admin barrado, política das fotos.
+- Vitest: `aplicarEdicao` (cada chave, vazio, ocultar fotos, chave inexistente, sem mutar), `emitirPedido` com base (usa o snapshot do boletim e não captura o clima), prévia por POST; telas (lista com filtros, editor: editar texto, ocultar, salvar, reenviar com confirmação, só leitura).
+- Deno: retificação publicada apaga a mensagem anterior; falha ao apagar mantém `publicado`; revisão 0 não apaga nada.

@@ -1,6 +1,9 @@
 import type {
   AmbienteDetalhe,
   CaminhoFoto,
+  EquipeServico,
+  EtapaInicio,
+  Posicao,
   NovaObservacao,
   NovoEncerramento,
   Observacao,
@@ -17,8 +20,14 @@ import type {
   ObraDisponivel,
   Organizacao,
   RegistroLocalizado,
+  PainelRelatorios,
+  Relatorios,
+  ResultadoExclusaoBoletim,
   RegistroResumo,
+  ResumoObra,
   SolicitacaoAcesso,
+  MatrizAcessos,
+  PapelAcesso,
 } from './tipos.ts'
 import type { ModeloFrag } from '../modelo/modelos.ts'
 import type { GeometriaAmbiente } from '../ra/geometria.ts'
@@ -26,10 +35,14 @@ import type { GeometriaAmbiente } from '../ra/geometria.ts'
 export interface Repositorio {
   /** Obras em que o usuário participa, cada uma com a sua etapa. */
   listarObras(): Promise<ObraDaLista[]>
+  /** Totais por obra visível (serviços, pendências abertas e resolvidas) e o papel do usuário. */
+  resumoObras(): Promise<ResumoObra[]>
   /** Pavimentos (com planta ativa), ambientes e pendências abertas por ambiente. */
   obterObra(slug: string): Promise<ObraDetalhe>
   obterAmbiente(slug: string, codigo: string): Promise<AmbienteDetalhe>
   listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]>
+  /** Pessoas que têm registros nas obras visíveis (`autores_registros`), pelo nome mostrado. */
+  autoresRegistros(): Promise<{ id: string; nome: string }[]>
   /** URL assinada (1 h) ou local na fixture, indexada pelo caminho recebido. */
   urlsImagens(
     paths: string[],
@@ -52,6 +65,10 @@ export interface Repositorio {
   listarSolicitacoes(obraId: string): Promise<SolicitacaoAcesso[]>
   /** Gestor aprova ou recusa um pedido. Falhas sobem como `ErroEnvio`. */
   decidirSolicitacao(id: string, aprovar: boolean): Promise<void>
+  /** Lista de pessoas x obras (só gestor de alguma obra). Falhas sobem como `ErroEnvio`. */
+  matrizAcessos(): Promise<MatrizAcessos>
+  /** Define o acesso de uma pessoa a uma obra (qualquer gestor, qualquer obra). Falhas sobem como `ErroEnvio`. */
+  definirAcesso(obraId: string, usuarioId: string, papel: PapelAcesso): Promise<void>
   /** Pendência com fotos, ambiente, pavimento, papel do usuário e encerramento; null se não houver acesso. */
   obterPendencia(id: string): Promise<PendenciaDetalhe | null>
   /** Idempotente pelo `id`. Falhas sobem como `ErroEnvio` (`conflito` se já encerrada). */
@@ -83,6 +100,18 @@ export interface Repositorio {
   souAdmin(): Promise<boolean>
   /** Link de uso único (2 min) para abrir o site de administração já com a sessão. */
   criarLinkAdmin(): Promise<LinkAdmin>
+  /** Aba Relatórios: situação de hoje por etapa e boletins emitidos. */
+  relatorios(): Promise<Relatorios>
+  /** Painel da aba Relatórios: movimento por obra e dia da etapa, até hoje. */
+  painelRelatorios(etapaId: string): Promise<PainelRelatorios>
+  /** Gera o PDF de pendências (etapa inteira ou uma obra) e devolve a URL assinada. */
+  exportarPendencias(etapaId: string, obraId: string | null): Promise<string>
+  /** URL assinada (5 min) do PDF de um boletim. */
+  urlPdfBoletim(caminho: string): Promise<string>
+  /** Admin: pede a emissão agora (nova revisão se já houver boletim no dia). Falhas sobem como `ErroEnvio`. */
+  emitirBoletim(slug: string, data: string): Promise<void>
+  /** Admin: exclui o dia inteiro do boletim (revisões, PDFs e mensagem no grupo). */
+  excluirBoletim(id: string): Promise<ResultadoExclusaoBoletim>
   /** Nome e logo da organização militar (faixa de identidade do topo). */
   organizacao(): Promise<Organizacao>
   /** Observações de hoje na obra (dia no fuso da etapa), com o estado de travada do dia. */
@@ -91,6 +120,14 @@ export interface Repositorio {
   salvarObservacao(dados: NovaObservacao): Promise<Observacao>
   /** Só o autor e antes da emissão do boletim; id inexistente não é erro. Falhas sobem como `ErroEnvio`. */
   excluirObservacao(id: string): Promise<void>
+  /** Etapas ativas, com a participação do usuário. */
+  etapasInicio(): Promise<EtapaInicio[]>
+  /** Equipe de serviço da etapa (abertos e encerrados nas últimas 24 h). */
+  equipeServico(etapaId: string): Promise<EquipeServico>
+  /** Check-in (exige estar a até 1 km da etapa). Falhas sobem como `ErroEnvio`. */
+  fazerCheckin(etapaId: string, posicao: Posicao): Promise<EquipeServico>
+  /** Fecha o serviço aberto do usuário. Devolve a equipe da etapa dele. */
+  fazerCheckout(): Promise<EquipeServico>
 }
 
 /**

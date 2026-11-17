@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import type { Rollup } from 'vite'
-import { arquivosSoDoAdmin, montarManifesto, rotaAdmin } from './vite.config.ts'
+import { arquivosSoDoAdmin, montarManifesto, montarVersao, rotaAdmin } from './vite.config.ts'
 
 describe('montarManifesto', () => {
   const nomes = ['assets/index-abc.js', 'assets/index-abc.css', 'index.html', 'assets/logo-1.svg']
@@ -112,5 +112,30 @@ describe('rotaAdmin', () => {
     expect(reescrever('/obras/hto')).toBe('/obras/hto')
     expect(reescrever('/assets/admin-b.js')).toBe('/assets/admin-b.js')
     expect(reescrever('/administracao')).toBe('/administracao')
+  })
+})
+
+describe('montarVersao', () => {
+  const agora = new Date('2026-11-13T17:32:00Z')
+
+  it('lê o PR da mensagem de merge e encurta o commit', () => {
+    const v = montarVersao(
+      'Merge pull request #39 from PFAN1234/claude/x\n\nMini app: aba Relatórios',
+      '9e969c1b53f38d3dbf9517a86fe7e65b51227c5a',
+      agora,
+    )
+    expect(v).toEqual({ pr: 39, commit: '9e969c1', data: '2026-11-13T17:32:00.000Z' })
+  })
+
+  it('lê o PR de um squash ("Título (#40)")', () => {
+    expect(montarVersao('Versão na tela inicial (#40)', 'abc1234567', agora).pr).toBe(40)
+  })
+
+  it('sem PR na mensagem nem commit, fica só a data', () => {
+    expect(montarVersao('Ajuste #12 no texto', undefined, agora)).toEqual({
+      pr: null,
+      commit: null,
+      data: '2026-11-13T17:32:00.000Z',
+    })
   })
 })

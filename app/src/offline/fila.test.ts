@@ -45,6 +45,12 @@ function criarRepoFalso() {
     async idUsuario() {
       return 'u1'
     },
+    async resumoObras() {
+      return []
+    },
+    async autoresRegistros() {
+      return []
+    },
     async obterGeometria() {
       return null
     },
@@ -57,10 +63,40 @@ function criarRepoFalso() {
     async souAdmin() {
       return false
     },
+    async etapasInicio() {
+      return []
+    },
+    async equipeServico() {
+      throw new Error('n/a')
+    },
+    async fazerCheckin() {
+      throw new Error('n/a')
+    },
+    async fazerCheckout() {
+      throw new Error('n/a')
+    },
     async organizacao() {
       return { nome: 'CO-FZ', logo_url: null }
     },
     async criarLinkAdmin() {
+      throw new Error('n/a')
+    },
+    async relatorios() {
+      return { admin: false, etapas: [], boletins: [] }
+    },
+    async painelRelatorios() {
+      throw new Error('n/a')
+    },
+    async exportarPendencias() {
+      throw new Error('n/a')
+    },
+    async urlPdfBoletim() {
+      throw new Error('n/a')
+    },
+    async emitirBoletim() {
+      throw new Error('n/a')
+    },
+    async excluirBoletim() {
       throw new Error('n/a')
     },
     async baixarModelo() {
@@ -74,6 +110,10 @@ function criarRepoFalso() {
       return []
     },
     async decidirSolicitacao() {},
+    async matrizAcessos() {
+      return { obras: [], pessoas: [] }
+    },
+    async definirAcesso() {},
     async localizarRegistro() {
       return null
     },

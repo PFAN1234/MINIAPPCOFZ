@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorio } from './contexto.tsx'
-import type { FiltroRegistros, NovaObservacao, PapelObra } from './tipos.ts'
+import type { EquipeServico, FiltroRegistros, NovaObservacao, PapelAcesso, PapelObra, Posicao } from './tipos.ts'
 
 export function useObras() {
   const repo = useRepositorio()
@@ -14,6 +14,12 @@ export function useObras() {
 export function useOrganizacao() {
   const repo = useRepositorio()
   return useQuery({ queryKey: ['organizacao'], queryFn: () => repo.organizacao(), staleTime: 5 * 60_000 })
+}
+
+/** Totais por obra para as barrinhas do Início e o botão Gestão. */
+export function useResumoObras() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['resumo-obras'], queryFn: () => repo.resumoObras() })
 }
 
 export function useObra(slug: string) {
@@ -37,26 +43,10 @@ export function useRegistros(filtro: FiltroRegistros = {}) {
   })
 }
 
-/** Pendências abertas de todas as obras: a consulta do Início, também lida pela barra inferior. */
-export const FILTRO_PENDENCIAS_ABERTAS: FiltroRegistros = { tipo: 'pendencia', situacao: 'aberta' }
-
-/**
- * Total de pendências abertas para a barra inferior, tirado da mesma consulta do Início.
- * Não busca nada sozinho: enquanto não houver dados (os do Início ou os guardados no aparelho),
- * devolve `undefined`. Com dados, acompanha a consulta e é refeito só quando ela é invalidada
- * (depois de um envio), para o número não ficar velho fora do Início.
- */
-export function useTotalPendenciasAbertas(): number | undefined {
+/** Pessoas com registros, para o filtro de pessoa de Registros. */
+export function useAutoresRegistros() {
   const repo = useRepositorio()
-  return useQuery({
-    queryKey: ['registros', FILTRO_PENDENCIAS_ABERTAS],
-    queryFn: () => repo.listarRegistros(FILTRO_PENDENCIAS_ABERTAS),
-    enabled: (consulta) => consulta.state.data !== undefined,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    select: (lista) => lista.length,
-  }).data
+  return useQuery({ queryKey: ['autores-registros'], queryFn: () => repo.autoresRegistros() })
 }
 
 /** URLs assinadas valem 1 h; renova um pouco antes. */
@@ -136,6 +126,33 @@ export function useDecidirSolicitacao() {
   })
 }
 
+/** Lista de acessos (pessoas x obras); falha com `permissao` para quem não é gestor. */
+export function useMatrizAcessos() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['matriz-acessos'], queryFn: () => repo.matrizAcessos() })
+}
+
+/** O usuário é gestor de alguma obra? `undefined` enquanto as obras não carregam. */
+export function useEhGestorAlguma(): boolean | undefined {
+  const resumo = useResumoObras()
+  return resumo.data ? resumo.data.some((r) => r.papel === 'gestor') : undefined
+}
+
+export function useDefinirAcesso() {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ obraId, usuarioId, papel }: { obraId: string; usuarioId: string; papel: PapelAcesso }) =>
+      repo.definirAcesso(obraId, usuarioId, papel),
+    onSettled: () =>
+      Promise.all(
+        ['matriz-acessos', 'obras', 'resumo-obras', 'participantes', 'solicitacoes', 'obras-disponiveis'].map(
+          (k) => qc.invalidateQueries({ queryKey: [k] }),
+        ),
+      ),
+  })
+}
+
 export function usePendencia(id: string) {
   const repo = useRepositorio()
   return useQuery({ queryKey: ['pendencia', id], queryFn: () => repo.obterPendencia(id) })
@@ -189,6 +206,7 @@ export function useResolverPublicacao() {
       Promise.all([
         qc.invalidateQueries({ queryKey: ['publicacoes-problema'] }),
         qc.invalidateQueries({ queryKey: ['registros'] }),
+        qc.invalidateQueries({ queryKey: ['resumo-obras'] }),
         qc.invalidateQueries({ queryKey: ['pendencia'] }),
       ]),
   })
@@ -211,6 +229,58 @@ export function useGeometria(
     queryKey: ['geometria', obra?.id, ambiente?.id],
     queryFn: () => repo.obterGeometria(obra!, ambiente!),
     enabled: habilitado && Boolean(obra && ambiente),
+  })
+}
+
+/** Todas as etapas ativas (abas do Início), com a participação do usuário. */
+export function useEtapasInicio() {
+  const repo = useRepositorio()
+  return useQuery({ queryKey: ['etapas-inicio'], queryFn: () => repo.etapasInicio() })
+}
+
+/** Equipe de serviço da etapa: refeita a cada 60 s e ao focar o app. */
+export function useEquipeServico(etapaId: string | undefined) {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['equipe-servico', etapaId],
+    queryFn: () => repo.equipeServico(etapaId!),
+    enabled: !!etapaId,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  })
+}
+
+/** Grava o retorno (equipe da etapa) no cache dela e invalida as das outras etapas. */
+function useAtualizarEquipes() {
+  const qc = useQueryClient()
+  return (equipe: EquipeServico) => {
+    qc.setQueryData(['equipe-servico', equipe.etapa_id], equipe)
+    void qc.invalidateQueries({
+      queryKey: ['equipe-servico'],
+      predicate: (q) => q.queryKey[1] !== equipe.etapa_id,
+    })
+  }
+}
+
+/** Check-in na etapa, com a posição já obtida. Exige conexão. */
+export function useCheckin(etapaId: string) {
+  const repo = useRepositorio()
+  const atualizar = useAtualizarEquipes()
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: (posicao: Posicao) => repo.fazerCheckin(etapaId, posicao),
+    onSuccess: atualizar,
+  })
+}
+
+/** Check-out do serviço aberto do usuário (em qualquer etapa). Exige conexão. */
+export function useCheckout() {
+  const repo = useRepositorio()
+  const atualizar = useAtualizarEquipes()
+  return useMutation({
+    networkMode: 'always',
+    mutationFn: () => repo.fazerCheckout(),
+    onSuccess: atualizar,
   })
 }
 
@@ -237,5 +307,54 @@ export function useAlterarObservacao(obraId: string) {
         ? repo.salvarObservacao(acao.dados).then(() => undefined)
         : repo.excluirObservacao(acao.id),
     onSettled: () => qc.invalidateQueries({ queryKey: ['observacoes', obraId] }),
+  })
+}
+
+/** Aba Relatórios. Reconsulta a cada 10 s enquanto alguma etapa tiver emissão pendente ou gerando. */
+export function useRelatorios() {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['relatorios'],
+    queryFn: () => repo.relatorios(),
+    refetchInterval: (consulta) => {
+      const etapas = consulta.state.data?.etapas ?? []
+      const emAndamento = etapas.some((e) => e.pedido_hoje?.estado === 'pendente' || e.pedido_hoje?.estado === 'gerando')
+      return emAndamento ? 10_000 : false
+    },
+  })
+}
+
+export function useEmitirBoletim() {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ slug, data }: { slug: string; data: string }) => repo.emitirBoletim(slug, data),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['relatorios'] }),
+  })
+}
+
+export function useExcluirBoletim() {
+  const repo = useRepositorio()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => repo.excluirBoletim(id),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['relatorios'] }),
+  })
+}
+
+/** Painel da aba Relatórios (histórico inteiro da etapa). */
+export function usePainelRelatorios(etapaId: string | null | undefined) {
+  const repo = useRepositorio()
+  return useQuery({
+    queryKey: ['painel-relatorios', etapaId],
+    queryFn: () => repo.painelRelatorios(etapaId as string),
+    enabled: !!etapaId,
+  })
+}
+
+export function useExportarPendencias() {
+  const repo = useRepositorio()
+  return useMutation({
+    mutationFn: ({ etapaId, obraId }: { etapaId: string; obraId: string | null }) => repo.exportarPendencias(etapaId, obraId),
   })
 }

@@ -3,7 +3,7 @@
  * (`/etapas/:slug`): Identificação, Localização e Dados do contrato. As regras de verdade ficam
  * nas RPCs (`admin_salvar_etapa`); aqui só o que poupa uma ida ao servidor.
  */
-import { useMemo, useState, type FormEvent } from 'react'
+import { lazy, Suspense, useCallback, useMemo, useState, type FormEvent } from 'react'
 import { Campo, Resultado } from '../../componentes.tsx'
 import { useOrganizacao, useSalvarEtapa } from '../../dados/hooks.ts'
 import {
@@ -200,6 +200,12 @@ export default function FormularioEtapa({ etapa, sucesso = null, onSalvo }: Prop
     }
   }
 
+  // Tocar no mapa preenche os dois campos.
+  const escolherNoMapa = useCallback((latitude: number, longitude: number) => {
+    setV((a) => ({ ...a, latitude: textoDecimal(latitude), longitude: textoDecimal(longitude) }))
+    setAviso(null)
+  }, [])
+
   const ponto = useMemo(() => {
     const latitude = lerDecimal(v.latitude)
     const longitude = lerDecimal(v.longitude)
@@ -312,7 +318,7 @@ export default function FormularioEtapa({ etapa, sucesso = null, onSalvo }: Prop
           <Campo rotulo="Endereço" largo>
             {(p) => <input {...p} value={v.endereco} onChange={(e) => mudar('endereco', e.target.value)} maxLength={300} />}
           </Campo>
-          <Campo rotulo="Latitude" obrigatorio dica="Pode colar “−3.7610, −38.5297” aqui: os dois campos são preenchidos.">
+          <Campo rotulo="Latitude" obrigatorio dica="Toque no mapa abaixo ou cole “−3.7610, −38.5297” aqui: os dois campos são preenchidos.">
             {(p) => (
               <input
                 {...p}
@@ -334,7 +340,7 @@ export default function FormularioEtapa({ etapa, sucesso = null, onSalvo }: Prop
               />
             )}
           </Campo>
-          <MapaPrevia ponto={ponto} />
+          <MapaPrevia ponto={ponto} aoEscolher={escolherNoMapa} />
           <Campo rotulo="Fuso horário" obrigatorio dica="Define o dia do boletim e a hora da emissão automática.">
             {(p) => (
               <select {...p} value={v.fuso} onChange={(e) => mudar('fuso', e.target.value)}>
@@ -446,32 +452,38 @@ export default function FormularioEtapa({ etapa, sucesso = null, onSalvo }: Prop
   )
 }
 
-// --- Mapa de prévia --------------------------------------------------------------------------
+// --- Mapa ------------------------------------------------------------------------------------
 
-/** `iframe` do OpenStreetMap com o ponto marcado e o link para abrir o mapa. */
-export function MapaPrevia({ ponto }: { ponto: { latitude: number; longitude: number } | null }) {
-  if (!ponto) {
-    return (
-      <p className="adm-dica adm-campo-largo" data-testid="mapa-vazio">
-        Informe a latitude e a longitude para ver o mapa.
-      </p>
-    )
-  }
-  const { latitude: lat, longitude: lon } = ponto
-  const bbox = [lon - 0.006, lat - 0.004, lon + 0.006, lat + 0.004].map((n) => n.toFixed(5)).join('%2C')
+const MapaEscolha = lazy(() => import('./MapaEscolha.tsx'))
+
+/** Mapa clicável (toque marca o local) com as coordenadas e o link para abrir no OpenStreetMap. */
+export function MapaPrevia({
+  ponto,
+  aoEscolher,
+}: {
+  ponto: { latitude: number; longitude: number } | null
+  aoEscolher: (latitude: number, longitude: number) => void
+}) {
   return (
     <figure className="adm-mapa adm-campo-largo">
-      <iframe
-        title={`Mapa da obra em ${coordenada(lat)}, ${coordenada(lon)}`}
-        src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lon}`}
-        loading="lazy"
-        referrerPolicy="no-referrer"
-      />
+      <Suspense fallback={<div className="adm-mapa-escolha" aria-hidden="true" />}>
+        <MapaEscolha ponto={ponto} aoEscolher={aoEscolher} />
+      </Suspense>
       <figcaption>
-        {coordenada(lat)}, {coordenada(lon)} ·{' '}
-        <a href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`} target="_blank" rel="noreferrer">
-          abrir no mapa
-        </a>
+        {ponto ? (
+          <>
+            {coordenada(ponto.latitude)}, {coordenada(ponto.longitude)} ·{' '}
+            <a
+              href={`https://www.openstreetmap.org/?mlat=${ponto.latitude}&mlon=${ponto.longitude}#map=17/${ponto.latitude}/${ponto.longitude}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              abrir no mapa
+            </a>
+          </>
+        ) : (
+          <span data-testid="mapa-vazio">Toque no mapa para marcar o local da obra.</span>
+        )}
       </figcaption>
     </figure>
   )

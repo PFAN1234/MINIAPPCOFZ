@@ -81,6 +81,24 @@ describe('repositório Supabase: boletins', () => {
     await expect(criarRepositorioAdminSupabase(ruim).reenviarBoletim('2a-etapa', 'b1')).rejects.toThrow('já foi publicado')
   })
 
+  it('excluirBoletim chama a Edge Function com a ação e converte a resposta', async () => {
+    const { cliente } = clienteFalso(() => ({ data: null, error: null }))
+    cliente.auth.getSession = vi.fn(async () => ({ data: { session: { access_token: 'tok' } }, error: null })) as never
+    const fetch = vi.fn(async () =>
+      Response.json({ ok: true, numero: 'N1', data: '2026-11-12', revisoes: 2, mensagens: { apagadas: 1, falhas: 0 }, arquivos_erro: 'x' }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    const r = await criarRepositorioAdminSupabase(cliente).excluirBoletim('2a-etapa', 'b1')
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toMatch(/\/functions\/v1\/admin-excluir-obra$/)
+    expect(JSON.parse(init.body as string)).toEqual({ acao: 'excluir_boletim', boletim_id: 'b1' })
+    expect(r).toEqual({ numero: 'N1', data: '2026-11-12', revisoes: 2, mensagens: { apagadas: 1, falhas: 0 }, arquivos_erro: 'x' })
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ erro: 'Boletim não encontrado.' }, { status: 404 })))
+    await expect(criarRepositorioAdminSupabase(cliente).excluirBoletim('2a-etapa', 'b1')).rejects.toThrow('Boletim não encontrado')
+    vi.stubGlobal('fetch', vi.fn(async () => Response.json({ erro: 'Emissão em andamento' }, { status: 409 })))
+    await expect(criarRepositorioAdminSupabase(cliente).excluirBoletim('2a-etapa', 'b1')).rejects.toThrow('Emissão em andamento')
+  })
+
   it('pedido repetido (23505) vira mensagem em português', async () => {
     const { cliente } = clienteFalso(() => ({
       data: null,

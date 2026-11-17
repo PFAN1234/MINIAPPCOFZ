@@ -6,7 +6,11 @@ import type {
   DadosAditivo,
   DadosEtapa,
   Aditivo,
+  BoletimDetalhe,
+  EdicaoBoletim,
+  FiltroBoletins,
   ListaBoletins,
+  ListaTodosBoletins,
   PedidoEmissao,
   EtapaDetalhe,
   Pessoa,
@@ -29,6 +33,7 @@ import type {
   Publicacao,
   RegistroModelo,
   ResultadoExclusao,
+  ResultadoExclusaoBoletim,
   ResultadoExclusaoEtapa,
   ResultadoPublicacao,
   ResumoEtapa,
@@ -71,10 +76,27 @@ export interface RepositorioAdmin {
    * falhou ou ficou incerta. Já publicado ou envio em andamento são recusados.
    */
   reenviarBoletim(slug: string, boletimId: string): Promise<void>
+  /**
+   * Exclui o DIA INTEIRO do boletim (todas as revisões da etapa e data, os PDFs e as mensagens no
+   * grupo do Telegram). Erro se o boletim não existir ou houver emissão/envio em andamento.
+   */
+  excluirBoletim(slug: string, boletimId: string): Promise<ResultadoExclusaoBoletim>
   /** URL (assinada, de curta duração) do PDF de um boletim no bucket `boletins`. */
   urlPdfBoletim(caminho: string): Promise<string>
   /** Gerador (`/api/previa-boletim`): PDF da prévia, sem número e sem gravar nada. */
   previaBoletim(slug: string, data: string): Promise<Blob>
+  /** `admin_listar_todos_boletins`: boletins e pedidos de todas as etapas (ou de uma), por período. */
+  listarTodosBoletins(filtro?: FiltroBoletins): Promise<ListaTodosBoletins>
+  /** `admin_boletim`: um boletim com o snapshot, a edição e o rascunho (inexistente: erro). */
+  boletim(id: string): Promise<BoletimDetalhe>
+  /** `admin_salvar_rascunho_boletim`: salva o rascunho (edição vazia apaga; devolve `null`). Só a última revisão. */
+  salvarRascunhoBoletim(id: string, edicao: EdicaoBoletim): Promise<{ atualizado_em: string } | null>
+  /** `admin_retificar_boletim`: pede a retificação editada (próxima revisão do dia). */
+  retificarBoletim(id: string, edicao: EdicaoBoletim): Promise<PedidoEmissao>
+  /** Gerador (`POST /api/previa-boletim`): PDF do boletim com a edição aplicada, sem gravar nada. */
+  previaBoletimEditado(id: string, edicao: EdicaoBoletim): Promise<Blob>
+  /** URLs assinadas (bucket `fotos`) em lote: caminho → URL; caminho sem URL fica de fora. */
+  urlsFotos(paths: string[]): Promise<Record<string, string>>
 
   /** Pessoas que já abriram o Mini App, com nome de exibição e participações nas obras. */
   listarPessoas(): Promise<Pessoa[]>

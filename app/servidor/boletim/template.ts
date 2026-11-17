@@ -18,6 +18,7 @@ import {
   horaBr,
   moeda,
   numeroBr,
+  partesNoFuso,
 } from './formato.js'
 import type { FotoSnapshot, ObraSnapshot, PendenciaEncerradaSnapshot, RegistroSnapshot, Snapshot } from './tipos.js'
 
@@ -40,7 +41,7 @@ export interface OpcoesTemplate {
   cssFontes: string
 }
 
-const CSS = `
+export const CSS = `
 @page { size: A4; margin: 12mm 12mm 16mm 12mm; }
 * { box-sizing: border-box; }
 html { padding-right: 2px; }
@@ -116,6 +117,9 @@ table.obras tr { break-inside: avoid; }
 .obs-obra { font-size: 10pt; margin: 2px 0 8px; }
 .obs-obra .item { display: grid; grid-template-columns: 150px 1fr; gap: 8px; padding: 3px 0; border-bottom: 1px dotted #bbb; break-inside: avoid; }
 .obs-obra .quem { color: #444; font-size: 9pt; }
+table.equipe { width: 100%; border-collapse: collapse; font-size: 9.4pt; margin-bottom: 8px; }
+table.equipe th, table.equipe td { border: 1px solid #999; padding: 3px 5px; text-align: left; }
+table.equipe th { background: #d9d9d9; font-size: 8.5pt; }
 table.tardios { width: 100%; border-collapse: collapse; font-size: 9.4pt; }
 table.tardios th, table.tardios td { border: 1px solid #999; padding: 3px 5px; text-align: left; vertical-align: top; }
 table.tardios th { background: #d9d9d9; font-size: 8.5pt; }
@@ -140,28 +144,60 @@ function linhaDados(partes: (string | null)[]): string {
 
 const ou = (v: string | null | undefined) => (v ? escapar(v) : '—')
 
-function cabecalho(s: Snapshot, o: OpcoesTemplate): string {
-  const linhas = s.organizacao.cabecalho.length > 0 ? s.organizacao.cabecalho : [s.organizacao.nome]
+export interface CabecalhoDocumento {
+  /** Linhas da OM (`organizacao.cabecalho`); vazio = só o nome. */
+  linhas: string[]
+  nome: string
+  logo: string | null
+  /** Conteúdo (HTML) da coluna da direita: número, expedição. */
+  doc: string
+  assunto: string
+  /** Linhas rótulo → valor (HTML) abaixo do assunto, com classe opcional na célula do valor. */
+  campos: [string, string, string?][]
+}
+
+/** Tabela do cabeçalho do boletim, reaproveitada pelo relatório de pendências. */
+export function tabelaCabecalho(c: CabecalhoDocumento): string {
+  const linhas = c.linhas.length > 0 ? c.linhas : [c.nome]
   // Linhas curtas não quebram (como na prévia v2); as longas quebram para não sair da célula.
   const om = linhas
     .map((l, i) => `<div class="${i === 0 ? 'l1' : 'l2'}${l.length <= 48 ? ' curta' : ''}">${escapar(l)}</div>`)
     .join('')
-  const logo = o.logo ? `<img src="${o.logo}" alt="Logo da OM">` : ''
-  const numero = o.numero
-    ? `<div class="val">${escapar(o.numero)}</div>`
-    : `<div class="val previa">${escapar(MARCA_PREVIA)}</div>`
-  const responsaveis = s.responsaveis.map((r) => escapar(r.nome)).join(', ') || '—'
+  const logo = c.logo ? `<img src="${c.logo}" alt="Logo da OM">` : ''
+  const campos = c.campos
+    .map(
+      ([rotulo, valor, cls]) =>
+        `<tr><td class="chave cinza">${escapar(rotulo)}</td><td colspan="2"${cls ? ` class="${cls}"` : ''}>${valor}</td></tr>`,
+    )
+    .join('\n')
   return `<table class="cab">
 <tr>
   <td class="logo">${logo}</td>
   <td class="om">${om}</td>
-  <td class="doc"><div class="rot">Nº DO DOCUMENTO</div>${numero}<div class="rot">EXPEDIÇÃO</div><div class="val">${escapar(expedicao(o.emitidoEm, s.fuso))}</div></td>
+  <td class="doc">${c.doc}</td>
 </tr>
-<tr><td class="chave cinza">ASSUNTO</td><td colspan="2" class="assunto">BOLETIM DE ACOMPANHAMENTO DIÁRIO</td></tr>
-<tr><td class="chave cinza">OBRA/SERVIÇO</td><td colspan="2" class="just">${comQuebras(s.etapa.objeto ?? s.etapa.nome)}</td></tr>
-<tr><td class="chave cinza">LOCAL</td><td colspan="2">${comQuebras(s.etapa.local ?? s.etapa.endereco ?? '—')}</td></tr>
-<tr><td class="chave cinza">RESPONSÁVEIS</td><td colspan="2">${responsaveis}</td></tr>
+<tr><td class="chave cinza">ASSUNTO</td><td colspan="2" class="assunto">${escapar(c.assunto)}</td></tr>
+${campos}
 </table>`
+}
+
+function cabecalho(s: Snapshot, o: OpcoesTemplate): string {
+  const numero = o.numero
+    ? `<div class="val">${escapar(o.numero)}</div>`
+    : `<div class="val previa">${escapar(MARCA_PREVIA)}</div>`
+  const responsaveis = s.responsaveis.map((r) => escapar(r.nome)).join(', ') || '—'
+  return tabelaCabecalho({
+    linhas: s.organizacao.cabecalho,
+    nome: s.organizacao.nome,
+    logo: o.logo,
+    doc: `<div class="rot">Nº DO DOCUMENTO</div>${numero}<div class="rot">EXPEDIÇÃO</div><div class="val">${escapar(expedicao(o.emitidoEm, s.fuso))}</div>`,
+    assunto: 'BOLETIM DE ACOMPANHAMENTO DIÁRIO',
+    campos: [
+      ['OBRA/SERVIÇO', comQuebras(s.etapa.objeto ?? s.etapa.nome), 'just'],
+      ['LOCAL', comQuebras(s.etapa.local ?? s.etapa.endereco ?? '—')],
+      ['RESPONSÁVEIS', responsaveis],
+    ],
+  })
 }
 
 function secaoDados(s: Snapshot): string {
@@ -411,6 +447,28 @@ ${s.tardios
   return `<h2><span>7.</span>OBSERVAÇÕES</h2>\n<div class="sec">${obs}${tardios}</div>`
 }
 
+/** `dd/mm HH:MM` no fuso do snapshot. */
+function diaHoraBr(instante: string, fuso: string): string {
+  const p = partesNoFuso(new Date(instante), fuso)
+  return `${p.dia}/${p.mes} ${p.hora}:${p.minuto}`
+}
+
+function tabelaEquipe(s: Snapshot): string {
+  const eq = s.equipe_servico
+  if (!eq) return ''
+  if (eq.length === 0) {
+    return '<p class="vazio">Nenhum check-in de serviço neste dia; assinam os responsáveis cadastrados na etapa.</p>'
+  }
+  const saida = (x: (typeof eq)[number]) =>
+    x.saida_em === null ? 'em serviço' : x.saida_automatica ? 'não registrada' : diaHoraBr(x.saida_em, s.fuso)
+  return `<table class="equipe"><tr><th>Militar</th><th>Entrada</th><th>Saída</th></tr>${eq
+    .map(
+      (x) =>
+        `<tr><td>${escapar(x.nome)}</td><td>${escapar(diaHoraBr(x.entrada_em, s.fuso))}</td><td>${escapar(saida(x))}</td></tr>`,
+    )
+    .join('')}</table>`
+}
+
 function secaoResponsaveis(s: Snapshot, o: OpcoesTemplate): string {
   const r = s.responsaveis
   const assin =
@@ -427,7 +485,7 @@ function secaoResponsaveis(s: Snapshot, o: OpcoesTemplate): string {
       } Lançamentos deste dia recebidos após a emissão entram no boletim seguinte.`
     : `${MARCA_PREVIA}: gerada pelo Fiscal Bot em ${quando} (horário de ${cidade}), com os lançamentos de ${dataBr(s.data)} até este momento. Não é um boletim emitido.`
   return `<div style="break-inside: avoid"><h2><span>8.</span>RESPONSÁVEIS</h2>
-<div class="sec">${assin}<div class="emissao">${escapar(texto)}</div></div></div>`
+<div class="sec">${tabelaEquipe(s)}${assin}<div class="emissao">${escapar(texto)}</div></div></div>`
 }
 
 /** HTML completo do boletim. */

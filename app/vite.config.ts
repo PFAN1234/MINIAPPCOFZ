@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { createReadStream, readFileSync, rmSync, statSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createHash } from 'node:crypto'
@@ -206,10 +207,45 @@ function semModelosNoBuild(): Plugin {
   }
 }
 
+/** Versão do app mostrada na tela inicial: último PR que entrou, commit e instante do build. */
+export interface VersaoApp {
+  pr: number | null
+  commit: string | null
+  data: string
+}
+
+/**
+ * Lê o número do PR da mensagem do commit: merge ("Merge pull request #39 from …") ou squash
+ * ("Título (#39)"). Sem PR na mensagem, fica só o commit curto.
+ */
+export function montarVersao(mensagem: string | undefined, sha: string | undefined, agora: Date): VersaoApp {
+  const titulo = (mensagem ?? '').split('\n')[0]
+  const achado = /^Merge pull request #(\d+)/.exec(titulo) ?? /\(#(\d+)\)\s*$/.exec(titulo)
+  return {
+    pr: achado ? Number(achado[1]) : null,
+    commit: sha ? sha.slice(0, 7) : null,
+    data: agora.toISOString(),
+  }
+}
+
+/** No Vercel, as variáveis do Git; fora dele (máquina local), o próprio `git`. */
+function versaoDoBuild(): VersaoApp {
+  let mensagem = process.env.VERCEL_GIT_COMMIT_MESSAGE
+  let sha = process.env.VERCEL_GIT_COMMIT_SHA
+  if (!sha) {
+    try {
+      ;[sha, mensagem] = execFileSync('git', ['log', '-1', '--format=%H%n%s'], { encoding: 'utf8' }).split('\n')
+    } catch {
+      /* sem git: versão só com a data */
+    }
+  }
+  return montarVersao(mensagem, sha, new Date())
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), plantasFixture(), siteAdmin(), manifestoPrecache(), semModelosNoBuild(), wasmWebIfc()],
-  define: { __VERSAO_WEB_IFC__: JSON.stringify(VERSAO_WEB_IFC) },
+  define: { __VERSAO_WEB_IFC__: JSON.stringify(VERSAO_WEB_IFC), __VERSAO_APP__: JSON.stringify(versaoDoBuild()) },
   // O conversor de IFC (worker do site de administração) importa a biblioteca como módulo.
   // `THREE.TSL` da That Open fica em código que o worker não usa (descartado no build): sem aviso.
   worker: { format: 'es', rolldownOptions: { checks: { importIsUndefined: false } } },

@@ -4,7 +4,7 @@ import {
   derivarSecretTokenWebhook,
 } from "../_shared/segredo.ts";
 import type { ResultadoTelegram } from "../_shared/telegram.ts";
-import { criarHandler, lerComando } from "./handler.ts";
+import { criarHandler, lerComando, limparCacheVistos } from "./handler.ts";
 
 const BOT = "diarioobra_cofz_bot";
 const CHAT = -1001234;
@@ -19,12 +19,65 @@ function montar(
     obra?: unknown;
     rpcErro?: boolean | { message: string; code?: string };
     rpcLanca?: boolean;
+    /** Obras (ids) não arquivadas ligadas ao grupo CHAT. */
+    obrasDoGrupo?: string[];
+    /** `telegram_id` → id dos usuários que já existem. */
+    usuarios?: Record<number, string>;
+    agora?: () => Date;
   } = {},
 ) {
+  limparCacheVistos();
+  const criados: number[] = [];
+  const consultasObra: number[] = [];
+  const usuarios = { ...(opts.usuarios ?? {}) };
   const chamadas: Chamada[] = [];
   const rpcs: { nome: string; args: Record<string, unknown> }[] = [];
   const respostas = opts.respostas ?? {};
   const admin = {
+    from: (tabela: string) => {
+      let filtro: unknown = null;
+      const b = {
+        select: () => b,
+        eq: (_c: string, v: unknown) => {
+          filtro = v;
+          return b;
+        },
+        is: () => b,
+        maybeSingle: () => {
+          const id = usuarios[filtro as number];
+          return Promise.resolve({
+            data: id ? { id } : null,
+            error: null,
+          });
+        },
+        upsert: () => Promise.resolve({ error: null }),
+        // deno-lint-ignore no-explicit-any
+        then: (ok: any, falha: any) => {
+          if (tabela === "obra") consultasObra.push(filtro as number);
+          const ids = filtro === CHAT ? (opts.obrasDoGrupo ?? []) : [];
+          return Promise.resolve({
+            data: ids.map((id) => ({ id })),
+            error: null,
+          }).then(ok, falha);
+        },
+      };
+      return b;
+    },
+    auth: {
+      admin: {
+        createUser: (attrs: { app_metadata: { telegram_id: number } }) => {
+          const tid = attrs.app_metadata.telegram_id;
+          criados.push(tid);
+          usuarios[tid] = `novo-${tid}`;
+          return Promise.resolve({
+            data: { user: { id: `novo-${tid}` } },
+            error: null,
+          });
+        },
+        generateLink: () =>
+          Promise.resolve({ data: null, error: { message: "x" } }),
+      },
+    },
     rpc: (nome: string, args: Record<string, unknown> = {}) => {
       if (nome === "segredo_interno") {
         return Promise.resolve({ data: "SEG", error: null });
@@ -57,8 +110,9 @@ function montar(
     botUsername: BOT,
     appName: "diario",
     urlFuncao: "https://p.supabase.co/functions/v1/bot-webhook",
+    agora: opts.agora,
   });
-  return { handler, chamadas, rpcs };
+  return { handler, chamadas, rpcs, criados, consultasObra };
 }
 
 const status = (s: string, extra = {}) =>
@@ -83,6 +137,24 @@ async function update(
         ...(s ? { "X-Telegram-Bot-Api-Secret-Token": s } : {}),
       },
       body: JSON.stringify({ update_id: 1, message }),
+    }),
+  );
+}
+
+async function updateBruto(
+  handler: (r: Request) => Promise<Response>,
+  corpo: Record<string, unknown>,
+) {
+  return await handler(
+    new Request("https://f.test/bot-webhook", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Telegram-Bot-Api-Secret-Token": await derivarSecretTokenWebhook(
+          "SEG",
+        ),
+      },
+      body: JSON.stringify({ update_id: 2, ...corpo }),
     }),
   );
 }
@@ -149,7 +221,7 @@ Deno.test("configurar: setWebhook e setMyCommands nos dois escopos", async () =>
   assertEquals(chamadas[0].corpo, {
     url: "https://p.supabase.co/functions/v1/bot-webhook",
     secret_token: await derivarSecretTokenWebhook("SEG"),
-    allowed_updates: ["message"],
+    allowed_updates: ["message", "chat_member"],
   });
   assertEquals(chamadas[1].corpo.scope, { type: "all_private_chats" });
   assertEquals(
@@ -563,4 +635,216 @@ Deno.test("corpo que não é JSON após o segredo válido → 200", async () => 
     }),
   );
   assertEquals(r.status, 200);
+});
+
+// --- Acessos por lista: quem o bot conhece ---------------------------------------------------
+
+const OBRAS = ["obra-1", "obra-2"];
+const sincs = (r: { nome: string; args: Record<string, unknown> }[]) =>
+  r.filter((x) => x.nome === "sincronizar_acesso");
+const itens = (situacao: string) =>
+  OBRAS.map((obra_id) => ({ obra_id, situacao }));
+
+Deno.test("mensagem comum no grupo da obra gera 'visto' e não responde", async () => {
+  const { handler, rpcs, chamadas, criados } = montar({ obrasDoGrupo: OBRAS });
+  const r = await update(handler, noTopico("bom dia"));
+  assertEquals(r.status, 200);
+  assertEquals(criados, [7]);
+  assertEquals(sincs(rpcs).map((x) => x.args), [
+    { p_usuario: "novo-7", p_itens: itens("visto") },
+  ]);
+  assertEquals(chamadas, []);
+});
+
+Deno.test("visto: cache de uma hora por chat e usuário", async () => {
+  let t = Date.parse("2026-11-16T10:00:00Z");
+  const { handler, rpcs, consultasObra } = montar({
+    obrasDoGrupo: OBRAS,
+    usuarios: { 7: "u7", 8: "u8" },
+    agora: () => new Date(t),
+  });
+  await update(handler, noTopico("oi"));
+  await update(handler, noTopico("de novo"));
+  assertEquals(sincs(rpcs).length, 1);
+  assertEquals(consultasObra.length, 1);
+  // Outra pessoa não é afetada pelo cache.
+  await update(handler, noTopico("oi", { from: { id: 8, first_name: "Bia" } }));
+  assertEquals(sincs(rpcs).length, 2);
+  // Passada uma hora, registra de novo.
+  t += 61 * 60 * 1000;
+  await update(handler, noTopico("voltei"));
+  assertEquals(sincs(rpcs).length, 3);
+});
+
+Deno.test("comando também conta como 'visto'", async () => {
+  const { handler, rpcs } = montar({
+    obrasDoGrupo: OBRAS,
+    usuarios: { 7: "u7" },
+    respostas: { getChatMember: status("administrator") },
+  });
+  await update(handler, noTopico("/fixar_botao"));
+  assertEquals(sincs(rpcs).map((x) => x.args), [
+    { p_usuario: "u7", p_itens: itens("visto") },
+  ]);
+});
+
+Deno.test("chat sem obra e mensagens de bot são ignorados", async () => {
+  const { handler, rpcs, criados } = montar({ obrasDoGrupo: [] });
+  await update(handler, noTopico("oi"));
+  assertEquals(sincs(rpcs), []);
+  assertEquals(criados, []);
+
+  const com = montar({ obrasDoGrupo: OBRAS });
+  await update(
+    com.handler,
+    noTopico("oi", { from: { id: 9, is_bot: true, first_name: "Bot" } }),
+  );
+  await update(
+    com.handler,
+    noTopico("oi", { from: undefined, sender_chat: { id: -100 } }),
+  );
+  await update(com.handler, {
+    ...noTopico(""),
+    text: undefined,
+    new_chat_members: [{ id: 9, is_bot: true, first_name: "Bot" }],
+  });
+  await update(com.handler, {
+    ...noTopico(""),
+    text: undefined,
+    left_chat_member: { id: 9, is_bot: true, first_name: "Bot" },
+  });
+  assertEquals(sincs(com.rpcs), []);
+  assertEquals(com.criados, []);
+});
+
+Deno.test("entrada e saída pelo update 'message'", async () => {
+  const { handler, rpcs, criados } = montar({
+    obrasDoGrupo: OBRAS,
+    usuarios: { 20: "u20" },
+  });
+  const servico = { message_id: 11, chat: { id: CHAT, type: "supergroup" } };
+  await update(handler, {
+    ...servico,
+    new_chat_members: [
+      { id: 10, first_name: "Caio" },
+      { id: 11, is_bot: true, first_name: "Bot" },
+    ],
+  });
+  assertEquals(criados, [10]);
+  assertEquals(sincs(rpcs).map((x) => x.args), [
+    { p_usuario: "novo-10", p_itens: itens("membro") },
+  ]);
+  await update(handler, {
+    ...servico,
+    left_chat_member: { id: 20, first_name: "Duda" },
+  });
+  assertEquals(sincs(rpcs).at(-1)?.args, {
+    p_usuario: "u20",
+    p_itens: itens("fora"),
+  });
+  // Quem sai sem nunca ter sido visto não vira usuário.
+  const antes = sincs(rpcs).length;
+  await update(handler, {
+    ...servico,
+    left_chat_member: { id: 30, first_name: "Edu" },
+  });
+  assertEquals(sincs(rpcs).length, antes);
+  assertEquals(criados, [10]);
+  // Quem sai sozinho vem também em `from`: a saída não pode virar "visto" em seguida.
+  await update(handler, {
+    ...servico,
+    from: { id: 20, first_name: "Duda" },
+    left_chat_member: { id: 20, first_name: "Duda" },
+  });
+  assertEquals(sincs(rpcs).at(-1)?.args, {
+    p_usuario: "u20",
+    p_itens: itens("fora"),
+  });
+});
+
+Deno.test("update 'chat_member' converte a situação como o auth-telegram", async () => {
+  const casos: [Record<string, unknown>, string | null][] = [
+    [{ status: "creator" }, "admin"],
+    [{ status: "administrator" }, "admin"],
+    [{ status: "member" }, "membro"],
+    [{ status: "restricted", is_member: true }, "membro"],
+    [{ status: "restricted", is_member: false }, "fora"],
+    [{ status: "left" }, "fora"],
+    [{ status: "kicked" }, "fora"],
+    [{ status: "outro" }, null],
+  ];
+  for (const [membro, esperado] of casos) {
+    const { handler, rpcs } = montar({
+      obrasDoGrupo: OBRAS,
+      usuarios: { 40: "u40" },
+    });
+    const r = await updateBruto(handler, {
+      chat_member: {
+        chat: { id: CHAT, type: "supergroup" },
+        new_chat_member: { ...membro, user: { id: 40, first_name: "Fer" } },
+      },
+    });
+    assertEquals(r.status, 200);
+    assertEquals(
+      sincs(rpcs).map((x) => x.args),
+      esperado ? [{ p_usuario: "u40", p_itens: itens(esperado) }] : [],
+    );
+  }
+});
+
+Deno.test("chat_member: 'fora' sem usuário não faz nada; entrada cria; bot e chat sem obra são ignorados", async () => {
+  const fora = montar({ obrasDoGrupo: OBRAS });
+  await updateBruto(fora.handler, {
+    chat_member: {
+      chat: { id: CHAT, type: "supergroup" },
+      new_chat_member: { status: "left", user: { id: 50, first_name: "Gil" } },
+    },
+  });
+  assertEquals(sincs(fora.rpcs), []);
+  assertEquals(fora.criados, []);
+
+  const entra = montar({ obrasDoGrupo: OBRAS });
+  await updateBruto(entra.handler, {
+    chat_member: {
+      chat: { id: CHAT, type: "supergroup" },
+      new_chat_member: {
+        status: "member",
+        user: { id: 51, first_name: "Ivo" },
+      },
+    },
+  });
+  assertEquals(entra.criados, [51]);
+  assertEquals(sincs(entra.rpcs).map((x) => x.args), [
+    { p_usuario: "novo-51", p_itens: itens("membro") },
+  ]);
+
+  const ign = montar({ obrasDoGrupo: OBRAS });
+  await updateBruto(ign.handler, {
+    chat_member: {
+      chat: { id: CHAT, type: "supergroup" },
+      new_chat_member: {
+        status: "member",
+        user: { id: 52, is_bot: true, first_name: "Bot" },
+      },
+    },
+  });
+  await updateBruto(ign.handler, {
+    chat_member: {
+      chat: { id: -999, type: "supergroup" },
+      new_chat_member: { status: "member", user: { id: 53, first_name: "Jo" } },
+    },
+  });
+  assertEquals(sincs(ign.rpcs), []);
+  assertEquals(ign.criados, []);
+});
+
+Deno.test("falha ao registrar acesso não derruba o update nem o comando", async () => {
+  const { handler, chamadas } = montar({
+    obrasDoGrupo: OBRAS,
+    rpcErro: true,
+    respostas: { getChatMember: status("administrator") },
+  });
+  const r = await update(handler, noTopico("/fixar_botao"));
+  assertEquals(r.status, 200);
+  assertEquals(enviadas(chamadas).length >= 1, true);
 });
