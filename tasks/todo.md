@@ -186,14 +186,14 @@ Plano: `tasks/plano-ra.md` (decisões de 2026-11-12: modelo ELT fornecido pelo u
 - [ ] RA0 no aparelho: `/ra-teste` em um Android e um iPhone, dentro do Telegram.
 - [ ] Conferir a cota do piso acabado e o pé-direito fora do Apto. 101 (hoje 0,385 m e 2,60 m para todos os ambientes).
 - [ ] Jardim 2 sem geometria (sem área na planta); Lobby e Circulação do 1º pavimento usam só o contorno externo (o IfcSpace tem furo).
-- [x] Planta baixa no ajuste do QR do admin (2026-11-17): `/admin/obras/<slug>/ra` mostra a planta real com o cômodo, cantos numerados e a marca do QR (só visualização; sem planta cai no desenho esquemático). Migration `20261122090000_ra_admin_planta.sql` (`admin_listar_ra` devolve `contorno_pagina` e a planta ativa) **ainda não aplicada**: aplicar em dev e conferir. Design e plano em `docs/superpowers/`.
+- [x] Planta baixa no ajuste do QR do admin (2026-11-17): `/admin/obras/<slug>/ra` mostra a planta real com o cômodo, cantos numerados e a marca do QR (só visualização; sem planta cai no desenho esquemático). Migration `20261122090000_ra_admin_planta.sql` (`admin_listar_ra` devolve `contorno_pagina` e a planta ativa) aplicada em `miniappcofz-dev`. Design e plano em `docs/superpowers/`.
 - [x] Botão "Visualizar modelo" no ambiente (2026-11-17): entre "Novo registro" e "Comparar com o modelo (RA)"; rota `obras/<slug>/ambientes/<codigo>/modelo` abre o modelo 3D cortado em volta do ambiente (mesma caixa da RA), câmera enquadrada nele, chip "Só este ambiente" liga/desliga o corte. **Falta conferir com o `.frag` real num navegador com WebGL** (corte e enquadramento não rodam no jsdom). Design e plano em `docs/superpowers/`.
 - [ ] Cadastrar e fixar os QRs dos ambientes do piloto.
 - [ ] RA5. Piloto em campo em quatro ambientes, medição do erro.
   - [x] Depois do 1º teste em campo (2026-11-13): mira no centro + "Marcar canto", planta real enquadrada no cômodo com os cantos numerados (folha e miniatura), malha triangular (piso estimado antes de alinhar; piso, paredes e teto do modelo depois, chip "Malha").
   - [x] Produção (2026-11-13): migration `20261119090000_ra_contorno_pagina.sql` aplicada e registrada; seed `hto_geometria.sql` reaplicado; 86 de 86 ambientes com `contorno_pagina` (Apto. 101 conferido com o json).
   - [ ] Repetir o teste em campo.
-  - [ ] Aplicar migration `20261123090000_ra_consistencia.sql` (`boletim_fotos` com `origem`, `admin_registrar_modelo` limpando `matriz`, `admin_definir_qr` exigindo ambiente ativo e constraints de finitos/`contorno_pagina`).
+  - [x] Migration `20261123090000_ra_consistencia.sql` aplicada e conferida no `miniappcofz-dev` (2026-11-17): `boletim_fotos` com `origem`, `admin_registrar_modelo` limpando `matriz`, `admin_definir_qr` exigindo ambiente ativo e constraints de finitos/`contorno_pagina`.
 
 Verificação: Vitest recupera poses sintéticas (< 1 cm, < 0,5°); e2e com câmera falsa salva o par de fotos; no aparelho, o contorno do Apto. 101 encaixa nas arestas reais. Dependência: 9 (federação validada e vínculo com o IfcSpace); o RA0 pode ser feito já.
 
