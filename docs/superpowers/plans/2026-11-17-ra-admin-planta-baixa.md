@@ -26,7 +26,7 @@
 
 ---
 
-### Tarefa 1: Migration da RPC
+### Task 1: Migration da RPC
 
 **Arquivos:**
 - Criar: `supabase/migrations/20261122090000_ra_admin_planta.sql`
@@ -38,7 +38,7 @@
 - [ ] **Passo 2:** conferir a sintaxe sem aplicar: `grep -c "contorno_pagina" supabase/migrations/20261122090000_ra_admin_planta.sql` ≥ 1 e revisar o SQL contra a migration original.
 - [ ] **Passo 3:** commit `feat(ra): admin_listar_ra devolve contorno_pagina e a planta do pavimento`.
 
-### Tarefa 2: Cálculo da planta (função pura)
+### Task 2: Cálculo da planta (função pura)
 
 **Arquivos:**
 - Criar: `app/src/admin/ra/planta.ts`, `app/src/admin/ra/planta.test.ts`
@@ -61,7 +61,7 @@
 - [ ] **Passo 4:** mesmo comando → PASSA.
 - [ ] **Passo 5:** commit `feat(ra): cálculo da planta e da marca do QR no admin`.
 
-### Tarefa 3: Dados do admin (tipos, repositório, fixture)
+### Task 3: Dados do admin (tipos, repositório, fixture)
 
 **Arquivos:**
 - Modificar: `app/src/admin/dados/tipos.ts:760`, `app/src/admin/dados/supabase.ts:826`, `app/src/admin/dados/fixture.ts:246`
@@ -77,7 +77,7 @@
 - [ ] **Passo 4:** teste PASSA e `cd app && npx tsc -b` sem erros.
 - [ ] **Passo 5:** commit `feat(ra): admin recebe contorno_pagina e a planta do pavimento`.
 
-### Tarefa 4: Tela
+### Task 4: Tela
 
 **Arquivos:**
 - Modificar: `app/src/admin/telas/ra/RaObra.tsx` (componentes `Ambiente` na linha 146 e `Desenho` na linha 325), `app/src/admin/admin.css` (após `.ra-desenho`, linha ~814)
@@ -97,7 +97,7 @@
 - [ ] **Passo 4:** testes da pasta PASSAM; `npx tsc -b` e `npx eslint src/admin` sem erros.
 - [ ] **Passo 5:** commit `feat(ra): planta baixa no ajuste do QR do admin`.
 
-### Tarefa 5: Fechamento
+### Task 5: Fechamento
 
 **Arquivos:**
 - Modificar: `tasks/todo.md`, `docs/admin.md` ou `docs/ra.md` (uma linha, na seção do cadastro do QR)
