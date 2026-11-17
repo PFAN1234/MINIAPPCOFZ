@@ -1,4 +1,4 @@
-import { comprimentoParede, type Ponto } from './geometria'
+import { comprimentoParede, type Ponto } from './geometria.ts'
 
 /** Planta do pavimento (imagem recortada) com as medidas para converter pontos da página em pixels. */
 export interface PlantaAdmin {
