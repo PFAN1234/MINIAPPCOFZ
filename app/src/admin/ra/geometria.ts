@@ -4,12 +4,12 @@ import type { QrAmbiente } from '../dados/tipos.ts'
 export type Ponto = [number, number]
 
 export const ALTURA_PADRAO_M = 1.5
-export const LADO_PADRAO_CM = 18
+export const LADO_PADRAO_CM = 15
 export const LADO_MIN_CM = 5
 export const LADO_MAX_CM = 100
 export const ALTURA_MAX_M = 5
 /** Maior lado de QR que ainda cabe numa folha A4 com a margem branca. */
-export const LADO_MAX_A4_CM = 18
+export const LADO_MAX_A4_CM = 15
 
 /** Comprimento da parede i (do canto i ao canto i+1), em metros. */
 export function comprimentoParede(contorno: Ponto[], i: number): number {

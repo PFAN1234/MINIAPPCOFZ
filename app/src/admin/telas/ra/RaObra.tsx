@@ -131,8 +131,8 @@ function camposIniciais(a: AmbienteRA): CamposQr & { parede: number } {
   if (a.qr) {
     return {
       parede: a.qr.parede,
-      distancia: paraCampo(a.qr.distancia_m),
-      altura: paraCampo(a.qr.altura_m),
+      distancia: paraCampo(a.qr.distancia_m, 2, 6),
+      altura: paraCampo(a.qr.altura_m, 2, 6),
       ladoCm: paraCampo(a.qr.lado_m * 100, 0, 2),
     }
   }
@@ -153,16 +153,18 @@ function Ambiente({ obra, ambiente, onVoltar }: { obra: ObraAdmin; ambiente: Amb
   const { qr, erros } = validarQr(ambiente.contorno, campos)
   const n = ambiente.contorno.length
 
+  const bot = String(import.meta.env.VITE_TELEGRAM_BOT ?? '').replace(/^@/, '').trim()
+  const temBot = bot.length > 0
   const gravado = ambiente.qr !== null
   const g = ambiente.qr
   const alterado =
     !qr ||
     !g ||
     qr.parede !== g.parede ||
-    Math.abs(qr.distancia_m - g.distancia_m) > 1e-9 ||
-    Math.abs(qr.altura_m - g.altura_m) > 1e-9 ||
-    Math.abs(qr.lado_m - g.lado_m) > 1e-9
-  const podeImprimir = gravado && !alterado && qr !== null
+    Math.abs(qr.distancia_m - g.distancia_m) > 1e-6 ||
+    Math.abs(qr.altura_m - g.altura_m) > 1e-6 ||
+    Math.abs(qr.lado_m - g.lado_m) > 1e-6
+  const podeImprimir = gravado && !alterado && qr !== null && temBot
 
   function mudar(campo: keyof CamposQr, valor: string | number) {
     setSalvo(null)
@@ -274,6 +276,11 @@ function Ambiente({ obra, ambiente, onVoltar }: { obra: ObraAdmin; ambiente: Amb
                   Com mais de {LADO_MAX_A4_CM} cm, o QR não cabe numa folha A4 com a margem branca.
                 </p>
               )}
+              {!temBot && (
+                <p className="adm-alerta adm-alerta-aviso">
+                  Configure <code>VITE_TELEGRAM_BOT</code> para gerar e imprimir o QR.
+                </p>
+              )}
               <Resultado sucesso={salvo} erro={erroCampos ? new Error(erroCampos) : (definir.error ?? remover.error)} />
               <div className="adm-acoes">
                 <button type="submit" className="adm-botao adm-botao-principal" disabled={!qr || definir.isPending}>
@@ -288,7 +295,7 @@ function Ambiente({ obra, ambiente, onVoltar }: { obra: ObraAdmin; ambiente: Amb
                   type="button"
                   className="adm-botao"
                   disabled={!podeImprimir}
-                  title={podeImprimir ? undefined : 'Salve o QR antes de imprimir'}
+                  title={podeImprimir ? undefined : temBot ? 'Salve o QR antes de imprimir' : 'Configure VITE_TELEGRAM_BOT para gerar o QR'}
                   onClick={() => window.print()}
                 >
                   Imprimir
@@ -316,7 +323,7 @@ function Ambiente({ obra, ambiente, onVoltar }: { obra: ObraAdmin; ambiente: Amb
           </div>
         </div>
       </div>
-      {podeImprimir && ambiente.qr && <Folha obra={obra} ambiente={ambiente} qr={ambiente.qr} />}
+      {podeImprimir && ambiente.qr && <Folha obra={obra} ambiente={ambiente} qr={ambiente.qr} bot={bot} />}
     </>
   )
 }
@@ -448,8 +455,17 @@ function Desenho({
 
 // --- Folha de impressão ----------------------------------------------------------------------
 
-function Folha({ obra, ambiente, qr }: { obra: ObraAdmin; ambiente: AmbienteRA; qr: NonNullable<AmbienteRA['qr']> }) {
-  const bot = String(import.meta.env.VITE_TELEGRAM_BOT ?? '')
+function Folha({
+  obra,
+  ambiente,
+  qr,
+  bot,
+}: {
+  obra: ObraAdmin
+  ambiente: AmbienteRA
+  qr: NonNullable<AmbienteRA['qr']>
+  bot: string
+}) {
   const app = String(import.meta.env.VITE_TELEGRAM_APP ?? '') || APP_PADRAO
   const texto = textoQr(bot, app, obra.obra.slug, ambiente.codigo)
   const gerado = gerarQr(texto)

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { LADO_MAX_A4_CM, LADO_PADRAO_CM } from './geometria.ts'
 import { gerarQr, textoQr } from './qr.ts'
 
 describe('textoQr', () => {
@@ -43,5 +44,17 @@ describe('gerarQr', () => {
   it('é determinístico e muda com o texto', () => {
     expect(gerarQr(texto).caminho).toBe(qr.caminho)
     expect(gerarQr(texto + 'x').caminho).not.toBe(qr.caminho)
+  })
+
+  it('o lado padrão e o limite A4 com margem branca de 4 módulos cabem na largura útil do A4 (194 mm)', () => {
+    const curto = gerarQr(textoQr('b', 'fiscalcofz', 'hto', 'a1'))
+    const longo = gerarQr(textoQr('diarioobra_cofz_bot', 'fiscalcofz', 'hto', 'terreo-administracao'))
+    for (const q of [curto, longo]) {
+      for (const cm of [LADO_PADRAO_CM, LADO_MAX_A4_CM]) {
+        const ladoMm = cm * 10
+        const totalMm = ladoMm * (1 + 8 / q.tamanho)
+        expect(totalMm).toBeLessThanOrEqual(194)
+      }
+    }
   })
 })
