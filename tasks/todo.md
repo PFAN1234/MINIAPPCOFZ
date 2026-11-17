@@ -162,17 +162,16 @@ Decisões de 2026-11-11 em `tasks/plano-app.md` (seção "Novas obras") e roteir
 
 Verificação: pytest (`tests/test_revisoes.py` e `tests/db/test_revisoes_banco.py`: R01 → R02 com planta anterior inativa, removidos inativos e registros preservados) e Vitest (aviso e filtro dos inativos).
 
-## 9. Modelo federado e planta clicável (última fase)
+## 9. Modelo federado (entregue em `.frag`)
 
-Diagnóstico existente preservado em `docs/validacao-hto.md` e `artifacts/validation/`.
+Diagnóstico existente preservado em `docs/validacao-hto.md` e `artifacts/validation/`. Plano executado em `tasks/plano-modelo-federado.md`.
 
 - [x] Inventariar as duas plantas PDF e os três IFCs.
 - [x] Extrair textos/coordenadas e gerar previews das plantas.
 - [x] Extrair hierarquia, unidades, matrizes e geometria dos espaços IFC.
-- [ ] Concluir correspondência geométrica do ambiente piloto e validar a transformação entre disciplinas (pontos de controle TLD, conferência de Z).
-- [ ] Gerar recortes GLB por ambiente com geometria real das disciplinas e metadados.
-- [ ] Planta 2D clicável usando as bbox guardadas na fase 1; seleção sem pegar ambientes vizinhos.
-- [ ] Visualizador Three.js e ativação do cartão “Visualizar modelo federado”.
+- [x] Federação e vínculo ambiente ↔ `IfcSpace` validados (`scripts/gerar_geometria.py`, `ra_referencial` e `modelo.matriz`).
+- [x] Conversão para `.frag` (Web Worker no `/admin/` + script CLI) e visualizador federado com `@thatopen/components` + `@thatopen/fragments` (substituiu o plano inicial de recortes GLB).
+- [x] Ativação do cartão/prévia do modelo federado na obra e cache por hash no aparelho.
 
 Verificação: sobreposição visual e controle independente de coordenadas; recorte não contém ambientes vizinhos inteiros; carregamento sob demanda sem enviar o IFC completo ao celular. Dependência: 8.
 
@@ -193,8 +192,8 @@ Plano: `tasks/plano-ra.md` (decisões de 2026-11-12: modelo ELT fornecido pelo u
 - [ ] RA5. Piloto em campo em quatro ambientes, medição do erro.
   - [x] Depois do 1º teste em campo (2026-11-13): mira no centro + "Marcar canto", planta real enquadrada no cômodo com os cantos numerados (folha e miniatura), malha triangular (piso estimado antes de alinhar; piso, paredes e teto do modelo depois, chip "Malha").
   - [x] Produção (2026-11-13): migration `20261119090000_ra_contorno_pagina.sql` aplicada e registrada; seed `hto_geometria.sql` reaplicado; 86 de 86 ambientes com `contorno_pagina` (Apto. 101 conferido com o json).
-  - [ ] Repetir o teste em campo (depois do merge do PR #44).
-  - [ ] PR à parte: atualizar os e2e antigos que falham também na main (`etapas`, `navegacao`, `pendencias`).
+  - [ ] Repetir o teste em campo.
+  - [ ] Aplicar migration `20261123090000_ra_consistencia.sql` (`boletim_fotos` com `origem`, `admin_registrar_modelo` limpando `matriz`, `admin_definir_qr` exigindo ambiente ativo e constraints de finitos/`contorno_pagina`).
 
 Verificação: Vitest recupera poses sintéticas (< 1 cm, < 0,5°); e2e com câmera falsa salva o par de fotos; no aparelho, o contorno do Apto. 101 encaixa nas arestas reais. Dependência: 9 (federação validada e vínculo com o IfcSpace); o RA0 pode ser feito já.
 

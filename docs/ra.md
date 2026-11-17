@@ -26,11 +26,11 @@ No histórico, o registro com fotos da RA leva o selo **RA**. O banco guarda em 
 
 ## Teste do aparelho (RA0)
 
-Tela `/ra-teste`, também pelo link `https://t.me/<bot>/<app>?startapp=ra_teste`. Mostra resolução da câmera, fonte e frequência do sensor, giro acumulado (deixe o celular parado por um minuto), WebGL 2, leitor de QR e a versão da Bot API. Fazer em um Android e em um iPhone, dentro do Telegram, e guardar a captura da tela.
+Tela `/ra-teste`, também pelo link `https://t.me/<bot>/<app>?startapp=ra_teste`. Mostra resolução da câmera, fonte e frequência do sensor, giro acumulado (deixe o celular parado por um minuto), suporte a WebGL 2, leitor de QR e a versão da Bot API. Fazer em um Android e em um iPhone, dentro do Telegram, e guardar a captura da tela.
 
 ## Aplicar num projeto
 
-1. Aplicar a migration `supabase/migrations/20261113090000_ra.sql`.
+1. Aplicar as migrations `supabase/migrations/20261113090000_ra.sql`, `20261119090000_ra_contorno_pagina.sql`, `20261122090000_ra_admin_planta.sql` e `20261123090000_ra_consistencia.sql`.
 2. Gerar e aplicar a geometria: `python scripts/gerar_geometria.py --obra hto` e depois `supabase/seed/hto_geometria.sql` (ver `scripts/README.md`).
 3. Publicar os modelos pelo `/admin/` (Modelos 3D). O ARQ publicado tem de ser o mesmo `.frag` usado no ajuste do referencial (`ra_referencial`); se o ARQ for convertido de novo, refazer o ajuste descrito no contrato.
 4. Cadastrar os QRs no `/admin/` (opcional).
