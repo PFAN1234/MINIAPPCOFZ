@@ -37,15 +37,18 @@ test('pedir acesso à Obra Demonstração mostra "Aguardando aprovação"', asyn
 })
 
 test('o gestor aprova o pedido da Maria', async ({ page }) => {
-  // O atalho da Gestão fica no Início, na linha da obra (só para o gestor).
+  // O Controle de acesso fica no Início (só para o gestor); o pedido aparece na pessoa.
   await page.goto('/')
-  await page.getByRole('listitem').filter({ hasText: 'HTO' }).getByRole('link', { name: /^Gestão/ }).tap()
-  await expect(page).toHaveURL(/\/obras\/hto\/gestao$/)
-  await expect(page.getByRole('heading', { name: 'Pedidos de acesso', level: 3 })).toBeVisible()
-  await expect(page.getByText('Maria Souza')).toBeVisible()
-  await expect(page.getByText('@maria')).toBeVisible()
-  await page.getByRole('button', { name: /Aprovar/ }).tap()
-  await expect(page.getByText('Nenhum pedido de acesso pendente.')).toBeVisible()
+  await page.getByRole('link', { name: /^Controle de acesso/ }).tap()
+  await expect(page).toHaveURL(/\/acessos$/)
+  await expect(page.getByRole('heading', { name: 'Controle de acesso', level: 1 })).toBeVisible()
+  const maria = page.getByRole('listitem').filter({ hasText: 'Maria Souza' })
+  await expect(maria.getByText('@maria')).toBeVisible()
+  await expect(maria.getByText('Pediu acesso')).toBeVisible()
+  const hto = maria.getByRole('group', { name: 'Acesso de Maria Souza em HTO' })
+  await hto.getByRole('button', { name: 'Equipe' }).tap()
+  await expect(hto.getByRole('button', { name: 'Equipe' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(maria.getByText('Pediu acesso')).toHaveCount(0)
 })
 
 test('link startapp registro_<id> abre o ambiente com o visualizador', async ({ page }) => {
