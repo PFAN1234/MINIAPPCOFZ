@@ -6,7 +6,7 @@ Decisões de 2026-11-17, que ajustam `docs/contrato-acessos.md`:
 - o botão "Controle de acesso" fica embaixo do botão "Administração", com o mesmo desenho;
 - o portal de administração, na aba **Pessoas**, ganha o mesmo controle.
 
-## A. Banco (migration nova: `supabase/migrations/20261122090000_controle_acesso.sql`)
+## A. Banco (migration nova: `supabase/migrations/20261124090000_controle_acesso.sql`)
 
 - `privado.pode_controlar_acesso() returns boolean` (`security definer`, `search_path = ''`, `stable`): `privado.eh_gestor_alguma() or privado.eh_admin()`. `revoke` de `public, anon` e `grant` a `authenticated`.
 - Recriar `public.matriz_acessos()` e `public.definir_acesso(...)` a partir de `20261121090000_acessos_lista.sql`, com estas mudanças:
