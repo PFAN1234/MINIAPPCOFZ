@@ -1942,6 +1942,13 @@ a.botao {
   right: 8px;
 }
 
+.visualizador-chip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+.visualizador-chip[aria-pressed='true'],
 .chip[aria-pressed='true'] {
   color: var(--destaque-texto);
   background: var(--destaque);
