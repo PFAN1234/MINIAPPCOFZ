@@ -1,9 +1,10 @@
 import * as OBC from '@thatopen/components'
+import CameraControls from 'camera-controls'
 import workerUrl from '@thatopen/fragments/worker?url'
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { caixaDeCorte, type GeometriaAmbiente } from '../ra/geometria.ts'
-import { caixaBox3, planosDeCorte } from './corte.ts'
+import { planosDeCorte, posicaoInterna } from './corte.ts'
 import { ordenarPorReferencia, temWebGL, type ModeloFrag } from './modelos.ts'
 
 type Estado = { tipo: 'carregando'; texto: string } | { tipo: 'pronto' } | { tipo: 'erro'; texto: string }
@@ -16,7 +17,7 @@ interface Props {
   ativos: ReadonlySet<string>
   /** Prévia da tela da obra: sem botão Enquadrar e sem resposta a toque ou arrasto. */
   previa?: boolean
-  /** Ambiente do QR: o modelo é cortado em volta dele e a câmera enquadra só ele (chip liga/desliga). */
+  /** Ambiente do QR: o modelo é cortado em volta dele (chip liga/desliga) e a câmera nasce por dentro, no centro. */
   ambiente?: GeometriaAmbiente
 }
 
@@ -25,6 +26,9 @@ interface Motor {
   world: OBC.SimpleWorld<OBC.SimpleScene, OBC.SimpleCamera, OBC.SimpleRenderer>
   fragments: OBC.FragmentsManager
 }
+
+/** Distância câmera-alvo na vista interna: pequena, para o arrasto girar a vista no lugar. */
+const DIST_ALVO = 0.01
 
 function mostrar(objeto: THREE.Object3D, visivel: boolean) {
   objeto.visible = visivel
@@ -50,8 +54,10 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
     const m = motor.current
     if (!m) return
     const amb = ambienteRef.current
-    if (amb && soAmbienteRef.current) {
-      void m.world.camera.controls.fitToBox(caixaBox3(caixaDeCorte(amb)), animar, { paddingLeft: 0.1, paddingRight: 0.1, paddingTop: 0.1, paddingBottom: 0.1 })
+    if (amb) {
+      // Câmera por dentro: gira em volta de si (alvo colado na câmera) e anda pelo ambiente.
+      const c = posicaoInterna(amb)
+      void m.world.camera.controls.setLookAt(c.x, c.y, c.z + DIST_ALVO, c.x, c.y, c.z, animar)
       return
     }
     const caixa = new THREE.Box3()
@@ -83,6 +89,18 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
     if (ambiente) world.renderer.three.clippingPlanes = planos
     components.init()
     if (previa) world.camera.controls.enabled = false
+    if (ambiente) {
+      const ctl = world.camera.controls
+      ctl.minDistance = DIST_ALVO
+      ctl.maxDistance = DIST_ALVO
+      ctl.verticalDragToForward = true
+      ctl.mouseButtons.wheel = CameraControls.ACTION.ZOOM
+      ctl.touches.two = CameraControls.ACTION.TOUCH_ZOOM_TRUCK
+      ctl.minZoom = 0.5
+      ctl.maxZoom = 4
+      world.camera.three.near = 0.05
+      world.camera.three.updateProjectionMatrix()
+    }
 
     const fragments = components.get(OBC.FragmentsManager)
     fragments.init(workerUrl)
@@ -143,8 +161,6 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
     planos.length = 0
     if (soAmbiente) planos.push(...planosDeCorte(caixaDeCorte(amb)))
     void m.fragments.core.update(true)
-    enquadrar(true)
-    // enquadrar só lê refs.
   }, [soAmbiente])
 
   return (
@@ -162,7 +178,7 @@ export default function VisualizadorModelo({ modelos, baixar, ativos, previa = f
       )}
       {estado.tipo === 'pronto' && !previa && (
         <button type="button" className="botao visualizador-enquadrar" onClick={() => enquadrar(true)}>
-          Enquadrar
+          {ambiente ? 'Voltar ao centro' : 'Enquadrar'}
         </button>
       )}
       {estado.tipo === 'pronto' && !previa && ambiente && (
