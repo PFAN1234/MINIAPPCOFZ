@@ -10,6 +10,9 @@ const PREFIXO_APP = 'app-'
 const CACHE_PLANTAS = 'plantas-v1'
 const CACHE_FOTOS = 'fotos-v1'
 const CACHE_MODELOS = 'modelos-v1' // .frag guardados pelo app (src/modelo/cacheModelo.ts), por hash
+/** Chunks pesados do 3D/RA (three, @thatopen/fragments, jsQR, worker): preservados entre deploys. */
+const CACHE_3D = 'motor-3d-v1'
+const LIMITE_3D = 20
 const LIMITE_FOTOS = 300
 /** Logo da OM (bucket público `organizacao`): nome novo a cada troca, basta guardar os últimos. */
 const CACHE_LOGO = 'organizacao-v1'
@@ -94,7 +97,7 @@ self.addEventListener('activate', (event) => {
       await Promise.all(
         nomes
           .filter((n) => n.startsWith(PREFIXO_APP) && n !== atual)
-          .concat(nomes.filter((n) => !n.startsWith(PREFIXO_APP) && ![CACHE_PLANTAS, CACHE_FOTOS, CACHE_MODELOS, CACHE_EXTERNOS, CACHE_LOGO].includes(n)))
+          .concat(nomes.filter((n) => !n.startsWith(PREFIXO_APP) && ![CACHE_PLANTAS, CACHE_FOTOS, CACHE_MODELOS, CACHE_EXTERNOS, CACHE_LOGO, CACHE_3D].includes(n)))
           .map((n) => caches.delete(n)),
       )
       await self.clients.claim()
@@ -134,6 +137,22 @@ async function navegacao(req) {
   const guardada = nome ? await (await caches.open(nome)).match('/index.html', { ignoreSearch: true }) : null
   // Sem cache: devolve o que a rede (lenta) ainda trouxer.
   return guardada ?? rede
+}
+
+function ehRecurso3D(pathname) {
+  return /^\/assets\/(VisualizadorModelo|motor-3d|jsQR|worker)-/.test(pathname)
+}
+
+async function recurso3D(req) {
+  const cache = await caches.open(CACHE_3D)
+  const guardada = await cache.match(req, { ignoreSearch: true })
+  if (guardada) return guardada
+  const r = await fetch(req)
+  if (r.status === 200) {
+    await cache.put(req, r.clone())
+    await limitarCache(cache, LIMITE_3D)
+  }
+  return r
 }
 
 async function assets(req) {
@@ -213,5 +232,6 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
 
   if (req.mode === 'navigate') return void event.respondWith(navegacao(req))
+  if (ehRecurso3D(url.pathname)) return void event.respondWith(recurso3D(req))
   if (url.pathname.startsWith('/assets/')) return void event.respondWith(assets(req))
 })

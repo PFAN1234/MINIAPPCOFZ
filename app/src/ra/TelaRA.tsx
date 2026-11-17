@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPonteiro } from 'react'
+import { Link } from 'react-router'
 import type { ModeloFrag } from '../modelo/modelos.ts'
 import { marcadorParaPixel } from '../util/coordenadas.ts'
 import { abrirCamera, capturarPar, fecharCamera } from './camera.ts'
@@ -95,6 +96,7 @@ export default function TelaRA(props: PropsTelaRA) {
   const palco = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
+  const desmontado = useRef(false)
   const motor = useRef<MotorRA | null>(null)
   const orientacao = useRef<Orientacao | null>(null)
   const fluxo = useRef<MediaStream | null>(null)
@@ -134,7 +136,10 @@ export default function TelaRA(props: PropsTelaRA) {
   const [aviso, setAviso] = useState('')
 
   const visiveis = modelos.filter((m) => !desligados.has(m.sigla))
+  const temQr = Boolean(qrNoMundo(geometria))
   const cabe = vagas - fotos.length >= 2
+  const desligadosRef = useRef(desligados)
+  const malhaRef = useRef(malha)
 
   // Pose = alinhamento de base + ajuste fino. Recalcula quando o ângulo de visão muda.
   useEffect(() => {
@@ -151,6 +156,7 @@ export default function TelaRA(props: PropsTelaRA) {
   }, [base, ajuste, fov, geometria])
 
   useEffect(() => {
+    malhaRef.current = malha
     motor.current?.definirMalha(malha)
   }, [malha, fase])
 
@@ -159,6 +165,7 @@ export default function TelaRA(props: PropsTelaRA) {
   }, [opacidade])
 
   useEffect(() => {
+    desligadosRef.current = desligados
     motor.current?.definirVisiveis(new Set(visiveis.map((m) => m.sigla)))
     // `visiveis` é derivado de `modelos` e `desligados`.
   }, [modelos, desligados]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -166,8 +173,11 @@ export default function TelaRA(props: PropsTelaRA) {
   // Encerra câmera, sensores e a cena ao sair.
   useEffect(
     () => () => {
+      desmontado.current = true
       fecharCamera(fluxo.current)
+      fluxo.current = null
       orientacao.current?.parar()
+      orientacao.current = null
       motor.current?.descartar()
       motor.current = null
     },
@@ -218,18 +228,44 @@ export default function TelaRA(props: PropsTelaRA) {
   async function comecar() {
     if (!video.current || !canvas.current) return
     setFase('abrindo')
+    const [resOrientacao, resCamera] = await Promise.allSettled([iniciarOrientacao(), abrirCamera(video.current)])
+    const o = resOrientacao.status === 'fulfilled' ? resOrientacao.value : null
+    const f = resCamera.status === 'fulfilled' ? resCamera.value : null
+    if (desmontado.current || !o || !f || !canvas.current) {
+      o?.parar()
+      fecharCamera(f)
+      if (desmontado.current) return
+      const falha =
+        resCamera.status === 'rejected'
+          ? resCamera.reason
+          : resOrientacao.status === 'rejected'
+            ? resOrientacao.reason
+            : null
+      setMensagem(
+        falha instanceof Error && falha.message ? falha.message : 'Não foi possível abrir a realidade aumentada.',
+      )
+      setFase('erro')
+      return
+    }
+    orientacao.current = o
+    fluxo.current = f
     try {
-      const [o, f] = await Promise.all([iniciarOrientacao(), abrirCamera(video.current)])
-      orientacao.current = o
-      fluxo.current = f
       const m = new MotorRA(canvas.current, geometria)
       motor.current = m
       setFase('alinhar')
       await m.carregar(modelos, baixar, setCarga)
-      m.definirVisiveis(new Set(modelos.filter((x) => !desligados.has(x.sigla)).map((x) => x.sigla)))
-      m.definirMalha(malha)
+      if (desmontado.current) return
+      m.definirVisiveis(new Set(modelos.filter((x) => !desligadosRef.current.has(x.sigla)).map((x) => x.sigla)))
+      m.definirMalha(malhaRef.current)
       setCarga('')
     } catch (e) {
+      fecharCamera(fluxo.current)
+      fluxo.current = null
+      orientacao.current?.parar()
+      orientacao.current = null
+      motor.current?.descartar()
+      motor.current = null
+      if (desmontado.current) return
       setMensagem(e instanceof Error && e.message ? e.message : 'Não foi possível abrir a realidade aumentada.')
       setFase('erro')
     }
@@ -296,11 +332,13 @@ export default function TelaRA(props: PropsTelaRA) {
         if (!ativo) return
         const primeira = poseQr.current === null
         const parado = q.angleTo(orientacao.current.atual()) < MOVIMENTO_MAXIMO
-        if (lido && !qrEDoAmbiente(lido.texto, obra.slug, ambiente.codigo)) {
+        if (!lido) {
+          if (primeira) setAviso('')
+        } else if (!qrEDoAmbiente(lido.texto, obra.slug, ambiente.codigo)) {
           if (primeira) setAviso('Este QR é de outro ambiente.')
-        } else if (lido && !parado) {
+        } else if (!parado) {
           if (primeira) setAviso('Segure o celular parado por um instante.')
-        } else if (lido) {
+        } else {
           const leitura: LeituraQr = { cantos: lido.cantos, q }
           const pose = poseDaLeitura(leitura, geometria, fovAtual.current, aspecto.current)
           const atual = poseQr.current
@@ -335,6 +373,7 @@ export default function TelaRA(props: PropsTelaRA) {
             }
             if (nova) {
               poseQr.current = nova
+              setErroCm(null)
               setBase({ tipo: 'qr', leitura, pose: nova })
             }
           }
@@ -383,12 +422,16 @@ export default function TelaRA(props: PropsTelaRA) {
       const [a, b] = [...ponteiros.current.values()]
       const d = Math.hypot(a.x - b.x, a.y - b.y)
       if (d > 10) {
-        setFov(Math.min(FOV_MAXIMO, Math.max(FOV_MINIMO, (pinca.current.fov * pinca.current.distancia) / d)))
+        const novoFov = Math.min(FOV_MAXIMO, Math.max(FOV_MINIMO, (pinca.current.fov * pinca.current.distancia) / d))
+        fovAtual.current = novoFov
+        setFov(novoFov)
+        setErroCm(null)
       }
       return
     }
     if (ponteiros.current.size !== 1) return
     const fovHorizontal = 2 * Math.atan(Math.tan((fovAtual.current * Math.PI) / 360) * aspecto.current)
+    setErroCm(null)
     setAjuste((a) => ({
       rumo: a.rumo + (dx / r.width) * fovHorizontal,
       altura: a.altura + (dy / r.height) * 0.6,
@@ -503,7 +546,7 @@ export default function TelaRA(props: PropsTelaRA) {
             onPointerDown={aoBaixar}
             onPointerMove={aoMover}
             onPointerUp={aoSoltar}
-            onPointerCancel={(e) => ponteiros.current.delete(e.pointerId)}
+            onPointerCancel={aoSoltar}
           />
         )}
         {((fase === 'alinhar' && !lendoQr) || (fase === 'pronto' && conferindo)) && (
@@ -548,7 +591,7 @@ export default function TelaRA(props: PropsTelaRA) {
         <div className="ra-cartao" role="alert">
           <p>{mensagem}</p>
           <p>
-            <a href="/ra-teste">Testar este aparelho</a>
+            <Link to="/ra-teste">Testar este aparelho</Link>
           </p>
           <button type="button" className="botao botao-bloco" onClick={onFechar}>
             Voltar
@@ -582,8 +625,15 @@ export default function TelaRA(props: PropsTelaRA) {
           )}
           {erroCm !== null && <p className="ra-nota">Erro no canto conferido: {erroCm.toLocaleString('pt-BR')} cm</p>}
 
-          {fase === 'alinhar' && geometria.qr && (
-            <button type="button" className="ra-botao ra-botao-texto" onClick={() => setLendoQr((v) => !v)}>
+          {fase === 'alinhar' && temQr && (
+            <button
+              type="button"
+              className="ra-botao ra-botao-texto"
+              onClick={() => {
+                setAviso('')
+                setLendoQr((v) => !v)
+              }}
+            >
               {lendoQr ? 'Usar os cantos' : 'Usar o QR do ambiente'}
             </button>
           )}

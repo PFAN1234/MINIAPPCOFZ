@@ -24,6 +24,34 @@ function comInativo(codigo: string): Repositorio {
   }
 }
 
+describe('botão Visualizar modelo', () => {
+  const MODELOS = [{ sigla: 'ARQ', revisao: 'R06', arquivo: 'ARQ.frag', bytes: 1, hash: 'h' }]
+  const comModelos = (base: Repositorio): Repositorio => ({ ...base, listarModelos: async () => MODELOS })
+
+  it('aparece entre "Novo registro" e "Comparar com o modelo (RA)"', async () => {
+    renderizarApp('/obras/hto/ambientes/terreo-apto-101', comModelos(criarRepositorioFixture()))
+    const visualizar = await screen.findByRole('button', { name: 'Visualizar modelo' })
+    const novo = screen.getByRole('button', { name: 'Novo registro' })
+    const ra = screen.getByRole('button', { name: 'Comparar com o modelo (RA)' })
+    expect(novo.compareDocumentPosition(visualizar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(visualizar.compareDocumentPosition(ra) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('não aparece em ambiente inativo', async () => {
+    renderizarApp('/obras/hto/ambientes/terreo-apto-101', comModelos(comInativo('terreo-apto-101')))
+    await screen.findByRole('note')
+    await new Promise((r) => setTimeout(r, 30))
+    expect(screen.queryByRole('button', { name: 'Visualizar modelo' })).not.toBeInTheDocument()
+  })
+
+  it('não aparece em obra sem modelo', async () => {
+    renderizarApp('/obras/hto/ambientes/terreo-apto-101', { ...criarRepositorioFixture(), listarModelos: async () => [] })
+    await screen.findByRole('button', { name: 'Novo registro' })
+    await new Promise((r) => setTimeout(r, 30))
+    expect(screen.queryByRole('button', { name: 'Visualizar modelo' })).not.toBeInTheDocument()
+  })
+})
+
 describe('ambiente inativo (saiu da planta numa revisão)', () => {
   it('a tela abre com o aviso, sem "Onde fica", e mantém o histórico', async () => {
     renderizarApp('/obras/hto/ambientes/terreo-apto-101', comInativo('terreo-apto-101'))
@@ -47,5 +75,24 @@ describe('ambiente inativo (saiu da planta numa revisão)', () => {
     expect(await screen.findByRole('link', { name: /Banheiro 101/ })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Apto\. 101/ })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /^Pendências\s*3$/ })).toBeInTheDocument()
+  })
+
+  it('ambiente inativo não libera Comparar com o modelo (RA) no Novo registro', async () => {
+    const base = comInativo('terreo-apto-101')
+    const modelosChamados = new Promise<void>((resolve) => {
+      const repo: Repositorio = {
+        ...base,
+        listarModelos: async () => {
+          resolve()
+          return [{ sigla: 'ARQ', revisao: 'R06', arquivo: 'ARQ.frag', bytes: 1, hash: 'h' }]
+        },
+      }
+      renderizarApp('/obras/hto/ambientes/terreo-apto-101/novo?ra=1', repo)
+    })
+    await screen.findByLabelText('Legenda')
+    await Promise.race([modelosChamados, new Promise((r) => setTimeout(r, 30))])
+    await new Promise((r) => setTimeout(r, 20))
+    expect(screen.queryByRole('button', { name: 'Comparar com o modelo (RA)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Comparar com o modelo' })).not.toBeInTheDocument()
   })
 })

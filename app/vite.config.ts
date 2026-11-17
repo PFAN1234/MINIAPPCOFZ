@@ -82,7 +82,7 @@ export function montarManifesto(nomes: string[]): ManifestoPrecache {
           n !== 'precache-manifest.json' &&
           !n.endsWith('.map') &&
           !n.endsWith('.woff') &&
-          !/^assets\/(VisualizadorModelo|worker|conversor\.worker)-/.test(n) &&
+          !/^assets\/(VisualizadorModelo|motor-3d|jsQR|worker|conversor\.worker)-/.test(n) &&
           !n.startsWith('web-ifc/'),
       ),
   )
@@ -257,6 +257,12 @@ export default defineConfig({
       input: {
         index: fileURLToPath(new URL('./index.html', import.meta.url)),
         admin: fileURLToPath(new URL('./admin.html', import.meta.url)),
+      },
+      output: {
+        manualChunks(id) {
+          if (/[\\/]node_modules[\\/](three|@thatopen[\\/]fragments)[\\/]/.test(id)) return 'motor-3d'
+          if (/[\\/]node_modules[\\/]jsqr[\\/]/.test(id)) return 'jsQR'
+        },
       },
     },
   },

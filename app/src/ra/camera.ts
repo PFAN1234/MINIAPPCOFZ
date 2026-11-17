@@ -100,15 +100,20 @@ export async function capturarPar(opcoes: {
   const largura = Math.max(1, Math.round(r.sw * fator))
   const altura = Math.max(1, Math.round(r.sh * fator))
 
-  const canvas = document.createElement('canvas')
-  canvas.width = largura
-  canvas.height = altura
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Não foi possível gerar a foto.')
-  ctx.drawImage(video, r.sx, r.sy, r.sw, r.sh, 0, 0, largura, altura)
-  const limpa = await paraJpeg(canvas)
+  const canvasLimpa = document.createElement('canvas')
+  canvasLimpa.width = largura
+  canvasLimpa.height = altura
+  const ctxLimpa = canvasLimpa.getContext('2d')
+  if (!ctxLimpa) throw new Error('Não foi possível gerar a foto.')
+  ctxLimpa.drawImage(video, r.sx, r.sy, r.sw, r.sh, 0, 0, largura, altura)
 
-  // O mesmo quadro continua no canvas; o 3D entra por cima.
+  const canvasModelo = document.createElement('canvas')
+  canvasModelo.width = largura
+  canvasModelo.height = altura
+  const ctx = canvasModelo.getContext('2d')
+  if (!ctx) throw new Error('Não foi possível gerar a foto.')
+  // Congela vídeo e cena 3D no mesmo instante, antes da codificação JPEG assíncrona.
+  ctx.drawImage(canvasLimpa, 0, 0, largura, altura)
   renderizar()
   ctx.globalAlpha = opacidade
   ctx.drawImage(canvas3d, 0, 0, largura, altura)
@@ -125,6 +130,6 @@ export async function capturarPar(opcoes: {
   faixa.forEach((texto, i) => {
     ctx.fillText(texto, Math.round(tamanho * 0.7), altura - alturaFaixa + Math.round(tamanho * 0.45) + i * linha, largura - tamanho * 1.4)
   })
-  const comModelo = await paraJpeg(canvas)
+  const [limpa, comModelo] = await Promise.all([paraJpeg(canvasLimpa), paraJpeg(canvasModelo)])
   return { limpa, comModelo, largura, altura }
 }

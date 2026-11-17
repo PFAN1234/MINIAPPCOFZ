@@ -9,6 +9,21 @@ export interface ModeloFrag {
   arquivo: string
   bytes: number
   hash: string
+  /** Correção opcional (16 números, ordem `THREE.Matrix4.elements`) sobre as coordenadas do `.frag`. */
+  matriz?: number[]
+}
+
+/** Coloca o modelo de referência (`ARQ` por padrão) antes dos demais, preservando a ordem relativa. */
+export function ordenarPorReferencia(modelos: readonly ModeloFrag[], referencia = 'ARQ'): ModeloFrag[] {
+  return [...modelos].sort((a, b) => Number(b.sigla === referencia) - Number(a.sigla === referencia))
+}
+
+export function temWebGL(): boolean {
+  try {
+    return Boolean(document.createElement('canvas').getContext('webgl2'))
+  } catch {
+    return false
+  }
 }
 
 /** Fixture: lê `app/public/modelos/<obra>/manifesto.json` (gerado por `npm run modelos`). */

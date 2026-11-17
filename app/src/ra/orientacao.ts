@@ -61,11 +61,31 @@ export async function iniciarOrientacao(): Promise<Orientacao> {
   let fonte: FonteOrientacao = 'nenhuma'
   let n = 0
 
+  let temporizador: ReturnType<typeof setInterval> | undefined
+  let telegramParado = false
+  const telegram = sensorTelegram()
+
+  function pararTelegram() {
+    if (temporizador !== undefined) {
+      clearInterval(temporizador)
+      temporizador = undefined
+    }
+    if (telegram && !telegramParado) {
+      telegramParado = true
+      try {
+        telegram.stop()
+      } catch {
+        // Nada a fazer.
+      }
+    }
+  }
+
   function aoEvento(e: DeviceOrientationEvent) {
     if (e.alpha == null || e.beta == null || e.gamma == null) return
     q = quaternionDoAparelho(e.alpha * GRAUS, e.beta * GRAUS, e.gamma * GRAUS, giroDaTela())
     fonte = 'navegador'
     n++
+    pararTelegram()
   }
 
   const pedir = (
@@ -81,14 +101,15 @@ export async function iniciarOrientacao(): Promise<Orientacao> {
   }
   if (permitido) window.addEventListener('deviceorientation', aoEvento)
 
-  const telegram = sensorTelegram()
-  let temporizador: ReturnType<typeof setInterval> | undefined
   if (telegram) {
     try {
       telegram.start({ refresh_rate: 20, need_absolute: false })
       temporizador = setInterval(() => {
         // O evento do navegador, quando existe, tem prioridade.
-        if (fonte === 'navegador') return
+        if (fonte === 'navegador') {
+          pararTelegram()
+          return
+        }
         const { alpha, beta, gamma } = telegram
         if (!telegram.isStarted || alpha == null || beta == null || gamma == null) return
         q = quaternionDoAparelho(alpha, beta, gamma, giroDaTela())
@@ -106,12 +127,7 @@ export async function iniciarOrientacao(): Promise<Orientacao> {
     leituras: () => n,
     parar() {
       window.removeEventListener('deviceorientation', aoEvento)
-      if (temporizador !== undefined) clearInterval(temporizador)
-      try {
-        telegram?.stop()
-      } catch {
-        // Nada a fazer.
-      }
+      pararTelegram()
     },
   }
 }

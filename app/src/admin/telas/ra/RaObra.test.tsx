@@ -107,13 +107,16 @@ describe('realidade aumentada (fixture)', () => {
     expect(screen.queryByRole('button', { name: 'Remover QR' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Imprimir' })).toBeDisabled()
     expect(screen.getByLabelText(/Altura do centro/)).toHaveValue('1,50')
-    expect(screen.getByLabelText(/Lado do QR/)).toHaveValue('18')
+    expect(screen.getByLabelText(/Lado do QR/)).toHaveValue('15')
 
     await user.selectOptions(screen.getByLabelText('Parede'), '1')
     const distancia = screen.getByLabelText(/Distância a partir do canto/)
     await user.clear(distancia)
     await user.type(distancia, '1,25')
     const lado = screen.getByLabelText(/Lado do QR/)
+    await user.clear(lado)
+    await user.type(lado, '16')
+    expect(screen.getByText(/Com mais de 15 cm, o QR não cabe numa folha A4/)).toBeInTheDocument()
     await user.clear(lado)
     await user.type(lado, '15')
     await user.click(screen.getByRole('button', { name: 'Salvar' }))
@@ -194,5 +197,44 @@ describe('realidade aumentada (fixture)', () => {
     await user.clear(screen.getByLabelText(/Distância a partir do canto/))
     expect(screen.getByTestId('ra-desenho')).toHaveAttribute('data-modo', 'planta')
     expect(screen.queryByTestId('ra-marca')).toBeNull()
+  })
+
+  it('QR salvo com mais de 4 casas decimais não abre com Imprimir bloqueado', async () => {
+    const user = userEvent.setup()
+    vi.stubEnv('VITE_TELEGRAM_BOT', '@bot_teste')
+    const base = criarRepositorioAdminFixture()
+    const repo = {
+      ...base,
+      async listarRA(obraId: string) {
+        const lista = await base.listarRA(obraId)
+        return lista.map((a) =>
+          a.codigo === 'terreo-administracao' && a.qr
+            ? { ...a, qr: { ...a.qr, distancia_m: 1.23456 } }
+            : a,
+        )
+      },
+    }
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={qc}>
+        <RepositorioAdminProvider repositorio={repo}>
+          <MemoryRouter initialEntries={['/obras/hto/ra']}>
+            <AdminApp entrada={criarEntrada(null)} />
+          </MemoryRouter>
+        </RepositorioAdminProvider>
+      </QueryClientProvider>,
+    )
+    await abrir(user, 'Administração')
+    expect(screen.getByRole('button', { name: 'Imprimir' })).toBeEnabled()
+  })
+
+  it('sem VITE_TELEGRAM_BOT configurado, bloqueia Imprimir e avisa em vez de gerar URL quebrada', async () => {
+    const user = userEvent.setup()
+    vi.stubEnv('VITE_TELEGRAM_BOT', '')
+    renderizar()
+    await abrir(user, 'Administração')
+    expect(screen.getByRole('button', { name: 'Imprimir' })).toBeDisabled()
+    expect(screen.getByText(/VITE_TELEGRAM_BOT/)).toBeInTheDocument()
+    expect(screen.queryByTestId('ra-folha')).not.toBeInTheDocument()
   })
 })

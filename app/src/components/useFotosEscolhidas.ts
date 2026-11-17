@@ -50,11 +50,14 @@ export function useFotosEscolhidas() {
     setFotos(fotosRef.current)
     for (const item of novos) {
       prepararFoto(item.arquivo, { id: item.ra?.id }).then(
-        (preparada) =>
+        (preparada) => {
+          const atual = fotosRef.current.find((f) => f.chave === item.chave)
+          const ra = atual?.ra ?? item.ra
           atualizar(item.chave, {
             estado: 'pronta',
-            preparada: item.ra ? { ...preparada, origem: item.ra.origem, ra: item.ra.ra } : preparada,
-          }),
+            preparada: ra ? { ...preparada, origem: ra.origem, ra: ra.ra } : preparada,
+          })
+        },
         (e: unknown) =>
           atualizar(item.chave, {
             estado: 'erro',
@@ -69,7 +72,20 @@ export function useFotosEscolhidas() {
   }, [])
 
   const remover = useCallback((chave: string) => {
-    fotosRef.current = fotosRef.current.filter((f) => f.chave !== chave)
+    const removida = fotosRef.current.find((f) => f.chave === chave)
+    const idRemovida = removida?.ra?.id
+    fotosRef.current = fotosRef.current
+      .filter((f) => f.chave !== chave)
+      .map((f) => {
+        if (!idRemovida || f.ra?.ra.par !== idRemovida) return f
+        const semPar = { ...f.ra.ra }
+        delete semPar.par
+        return {
+          ...f,
+          ra: { ...f.ra, ra: semPar },
+          ...(f.preparada?.ra ? { preparada: { ...f.preparada, ra: semPar } } : {}),
+        }
+      })
     setFotos(fotosRef.current)
     setAviso('')
   }, [])
