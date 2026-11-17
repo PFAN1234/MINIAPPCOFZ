@@ -2,6 +2,7 @@
 import { FragmentsModels, type FragmentsModel } from '@thatopen/fragments'
 import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
+import { planosDeCorte } from '../modelo/corte.ts'
 import { ordenarPorReferencia, temWebGL, type ModeloFrag } from '../modelo/modelos.ts'
 import { arestasDoAmbiente, caixaDeCorte, type GeometriaAmbiente } from './geometria.ts'
 import { gradeDeProcura, malhaDoAmbiente } from './malha.ts'
@@ -54,15 +55,7 @@ export class MotorRA {
     this.renderer.setClearColor(0x000000, 0)
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
 
-    const [x0, y0, z0, x1, y1, z1] = caixaDeCorte(geometria)
-    this.planos = [
-      new THREE.Plane(new THREE.Vector3(1, 0, 0), -x0),
-      new THREE.Plane(new THREE.Vector3(-1, 0, 0), x1),
-      new THREE.Plane(new THREE.Vector3(0, 1, 0), -y0),
-      new THREE.Plane(new THREE.Vector3(0, -1, 0), y1),
-      new THREE.Plane(new THREE.Vector3(0, 0, 1), -z0),
-      new THREE.Plane(new THREE.Vector3(0, 0, -1), z1),
-    ]
+    this.planos = planosDeCorte(caixaDeCorte(geometria))
     this.renderer.clippingPlanes = this.planos
 
     this.cena.add(new THREE.AmbientLight(0xffffff, 1.6))
