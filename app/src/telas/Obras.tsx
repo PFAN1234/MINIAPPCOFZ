@@ -9,12 +9,12 @@ import type { ObraDaLista, ObraDisponivel, ResumoObra } from '../dados/tipos.ts'
 import {
   useCriarLinkAdmin,
   useEhGestorAlguma,
+  useMatrizAcessos,
   useEtapasInicio,
   useObras,
   useObrasDisponiveis,
   usePublicacoesProblema,
   useResumoObras,
-  useSolicitacoes,
   useSolicitarAcesso,
   useSouAdmin,
 } from '../dados/hooks.ts'
@@ -119,14 +119,14 @@ export default function Obras() {
         </EstadoConsulta>
       </section>
       {outras.length > 0 && <OutrasObras obras={outras} />}
-      <LinkAcessosEquipe />
       {etapa && <EquipeServico etapaId={etapa.id} />}
       <Administracao />
+      <ControleAcesso />
     </>
   )
 }
 
-/** Uma obra do Início: o nome (link que cobre o cartão), o botão Gestão do gestor e os 3 totais. */
+/** Uma obra do Início: o nome (link que cobre o cartão), os 3 totais e, ao gestor, o aviso de publicações com problema. */
 function LinhaObra({ obra, resumo }: { obra: ObraDaLista; resumo: ResumoObra | undefined }) {
   const gestor = resumo?.papel === 'gestor'
   return (
@@ -135,7 +135,6 @@ function LinhaObra({ obra, resumo }: { obra: ObraDaLista; resumo: ResumoObra | u
         <Link className="obra-linha-nome lista-titulo" to={`/obras/${obra.slug}`}>
           {obra.nome}
         </Link>
-        {gestor && <BotaoGestao obra={obra} />}
       </div>
       {resumo && (
         <span className="barrinhas">
@@ -144,6 +143,7 @@ function LinhaObra({ obra, resumo }: { obra: ObraDaLista; resumo: ResumoObra | u
           <Barrinha tipo="resolvidas" n={resumo.resolvidas} texto={textoPendenciasResolvidas(resumo.resolvidas)} />
         </span>
       )}
+      {gestor && <AvisoPublicacoes obra={obra} />}
     </li>
   )
 }
@@ -160,27 +160,39 @@ function Barrinha({ tipo, n, texto }: { tipo: keyof typeof ROTULO_BARRINHA; n: n
   )
 }
 
-/** Atalho da Gestão, com selo de alerta (pedidos de acesso e publicações com problema). */
-function BotaoGestao({ obra }: { obra: ObraDaLista }) {
-  const pedidos = useSolicitacoes(obra.id, true)
+/** Só para o gestor: link de alerta quando a obra tem publicações com problema. */
+function AvisoPublicacoes({ obra }: { obra: ObraDaLista }) {
   const problemas = usePublicacoesProblema(obra.id, true)
-  const n = (pedidos.data?.length ?? 0) + (problemas.data?.length ?? 0)
+  const n = problemas.data?.length ?? 0
+  if (n === 0) return null
   return (
-    <Link className="atalho" to={`/obras/${obra.slug}/gestao`}>
-      Gestão{' '}
-      {n > 0 && <span className="atalho-selo atalho-selo-alerta">{n}</span>}
+    <Link className="aviso-publicacoes" to={`/obras/${obra.slug}/publicacoes`}>
+      {n === 1 ? '1 publicação com problema' : `${n} publicações com problema`}
     </Link>
   )
 }
 
-/** Só para quem é gestor de alguma obra: abre a lista de acessos da equipe. */
-function LinkAcessosEquipe() {
+/** Para quem é gestor de alguma obra ou admin: abre o Controle de acesso, com o total de pedidos. */
+function ControleAcesso() {
   const gestor = useEhGestorAlguma()
-  if (!gestor) return null
+  const admin = useSouAdmin()
+  const pode = gestor === true || admin.data === true
+  const matriz = useMatrizAcessos(pode)
+  if (!pode) return null
+  const pedidos = (matriz.data?.pessoas ?? []).reduce((soma, p) => soma + p.pedidos.length, 0)
   return (
-    <Link className="atalho" to="/acessos">
-      Acessos da equipe
-    </Link>
+    <section className="administracao">
+      <Link className="botao" to="/acessos">
+        Controle de acesso
+        {pedidos > 0 && (
+          <>
+            {' '}
+            <span className="atalho-selo atalho-selo-alerta">{pedidos}</span>
+          </>
+        )}
+      </Link>
+      <p className="lista-sub">Escolha quais obras cada pessoa do grupo pode ver.</p>
+    </section>
   )
 }
 

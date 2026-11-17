@@ -80,30 +80,21 @@ describe('Início: barrinhas', () => {
   })
 })
 
-describe('Início: botão Gestão', () => {
-  it('aparece só nas obras em que o usuário é gestor, como link irmão do link da obra', async () => {
+describe('Início: aviso de publicações com problema', () => {
+  it('o cartão não tem botão Gestão; o gestor vê o aviso com o total e o link', async () => {
     renderizarApp('/')
     const linha = await linhaDaHto()
-    const gestao = await within(linha).findByRole('link', { name: /Gestão/ })
-    expect(gestao).toHaveAttribute('href', '/obras/hto/gestao')
-    expect(gestao.parentElement).toBe(screen.getByRole('link', { name: 'HTO' }).parentElement)
-    expect(linha).toContainElement(gestao)
-    expect(screen.getByRole('link', { name: 'HTO' })).not.toContainElement(gestao)
-    expect(screen.getAllByRole('link', { name: /Gestão/ })).toHaveLength(1)
+    const aviso = await within(linha).findByRole('link', { name: '2 publicações com problema' })
+    expect(aviso).toHaveAttribute('href', '/obras/hto/publicacoes')
+    expect(screen.queryByRole('link', { name: /Gestão/ })).not.toBeInTheDocument()
   })
 
-  it('mostra o selo de alerta com pedidos e publicações com problema', async () => {
-    renderizarApp('/')
-    const linha = await linhaDaHto()
-    expect(await within(linha).findByRole('link', { name: 'Gestão 3' })).toBeInTheDocument()
-  })
-
-  it('equipe não vê o botão', async () => {
+  it('equipe não vê o aviso', async () => {
     renderizarApp(
       '/',
       repoComResumo([{ obra_id: ID_HTO, papel: 'equipe', servicos: 0, abertas: 0, resolvidas: 0 }]),
     )
     await linhaDaHto()
-    expect(screen.queryByRole('link', { name: /Gestão/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /publica(ção|ções) com problema/ })).not.toBeInTheDocument()
   })
 })

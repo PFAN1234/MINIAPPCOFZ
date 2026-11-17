@@ -27,7 +27,7 @@ function AcessosCarregados({ detalhe }: { detalhe: ObraDetalhe }) {
         <>
           <PedidosAcesso obraId={obra.id} />
           <Link className="atalho" to="/acessos">
-            Lista de acessos da equipe
+            Controle de acesso
           </Link>
         </>
       )}

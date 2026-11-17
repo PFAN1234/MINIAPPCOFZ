@@ -7,7 +7,7 @@ import { OfflineProvider } from './offline/contexto.tsx'
 import Acessos from './telas/Acessos.tsx'
 import AcessosEquipe from './telas/AcessosEquipe.tsx'
 import Ambiente from './telas/Ambiente.tsx'
-import Gestao from './telas/Gestao.tsx'
+import Publicacoes from './telas/Publicacoes.tsx'
 import Modelo from './telas/Modelo.tsx'
 import NaoEncontrada from './telas/NaoEncontrada.tsx'
 import NovoRegistro from './telas/NovoRegistro.tsx'
@@ -39,7 +39,8 @@ export default function App() {
             <Route path="obras/:slug/modelo" element={<Modelo />} />
             <Route path="obras/:slug/pendencias" element={<Pendencias />} />
             <Route path="obras/:slug/pendencias/:id" element={<PendenciaDetalhe />} />
-            <Route path="obras/:slug/gestao" element={<Gestao />} />
+            <Route path="obras/:slug/publicacoes" element={<Publicacoes />} />
+            <Route path="obras/:slug/gestao" element={<Navigate replace to="../publicacoes" relative="path" />} />
             <Route path="obras/:slug/ambientes/:codigo" element={<Ambiente />} />
             <Route path="obras/:slug/ambientes/:codigo/novo" element={<NovoRegistro />} />
             <Route

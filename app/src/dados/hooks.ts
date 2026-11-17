@@ -127,9 +127,9 @@ export function useDecidirSolicitacao() {
 }
 
 /** Lista de acessos (pessoas x obras); falha com `permissao` para quem não é gestor. */
-export function useMatrizAcessos() {
+export function useMatrizAcessos(habilitado = true) {
   const repo = useRepositorio()
-  return useQuery({ queryKey: ['matriz-acessos'], queryFn: () => repo.matrizAcessos() })
+  return useQuery({ queryKey: ['matriz-acessos'], queryFn: () => repo.matrizAcessos(), enabled: habilitado })
 }
 
 /** O usuário é gestor de alguma obra? `undefined` enquanto as obras não carregam. */

@@ -1654,8 +1654,7 @@ a.botao {
 }
 
 .filtro select,
-.filtro-select,
-.participante-acoes select {
+.filtro-select {
   flex: 1;
   min-height: 40px;
   font: inherit;
@@ -1866,37 +1865,6 @@ a.botao {
   margin-top: 16px;
 }
 
-.gestao-secao + .gestao-secao {
-  margin-top: 8px;
-}
-
-.participante-item {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 12px;
-}
-
-.participante-acoes {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.participante-acoes select {
-  flex: none;
-  padding: 0 8px;
-  background: var(--superficie);
-  border: 1px solid var(--borda);
-  border-radius: 8px;
-}
-
-.participante-erro {
-  flex-basis: 100%;
-  margin: 0;
-}
-
 .publicacao-problema-item {
   gap: 4px;
 }
@@ -2097,7 +2065,7 @@ a.botao {
   min-width: 120px;
 }
 
-/* Início: cartão de cada obra, com o nome, o botão Gestão e os 3 totais */
+/* Início: cartão de cada obra, com o nome, os 3 totais e o aviso de publicações */
 .obra-linha {
   position: relative;
   gap: 0;
@@ -2110,14 +2078,14 @@ a.botao {
   gap: 8px;
 }
 
-.obra-linha .atalho {
+.aviso-publicacoes {
   position: relative;
   z-index: 1;
-  flex: none;
-  min-height: 32px;
-  padding: 0 6px 0 12px;
-  gap: 6px;
+  align-self: flex-start;
+  margin-top: 8px;
+  color: var(--pendencia);
   font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .obra-linha-nome {
