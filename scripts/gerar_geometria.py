@@ -106,6 +106,8 @@ def centroide(poly) -> tuple[float, float]:
         a2 += c
         cx += (x1 + x2) * c
         cy += (y1 + y2) * c
+    if abs(a2) < 1e-12:
+        return (sum(p[0] for p in poly) / max(1, n), sum(p[1] for p in poly) / max(1, n))
     return cx / (3 * a2), cy / (3 * a2)
 
 
@@ -410,7 +412,9 @@ def calcular(slug: str, dados: dict | None = None, plantas: dict | None = None,
     for pav, cfg in ra["pavimentos"].items():
         if pav in cals:
             continue
-        escala = next(c["escala"] for c in cals.values())
+        escala = next((c["escala"] for c in cals.values()), None)
+        if escala is None:
+            raise SystemExit("ra.pavimentos precisa de ao menos uma calibracao documentada")
         try:
             d = derivar_calibracao(marcadores_unicos(pav), espacos[pav], areas(pav), escala, vies)
         except ValueError as e:
@@ -500,11 +504,12 @@ def gerar_sql(geo: dict) -> str:
             "atualizado_em = now();"
         )
     lista = ", ".join(literal(c) for c in geo["ambientes"])
+    alvo = f"array[{lista}]::text[]" if lista else "'{}'::text[]"
     linhas += [
         "",
         "delete from public.ambiente_geometria g using public.ambiente a, public.obra o "
         f"where g.ambiente_id = a.id and a.obra_id = o.id and o.slug = {literal(slug)} "
-        f"and a.codigo <> all (array[{lista}]::text[]);",
+        f"and a.codigo <> all ({alvo});",
         "",
         "commit;",
         "",
