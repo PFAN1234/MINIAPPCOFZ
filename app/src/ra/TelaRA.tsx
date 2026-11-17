@@ -6,9 +6,11 @@ import { criarLeitorQr } from './leitorQr.ts'
 import { MotorRA } from './motor.ts'
 import { iniciarOrientacao, type Orientacao } from './orientacao.ts'
 import {
+  distanciaEntrePoses,
   erroDoToque,
   resolverPorCantos,
   resolverPorQr,
+  suavizarPose,
   type LeituraQr,
   type Ponto2,
   type Pose,
@@ -24,8 +26,18 @@ const FOV_MAXIMO = 95
 const OPACIDADE_PADRAO = 0.7
 /** Altura típica do celular na mão, acima do piso (desempate do alinhamento). */
 const ALTURA_DA_MAO = 1.4
+// Re-localização pelo QR: enquanto ele está à vista, cada leitura corrige a pose.
+/** Giro máximo (rad) do aparelho durante a leitura; acima disso o quadro e o giroscópio não casam. */
+const MOVIMENTO_MAXIMO = 0.03
+/** Parte da leitura nova que entra na pose (o resto é a pose anterior): filtra o ruído do QR. */
+const PESO_DA_LEITURA = 0.3
+/** Leitura mais distante que isso da pose atual só vale se a seguinte confirmar. */
+const SALTO_METROS = 0.5
+const SALTO_RAD = 0.2
+const CONFIRMA_METROS = 0.15
+const CONFIRMA_RAD = 0.05
 
-type Base = { tipo: 'cantos'; a: Toque; b: Toque } | { tipo: 'qr'; leitura: LeituraQr }
+type Base = { tipo: 'cantos'; a: Toque; b: Toque } | { tipo: 'qr'; leitura: LeituraQr; pose: Pose }
 type Fase = 'inicio' | 'abrindo' | 'alinhar' | 'pronto' | 'erro'
 interface Pendente {
   ndc: Ponto2
@@ -57,8 +69,13 @@ function fovGuardado(): number {
 
 function resolver(base: Base, g: GeometriaAmbiente, fov: number, aspecto: number): Pose | null {
   if (base.tipo === 'cantos') return resolverPorCantos(base.a, base.b, fov, aspecto, g.yPiso + ALTURA_DA_MAO)
+  // A pose do QR já vem suavizada; a leitura bruta só serve de apoio.
+  return { posicao: base.pose.posicao.clone(), rumo: base.pose.rumo }
+}
+
+function poseDaLeitura(leitura: LeituraQr, g: GeometriaAmbiente, fov: number, aspecto: number): Pose | null {
   const qr = qrNoMundo(g)
-  return qr ? resolverPorQr(base.leitura, qr, fov, aspecto) : null
+  return qr ? resolverPorQr(leitura, qr, fov, aspecto) : null
 }
 
 /** Tela de realidade aumentada: câmera ao vivo, modelo sobreposto, alinhamento e captura. */
@@ -74,6 +91,9 @@ export default function TelaRA(props: PropsTelaRA) {
   const poseAtual = useRef<Pose | null>(null)
   const fovAtual = useRef(FOV_PADRAO)
   const opacidadeAtual = useRef(OPACIDADE_PADRAO)
+  /** Pose do QR (sem o ajuste fino), suavizada pelas leituras seguintes. */
+  const poseQr = useRef<Pose | null>(null)
+  const poseRejeitada = useRef<Pose | null>(null)
 
   const [fase, setFase] = useState<Fase>('inicio')
   const [mensagem, setMensagem] = useState('')
@@ -195,6 +215,8 @@ export default function TelaRA(props: PropsTelaRA) {
   }
 
   function realinhar() {
+    poseQr.current = null
+    poseRejeitada.current = null
     setBase(null)
     setPrimeiro(null)
     setPendente(null)
@@ -232,9 +254,12 @@ export default function TelaRA(props: PropsTelaRA) {
     }
   }
 
-  // Leitura do QR: tenta a cada 300 ms até achar o QR deste ambiente.
+  // Leitura do QR a cada 300 ms: acha o QR deste ambiente e, depois de alinhado, segue lendo
+  // enquanto ele estiver à vista para corrigir a posição e o rumo (o giroscópio não sente andar).
+  const reLocalizar = fase === 'pronto' && base?.tipo === 'qr'
+  const escaneando = lendoQr || reLocalizar
   useEffect(() => {
-    if (!lendoQr) return
+    if (!escaneando) return
     let ativo = true
     let temporizador: ReturnType<typeof setTimeout> | undefined
     void (async () => {
@@ -244,20 +269,50 @@ export default function TelaRA(props: PropsTelaRA) {
         const q = orientacao.current.atual()
         const lido = await leitor.ler(video.current, aspecto.current)
         if (!ativo) return
+        const primeira = poseQr.current === null
+        const parado = q.angleTo(orientacao.current.atual()) < MOVIMENTO_MAXIMO
         if (lido && !qrEDoAmbiente(lido.texto, obra.slug, ambiente.codigo)) {
-          setAviso('Este QR é de outro ambiente.')
+          if (primeira) setAviso('Este QR é de outro ambiente.')
+        } else if (lido && !parado) {
+          if (primeira) setAviso('Segure o celular parado por um instante.')
         } else if (lido) {
-          const nova: Base = { tipo: 'qr', leitura: { cantos: lido.cantos, q } }
-          if (resolver(nova, geometria, fovAtual.current, aspecto.current)) {
+          const leitura: LeituraQr = { cantos: lido.cantos, q }
+          const pose = poseDaLeitura(leitura, geometria, fovAtual.current, aspecto.current)
+          const atual = poseQr.current
+          if (!pose) {
+            if (primeira) setAviso('Aproxime-se do QR e mantenha o celular reto.')
+          } else if (!atual) {
+            poseQr.current = pose
+            poseRejeitada.current = null
             setAviso('')
             setAjuste({ rumo: 0, altura: 0 })
             setErroCm(null)
-            setBase(nova)
+            setBase({ tipo: 'qr', leitura, pose })
             setLendoQr(false)
             setFase('pronto')
-            return
+          } else {
+            const salto = distanciaEntrePoses(atual, pose)
+            const rejeitada = poseRejeitada.current
+            let nova: Pose | null = null
+            if (salto.metros < SALTO_METROS && salto.rad < SALTO_RAD) {
+              nova = suavizarPose(atual, pose, PESO_DA_LEITURA)
+              poseRejeitada.current = null
+            } else if (rejeitada) {
+              const d = distanciaEntrePoses(rejeitada, pose)
+              if (d.metros < CONFIRMA_METROS && d.rad < CONFIRMA_RAD) {
+                nova = pose
+                poseRejeitada.current = null
+              } else {
+                poseRejeitada.current = pose
+              }
+            } else {
+              poseRejeitada.current = pose
+            }
+            if (nova) {
+              poseQr.current = nova
+              setBase({ tipo: 'qr', leitura, pose: nova })
+            }
           }
-          setAviso('Aproxime-se do QR e mantenha o celular reto.')
         }
         temporizador = setTimeout(() => void tentar(), 300)
       }
@@ -267,7 +322,7 @@ export default function TelaRA(props: PropsTelaRA) {
       ativo = false
       if (temporizador !== undefined) clearTimeout(temporizador)
     }
-  }, [lendoQr, geometria, obra.slug, ambiente.codigo])
+  }, [escaneando, geometria, obra.slug, ambiente.codigo])
 
   // Toques e gestos sobre a imagem.
   const ponteiros = useRef(new Map<number, { x: number; y: number; x0: number; y0: number }>())
@@ -432,7 +487,7 @@ export default function TelaRA(props: PropsTelaRA) {
           <h2>Comparar com o modelo</h2>
           <p>
             A câmera mostra o modelo por cima do ambiente. Escolha um ponto para ficar, alinhe o modelo e tire as
-            fotos sem sair do lugar. Se andar, alinhe de novo.
+            fotos sem sair do lugar. Se andar, aponte de novo para o QR (ou alinhe pelos cantos).
           </p>
           <p>Cada foto entra no registro duas vezes: limpa e com o modelo.</p>
           <button type="button" className="botao botao-bloco" onClick={() => void comecar()}>
