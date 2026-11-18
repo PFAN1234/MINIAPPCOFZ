@@ -24,6 +24,7 @@ import {
   problemaDoLogo,
   type Admin,
   type ErroCliente,
+  type ResumoOrfaos,
   type AmbienteBanco,
   type ConfigObra,
   type EstadoSessao,
@@ -376,6 +377,18 @@ function snapshotFixture(data: string): SnapshotBoletim {
       { id: `tar-${data}-1`, tipo: 'servico', data, hora: '17:20', recebido_em: `${somarDias(data, 1)}T09:00:00-03:00`, obra: 'HTO', ambiente: 'Sala 01', autor: 'CP PATRICIO', texto: 'Limpeza final do pavimento' },
     ],
   }
+}
+
+const ORFAOS_BASE: ResumoOrfaos = {
+  buckets: [
+    { bucket: 'fotos', quantidade: 2, bytes: 3_145_728 },
+    { bucket: 'modelos', quantidade: 1, bytes: 52_428_800 },
+  ],
+  maiores: [
+    { bucket: 'modelos', caminho: 'obra-x/ARQ/0123456789abcdef.frag', tamanho: 52_428_800, criado_em: '2026-10-01T10:00:00Z', detectado_em: '2026-11-17T03:17:00Z' },
+    { bucket: 'fotos', caminho: 'obra-x/registro-1/foto-1.jpg', tamanho: 2_097_152, criado_em: '2026-10-02T10:00:00Z', detectado_em: '2026-11-17T03:17:00Z' },
+    { bucket: 'fotos', caminho: 'obra-x/registro-1/foto-2.jpg', tamanho: 1_048_576, criado_em: '2026-10-02T10:00:00Z', detectado_em: '2026-11-17T03:17:00Z' },
+  ],
 }
 
 const ERROS_CLIENTE_BASE: ErroCliente[] = [
@@ -1671,6 +1684,11 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     async listarErrosCliente(limite = 200): Promise<ErroCliente[]> {
       exigirAdmin()
       return ERROS_CLIENTE_BASE.slice(0, limite)
+    },
+
+    async resumoOrfaos(): Promise<ResumoOrfaos> {
+      exigirAdmin()
+      return copia(ORFAOS_BASE)
     },
 
     async listarAdmins(): Promise<Admin[]> {

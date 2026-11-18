@@ -105,7 +105,7 @@ function Layout({ usuario, onSair, children }: { usuario: UsuarioSessao; onSair:
           <NavLink to="/pessoas">Pessoas</NavLink>
           <NavLink to="/organizacao">Organização</NavLink>
           <NavLink to="/admins">Admins</NavLink>
-          <NavLink to="/erros">Erros</NavLink>
+          <NavLink to="/erros">Manutenção</NavLink>
         </nav>
         <span className="adm-usuario">{usuario.nome}</span>
         <button type="button" className="adm-botao adm-botao-discreto" onClick={onSair}>

@@ -275,4 +275,14 @@ describe('erros do cliente', () => {
     await usuario.click(screen.getByRole('button', { name: /Cannot read properties/ }))
     expect(screen.getByText(/at Obra \(obra\.tsx/)).toBeInTheDocument()
   })
+
+  it('aba Arquivos órfãos mostra o resumo por bucket e os maiores', async () => {
+    const usuario = userEvent.setup()
+    renderizar('/erros')
+    await usuario.click(await screen.findByRole('tab', { name: 'Arquivos órfãos' }))
+    const resumo = await screen.findByRole('table', { name: 'Resumo por bucket' })
+    expect(within(resumo).getByRole('cell', { name: 'modelos' })).toBeInTheDocument()
+    expect(within(resumo).getByRole('cell', { name: '50,0 MB' })).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'Maiores arquivos órfãos' })).toBeInTheDocument()
+  })
 })

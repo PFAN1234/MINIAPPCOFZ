@@ -15,6 +15,7 @@ import {
   problemaDoLogo,
   type Admin,
   type ErroCliente,
+  type ResumoOrfaos,
   type BucketObra,
   type ConfigObra,
   type Aditivo,
@@ -953,6 +954,26 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
           contexto: (l.contexto ?? null) as Record<string, unknown> | null,
         }),
       )
+    },
+
+    async resumoOrfaos() {
+      const r = (await rpc<Linha>('admin_resumo_orfaos')) ?? {}
+      const lista = (v: unknown) => (Array.isArray(v) ? (v as Linha[]) : [])
+      const numeroOuNulo = (v: unknown) => (v == null ? null : Number(v))
+      return {
+        buckets: lista(r.buckets).map((b) => ({
+          bucket: String(b.bucket),
+          quantidade: Number(b.quantidade),
+          bytes: Number(b.bytes),
+        })),
+        maiores: lista(r.maiores).map((m) => ({
+          bucket: String(m.bucket),
+          caminho: String(m.caminho),
+          tamanho: numeroOuNulo(m.tamanho),
+          criado_em: textoOuNulo(m.criado_em),
+          detectado_em: String(m.detectado_em),
+        })),
+      } satisfies ResumoOrfaos
     },
 
     async incluirAdmin(usuarioId) {
