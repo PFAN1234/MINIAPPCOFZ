@@ -17,6 +17,8 @@ Num ambiente retangular, os cantos opostos se confundem: se o modelo aparecer vi
 
 No histórico, o registro com fotos da RA leva o selo **RA**. O banco guarda em `foto.ra` contra qual revisão de cada modelo a comparação foi feita, o método de alinhamento, a pose e o erro do canto conferido.
 
+5. **Confirmação:** com a pose resolvida e o modelo desenhado, a tela mostra o aviso "Modelo renderizado no ambiente" por alguns segundos e a marca fixa "✓ Modelo no ambiente" no topo. Antes disso a marca diz "Carregando o modelo…" ou "Desenhando o modelo…"; sem nenhuma sigla ligada, a instrução pede para ligar uma.
+
 ## Limites
 
 - O celular sabe para onde está virado, não que andou. A posição do modelo é indicativa: serve para ver se o ponto está onde o projeto diz, não para medir.

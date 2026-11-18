@@ -205,4 +205,32 @@ describe('TelaRA', () => {
 
     expect(screen.queryByText(/Erro no canto conferido:/)).not.toBeInTheDocument()
   })
+
+  it('avisa que o modelo foi renderizado depois de alinhar', async () => {
+    const orientacoes = [quaternionDoAparelho(0, Math.PI / 3, 0, 0), quaternionDoAparelho(Math.PI / 2, Math.PI / 3, 0, 0)]
+    let passo = 0
+    mocks.iniciarOrientacao.mockResolvedValue({
+      atual: () => orientacoes[passo].clone(),
+      fonte: () => 'navegador',
+      leituras: () => 2,
+      parar: vi.fn(),
+    })
+    mocks.abrirCamera.mockResolvedValue({ getTracks: () => [] } as unknown as MediaStream)
+
+    render(
+      <MemoryRouter>
+        <TelaRA {...propsBase()} />
+      </MemoryRouter>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir câmera' }))
+    await screen.findByRole('button', { name: 'Marcar canto' })
+    fireEvent.click(screen.getByRole('button', { name: 'Marcar canto' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Canto 1' }))
+    passo = 1
+    fireEvent.click(screen.getByRole('button', { name: 'Marcar canto' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Canto 2' }))
+
+    expect(await screen.findByText('Modelo renderizado no ambiente')).toBeInTheDocument()
+    expect(screen.getByTestId('ra-render')).toHaveTextContent('✓ Modelo no ambiente')
+  })
 })

@@ -305,6 +305,14 @@ describe('abertura por link startapp', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Pedidos de acesso' })).toBeInTheDocument()
   })
 
+  it('amb_<slug>_<codigo> abre o ambiente no fluxo da RA (?ra=1)', async () => {
+    sessionStorage.clear()
+    simularTelegram('amb_hto_terreo-apto-101')
+    renderizar('/')
+    expect(await screen.findByRole('heading', { level: 1, name: 'Novo registro' })).toBeInTheDocument()
+    expect(await screen.findByText(/Apto\. 101/)).toBeInTheDocument()
+  })
+
   it('registro inexistente mostra o aviso', async () => {
     sessionStorage.clear()
     simularTelegram('registro_00000000-0000-4000-8000-0000000009ff')

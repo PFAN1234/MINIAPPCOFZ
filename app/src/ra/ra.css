@@ -356,3 +356,37 @@
   fill: rgba(245, 183, 0, 0.18);
   stroke: #f5b700;
 }
+
+/* Confirmação de que o modelo foi desenhado depois do alinhamento. */
+.ra-render {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 3.6rem);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ra-render-ok {
+  color: #7dffa8;
+}
+
+.ra-render-aviso {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  background: rgb(0 0 0 / 0.7);
+  color: #fff;
+  font-weight: 600;
+  pointer-events: none;
+}

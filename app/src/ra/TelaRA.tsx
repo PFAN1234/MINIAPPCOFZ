@@ -134,6 +134,12 @@ export default function TelaRA(props: PropsTelaRA) {
   const [fotos, setFotos] = useState<FotoRA[]>([])
   const [capturando, setCapturando] = useState(false)
   const [aviso, setAviso] = useState('')
+  // Confirmação ao fiscal: modelos baixados e primeiro quadro desenhado já alinhado.
+  const [modeloPronto, setModeloPronto] = useState(false)
+  const [renderizado, setRenderizado] = useState(false)
+  const [avisoRender, setAvisoRender] = useState(false)
+  const modeloProntoRef = useRef(false)
+  const renderizouRef = useRef(false)
 
   const visiveis = modelos.filter((m) => !desligados.has(m.sigla))
   const temQr = Boolean(qrNoMundo(geometria))
@@ -205,6 +211,13 @@ export default function TelaRA(props: PropsTelaRA) {
       if (poseAtual.current) {
         m.posicionar(poseAtual.current, o.atual(), fovAtual.current)
         m.renderizar()
+        if (!renderizouRef.current && modeloProntoRef.current && modelos.some((x) => !desligadosRef.current.has(x.sigla))) {
+          renderizouRef.current = true
+          setRenderizado(true)
+          // Aviso passageiro; a marca fixa no topo continua.
+          setAvisoRender(true)
+          setTimeout(() => setAvisoRender(false), 3500)
+        }
       } else {
         m.posicionarProcura(o.atual(), fovAtual.current)
         m.renderizar()
@@ -215,7 +228,7 @@ export default function TelaRA(props: PropsTelaRA) {
       cancelAnimationFrame(quadro)
       observador.disconnect()
     }
-  }, [fase])
+  }, [fase, modelos])
 
   // Avisa enquanto o aparelho não entregar nenhuma leitura de orientação.
   useEffect(() => {
@@ -258,6 +271,8 @@ export default function TelaRA(props: PropsTelaRA) {
       m.definirVisiveis(new Set(modelos.filter((x) => !desligadosRef.current.has(x.sigla)).map((x) => x.sigla)))
       m.definirMalha(malhaRef.current)
       setCarga('')
+      modeloProntoRef.current = true
+      setModeloPronto(true)
     } catch (e) {
       fecharCamera(fluxo.current)
       fluxo.current = null
@@ -272,6 +287,8 @@ export default function TelaRA(props: PropsTelaRA) {
   }
 
   function realinhar() {
+    renderizouRef.current = false
+    setRenderizado(false)
     poseQr.current = null
     poseRejeitada.current = null
     setBase(null)
@@ -532,7 +549,11 @@ export default function TelaRA(props: PropsTelaRA) {
           : 'Aponte a mira para um canto do ambiente (encontro das paredes com o piso ou o teto) e toque em Marcar canto'
       : conferindo
         ? 'Aponte a mira para um terceiro canto e toque em Conferir este canto'
-        : 'Arraste para girar ou subir o modelo; pinça ajusta o tamanho'
+        : !modeloPronto
+          ? 'Alinhado. Carregando o modelo…'
+          : visiveis.length === 0
+            ? 'Nenhum modelo ligado: toque em uma sigla para exibir'
+            : 'Arraste para girar ou subir o modelo; pinça ajusta o tamanho'
 
   return (
     <div className="ra" role="dialog" aria-modal="true" aria-label="Comparar com o modelo">
@@ -568,6 +589,17 @@ export default function TelaRA(props: PropsTelaRA) {
           </button>
         )}
       </header>
+
+      {fase === 'pronto' && (
+        <p className={renderizado ? 'ra-render ra-render-ok' : 'ra-render'} data-testid="ra-render">
+          {renderizado ? '✓ Modelo no ambiente' : modeloPronto ? 'Desenhando o modelo…' : 'Carregando o modelo…'}
+        </p>
+      )}
+      {avisoRender && (
+        <p className="ra-render-aviso" role="status">
+          Modelo renderizado no ambiente
+        </p>
+      )}
 
       {fase === 'inicio' && (
         <div className="ra-cartao">
