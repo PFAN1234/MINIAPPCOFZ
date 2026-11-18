@@ -81,7 +81,7 @@ alter table public.foto
 
 ## QR
 
-O QR carrega o link do ambiente: `https://t.me/<bot>/<app>?startapp=amb_<slug>_<codigo>`. Fica na face interna da parede, virado para dentro do ambiente, com as bordas alinhadas com a vertical.
+O QR carrega o link do ambiente: `https://t.me/<bot>/<app>?startapp=amb_<slug>_<codigo>`. Fica na face interna da parede, virado para dentro do ambiente, com as bordas alinhadas com a vertical. Ao escanear com a câmera do celular, o Telegram abre o app e `AberturaPorLink` leva direto a `/obras/<slug>/ambientes/<codigo>/novo?ra=1`, ou seja, ao "Comparar com o modelo (RA)". Sem geometria ou modelo publicado, cai no formulário de novo registro. A câmera só abre com um toque (exigência do navegador e do iPhone).
 
 ## Dados por obra
 

@@ -29,7 +29,7 @@ function marcarConsumido(parametro: string): void {
 /**
  * Trata o parâmetro do link `startapp` uma vez por abertura do app:
  * `registro_<uuid>` abre o registro no ambiente; `acessos_<slug>` abre os pedidos de acesso;
- * `amb_<slug>_<codigo>` (QR fixado no ambiente) abre o ambiente; `ra_teste` abre o teste
+ * `amb_<slug>_<codigo>` (QR fixado no ambiente) abre o ambiente já em "Comparar com o modelo (RA)"; `ra_teste` abre o teste
  * da realidade aumentada no aparelho.
  */
 export function AberturaPorLink() {
@@ -55,7 +55,8 @@ export function AberturaPorLink() {
     const ambiente = AMBIENTE.exec(parametro)
     if (ambiente) {
       marcarConsumido(parametro)
-      navigate(`/obras/${ambiente[1]}/ambientes/${ambiente[2]}`)
+      // Direto na RA; sem geometria ou modelo publicado, NovoRegistro mostra o formulário comum.
+      navigate(`/obras/${ambiente[1]}/ambientes/${ambiente[2]}/novo?ra=1`)
       return
     }
     const registro = REGISTRO.exec(parametro)
