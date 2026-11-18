@@ -1,5 +1,6 @@
 import type {
   Admin,
+  ErroCliente,
   Bucket,
   ConfigObra,
   DadosEditorPlanta,
@@ -171,6 +172,8 @@ export interface RepositorioAdmin {
   incluirAdmin(usuarioId: string): Promise<void>
   removerAdmin(usuarioId: string): Promise<void>
   listarUsuarios(): Promise<UsuarioApp[]>
+  /** RPC `admin_listar_erros_cliente`: erros do Mini App e do site, do mais recente ao mais antigo. */
+  listarErrosCliente(limite?: number): Promise<ErroCliente[]>
 }
 
 /** Como no app: a fixture só entra no build com `VITE_DADOS=fixture`. */

@@ -5,9 +5,13 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import './admin.css'
 import AdminApp from './AdminApp.tsx'
+import ErrorBoundary from '../components/ErrorBoundary.tsx'
+import { instalarCapturaGlobal } from '../util/erros.ts'
 import { Carregando } from './componentes.tsx'
 import { RepositorioAdminProvider } from './dados/contexto.tsx'
 import { consumirTokenDaUrl, criarEntrada } from './entrada.ts'
+
+instalarCapturaGlobal('admin')
 
 // Lido e apagado da URL antes de tudo, para o token não ficar no histórico nem ser usado duas vezes.
 const entrada = criarEntrada(consumirTokenDaUrl())
@@ -18,6 +22,7 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <RepositorioAdminProvider carregando={<Carregando />}>
         <BrowserRouter basename="/admin">
@@ -25,5 +30,6 @@ createRoot(document.getElementById('root')!).render(
         </BrowserRouter>
       </RepositorioAdminProvider>
     </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

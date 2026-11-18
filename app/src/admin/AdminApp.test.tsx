@@ -264,3 +264,15 @@ describe('admins', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Não é possível remover o último admin')
   })
 })
+
+describe('erros do cliente', () => {
+  it('lista os erros e mostra a pilha ao clicar', async () => {
+    const usuario = userEvent.setup()
+    renderizar('/erros')
+    expect(await screen.findByRole('heading', { name: 'Erros do cliente' })).toBeInTheDocument()
+    expect(await screen.findByRole('cell', { name: 'Maria Souza' })).toBeInTheDocument()
+    expect(screen.queryByText(/at Obra \(obra\.tsx/)).not.toBeInTheDocument()
+    await usuario.click(screen.getByRole('button', { name: /Cannot read properties/ }))
+    expect(screen.getByText(/at Obra \(obra\.tsx/)).toBeInTheDocument()
+  })
+})

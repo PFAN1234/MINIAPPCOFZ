@@ -5,6 +5,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { criarClienteSupabase } from '../../dados/supabase.ts'
+import { configurarEnvioErros } from '../../util/erros.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import type { PlantaAdmin } from '../ra/planta.ts'
 import {
@@ -13,6 +14,7 @@ import {
   novoCaminhoLogo,
   problemaDoLogo,
   type Admin,
+  type ErroCliente,
   type BucketObra,
   type ConfigObra,
   type Aditivo,
@@ -213,6 +215,7 @@ function erroDaRpc(e: unknown): ErroAdmin {
 type Linha = Record<string, unknown>
 
 export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarClienteAdmin()): RepositorioAdmin {
+  configurarEnvioErros(cliente, 'admin')
   const base = String(import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '')
   const chave = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '')
 
@@ -930,6 +933,24 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
           telegram_id: Number(l.telegram_id),
           criado_em: String(l.criado_em),
           criado_por_nome: l.criado_por_nome == null ? null : String(l.criado_por_nome),
+        }),
+      )
+    },
+
+    async listarErrosCliente(limite = 200) {
+      return ((await rpc<Linha[]>('admin_listar_erros_cliente', { p_limite: limite })) ?? []).map(
+        (l): ErroCliente => ({
+          id: Number(l.id),
+          criado_em: String(l.criado_em),
+          usuario_id: l.usuario_id == null ? null : String(l.usuario_id),
+          usuario_nome: l.usuario_nome == null ? null : String(l.usuario_nome),
+          app: l.app === 'admin' ? 'admin' : 'miniapp',
+          versao: l.versao == null ? null : String(l.versao),
+          rota: l.rota == null ? null : String(l.rota),
+          mensagem: String(l.mensagem),
+          pilha: l.pilha == null ? null : String(l.pilha),
+          agente: l.agente == null ? null : String(l.agente),
+          contexto: (l.contexto ?? null) as Record<string, unknown> | null,
         }),
       )
     },
