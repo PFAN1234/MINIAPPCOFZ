@@ -23,6 +23,7 @@ import {
   novoCaminhoLogo,
   problemaDoLogo,
   type Admin,
+  type ErroCliente,
   type AmbienteBanco,
   type ConfigObra,
   type EstadoSessao,
@@ -376,6 +377,35 @@ function snapshotFixture(data: string): SnapshotBoletim {
     ],
   }
 }
+
+const ERROS_CLIENTE_BASE: ErroCliente[] = [
+  {
+    id: 2,
+    criado_em: '2026-11-18T14:32:00Z',
+    usuario_id: 'usuario-maria',
+    usuario_nome: 'Maria Souza',
+    app: 'miniapp',
+    versao: 'v54.261118.abc1234',
+    rota: '/obras/hto-bloco-a',
+    mensagem: "Cannot read properties of undefined (reading 'nome')",
+    pilha: "TypeError: Cannot read properties of undefined (reading 'nome')\n    at Obra (obra.tsx:42:10)",
+    agente: 'Mozilla/5.0 (Linux; Android 14) Telegram',
+    contexto: { componentStack: '\n    at Obra\n    at App' },
+  },
+  {
+    id: 1,
+    criado_em: '2026-11-17T09:05:00Z',
+    usuario_id: null,
+    usuario_nome: null,
+    app: 'admin',
+    versao: 'v54.261118.abc1234',
+    rota: '/admin/boletins',
+    mensagem: 'Failed to fetch',
+    pilha: null,
+    agente: 'Mozilla/5.0 (X11; Linux x86_64) Chrome/130',
+    contexto: null,
+  },
+]
 
 export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?: boolean } = {}): RepositorioAdmin {
   const ehAdmin = opcoes.admin !== false
@@ -1636,6 +1666,11 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         o.config_atualizada_por = VOCE.nome
       }
       return { publicacoes: feitas, ambientes_ativos: planta.ambientes.filter((a) => a.ativo).length, inativados }
+    },
+
+    async listarErrosCliente(limite = 200): Promise<ErroCliente[]> {
+      exigirAdmin()
+      return ERROS_CLIENTE_BASE.slice(0, limite)
     },
 
     async listarAdmins(): Promise<Admin[]> {

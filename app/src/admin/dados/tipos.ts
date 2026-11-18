@@ -587,6 +587,20 @@ export interface Admin {
   criado_por_nome: string | null
 }
 
+export interface ErroCliente {
+  id: number
+  criado_em: string
+  usuario_id: string | null
+  usuario_nome: string | null
+  app: 'miniapp' | 'admin'
+  versao: string | null
+  rota: string | null
+  mensagem: string
+  pilha: string | null
+  agente: string | null
+  contexto: Record<string, unknown> | null
+}
+
 export interface UsuarioApp {
   id: string
   nome: string
