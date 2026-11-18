@@ -382,7 +382,7 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Parte A: tabela `erro_cliente`, RPCs, retenção de 90 dias, ErrorBoundary e captura global no Mini App e no admin, tela Manutenção → Erros.
 - [x] Parte B: varredura diária de órfãos nos buckets (só simulação, nada é apagado) e aba Manutenção → Arquivos órfãos.
 - [x] Migrations `20261125090000_erro_cliente.sql` e `20261125100000_orfaos_storage.sql` aplicadas no `miniappcofz-dev` em 2026-11-18 (md5 das 4 funções igual ao repositório; crons `limpar-erro-cliente` e `varrer-orfaos-storage` agendados; primeira varredura: 0 órfãos).
-- [ ] Conferir no site admin a tela Manutenção (abas Erros e Arquivos órfãos).
+- [x] Tela Manutenção conferida no site admin pelo usuário (abas Erros e Arquivos órfãos).
 - [x] E2E: testes da Gestão passam a usar o Controle de acesso (PR #57).
 - [ ] Depois de conferir a lista de órfãos por alguns dias: remoção real por Edge Function (API do Storage), tratando envios de planta/modelo pendentes há mais de 7 dias.
 - [ ] Backup e restauração do Postgres e do Storage (adiado pelo usuário).
