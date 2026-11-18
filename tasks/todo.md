@@ -375,3 +375,12 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Acessos por lista (`docs/contrato-acessos.md`): tela `/acessos` "Acessos da equipe" (pessoas × obras, Sem acesso/Equipe/Gestor; qualquer gestor altera qualquer obra; admin do grupo fixo em Gestor). RPCs `matriz_acessos`/`definir_acesso`; `membro_grupo.admin`; `sincronizar_acesso` com `visto`. O `bot-webhook` registra quem fala, entra ou sai do grupo (`allowed_updates` com `chat_member`). "Solicitar acesso" continua. Bot já é admin do grupo TesteDev.
 - [x] Controle de acesso (`docs/contrato-controle-acesso.md`): "Acessos da equipe" virou "Controle de acesso", botão embaixo de Administração (com selo de pedidos), para gestor ou admin. Sai o botão Gestão; as publicações com problema aparecem num aviso no cartão (`/obras/:slug/publicacoes`; `/gestao` redireciona). `definir_acesso('nenhum')` recusa o pedido pendente. Portal: aba Pessoas com uma coluna por obra. Migration `20261124090000_controle_acesso` aplicada. Falta: teste no Telegram e no portal; limpar hooks sem uso (`useParticipantes`, `useDefinirPapel`, `useRemoverParticipante`).
 - [ ] Exclusão de etapa/obra: remover também os PDFs do bucket `relatorios`.
+
+## Melhorias de 2026-11-18: dependências, erros do cliente e órfãos (contrato: `docs/contrato-erros-orfaos.md`)
+
+- [x] `@vercel/functions` 3.11.3 (zera os 4 alertas altos do `npm audit`; restam 2 baixos via `@thatopen/components`, que exigem versão maior).
+- [x] Parte A: tabela `erro_cliente`, RPCs, retenção de 90 dias, ErrorBoundary e captura global no Mini App e no admin, tela Manutenção → Erros.
+- [x] Parte B: varredura diária de órfãos nos buckets (só simulação, nada é apagado) e aba Manutenção → Arquivos órfãos.
+- [ ] Aplicar as migrations `20261125090000_erro_cliente.sql` e `20261125100000_orfaos_storage.sql` no `miniappcofz-dev` e conferir no site (Manutenção).
+- [ ] Depois de conferir a lista de órfãos por alguns dias: remoção real por Edge Function (API do Storage), tratando envios de planta/modelo pendentes há mais de 7 dias.
+- [ ] Backup e restauração do Postgres e do Storage (adiado pelo usuário).

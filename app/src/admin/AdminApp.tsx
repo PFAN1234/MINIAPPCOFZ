@@ -6,6 +6,7 @@ import { useRepositorioAdmin } from './dados/contexto.tsx'
 import type { Entrada } from './entrada.ts'
 import type { EstadoSessao, UsuarioSessao } from './dados/tipos.ts'
 import Admins from './telas/Admins.tsx'
+import Erros from './telas/Erros.tsx'
 import { AcessoNegado, Entrar } from './telas/Entrar.tsx'
 import ObraAdmin, { NovaObra } from './telas/ObraAdmin.tsx'
 import ObrasAdmin from './telas/ObrasAdmin.tsx'
@@ -84,6 +85,7 @@ export default function AdminApp({ entrada }: { entrada: Entrada }) {
         <Route path="organizacao" element={<Organizacao />} />
         <Route path="obras/:slug/ra" element={<RaObra />} />
         <Route path="admins" element={<Admins />} />
+        <Route path="erros" element={<Erros />} />
         <Route path="*" element={<p>Página não encontrada.</p>} />
       </Routes>
     </Layout>
@@ -103,6 +105,7 @@ function Layout({ usuario, onSair, children }: { usuario: UsuarioSessao; onSair:
           <NavLink to="/pessoas">Pessoas</NavLink>
           <NavLink to="/organizacao">Organização</NavLink>
           <NavLink to="/admins">Admins</NavLink>
+          <NavLink to="/erros">Manutenção</NavLink>
         </nav>
         <span className="adm-usuario">{usuario.nome}</span>
         <button type="button" className="adm-botao adm-botao-discreto" onClick={onSair}>

@@ -379,3 +379,22 @@ Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra,
 | RPCs | `admin_listar_ra(p_obra)`, `admin_definir_qr(p_ambiente, p_parede, p_distancia_m, p_altura_m, p_lado_m)`, `admin_remover_qr(p_ambiente)` |
 | Repositório | `listarRA`, `definirQr`, `removerQr` (`dados/`; a fixture traz dois ambientes da HTO com geometria, um deles com QR) |
 | Testes | `app/src/admin/ra/*.test.ts`, `app/src/admin/telas/ra/RaObra.test.tsx` |
+
+## Erros do cliente
+
+Erros do Mini App e do site admin ficam na tabela `public.erro_cliente` (migration `20261125090000_erro_cliente.sql`; contrato em `docs/contrato-erros-orfaos.md`, Parte A), sem serviço externo. A lista está em `/admin/erros` (link "Manutenção" no menu, aba "Erros"): quando, app, versão, rota, usuário e mensagem; clicar na mensagem mostra a pilha, o contexto e o navegador.
+
+## Arquivos órfãos nos buckets (simulação)
+
+Migration `20261125100000_orfaos_storage.sql` (contrato: `docs/contrato-erros-orfaos.md`, Parte B). Todo dia às 03:17 UTC o `pg_cron` roda `privado.varrer_orfaos_storage()`, que grava em `public.orfao_storage` os objetos de `fotos`, `plantas`, `originais`, `modelos`, `boletins`, `organizacao` e `relatorios` que não aparecem em nenhuma coluna de caminho e foram criados há mais de 7 dias. **Nada é apagado do Storage**: a remoção real ficará para uma Edge Function futura.
+
+- **Como conferir no site:** `/admin/erros` (menu "Manutenção"), aba "Arquivos órfãos": resumo por bucket (quantidade e tamanho) e os 100 maiores.
+- **Como conferir no SQL:** `select public.admin_resumo_orfaos();` (como admin) ou, como superusuário, `select * from public.orfao_storage order by tamanho desc nulls last;`. Para forçar a varredura agora: `select privado.varrer_orfaos_storage();`.
+- **Mapeamento:** `fotos` = `foto.storage_path`; `plantas` = `planta.imagem_path`, `planta.imagem_hd_path`, `planta_detalhe.imagem_path`; `originais` = `publicacao_planta.pdf_path`; `modelos` = `modelo.caminho` e `publicacao_modelo.caminho`; `boletins` = `boletim.pdf_path` e a imagem `<etapa_id>/<numero sem barras>-clima.png`; `organizacao` = `organizacao.logo_path`. Em `relatorios` (sem coluna) só é órfão o objeto cuja primeira pasta é um uuid de obra/etapa que não existe mais; o resto conta como referenciado.
+- Um arquivo que ganha referência (ou some do bucket) sai da lista na varredura seguinte. Os 7 dias de carência cobrem o intervalo entre o envio e o registro no banco.
+
+- **Captura:** `app/src/util/erros.ts` (`registrarErro`, `instalarCapturaGlobal`) pega `error` e `unhandledrejection` da janela; o `ErrorBoundary` (`app/src/components/`) mostra "Algo deu errado" com "Recarregar" e registra o erro com o `componentStack`. Os dois estão ligados em `app/src/main.tsx` e `app/src/admin/main.tsx`.
+- **Envio:** RPC `registrar_erro_cliente` (só `authenticated`; sem sessão ignora em silêncio; 20 registros por usuário por minuto; textos cortados em mensagem 1.000, pilha 8.000, rota 300, versão 50 e agente 300 caracteres; contexto acima de 4 KB vira `null`). No cliente, a mesma mensagem não é reenviada em 60 s e há no máximo 10 envios por carregamento. Com `VITE_DADOS=fixture` ou sem sessão só sai `console.error`.
+- **Leitura:** RPC `admin_listar_erros_cliente(p_limite)` e RLS só para admin; a tabela não aceita insert, update nem delete direto.
+- **Retenção:** `cron.schedule` diário (`limpar-erro-cliente`, 03:30 UTC) apaga registros com mais de 90 dias.
+- **Testes:** `tests/db/test_erro_cliente.py`, `app/src/util/erros.test.ts`, `app/src/components/ErrorBoundary.test.tsx`, `app/src/admin/AdminApp.test.tsx`.
