@@ -5,6 +5,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { criarClienteSupabase } from '../../dados/supabase.ts'
+import { configurarEnvioErros } from '../../util/erros.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import type { PlantaAdmin } from '../ra/planta.ts'
 import {
@@ -13,6 +14,8 @@ import {
   novoCaminhoLogo,
   problemaDoLogo,
   type Admin,
+  type ErroCliente,
+  type ResumoOrfaos,
   type BucketObra,
   type ConfigObra,
   type Aditivo,
@@ -213,6 +216,7 @@ function erroDaRpc(e: unknown): ErroAdmin {
 type Linha = Record<string, unknown>
 
 export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarClienteAdmin()): RepositorioAdmin {
+  configurarEnvioErros(cliente, 'admin')
   const base = String(import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '')
   const chave = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '')
 
@@ -932,6 +936,44 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
           criado_por_nome: l.criado_por_nome == null ? null : String(l.criado_por_nome),
         }),
       )
+    },
+
+    async listarErrosCliente(limite = 200) {
+      return ((await rpc<Linha[]>('admin_listar_erros_cliente', { p_limite: limite })) ?? []).map(
+        (l): ErroCliente => ({
+          id: Number(l.id),
+          criado_em: String(l.criado_em),
+          usuario_id: l.usuario_id == null ? null : String(l.usuario_id),
+          usuario_nome: l.usuario_nome == null ? null : String(l.usuario_nome),
+          app: l.app === 'admin' ? 'admin' : 'miniapp',
+          versao: l.versao == null ? null : String(l.versao),
+          rota: l.rota == null ? null : String(l.rota),
+          mensagem: String(l.mensagem),
+          pilha: l.pilha == null ? null : String(l.pilha),
+          agente: l.agente == null ? null : String(l.agente),
+          contexto: (l.contexto ?? null) as Record<string, unknown> | null,
+        }),
+      )
+    },
+
+    async resumoOrfaos() {
+      const r = (await rpc<Linha>('admin_resumo_orfaos')) ?? {}
+      const lista = (v: unknown) => (Array.isArray(v) ? (v as Linha[]) : [])
+      const numeroOuNulo = (v: unknown) => (v == null ? null : Number(v))
+      return {
+        buckets: lista(r.buckets).map((b) => ({
+          bucket: String(b.bucket),
+          quantidade: Number(b.quantidade),
+          bytes: Number(b.bytes),
+        })),
+        maiores: lista(r.maiores).map((m) => ({
+          bucket: String(m.bucket),
+          caminho: String(m.caminho),
+          tamanho: numeroOuNulo(m.tamanho),
+          criado_em: textoOuNulo(m.criado_em),
+          detectado_em: String(m.detectado_em),
+        })),
+      } satisfies ResumoOrfaos
     },
 
     async incluirAdmin(usuarioId) {

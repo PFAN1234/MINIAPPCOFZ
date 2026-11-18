@@ -36,19 +36,24 @@ test('pedir acesso à Obra Demonstração mostra "Aguardando aprovação"', asyn
   await expect(page.getByRole('button', { name: /Solicitar acesso/ })).toHaveCount(0)
 })
 
-test('o gestor aprova o pedido da Maria', async ({ page }) => {
-  // O Controle de acesso fica no Início (só para o gestor); o pedido aparece na pessoa.
+test('o gestor aprova o pedido da Maria no Controle de acesso', async ({ page }) => {
+  // O Controle de acesso fica no Início, embaixo da Administração (gestor ou admin), com o selo de pedidos.
   await page.goto('/')
   await page.getByRole('link', { name: /^Controle de acesso/ }).tap()
   await expect(page).toHaveURL(/\/acessos$/)
   await expect(page.getByRole('heading', { name: 'Controle de acesso', level: 1 })).toBeVisible()
+
   const maria = page.getByRole('listitem').filter({ hasText: 'Maria Souza' })
-  await expect(maria.getByText('@maria')).toBeVisible()
-  await expect(maria.getByText('Pediu acesso')).toBeVisible()
+  await expect(maria).toContainText('@maria')
+  await expect(maria).toContainText('Pediu acesso')
+  // Pedido pendente sem acesso: nenhuma opção marcada.
   const hto = maria.getByRole('group', { name: 'Acesso de Maria Souza em HTO' })
+  await expect(hto.getByRole('button', { pressed: true })).toHaveCount(0)
+
+  // Liberar como Equipe aprova o pedido.
   await hto.getByRole('button', { name: 'Equipe' }).tap()
   await expect(hto.getByRole('button', { name: 'Equipe' })).toHaveAttribute('aria-pressed', 'true')
-  await expect(maria.getByText('Pediu acesso')).toHaveCount(0)
+  await expect(maria).not.toContainText('Pediu acesso')
 })
 
 test('link startapp registro_<id> abre o ambiente com o visualizador', async ({ page }) => {

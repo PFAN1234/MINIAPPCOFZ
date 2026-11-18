@@ -43,6 +43,7 @@ create table storage.objects (
   bucket_id text references storage.buckets (id),
   name text,
   owner_id text,
+  created_at timestamptz default now(),
   -- No Supabase o Storage preenche (size, mimetype, eTag...) ao terminar o upload.
   metadata jsonb,
   unique (bucket_id, name)

@@ -70,24 +70,26 @@ test('encerrar sem sinal fica na fila e é enviado quando o sinal volta', async 
   await expect(page.getByText('1 item aguardando envio')).toHaveCount(0)
 })
 
-test('Controle de acesso: mudar o papel de um participante; Publicações: reenviar uma publicação', async ({ page }) => {
-  // O Controle de acesso e o aviso de publicações ficam no Início (só para o gestor).
+test('Controle de acesso e publicações: mudar o papel de um participante e reenviar uma publicação', async ({ page }) => {
+  // O Controle de acesso fica no Início, embaixo da Administração (gestor ou admin).
   await page.goto('/')
   await page.getByRole('link', { name: /^Controle de acesso/ }).tap()
   await expect(page.getByRole('heading', { name: 'Controle de acesso', level: 1 })).toBeVisible()
 
-  const marcos = () =>
-    page.getByRole('group', { name: 'Acesso de Marcos Teixeira em HTO' })
-  await expect(marcos().getByRole('button', { name: 'Equipe' })).toHaveAttribute('aria-pressed', 'true')
-  await marcos().getByRole('button', { name: 'Gestor' }).tap()
-  await expect(marcos().getByRole('button', { name: 'Gestor' })).toHaveAttribute('aria-pressed', 'true')
+  const papel = () => page.getByRole('group', { name: 'Acesso de Marcos Teixeira em HTO' })
+  await expect(papel().getByRole('button', { name: 'Equipe' })).toHaveAttribute('aria-pressed', 'true')
+  await papel().getByRole('button', { name: 'Gestor' }).tap()
+  await expect(papel().getByRole('button', { name: 'Gestor' })).toHaveAttribute('aria-pressed', 'true')
   // Persiste: a lista recarregada mostra o papel novo.
   await page.reload()
-  await expect(marcos().getByRole('button', { name: 'Gestor' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(papel().getByRole('button', { name: 'Gestor' })).toHaveAttribute('aria-pressed', 'true')
 
+  // As publicações com problema aparecem num aviso no cartão da obra, no Início (só para o gestor).
   await page.goto('/')
-  await page.getByRole('link', { name: /publicações? com problema/ }).tap()
+  await page.getByRole('link', { name: /publicaç(ão|ões) com problema$/ }).tap()
+  await expect(page).toHaveURL(/\/obras\/hto\/publicacoes$/)
   await expect(page.getByRole('heading', { name: 'Publicações com problema', level: 1 })).toBeVisible()
+
   const falhou = page.locator('li', { hasText: 'Guarda-corpo com fixação folgada.' })
   await expect(falhou).toContainText('Falhou')
   await falhou.getByRole('button', { name: 'Reenviar' }).tap()

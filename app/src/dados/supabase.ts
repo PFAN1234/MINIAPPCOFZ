@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import { entrarComTelegram } from './login.ts'
+import { configurarEnvioErros } from '../util/erros.ts'
 import { limitesPeriodo } from '../util/periodo.ts'
 import { nomeMostrado } from './nome.ts'
 import { FUSO_PADRAO, dataNoFuso } from '../util/fuso.ts'
@@ -214,6 +215,7 @@ const COLUNAS_AMBIENTE =
 export function criarRepositorioSupabase(
   cliente: SupabaseClient = criarClienteSupabase(),
 ): Repositorio {
+  configurarEnvioErros(cliente, 'miniapp')
   async function obraPorSlug(slug: string): Promise<ObraResumo> {
     const linha = checar(
       await cliente.from('obra').select('id, slug, nome').eq('slug', slug).maybeSingle(),
