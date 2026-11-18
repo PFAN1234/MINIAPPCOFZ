@@ -56,6 +56,8 @@ begin
     union all select 'boletins', b.pdf_path from public.boletim b where b.pdf_path is not null
     union all select 'boletins', b.etapa_id::text || '/' || replace(b.numero, '/', '') || '-clima.png'
                 from public.boletim b
+    union all select 'boletins', regexp_replace(b.pdf_path, '\.pdf$', '') || '-clima.png'
+                from public.boletim b where b.pdf_path is not null
     union all select 'organizacao', o.logo_path from public.organizacao o where o.logo_path is not null
   )
   select o.bucket_id as bucket, o.name as caminho,
