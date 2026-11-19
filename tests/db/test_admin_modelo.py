@@ -242,6 +242,15 @@ def test_registrar_cria_e_atualiza(cenario, admin):
     assert historico(cenario, obra) == 2
 
 
+    lista = listar(cenario, admin, obra)
+    assert [h['hash'] for h in lista['historico']] == ['d' * 16, 'a' * 16]
+    assert lista['historico'][0]['publicado_por_nome'] == 'Usuário 3'
+    assert lista['historico'][0]['origem'] == 'frag' and lista['historico'][0]['arquivo_nome'] is None
+    assert lista['historico'][0]['ifc_bytes'] is None
+    assert lista['historico'][1]['origem'] == 'ifc' and lista['historico'][1]['arquivo_nome'] == 'ARQ-R01.ifc'
+    assert lista['historico'][1]['ifc_bytes'] == 5000
+
+
 def test_republicar_limpa_matriz_da_revisao_anterior(cenario, admin):
     obra = cenario.obra_a
     p1 = payload(obra, sigla='ANT', hash_='a', bytes_=100)
@@ -256,14 +265,6 @@ def test_republicar_limpa_matriz_da_revisao_anterior(cenario, admin):
     with sessao(cenario.dsn, papel=None) as cur:
         cur.execute("select matriz from public.modelo where obra_id = %s and sigla = 'ANT'", (obra,))
         assert cur.fetchone()[0] is None
-
-    lista = listar(cenario, admin, obra)
-    assert [h['hash'] for h in lista['historico']] == ['d' * 16, 'a' * 16]
-    assert lista['historico'][0]['publicado_por_nome'] == 'Usuário 3'
-    assert lista['historico'][0]['origem'] == 'frag' and lista['historico'][0]['arquivo_nome'] is None
-    assert lista['historico'][0]['ifc_bytes'] is None
-    assert lista['historico'][1]['origem'] == 'ifc' and lista['historico'][1]['arquivo_nome'] == 'ARQ-R01.ifc'
-    assert lista['historico'][1]['ifc_bytes'] == 5000
 
 
 def test_registrar_substitui_caminho_antigo_do_script(cenario, admin):
