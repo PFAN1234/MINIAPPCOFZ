@@ -95,4 +95,15 @@ describe('template do relatório de pendências', () => {
     expect(caminhosDasFotos(relatorioExemplo())).toEqual(['e/o/a1.jpg', 'e/o/b1.jpg', 'e/o/a2.jpg', 'e/o/a3.jpg', 'e/o/b3.jpg', 'e/o/c3.jpg'])
     expect(rodapeRelatorio('2ª ETAPA')).toContain('Relatório de pendências · 2ª ETAPA · página')
   })
+
+  it('rotula fotos da RA como real (RA) e modelo (RA)', () => {
+    const r = relatorioExemplo()
+    r.pendencias[0].fotos = [
+      { path: 'e/o/limpa.jpg', largura: 1200, altura: 900, origem: 'ra_limpa' },
+      { path: 'e/o/modelo.jpg', largura: 1200, altura: 900, origem: 'ra_modelo' },
+    ]
+    const t = texto(montarHtmlRelatorio(r, opcoes()))
+    expect(t).toContain('Foto 1 · real (RA)')
+    expect(t).toContain('Foto 2 · modelo (RA)')
+  })
 })

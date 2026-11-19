@@ -63,13 +63,13 @@ alter table public.foto
 
 - Leitura das três tabelas novas: participantes da obra do ambiente (mesma regra de `ambiente`) e admins. Escrita só por RPC de admin ou pelo `service_role`/seed.
 - `concluir_registro`: cada item de `fotos` aceita os campos opcionais `origem` e `ra`; ausentes valem `'normal'` e `null`. `ra` só é aceito quando `origem` começa com `ra_`.
-- RPCs de admin (padrão das demais `admin_*`): `admin_listar_ra(p_obra uuid)` devolve, por ambiente ativo da obra com geometria, `ambiente_id`, `codigo`, `nome`, `pavimento` (nome), `contorno`, `y_piso`, `y_teto` e `qr` (objeto `{parede, distancia_m, altura_m, lado_m}` ou null); `admin_definir_qr(p_ambiente uuid, p_parede int, p_distancia_m double precision, p_altura_m double precision, p_lado_m double precision)`; `admin_remover_qr(p_ambiente uuid)`.
+- RPCs de admin (padrão das demais `admin_*`): `admin_listar_ra(p_obra uuid)` devolve, por ambiente ativo da obra com geometria, `ambiente_id`, `codigo`, `nome`, `pavimento` (nome), `contorno`, `contorno_pagina`, `y_piso`, `y_teto`, `planta` (ativa do pavimento, ou null) e `qr` (objeto `{parede, distancia_m, altura_m, lado_m}` ou null); `admin_definir_qr(p_ambiente uuid, p_parede int, p_distancia_m double precision, p_altura_m double precision, p_lado_m double precision)` (exige ambiente ativo); `admin_remover_qr(p_ambiente uuid)`.
 
 ## `foto.ra`
 
 ```json
 {
-  "par": "<id da outra foto do par>",
+  "par": "<id da outra foto do par (omitido se removida antes do envio)>",
   "modelos": [{ "sigla": "ELT", "revisao": "R01", "hash": "…" }],
   "alinhamento": "cantos" | "qr",
   "pose": { "posicao": [x, y, z], "rumo": 0.0, "fov": 60.0 },
@@ -91,8 +91,16 @@ O QR carrega o link do ambiente: `https://t.me/<bot>/<app>?startapp=amb_<slug>_<
 {
   "obra": "hto",
   "referencial": { "sigla": "ARQ", "revisao": "R06", "coordenadas": [201.82966, -1.19, -327.13588, 1, 0, 0, 0, 1, 0] },
+  "calibracao": { "<pavimento>": { "escala": 22.68, "tx": 0.0, "ty": 0.0, "origem": "documentada" } },
   "ambientes": {
-    "<codigo do ambiente>": { "guid": "…", "contorno": [[x, z], …], "y_piso": -0.805, "y_teto": 1.795, "area_m2": 23.88 }
+    "<codigo do ambiente>": {
+      "guid": "…",
+      "contorno": [[x, z], …],
+      "contorno_pagina": [[x, y], …],
+      "y_piso": -0.805,
+      "y_teto": 1.795,
+      "area_m2": 23.88
+    }
   },
   "sem_vinculo": [{ "codigo": "…", "motivo": "…" }]
 }

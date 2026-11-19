@@ -21,18 +21,22 @@ def _carregar(nome, rel):
 mod = _carregar("gerar_geometria", "scripts/gerar_geometria.py")
 
 INVENTARIO = ROOT / "artifacts/validation/ifc/CE01-14PE01-ARQ-R05-inspection.json"
-pytestmark = pytest.mark.skipif(not INVENTARIO.exists(), reason="inventário do IFC ausente")
+com_inventario = pytest.mark.skipif(not INVENTARIO.exists(), reason="inventário do IFC ausente")
 
-DADOS = json.loads((ROOT / "data/hto/ambientes.json").read_text(encoding="utf-8"))
-AMB = {a["id"]: a for a in DADOS["ambientes"]}
-GEO, _INFO = mod.calcular("hto")
-SQL = mod.gerar_sql(GEO)
+if INVENTARIO.exists():
+    DADOS = json.loads((ROOT / "data/hto/ambientes.json").read_text(encoding="utf-8"))
+    AMB = {a["id"]: a for a in DADOS["ambientes"]}
+    GEO, _INFO = mod.calcular("hto")
+    SQL = mod.gerar_sql(GEO)
+else:
+    DADOS = AMB = GEO = SQL = None
 
 
 def _lado(p, q):
     return math.hypot(p[0] - q[0], p[1] - q[1])
 
 
+@com_inventario
 def test_apto_101_liga_ao_guid_e_tem_contorno_retangular():
     g = GEO["ambientes"]["terreo-apto-101"]
     assert g["guid"] == "0vfo$Cu9vBkhdNguKiGtzT"
@@ -46,6 +50,7 @@ def test_apto_101_liga_ao_guid_e_tem_contorno_retangular():
     assert g["y_teto"] == pytest.approx(1.795, abs=1e-9)
 
 
+@com_inventario
 def test_banheiro_101_liga_ao_guid():
     assert GEO["ambientes"]["terreo-banheiro-101"]["guid"] == "08arOxA3r6oAwA$PXqJ0ly"
 
@@ -63,11 +68,13 @@ def test_transformacao_ifc_para_frag_do_contrato():
     assert fy == pytest.approx(0.5 - 1.19, abs=1e-12)
 
 
+@com_inventario
 def test_nenhum_guid_repetido():
     guids = [g["guid"] for g in GEO["ambientes"].values()]
     assert len(guids) == len(set(guids))
 
 
+@com_inventario
 def test_contornos_validos_e_area_confere_com_a_planta():
     for cod, g in GEO["ambientes"].items():
         c = g["contorno"]
@@ -81,10 +88,12 @@ def test_contornos_validos_e_area_confere_com_a_planta():
         assert g["y_teto"] - g["y_piso"] == pytest.approx(2.6, abs=1e-9), cod
 
 
+@com_inventario
 def test_ambientes_com_furo_no_ifcspace():
     assert sorted(_INFO["com_furo"]) == ["1pav-circulacao", "terreo-lobby"]
 
 
+@com_inventario
 def test_vestiario_masculino_arco_simplificado():
     # o arco discretizado (114 vértices no IFC) vira poucos pontos com tolerância de 1 cm
     inv = json.loads(INVENTARIO.read_text(encoding="utf-8"))
@@ -96,6 +105,7 @@ def test_vestiario_masculino_arco_simplificado():
     assert mod.area_laco(simples) == pytest.approx(sp["footprint_area_m2"], rel=0.005)
 
 
+@com_inventario
 def test_ao_menos_80_por_cento_vinculados_por_pavimento():
     for pav in ("terreo", "1pav"):
         todos = [a["id"] for a in DADOS["ambientes"] if a["pavimento"] == pav]
@@ -103,6 +113,7 @@ def test_ao_menos_80_por_cento_vinculados_por_pavimento():
         assert len(ligados) / len(todos) >= 0.8, pav
 
 
+@com_inventario
 def test_sem_vinculo_tem_codigo_e_motivo_e_nao_cruza_com_vinculados():
     for s in GEO["sem_vinculo"]:
         assert s["codigo"] in AMB and s["motivo"]
@@ -110,6 +121,7 @@ def test_sem_vinculo_tem_codigo_e_motivo_e_nao_cruza_com_vinculados():
     assert len(GEO["ambientes"]) + len(GEO["sem_vinculo"]) == len(DADOS["ambientes"])
 
 
+@com_inventario
 def test_calibracao_derivada_reproduz_a_documentada_no_terreo():
     ra = json.loads((ROOT / "data/hto/obra.json").read_text(encoding="utf-8"))["ra"]
     doc = ra["pavimentos"]["terreo"]["calibracao"]
@@ -135,6 +147,7 @@ def test_calibracao_sem_maioria_nitida_falha():
         mod.derivar_calibracao(pm, esp, areas, 22.68)
 
 
+@com_inventario
 def test_calibracao_do_primeiro_pavimento_gravada():
     c = GEO["calibracao"]["1pav"]
     assert c["origem"] == "derivada" and c["concordantes"] >= 10
@@ -142,6 +155,7 @@ def test_calibracao_do_primeiro_pavimento_gravada():
     assert GEO["calibracao"]["terreo"]["origem"] == "documentada"
 
 
+@com_inventario
 def test_seed_tem_uma_linha_por_ambiente_vinculado_e_e_deterministico():
     linhas = SQL.splitlines()
     assert sum(l.startswith("insert into public.ambiente_geometria ") for l in linhas) == len(GEO["ambientes"])
@@ -153,6 +167,7 @@ def test_seed_tem_uma_linha_por_ambiente_vinculado_e_e_deterministico():
     assert mod.gerar_sql(geo2) == SQL
 
 
+@com_inventario
 def test_arquivos_commitados_estao_atualizados():
     assert (ROOT / "data/hto/geometria.json").read_text(encoding="utf-8") == mod.serializar(GEO), \
         "rode python3 scripts/gerar_geometria.py --obra hto"
@@ -167,6 +182,7 @@ def test_frag_ifc_frag_volta_ao_mesmo_ponto():
         assert abs(fx - x) < 1e-6 and abs(fz - z) < 1e-6
 
 
+@com_inventario
 def test_contorno_pagina_do_apto_101():
     g = GEO["ambientes"]["terreo-apto-101"]
     cp = g["contorno_pagina"]
@@ -175,3 +191,17 @@ def test_contorno_pagina_do_apto_101():
     mk = AMB["terreo-apto-101"]["marcadores"][0]
     p = (mk["x"], mk["y"])
     assert mod.ponto_em_poligono(p, cp) or mod.distancia_ao_poligono(p, cp) < 0.01
+
+
+def test_centroide_poligono_degenerado():
+    assert mod.centroide([[0.0, 0.0], [2.0, 0.0], [4.0, 0.0]]) == (2.0, 0.0)
+
+
+def test_gerar_sql_ambientes_vazios_nao_gera_array_vazio_invalido():
+    sql = mod.gerar_sql({
+        "obra": "hto",
+        "referencial": {"sigla": "ARQ", "revisao": "R06", "coordenadas": [0, 0, 0, 1, 0, 0, 0, 1, 0]},
+        "ambientes": {},
+    })
+    assert "array[]::text[]" not in sql
+    assert "'{}'::text[]" in sql

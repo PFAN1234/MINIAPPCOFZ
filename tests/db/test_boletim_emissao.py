@@ -301,7 +301,7 @@ def test_snapshot_de_um_dia_completo(cenario):
     s1 = a['servicos'][2]
     assert s1 == {'id': str(ids['s1']), 'pavimento': 'Térreo', 'ambiente': 'Ambiente 1', 'hora': '09:00',
                   'autor': 'CB ALMEIDA', 'legenda': 'Porcelanato',
-                  'fotos': [{'path': p, 'largura': 1000, 'altura': 750} for p in ids['s1_fotos']]}
+                  'fotos': [{'path': p, 'largura': 1000, 'altura': 750, 'origem': 'normal'} for p in ids['s1_fotos']]}
     assert b['servicos'] == [] and a['pendencias_abertas'] == []
     assert [(x['id'], x['autor'], x['hora']) for x in b['pendencias_abertas']] == [(str(ids['p_nova']), 'SGT B', '11:00')]
     assert b['pendencias_encerradas'] == []  # a encerrada às 23:45 de 09/11 não é do dia
@@ -310,9 +310,9 @@ def test_snapshot_de_um_dia_completo(cenario):
     assert enc == {
         'id': str(ids['p_resolvida']), 'pavimento': 'Térreo', 'ambiente': 'Ambiente 1', 'dias_aberta': 9,
         'legenda': 'Tomada solta',
-        'fotos_registro': [{'path': ids['p_resolvida_fotos'][0], 'largura': 1000, 'altura': 750}],
+        'fotos_registro': [{'path': ids['p_resolvida_fotos'][0], 'largura': 1000, 'altura': 750, 'origem': 'normal'}],
         'encerramento': {'hora': '15:00', 'autor': 'Gestor A', 'observacao': 'Trocada',
-                         'fotos': [{'path': ids['enc_fotos'][0], 'largura': 1000, 'altura': 750}]},
+                         'fotos': [{'path': ids['enc_fotos'][0], 'largura': 1000, 'altura': 750, 'origem': 'normal'}]},
     }
     assert a['observacoes'] == [
         {'hora': '07:00', 'autor': 'Gestor A', 'texto': 'Equipe completa', 'editada': False},

@@ -19,6 +19,7 @@ import {
   moeda,
   numeroBr,
   partesNoFuso,
+  rotuloOrigemRA,
 } from './formato.js'
 import type { FotoSnapshot, ObraSnapshot, PendenciaEncerradaSnapshot, RegistroSnapshot, Snapshot } from './tipos.js'
 
@@ -333,12 +334,16 @@ function foto(o: OpcoesTemplate, f: FotoSnapshot, rotulo: string): string {
   return `<figure class="foto"><div class="img">${img}</div><figcaption>${escapar(rotulo)}</figcaption></figure>`
 }
 
-function fotosDe(o: OpcoesTemplate, fotos: FotoSnapshot[], rotulo: (i: number) => string): string {
+function fotosDe(o: OpcoesTemplate, fotos: FotoSnapshot[], rotulo: (f: FotoSnapshot, i: number) => string): string {
   if (fotos.length === 0) return ''
-  return `<div class="fotos">${fotos.map((f, i) => foto(o, f, rotulo(i))).join('')}</div>`
+  return `<div class="fotos">${fotos.map((f, i) => foto(o, f, rotulo(f, i))).join('')}</div>`
 }
 
 const local = (r: { pavimento: string; ambiente: string }) => [r.pavimento, r.ambiente].filter(Boolean).map(escapar).join(' › ')
+
+function rotuloComHora(i: number, origem: FotoSnapshot['origem'], hora: string): string {
+  return [`Foto ${i + 1}`, rotuloOrigemRA(origem), hora].filter(Boolean).join(' · ')
+}
 
 function secaoServicos(s: Snapshot, o: OpcoesTemplate): string {
   const obras = s.obras.filter((x) => x.servicos.length > 0)
@@ -354,7 +359,7 @@ function secaoServicos(s: Snapshot, o: OpcoesTemplate): string {
                   const hora = horaBr(r.hora, s.fuso)
                   return `<div class="registro"><div class="reg-cab"><b>${local(r)}</b><span>${escapar(hora)} · ${escapar(r.autor)}</span></div>${
                     r.legenda ? `<p>${comQuebras(r.legenda)}</p>` : ''
-                  }${fotosDe(o, r.fotos, (i) => `Foto ${i + 1} · ${hora}`)}</div>`
+                  }${fotosDe(o, r.fotos, (f, i) => rotuloComHora(i, f.origem, hora))}</div>`
                 })
                 .join(''),
           )
@@ -373,10 +378,11 @@ function secaoAbertas(s: Snapshot, o: OpcoesTemplate): string {
       const legenda = r.legenda ? `<p>${comQuebras(r.legenda)}</p>` : ''
       if (r.fotos.length > 1) {
         // Várias fotos: a linha inteira, com as fotos 4 por linha.
-        return `<div class="registro larga">${cab}${legenda}${fotosDe(o, r.fotos, (i) => `Foto ${i + 1} · ${hora}`)}<span class="tag aberta">ABERTA</span></div>`
+        return `<div class="registro larga">${cab}${legenda}${fotosDe(o, r.fotos, (f, i) => rotuloComHora(i, f.origem, hora))}<span class="tag aberta">ABERTA</span></div>`
       }
+      const marca = r.fotos[0] ? rotuloOrigemRA(r.fotos[0].origem) : ''
       const capa = r.fotos[0]
-        ? foto(o, r.fotos[0], '')
+        ? foto(o, r.fotos[0], marca ? `Foto ${marca}` : '')
         : '<figure class="foto"><div class="img"><span class="falta">sem foto</span></div></figure>'
       return `<div class="pend"><div class="pend-foto">${capa}</div><div>${cab}${legenda}<span class="tag aberta">ABERTA</span></div></div>`
     })
@@ -395,8 +401,14 @@ function secaoEncerradas(s: Snapshot, o: OpcoesTemplate): string {
       const enc = p.encerramento
       const aberta = `aberta em ${diaMesBr(p.aberta_em, s.fuso)} (${p.dias_aberta} ${p.dias_aberta === 1 ? 'dia' : 'dias'})`
       const fotos = [
-        ...p.fotos_registro.map((f) => ({ f, rotulo: 'Antes (registro original)' })),
-        ...enc.fotos.map((f) => ({ f, rotulo: 'Depois (comprovação)' })),
+        ...p.fotos_registro.map((f) => ({
+          f,
+          rotulo: ['Antes (registro original)', rotuloOrigemRA(f.origem)].filter(Boolean).join(' · '),
+        })),
+        ...enc.fotos.map((f) => ({
+          f,
+          rotulo: ['Depois (comprovação)', rotuloOrigemRA(f.origem)].filter(Boolean).join(' · '),
+        })),
       ]
       return `<div class="registro"><div class="reg-cab"><b>${escapar(obra.nome.toUpperCase())} › ${local(p)}</b><span>${escapar(aberta)}</span></div>
 ${p.legenda ? `<p><b>Pendência:</b> ${comQuebras(p.legenda)}</p>` : ''}

@@ -368,3 +368,39 @@ def test_check_foto_ra_nulo_com_origem_normal(cenario):
         inserir(c, "update public.foto set ra = '{}'::jsonb where registro_id = %s", (rid,))
     with pytest.raises(errors.CheckViolation):
         inserir(c, "update public.foto set origem = 'xyz' where registro_id = %s", (rid,))
+
+
+def test_definir_qr_recusa_ambiente_inativo(cenario):
+    c = cenario
+    geometria(c, c.amb_a)
+    tornar_admin(c, c.sem_obra)
+    with sessao(c.dsn, papel=None) as cur:
+        cur.execute('update public.ambiente set ativo = false where id = %s', (c.amb_a,))
+    with pytest.raises(errors.InvalidParameterValue):
+        definir_qr(c, c.sem_obra, c.amb_a)
+
+
+def test_check_contorno_pagina_e_finitos(cenario):
+    c = cenario
+    with pytest.raises(errors.CheckViolation):
+        inserir(c, 'insert into public.ambiente_geometria (ambiente_id, contorno, contorno_pagina, y_piso, y_teto) '
+                   'values (%s, %s::jsonb, %s::jsonb, 0, 2.7)',
+                (c.amb_a, json.dumps(CONTORNO), json.dumps([[0.1, 0.1], [0.2, 0.1], [0.2, 0.2]])))
+    with pytest.raises(errors.CheckViolation):
+        inserir(c, 'insert into public.ambiente_geometria (ambiente_id, contorno, y_piso, y_teto) '
+                   "values (%s, %s::jsonb, 'NaN', 2.7)", (c.amb_a, json.dumps(CONTORNO)))
+    with pytest.raises(errors.CheckViolation):
+        inserir(c, 'insert into public.ambiente_qr (ambiente_id, parede, distancia_m) '
+                   "values (%s, 0, 'NaN')", (c.amb_a,))
+
+
+def test_boletim_fotos_inclui_origem_ra(cenario):
+    c = cenario
+    rid, _ = concluir(c, c.equipe_a, [
+        {'origem': 'ra_limpa', 'ra': RA},
+        {'origem': 'ra_modelo', 'ra': RA},
+    ])
+    with sessao(c.dsn, papel=None) as cur:
+        cur.execute('select privado.boletim_fotos(%s, null)', (rid,))
+        fotos = cur.fetchone()[0]
+    assert [f['origem'] for f in fotos] == ['ra_limpa', 'ra_modelo']

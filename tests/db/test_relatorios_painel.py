@@ -148,7 +148,7 @@ def test_relatorio_ordem_dias_e_estrutura(cenario):
     assert por[str(rs)]['dias'] == 3 and por[str(rs)]['situacao'] == 'resolvida'
     assert enc['observacao'] == 'feito' and enc['autor'] == 'Usuário 0' and len(enc['fotos']) == 1
     assert set(enc) == {'em', 'autor', 'observacao', 'fotos'}
-    assert set(por[str(ab)]['fotos'][0]) == {'path', 'largura', 'altura'}
+    assert set(por[str(ab)]['fotos'][0]) == {'path', 'largura', 'altura', 'origem'}
 
 
 def test_relatorio_filtro_de_obra_e_erro(cenario):

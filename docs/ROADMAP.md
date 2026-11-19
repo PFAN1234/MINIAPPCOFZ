@@ -27,7 +27,7 @@ O **Mini App CO-FZ** é uma ferramenta móvel integrada ao Telegram destinada ao
   - `publish-outbox`: Despacho da fila de saída para a Bot API do Telegram via `pg_cron`/`pg_net`.
   - `assinar-envio-plantas`: Upload seguro de derivados de plantas e recortes.
 - **Pipeline de Dados (Python CLI):** PyMuPDF (`fitz`) para leitura de plantas PDF, pareamento automatizado de cômodos com áreas `A=xx m²`, geração de WebP/HD e seeds SQL (`extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `publicar_plantas.py`).
-- **Módulo Futuro BIM:** Visualizador 3D Three.js alimentado por recortes GLB extraídos de modelos IFC2X3 via IfcOpenShell.
+- **Módulo BIM 3D & RA:** Visualizador 3D federado (Three.js + `@thatopen/components`/`@thatopen/fragments` sobre arquivos `.frag` convertidos no `/admin/`) e Realidade Aumentada parada no registro de fotos (`app/src/ra/`).
 
 ```mermaid
 flowchart LR
@@ -56,7 +56,8 @@ flowchart LR
 | **Multi-Obras (COFZ)** | Pipeline parametrizado (`--obra`), 19 ambientes extraídos, seed gerado. | **Concluído (90%)** | Revisão humana de `prova.png` e vínculo do tópico. |
 | **8. Piloto Assistido** | Testes de campo com equipe real, Android/iOS, rotinas de backup. | **Pendente** | Depende das fases 6 e 7 homologadas. |
 | **Organização de Pastas** | Limpeza da raiz, padronização `DOCS *` → `obras/<slug>/`, `README.md` e `app/src/` (`miniapp/` + `shared/`). | **Planejado** | Executar fases 1–4 de `tasks/plano-organizacao-pastas.md`. |
-| **9. Modelo Federado BIM** | Visualizador 3D Three.js, recortes GLB, integração 2D/3D IfcSpace. | **Planejado (Fase Final)** | Diagnósticos geométricos prontos em `artifacts/validation/`. |
+| **9. Modelo Federado BIM** | Visualizador 3D `.frag` (`@thatopen/fragments`), federação ARQ/ELT e conversão no `/admin/`. | **Concluído (95%)** | Publicar disciplinas restantes após validação. |
+| **10. Realidade Aumentada (RA)** | Alinhamento por cantos e QR, par de fotos `ra_limpa`/`ra_modelo`, diagnóstico `/ra-teste` e QR no `/admin/`. | **Em homologação (90%)** | Repetir piloto em campo e aplicar migrations pendentes (`20261122*`, `20261123*`). |
 
 ---
 
@@ -91,9 +92,9 @@ flowchart TD
         DASH["Dashboard de Indicadores & Gestão Corporativa"]
     end
 
-    subgraph M5["Marco 5: Engenharia BIM & Modelo 3D (Longo Prazo)"]
-        F9["Fase 9: Visualizador 3D Federado (Three.js/GLB)"]
-        VET["Planta Clicável com Polígonos IfcSpace"]
+    subgraph M5["Marco 5: Engenharia BIM, Modelo 3D & RA (Em Homologação)"]
+        F9["Fase 9: Visualizador 3D Federado (.frag / That Open)"]
+        F10["Fase 10: Realidade Aumentada (2 Cantos & QR)"]
     end
 
     M1 --> M2
@@ -182,23 +183,13 @@ flowchart TD
 
 ---
 
-### Marco 5: Engenharia BIM & Modelo 3D Federado
-*Status: Longo Prazo (Conforme Planejamento Estratégico)*
+### Marco 5: Engenharia BIM, Modelo 3D Federado & RA
+*Status: Implementado (em homologação de campo)*
 
-- **Objetivos:** Integrar a inteligência geométrica tridimensional dos modelos IFC à navegação do Mini App.
-- **Entregas Planejadas:**
-  1. **Federação e Ajuste de Coordenadas:**
-     - Consolidação das matrizes de transformação de Arquitetura (ARQ R05), Instalações Hidráulicas/Antincêndio (ANT R01) e Telecomunicações/Elétrica (TLD R00).
-     - Resolução da divergência de cota altimétrica Z entre disciplinas identificada nos diagnósticos de engenharia.
-  2. **Processamento Server-side com IfcOpenShell:**
-     - Extração e corte volumétrico de elementos construtivos reais circunscritos a cada `IfcSpace`.
-     - Geração de malhas leves em formato GLB/draco com origem local unificada para evitar perda de precisão geométrica em dispositivos móveis.
-  3. **Visualizador 3D no Mini App (Three.js):**
-     - Ativação do cartão *"Visualizar modelo federado"* na tela da obra.
-     - Controles touch de rotação, zoom e corte transversal.
-     - Seletor de disciplinas (ARQ, ELT, HID, ESG, DRE, PCI, VES, TLD, ANT).
-  4. **Planta 2D Vetorial Clicável:**
-     - Evolução dos pinos pontuais para polígonos de seleção baseados nas coordenadas normalizadas (`bbox_normalizada`) extraídas dos modelos.
+- **Entregas realizadas:**
+  1. **Federação e Ajuste de Coordenadas:** referencial `ARQ.frag` (`ra_referencial`), correções opcionais em `modelo.matriz` e vínculo ambiente ↔ `IfcSpace` (`scripts/gerar_geometria.py`).
+  2. **Conversão e Visualizador `.frag`:** conversão IFC → `.frag` no `/admin/` (Web Worker + `web-ifc.wasm`) e visualizador federado com Three.js + `@thatopen/components` + `@thatopen/fragments`, com cache offline por hash.
+  3. **Realidade Aumentada (RA):** sobreposição em câmera ao vivo por 2 cantos ou QR, captura do par (`ra_limpa` + `ra_modelo`) com rótulos nos boletins/relatórios e impressão A4 de QR no `/admin/`.
 
 ---
 

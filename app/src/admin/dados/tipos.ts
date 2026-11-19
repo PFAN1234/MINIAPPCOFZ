@@ -427,6 +427,7 @@ export interface FotoBoletim {
   path: string
   largura: number
   altura: number
+  origem?: 'normal' | 'ra_limpa' | 'ra_modelo'
 }
 
 /** Serviço do dia ou pendência aberta no dia. */

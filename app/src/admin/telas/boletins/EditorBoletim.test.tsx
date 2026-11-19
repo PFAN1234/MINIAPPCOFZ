@@ -268,4 +268,34 @@ describe('editor do boletim', () => {
     expect(screen.getByText(`Retificação editada a partir de ${num(anteontem)}`)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Abrir PDF' })).toBeEnabled()
   })
+
+  it('exibe o selo real (RA) e modelo (RA) nas fotos da RA dentro do editor', async () => {
+    const repo = criarRepositorioAdminFixture()
+    const original = repo.boletim.bind(repo)
+    vi.spyOn(repo, 'boletim').mockImplementation(async (id) => {
+      const b = await original(id)
+      const obras = b.snapshot.obras.map((o, oi) =>
+        oi === 0
+          ? {
+              ...o,
+              servicos: o.servicos.map((s, si) =>
+                si === 0
+                  ? {
+                      ...s,
+                      fotos: [
+                        { path: FOTO_A, largura: 1200, altura: 900, origem: 'ra_limpa' as const },
+                        { path: FOTO_B, largura: 1200, altura: 900, origem: 'ra_modelo' as const },
+                      ],
+                    }
+                  : s,
+              ),
+            }
+          : o,
+      )
+      return { ...b, snapshot: { ...b.snapshot, obras } }
+    })
+    await abrirEditor(ID, repo)
+    expect(within(item(SRV1)).getByText('real (RA)')).toBeInTheDocument()
+    expect(within(item(SRV1)).getByText('modelo (RA)')).toBeInTheDocument()
+  })
 })

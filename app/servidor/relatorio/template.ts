@@ -3,7 +3,7 @@
  * em grade). O rodapé ("página x de y") vai no `footerTemplate` do Chromium (`rodapeRelatorio`).
  */
 import { CSS, tabelaCabecalho } from '../boletim/template.js'
-import { comQuebras, dataBr, escapar, expedicao, numeroBr } from '../boletim/formato.js'
+import { comQuebras, dataBr, escapar, expedicao, numeroBr, rotuloOrigemRA } from '../boletim/formato.js'
 import type { FotoRelatorio, PendenciaRelatorio, RelatorioPendencias } from './tipos.js'
 
 export interface OpcoesRelatorio {
@@ -80,9 +80,9 @@ function foto(o: OpcoesRelatorio, f: FotoRelatorio, rotulo: string): string {
   return `<figure class="foto"><div class="img">${img}</div><figcaption>${escapar(rotulo)}</figcaption></figure>`
 }
 
-function fotosDe(o: OpcoesRelatorio, fotos: FotoRelatorio[], rotulo: (i: number) => string): string {
+function fotosDe(o: OpcoesRelatorio, fotos: FotoRelatorio[], rotulo: (f: FotoRelatorio, i: number) => string): string {
   if (fotos.length === 0) return ''
-  return `<div class="fotos">${fotos.map((f, i) => foto(o, f, rotulo(i))).join('')}</div>`
+  return `<div class="fotos">${fotos.map((f, i) => foto(o, f, rotulo(f, i))).join('')}</div>`
 }
 
 const codigo = (n: number) => `P-${String(n).padStart(3, '0')}`
@@ -95,11 +95,11 @@ function cartao(p: PendenciaRelatorio, n: number, r: RelatorioPendencias, o: Opc
   const resolucao = enc
     ? `<div class="resolucao"><b>Resolvida em ${dataBr(enc.em, r.fuso)} por ${escapar(enc.autor)} (${plural(p.dias, 'dia', 'dias')})</b>${
         enc.observacao ? `<p>${comQuebras(enc.observacao)}</p>` : ''
-      }${fotosDe(o, enc.fotos, (i) => `Resolução · foto ${i + 1}`)}</div>`
+      }${fotosDe(o, enc.fotos, (f, i) => [`Resolução · foto ${i + 1}`, rotuloOrigemRA(f.origem)].filter(Boolean).join(' · '))}</div>`
     : ''
   return `<div class="cartao"><div class="reg-cab"><b>${codigo(n)} · ${local}</b><span class="tag ${aberta ? 'aberta' : 'resolvida'}">${aberta ? 'ABERTA' : 'RESOLVIDA'}</span></div>
 <div class="meta">${escapar(desde)} · ${escapar(p.autor)}</div>
-${p.legenda ? `<p>${comQuebras(p.legenda)}</p>` : ''}${fotosDe(o, p.fotos, (i) => `Foto ${i + 1}`)}${resolucao}</div>`
+${p.legenda ? `<p>${comQuebras(p.legenda)}</p>` : ''}${fotosDe(o, p.fotos, (f, i) => [`Foto ${i + 1}`, rotuloOrigemRA(f.origem)].filter(Boolean).join(' · '))}${resolucao}</div>`
 }
 
 export function montarHtmlRelatorio(r: RelatorioPendencias, o: OpcoesRelatorio): string {
