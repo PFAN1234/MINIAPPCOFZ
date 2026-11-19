@@ -618,3 +618,40 @@ A partir da conclusão da Fase 0, toda nova funcionalidade já deve nascer na es
 4. **Mantenha a UI fina:** componentes em `presentation/` não contêm regras de negócio nem chamadas diretas ao SDK do Supabase; delegam a hooks/use-cases.
 5. **Respeite a fronteira Mini App vs Admin:** código compartilhado vai em `domain/`, `application/` ou `shared/`; código exclusivo de tela vai em `presentation/miniapp/` ou `presentation/admin/`.
 6. **Não duplique contratos:** toda mudança de contrato continua nascendo em `docs/contrato-*.md` e nas migrations/testes de banco (`tests/db/`).
+
+---
+
+## 7. Protocolo de Execução com `ub-mode`
+
+Cada fase ou subfase deste plano deve ser conduzida seguindo o ciclo do **`ub-mode`** (*First Make it Work → Then Make it Right → Follow Practice*), evitando tanto regressões quanto *over-engineering*.
+
+### 7.1 Cadência por fatia de migração
+
+1. **First Make it Work (Base e Segurança):**
+   - **Foundational Thinking:** acertar o formato dos dados/contratos antes de mover a lógica; fazer primeiro o que desbloqueia as fases seguintes (aliases, `shared/kernel`, portas segregadas).
+   - **Boundary Discipline & Type System Discipline:** validar e parsear dados externos (Supabase, PDF, Telegram, IndexedDB) na borda (`infrastructure/`); dentro de `domain/`, confiar nos tipos e manter regras de negócio em funções puras, tornando estados ilegais irrepresentáveis.
+   - **TDD:** escrever o teste de caracterização ou teste de contrato falhando antes de alterar a estrutura, confirmar o motivo da falha e aplicar a menor mudança para passar.
+   - **Build the Lever:** migrar o primeiro contexto manualmente (Fase 4A — `ra`) para validar o padrão; só então consolidar regras de lint/scripts repetíveis para os demais contextos.
+
+2. **Then Make it Right (Refatoração Verificável):**
+   - **Refactoring:** *fixar o comportamento atual → alterar a estrutura → provar que o comportamento não mudou*.
+   - **Test Behavior, Not Implementation:** testar contratos públicos e resultados visíveis ao usuário, descartando testes acoplados a detalhes internos de importação ou mocks triviais.
+   - **Sequence work into verifiable units:** concluir e validar uma unidade pequena (uma porta ou um contexto) antes de iniciar a próxima.
+   - **Portões determinísticos (quando habilitados no ambiente):**
+     - `crapper` (**CRAP < 10**): priorizar funções complexas nos adaptadores monolíticos antes de fatiá-los.
+     - `dryer` (**similaridade ≥ 0.8**): detectar duplicações estruturais entre Mini App e Admin para convergência em `domain/` ou `shared/`.
+     - `mutator`: garantir que os testes de domínio e de contrato eliminam mutantes e expor código morto para remoção.
+
+3. **Follow Practice (Higiene e Rastreabilidade):**
+   - **Keep a Log:** registrar em `tasks/todo.md` cada unidade migrada, o motivo da decisão e a evidência de verificação.
+   - **Guard the Context Window:** manter a conversa principal focada em planejamento, decisões e revisão, delegando fatias autocontidas a subagentes (conforme `CLAUDE.md`).
+   - **Worktree Cleanup:** remover *shims* temporários, pastas obsoletas e worktrees assim que a fase for concluída.
+   - **Commit and Push:** commits pequenos e ordenados explicando **por quê**, **o que mudou** e **como foi provado**.
+
+### 7.2 Critérios de corte contra *over-engineering*
+
+- ***"If the code is already clear and local, leave it"***: não refatorar por dogma módulos já limpos e isolados (ex.: `supabase/functions/*/handler.ts` ou utilitários triviais sem acoplamento).
+- ***"Subtract Before You Add"***: remover duplicação e complexidade antes de introduzir novas abstrações.
+- **Sem camadas vazias:** só criar `application/use-cases/` quando houver orquestração real (múltiplas portas, regras de idempotência, tratamento de erro ou validação de domínio); se uma operação for apenas leitura direta, a camada de apresentação pode consumir a porta tipada diretamente.
+- ***"One decision lives in one place"*** (*Laziness Protocol*): toda regra compartilhada entre Mini App e Admin (ex.: geometria RA, disciplinas 3D, cálculo de painel/etapas) deve ter uma única fonte de verdade em `modules/<ctx>/domain/` ou `shared/kernel/`.
+
