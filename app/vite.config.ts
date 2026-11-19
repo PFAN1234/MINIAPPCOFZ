@@ -245,6 +245,13 @@ function versaoDoBuild(): VersaoApp {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), plantasFixture(), siteAdmin(), manifestoPrecache(), semModelosNoBuild(), wasmWebIfc()],
+  resolve: {
+    alias: {
+      '@shared': fileURLToPath(new URL('./src/shared', import.meta.url)),
+      '@modules': fileURLToPath(new URL('./src/modules', import.meta.url)),
+      '@apps': fileURLToPath(new URL('./src/apps', import.meta.url)),
+    },
+  },
   define: { __VERSAO_WEB_IFC__: JSON.stringify(VERSAO_WEB_IFC), __VERSAO_APP__: JSON.stringify(versaoDoBuild()) },
   // O conversor de IFC (worker do site de administração) importa a biblioteca como módulo.
   // `THREE.TSL` da That Open fica em código que o worker não usa (descartado no build): sem aviso.

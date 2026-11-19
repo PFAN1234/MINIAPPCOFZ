@@ -385,3 +385,9 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] E2E: testes da Gestão passam a usar o Controle de acesso (PR #57).
 - [ ] Depois de conferir a lista de órfãos por alguns dias: remoção real por Edge Function (API do Storage), tratando envios de planta/modelo pendentes há mais de 7 dias.
 - [ ] Backup e restauração do Postgres e do Storage (adiado pelo usuário).
+
+## Arquitetura — Fase 0 (baseline)
+
+- [x] Fase 0 de `docs/plano-arquitetura-organizacao.md` concluída: aliases `@shared`/`@modules`/`@apps` (tsconfig.app, herdado por tsconfig.testes-node; vite/vitest), pastas `src/shared/{kernel,infra,ui,test}`, `src/modules`, `src/apps/{miniapp,admin}`, fronteiras de lint em `warn` (validadas com arquivo violador temporário, removido) e smoke de alias.
+- Baseline: typecheck, lint (0 warnings), build e build:fixture verdes; 856 testes em 101 arquivos (855 anteriores + 1 smoke).
+- `precache-manifest.json`: 18 arquivos; `VisualizadorModelo`, `motor-3d`, `jsQR` e `conversor.worker` existem em `dist/assets` (4 chunks) e ficam fora do manifesto, como esperado.
