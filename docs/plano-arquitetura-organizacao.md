@@ -1,9 +1,9 @@
 # Plano de Organização de Arquivos e Evolução Arquitetural (DDD, Clean Architecture e TDD)
 
-> **Status:** Proposta de arquitetura e plano de migração incremental  
+> **Status:** Proposta de arquitetura e plano de migração incremental (refinada pelos princípios do `ub-mode`)  
 > **Data:** 2026-11-19  
-> **Escopo:** Todo o repositório (`app/`, `supabase/`, `scripts/`, `data/`, `obras/`, `docs/`, `tests/`), com foco principal na estruturação de `app/src/` e alinhamento de `app/servidor/`.  
-> **Relação com planos anteriores:** Expande e consolida o plano operacional de limpeza de pastas em [`tasks/plano-organizacao-pastas.md`](../tasks/plano-organizacao-pastas.md), introduzindo fronteiras arquiteturais explícitas de **Domain-Driven Design (DDD)**, **Clean Architecture** e **Test-Driven Development (TDD)**.
+> **Escopo:** Todo o repositório (`app/`, `supabase/`, `scripts/`, `data/`, `obras/`, `docs/`, `tests/`), com foco principal na estruturação de `app/src/`.  
+> **Relação com planos anteriores:** Expande e consolida o plano operacional de limpeza de pastas em [`tasks/plano-organizacao-pastas.md`](../tasks/plano-organizacao-pastas.md), introduzindo fronteiras arquiteturais explícitas de **Domain-Driven Design (DDD)**, **Clean Architecture**, **Test-Driven Development (TDD)** e disciplina de execução enxuta do **`ub-mode`**.
 
 ---
 
@@ -28,8 +28,8 @@ Entretanto, a organização atual de `app/src/` cresceu orientada a **tipo técn
 ### O que já funciona bem e será preservado
 
 - **Deploy na Vercel (`Root Directory = app/`):** não criar monorepo artificial (`apps/` / `packages/`). Manter `app/api/*.ts` como entrypoints finos das funções serverless.
-- **Padrão `index.ts` → `handler.ts` + `handler_test.ts`** nas Edge Functions em `supabase/functions/`.
-- **Separação `api/*.ts` → `servidor/{boletim,relatorio}/`** (já próxima de Clean Architecture).
+- **Padrão `index.ts` → `handler.ts` + `handler_test.ts`** nas Edge Functions em `supabase/functions/` (*código já claro e local: manter intacto*).
+- **Separação `api/*.ts` → `servidor/{boletim,relatorio}/`** (*código já claro, enxuto e bem testado em `nodenext`: manter plano, sem aninhar subpastas por dogma*).
 - **Inversão de dependência via `fixture` vs `supabase`** com *tree-shaking* em tempo de build (`import.meta.env.VITE_DADOS === 'fixture'`).
 - **Isolamento de bundles no Vite** (`index.html` vs `admin.html` e exclusão de chunks exclusivos do Admin no `precache-manifest.json`).
 
@@ -55,6 +55,21 @@ O código passa a ser organizado em torno de **Contextos Delimitados (Bounded Co
 Além dos contextos, existirão dois núcleos explícitos em `app/src/shared/`:
 - **`shared/kernel/` (Shared Kernel):** Value Objects transversais (`Slug`, `Periodo`, `Fuso`, `Coordenada`, `PapelAcesso`), hierarquia de erros de domínio (`ErroDominio`, `ErroEnvio`) e funções puras sem dependência de framework (`busca`, `formato`, `ordenacao`, `fuso`).
 - **`shared/ui/` (Design System):** Tokens CSS (`tokens.css`, `fontes.css`), componentes visuais reutilizáveis e agnósticos de regra de negócio (`Layout`, `TopoTela`, `BarraInferior`, `Abas`, `Aviso`, `Estado`, `Icones`, `CampoBusca`, `ErrorBoundary`, `SeloVersao`).
+
+#### Glossário Ubíquo e Estados Ilegais Irrepresentáveis
+
+Seguindo *Model the Domain* e *Type System Discipline* (`ub-mode`), os termos abaixo são a fonte única de nomenclatura entre Mini App, Admin, RPCs e contratos (`docs/contrato-*.md`):
+
+| Termo canônico | Significado no domínio CO-FZ | Regra de modelagem (estados ilegais irrepresentáveis) |
+| --- | --- | --- |
+| **`Etapa`** | Contrato/frente que agrupa obras, aditivos, responsáveis e boletins | Datas e prazos modelados com tipos válidos; fuso explícito |
+| **`Obra`** | Empreendimento físico com pavimentos, ambientes, plantas e modelos | `slug` único; arquivamento explícito (`arquivada_em: string \| null`) |
+| **`Ambiente`** | Unidade espacial de um pavimento onde ocorrem registros e RA | Identificado por `(obraId, codigo)` ou `id`; geometria opcional tipada |
+| **`Registro`** | Ação de campo: **Serviço** executado ou **Pendência** aberta | *Discriminated union* (`tipo: 'servico'` vs `tipo: 'pendencia'` com `encerramento` só permitido em pendência) |
+| **`Observação do Dia`** | Nota diária da obra, editável pelo autor até a emissão do boletim | Estado de edição explícito (`travada: boolean`) derivado do boletim do dia |
+| **`Boletim` / `Retificação`** | Relatório diário oficial (PDF) publicado no Telegram; retificação gera nova revisão | Estados exclusivos (`pendente \| gerando \| emitido \| falha`), impedindo rascunho em revisão antiga |
+| **`Equipe de Serviço`** | Presença em campo (check-in a até 1 km da etapa / check-out) | Serviço aberto vs encerrado modelado em união discriminada |
+| **`Publicação Outbox`** | Fila de entrega de mensagens no tópico do Telegram | Status fechado (`pendente \| publicada \| incerto \| falhou`) |
 
 #### Mapa de Contextos (Context Map)
 
@@ -107,7 +122,7 @@ flowchart LR
 
 ### 2.2 Clean Architecture (Regra de Dependência)
 
-Dentro de cada contexto em `app/src/modules/<contexto>/` (e nos serviços Node em `app/servidor/<contexto>/`), os arquivos seguem **4 camadas concêntricas**. As dependências apontam **sempre para dentro**:
+Dentro de cada contexto em `app/src/modules/<contexto>/`, os arquivos seguem até **4 camadas concêntricas** (criando `application/use-cases/` **apenas** quando houver orquestração real no cliente; operações simples de leitura/RPC consomem a porta diretamente). As dependências apontam **sempre para dentro**, aplicando *Boundary Discipline* (`ub-mode`): **validar e parsear dados externos na borda (`infrastructure/`), confiar nos tipos lá dentro e manter regras de negócio em funções puras (`domain/`)**.
 
 ```mermaid
 flowchart TD
@@ -203,19 +218,9 @@ MINIAPPCOFZ/
 │   │   ├── gerar-boletim.ts
 │   │   ├── previa-boletim.ts
 │   │   └── relatorio-pendencias.ts
-│   ├── servidor/                   # Backend Node do gerador de PDFs (tsconfig.servidor.json)
-│   │   ├── shared/                 # Infra comum (chromium, fontes, http-errors, supabase-client)
-│   │   ├── boletim/
-│   │   │   ├── domain/             # tipos, edicao, formato, regras de consolidacao
-│   │   │   ├── application/        # gerador (use case), portas (FonteBoletim, RenderizadorPdf, ServicoClima)
-│   │   │   ├── infrastructure/     # supabase, clima, estacoes, fotos, pdf (Playwright/Chromium), template
-│   │   │   ├── http/               # controller HTTP (tratarGerar, tratarPrevia)
-│   │   │   └── __fixtures__/
-│   │   └── relatorio/
-│   │       ├── domain/
-│   │       ├── application/
-│   │       ├── infrastructure/
-│   │       └── http/
+│   ├── servidor/                   # Backend Node (tsconfig.servidor.json) — mantido plano e local
+│   │   ├── boletim/                # Já coeso: tipos/edicao/formato (puros), gerador, http, supabase, pdf, clima
+│   │   └── relatorio/              # Já coeso (6 arquivos): tipos, template, http, supabase, exemplo
 │   ├── src/                        # Frontend (Mini App + Admin) — detalhado em 3.2
 │   ├── e2e/                        # Testes Playwright ponta a ponta
 │   ├── public/                     # sw.js e modelos locais de desenvolvimento
@@ -292,9 +297,8 @@ app/src/
     ├── obras/
     │   ├── domain/                         # Obra, Etapa, Pavimento, Ambiente, Aditivo, etapas.ts (regras puras)
     │   ├── application/
-    │   │   ├── ports/                      # ObrasRepositorio.port.ts, EtapasRepositorio.port.ts, OrganizacaoRepositorio.port.ts
-    │   │   └── use-cases/                  # salvarEtapa, salvarObra, arquivarObra, excluirObra, etc.
-    │   ├── infrastructure/
+    │   │   └── ports/                      # ObrasRepositorio.port.ts, EtapasRepositorio.port.ts, OrganizacaoRepositorio.port.ts
+    │   ├── infrastructure/                 # Sem use-cases/ vazios: regras de escrita vivem nas RPCs do banco
     │   │   ├── supabase/                   # ObrasSupabaseAdapter.ts, EtapasSupabaseAdapter.ts
     │   │   └── fixture/                    # ObrasFixtureAdapter.ts, EtapasFixtureAdapter.ts
     │   ├── presentation/
@@ -303,10 +307,10 @@ app/src/
     │   └── index.ts
     │
     ├── fiscalizacao/
-    │   ├── domain/                         # Registro, Pendencia, Encerramento, Observacao, regras de envio/idempotencia
+    │   ├── domain/                         # Registro (Servico | Pendencia), Encerramento, Observacao, regras de envio/idempotencia
     │   ├── application/
     │   │   ├── ports/                      # RegistrosRepositorio.port.ts, ObservacoesRepositorio.port.ts, PublicacoesRepositorio.port.ts
-    │   │   └── use-cases/                  # concluirRegistro, encerrarPendencia, salvarObservacao, republicar
+    │   │   └── use-cases/                  # concluirRegistro (upload fotos + RPC idempotente), encerrarPendencia
     │   ├── infrastructure/
     │   │   ├── supabase/                   # RegistrosSupabaseAdapter.ts, StorageFotosAdapter.ts
     │   │   └── fixture/                    # RegistrosFixtureAdapter.ts
@@ -317,8 +321,7 @@ app/src/
     ├── acessos/
     │   ├── domain/                         # Sessao, PapelObra, SolicitacaoAcesso, EquipeServico, nome.ts
     │   ├── application/
-    │   │   ├── ports/                      # SessaoRepositorio.port.ts, AcessosRepositorio.port.ts, EquipeServicoRepositorio.port.ts
-    │   │   └── use-cases/                  # autenticarTelegram, solicitarAcesso, definirAcesso, fazerCheckin
+    │   │   └── ports/                      # SessaoRepositorio.port.ts, AcessosRepositorio.port.ts, EquipeServicoRepositorio.port.ts
     │   ├── infrastructure/
     │   │   ├── supabase/                   # AcessosSupabaseAdapter.ts, login.ts
     │   │   └── fixture/                    # AcessosFixtureAdapter.ts
@@ -331,7 +334,7 @@ app/src/
     │   ├── domain/                         # tipos.ts, extrair.ts, spans.ts, editor.ts, sinteticos.ts, metricasFonte.ts
     │   ├── application/
     │   │   ├── ports/                      # PlantasRepositorio.port.ts, ServicoPdf.port.ts
-    │   │   └── use-cases/                  # extrairPlanta, publicarRevisaoPlanta
+    │   │   └── use-cases/                  # extrairPlanta, publicarRevisaoPlanta (orquestracao PDF + Storage + RPC)
     │   ├── infrastructure/
     │   │   ├── pdf/                        # carregarPdfJs.ts, pdf.ts, render.ts, servicoNavegador.ts
     │   │   ├── supabase/                   # PlantasSupabaseAdapter.ts, publicar.ts
@@ -345,7 +348,7 @@ app/src/
     │   ├── domain/                         # modelos.ts, corte.ts (regras puras de disciplina e corte 3D)
     │   ├── application/
     │   │   ├── ports/                      # ModelosRepositorio.port.ts, CacheModelo.port.ts, ConversorIfc.port.ts
-    │   │   └── use-cases/                  # carregarModeloComCache, registrarModelo, retirarModelo
+    │   │   └── use-cases/                  # carregarModeloComCache (hash + IndexedDB + download)
     │   ├── infrastructure/
     │   │   ├── cache/                      # cacheModelo.ts (IndexedDB)
     │   │   ├── conversor/                  # conversor.ts, conversor.worker.ts, globais.d.ts
@@ -360,7 +363,7 @@ app/src/
     │   ├── domain/                         # tipos.ts, geometria.ts, pose.ts, orientacao.ts, malha.ts, qr.ts, planta.ts
     │   ├── application/
     │   │   ├── ports/                      # RaRepositorio.port.ts, Camera.port.ts, LeitorQr.port.ts
-    │   │   └── use-cases/                  # calibrarAmbienteRA, definirQrAmbiente
+    │   │   └── use-cases/                  # calibrarAmbienteRA (QR + pose + referencial 3D)
     │   ├── infrastructure/
     │   │   ├── dispositivo/                # camera.ts, leitorQr.ts, motor.ts
     │   │   ├── supabase/                   # RaSupabaseAdapter.ts
@@ -373,8 +376,7 @@ app/src/
     ├── relatorios/
     │   ├── domain/                         # painel.ts, periodo.ts, tipos de boletim/relatorio
     │   ├── application/
-    │   │   ├── ports/                      # RelatoriosRepositorio.port.ts, BoletinsAdminRepositorio.port.ts
-    │   │   └── use-cases/                  # emitirBoletim, retificarBoletim, exportarPendencias
+    │   │   └── ports/                      # RelatoriosRepositorio.port.ts, BoletinsAdminRepositorio.port.ts
     │   ├── infrastructure/
     │   │   ├── supabase/                   # RelatoriosSupabaseAdapter.ts, BoletinsSupabaseAdapter.ts
     │   │   └── fixture/                    # RelatoriosFixtureAdapter.ts, fixtureBoletim.ts
@@ -387,7 +389,7 @@ app/src/
         ├── domain/                         # fila.ts (regras de retentativa/estado), erros de cliente, orfaos
         ├── application/
         │   ├── ports/                      # ArmazenamentoOffline.port.ts, TelemetriaRepositorio.port.ts
-        │   └── use-cases/                  # sincronizarFila, registrarErroCliente
+        │   └── use-cases/                  # sincronizarFila (retentativa idempotente + ordem)
         ├── infrastructure/
         │   ├── indexeddb/                  # armazenamento.ts, cacheConsultas.ts
         │   ├── supabase/                   # TelemetriaSupabaseAdapter.ts
@@ -430,14 +432,15 @@ sequenceDiagram
 
 ## 4. Plano de Migração em Fases Seguras (Zero Quebra)
 
-### Estratégia de Segurança ("Strangler Fig" + Barrels Temporários)
+### Estratégia de Segurança ("Strangler Fig" + Barrels Temporários + `ub-mode`)
 
 Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 1. **Nunca fazer "Big Bang":** cada fase (e subfase) é um PR pequeno, revisável e reversível.
 2. **Shims de compatibilidade (re-exports):** ao mover um módulo para `modules/<ctx>/` ou `shared/`, manter temporariamente um arquivo de re-export no caminho antigo até todos os consumidores serem atualizados — só então remover o arquivo antigo.
-3. **Composição de interfaces na transição dos repositórios:** `Repositorio` e `RepositorioAdmin` passam a estender/compor as novas portas segregadas por contexto; assim, telas antigas continuam funcionando enquanto novas telas já consomem apenas a porta do seu contexto.
-4. **Gate de verificação obrigatório ao fim de cada fase** (espelhando `.github/workflows/ci.yml`):
+3. **Segregação *just-in-time* por fatia (*Build the Lever*):** em vez de desenhar 15 interfaces de porta especulativas antes de migrar código, cada porta nasce junto com o seu contexto. `Repositorio` e `RepositorioAdmin` passam a compor as novas portas conforme cada fatia é extraída (`interface Repositorio extends RaRepositorio, ModelosRepositorio, ...`).
+4. **Isolamento do estado mutável da Fixture (*Separate Before Serializing Shared State*):** ao fatiar `fixture.ts` (1.418 linhas) e `admin/dados/fixture.ts` (1.731 linhas), cada contexto é o **único escritor** (*single writer*) da sua fatia em um `EstadoFixture` explícito em `shared/infra/fixtureState.ts` — sem mutações cruzadas ocultas entre adaptadores.
+5. **Gate de verificação obrigatório ao fim de cada fase** (espelhando `.github/workflows/ci.yml`):
    ```bash
    # App (TypeScript + ESLint + Vitest + Build + Fixture Build)
    cd app && npm run typecheck && npm run lint && npm test && npm run build && npm run build:fixture
@@ -502,77 +505,65 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 ---
 
-### Fase 3 — Segregação das Portas (Quebra dos God Repositories via ISP)
+### Fase 3 — Alavanca / Piloto Ponta a Ponta: Contexto `ra` (*Build the Lever*)
 
-**Objetivo:** Eliminar o acoplamento de toda a aplicação a `Repositorio` (35 métodos) e `RepositorioAdmin` (50 métodos) aplicando o **Princípio da Segregação de Interfaces (ISP)** da Clean Architecture.
+**Objetivo:** Provar todo o padrão arquitetural (porta segregada + *Contract Test* + fatiamento do adaptador Supabase/Fixture + composição na fachada `Repositorio`/`RepositorioAdmin` + unificação de duplicação entre Mini App e Admin) no menor contexto autocontido antes de replicar nos demais.
 
-- **Ações (com TDD Contract Tests):**
-  1. Definir interfaces de porta pequenas e focadas em `modules/<ctx>/application/ports/*.port.ts`:
-     - `ObrasRepositorio`, `EtapasRepositorio`, `OrganizacaoRepositorio`
-     - `RegistrosRepositorio`, `ObservacoesRepositorio`, `PublicacoesRepositorio`
-     - `SessaoRepositorio`, `AcessosRepositorio`, `EquipeServicoRepositorio`
-     - `PlantasRepositorio`, `ModelosRepositorio`, `RaRepositorio`
-     - `RelatoriosRepositorio`, `BoletinsAdminRepositorio`, `TelemetriaRepositorio`
-  2. Escrever **Contract Tests** (`*.contract.test.ts`) para as portas prioritárias, validando que `Fixture` e `Supabase` obedecem ao mesmo contrato (incluindo erros esperados e idempotência).
-  3. Fazer `Repositorio` e `RepositorioAdmin` legados atuarem como **fachadas compostas** (`interface Repositorio extends ObrasRepositorio, RegistrosRepositorio, ...`), permitindo migrar consumidor por consumidor e fatiar `supabase.ts` e `fixture.ts` sem quebrar nada.
-- **Risco:** Baixo a moderado (mudança de tipos; TypeScript captura qualquer incompatibilidade imediatamente).
-- **Verificação:** `typecheck`, `test` (incluindo novos contract tests) e `build:fixture`.
+- **Ações (com TDD Red → Green → Refactor):**
+  1. Definir `RaRepositorio.port.ts`, `Camera.port.ts` e `LeitorQr.port.ts` em `modules/ra/application/ports/` e escrever o *Contract Test* (`RaRepositorio.contract.test.ts`).
+  2. Unificar regras puras duplicadas de `src/ra/` e `src/admin/ra/` em `modules/ra/domain/` (`tipos.ts`, `geometria.ts`, `pose.ts`, `orientacao.ts`, `malha.ts`, `qr.ts`, `planta.ts`), garantindo zero imports de React/DOM/Supabase.
+  3. Extrair adaptadores de RA (`camera.ts`, `leitorQr.ts`, `motor.ts`, `RaSupabaseAdapter.ts`, `RaFixtureAdapter.ts`) e compor `RaRepositorio` nas fachadas `Repositorio` e `RepositorioAdmin`.
+  4. Mover `TelaRA`, `DiagnosticoRA`, `ra.css` para `presentation/miniapp/` e `RaObra` para `presentation/admin/`.
+  5. **Build the Lever:** registrar o padrão validado (estrutura, *Contract Test*, regra ESLint e `EstadoFixture`) como modelo para as Fases 4 e 5.
+- **Critério de pronto:** zero violações de fronteira ESLint em `modules/ra/`, *Contract Test* passando para Fixture e Supabase, `npm test -- ra` e `npm run test:e2e -- e2e/ra.spec.ts` verdes.
 
 ---
 
 ### Fase 4 — Migração por Contexto Delimitado — Onda 1 (Baixo Acoplamento)
 
-**Objetivo:** Validar a arquitetura na prática com os três contextos mais autocontidos e já parcialmente modularizados. Executar um PR por subfase:
+**Objetivo:** Replicar o padrão validado na Fase 3 nos outros dois contextos técnicos de baixo acoplamento. Um PR por subfase:
 
-#### Fase 4A — Contexto `ra` (Realidade Aumentada)
-- `domain/`: `tipos.ts`, `geometria.ts`, `pose.ts`, `orientacao.ts`, `malha.ts`, `admin/ra/geometria.ts`, `admin/ra/planta.ts`, `admin/ra/qr.ts` (unificando regras duplicadas entre Mini App e Admin).
-- `application/`: portas `RaRepositorio`, `CameraPort`, `LeitorQrPort` + casos de uso.
-- `infrastructure/`: `camera.ts`, `leitorQr.ts`, `motor.ts`, adaptadores Supabase/Fixture de RA (extraídos de `dados/supabase.ts` e `admin/dados/supabase.ts`).
-- `presentation/`: `miniapp/` (`TelaRA`, `DiagnosticoRA`, `ra.css`) e `admin/` (`RaObra`).
-- **Verificação:** `npm test -- ra`, `npm run test:e2e -- e2e/ra.spec.ts`.
-
-#### Fase 4B — Contexto `modelos` (Modelos 3D / IFC → `.frag`)
+#### Fase 4A — Contexto `modelos` (Modelos 3D / IFC → `.frag`)
 - `domain/`: `modelos.ts`, `corte.ts` (unificando regras de disciplinas e corte).
-- `application/`: portas `ModelosRepositorio`, `CacheModeloPort`, `ConversorIfcPort`.
+- `application/`: portas `ModelosRepositorio`, `CacheModeloPort`, `ConversorIfcPort` + `use-cases/carregarModeloComCache`.
 - `infrastructure/`: `cacheModelo.ts`, `conversor.ts`, `conversor.worker.ts`, adaptadores Supabase/Fixture de modelos.
 - `presentation/`: `miniapp/` (`VisualizadorModelo`, `PreviaModelo`, `Modelo`, `AmbienteModelo`) e `admin/` (`ModelosObra`).
-- **Atenção:** validar que `conversor.worker` e `VisualizadorModelo` continuam fora do `precache-manifest.json` e que `modelos.node.test.ts` continua passando.
-- **Verificação:** `npm test -- modelo`, `npm run test:e2e -- e2e/modelo.spec.ts e2e/admin-modelo.spec.ts`.
+- **Critério de pronto:** `conversor.worker` e `VisualizadorModelo` continuam fora do `precache-manifest.json`; `modelos.node.test.ts`, `npm test -- modelo` e `npm run test:e2e -- e2e/modelo.spec.ts e2e/admin-modelo.spec.ts` verdes.
 
-#### Fase 4C — Contexto `plantas` (PDF, Extração e Revisões 2D)
+#### Fase 4B — Contexto `plantas` (PDF, Extração e Revisões 2D)
 - `domain/`: `tipos.ts`, `extrair.ts`, `spans.ts`, `editor.ts`, `sinteticos.ts`, `metricasFonte.ts`.
-- `application/`: portas `PlantasRepositorio`, `ServicoPdfPort` + caso de uso `publicarRevisao`.
+- `application/`: portas `PlantasRepositorio`, `ServicoPdfPort` + `use-cases/` (`extrairPlanta`, `publicarRevisaoPlanta`).
 - `infrastructure/`: `carregarPdfJs.ts`, `pdf.ts`, `render.ts`, `servicoNavegador.ts`, `servicoFalso.ts`, adaptadores Supabase/Fixture.
 - `presentation/`: `miniapp/` (`AbaPlanta`, `PlantaViewer`, `OndeFica`, `Pino`) e `admin/` (`PlantaObra`, `EditorPlanta`, `Ambientes`, `NovaRevisao`, `Recorte`).
-- **Verificação:** `npm test -- planta`, `paridade.node.test.ts`, `spans.node.test.ts`, `npm run test:e2e -- e2e/planta.spec.ts`.
+- **Critério de pronto:** `npm test -- planta`, `paridade.node.test.ts`, `spans.node.test.ts` e `npm run test:e2e -- e2e/planta.spec.ts` verdes.
 
 ---
 
-### Fase 5 — Migração por Contexto Delimitado — Onda 2 (Core Domain e Backend Node)
+### Fase 5 — Migração por Contexto Delimitado — Onda 2 (Core Domain)
 
-**Objetivo:** Migrar os contextos centrais de negócio (onde estão os arquivos mais longos de `dados/` e `telas/`) e alinhar a estrutura interna de `app/servidor/`. Um PR por subfase:
+**Objetivo:** Migrar os contextos centrais de negócio fatiando o restante dos adaptadores monolíticos (`dados/` e `admin/dados/`), extraindo cada porta *just-in-time* com seu *Contract Test*. Um PR por subfase:
 
 #### Fase 5A — Contexto `acessos`
-- Extrair `Sessao`, `Acessos`, `Pessoas`, `Admins` e `EquipeServico` (check-in/out) dos adaptadores monolíticos.
-- **Verificação:** `npm test -- acesso`, `npm run test:e2e -- e2e/acesso.spec.ts`.
+- Extrair `Sessao`, `Acessos`, `Pessoas`, `Admins` e `EquipeServico` (check-in/out) dos adaptadores monolíticos, com portas segregadas (sem `use-cases/` vazios).
+- **Critério de pronto:** `npm test -- acesso`, `npm run test:e2e -- e2e/acesso.spec.ts` verdes.
 
 #### Fase 5B — Contexto `obras`
-- Extrair `Obras`, `Etapas` (com `util/etapas.ts` → `domain/`), `Pavimentos`, `Ambientes`, `Aditivos`, `Responsáveis` e `Organização`.
-- **Verificação:** `npm test -- obra etapa`, `npm run test:e2e -- e2e/navegacao.spec.ts e2e/etapas.spec.ts e2e/admin-obra.spec.ts e2e/admin-etapas.spec.ts`.
+- Extrair `Obras`, `Etapas` (com `util/etapas.ts` → `domain/`), `Pavimentos`, `Ambientes`, `Aditivos`, `Responsáveis` e `Organização`, com portas segregadas (regras de escrita permanecem nas RPCs).
+- **Critério de pronto:** `npm test -- obra etapa`, `npm run test:e2e -- e2e/navegacao.spec.ts e2e/etapas.spec.ts e2e/admin-obra.spec.ts e2e/admin-etapas.spec.ts` verdes.
 
 #### Fase 5C — Contexto `fiscalizacao`
-- Extrair `Registros`, `Pendências`, `Encerramentos`, `Observações do Dia`, `Publicações` e regras de envio (`dados/envio.ts` → `domain/` + `application/`).
-- **Verificação:** `npm test -- registro pendencia observac`, `npm run test:e2e -- e2e/novo-registro.spec.ts e2e/pendencias.spec.ts e2e/observacoes.spec.ts`.
+- Extrair `Registros` (*discriminated union* `Servico | Pendencia`), `Encerramentos`, `Observações do Dia`, `Publicações` e `use-cases/` de envio idempotente (`dados/envio.ts`).
+- **Critério de pronto:** `npm test -- registro pendencia observac`, `npm run test:e2e -- e2e/novo-registro.spec.ts e2e/pendencias.spec.ts e2e/observacoes.spec.ts` verdes.
 
-#### Fase 5D — Contexto `relatorios` (Frontend + Alinhamento de `app/servidor/`)
-- **Frontend:** extrair `Relatórios`, `Painel` (`util/painel.ts`, `util/periodo.ts` → `domain/`), `Boletins` e `EditorBoletim` (`fixtureBoletim.ts` → `infrastructure/fixture/`).
-- **Backend Node (`app/servidor/`):** organizar `app/servidor/boletim/` e `app/servidor/relatorio/` em `domain/`, `application/`, `infrastructure/` e `http/`, mantendo `app/api/gerar-boletim.ts`, `app/api/previa-boletim.ts` e `app/api/relatorio-pendencias.ts` como entrypoints finos (sem alterar URLs nem `app/vercel.json`).
-- **Verificação:** `npm test -- relatorio boletim servidor`, `BOLETIM_EXIGIR_CHROMIUM=1 npx vitest run servidor`.
+#### Fase 5D — Contexto `relatorios` (Frontend)
+- Extrair `Relatórios`, `Painel` (`util/painel.ts`, `util/periodo.ts` → `domain/`), `Boletins` e `EditorBoletim` (`fixtureBoletim.ts` → `infrastructure/fixture/`).
+- **`app/servidor/{boletim,relatorio}/`:** mantido plano e local (*"If the code is already clear and local, leave it"*), sem alterar `app/api/*.ts` nem `app/vercel.json`.
+- **Critério de pronto:** `npm test -- relatorio boletim servidor` e `BOLETIM_EXIGIR_CHROMIUM=1 npx vitest run servidor` verdes.
 
 #### Fase 5E — Contexto `operacao`
-- Migrar `offline/` (`fila.ts` → `domain/`, `armazenamento.ts` e `cacheConsultas.ts` → `infrastructure/indexeddb/`, `contexto.tsx` e `BarraSincronizacao.tsx` → `presentation/miniapp/`).
+- Migrar `offline/` (`fila.ts` → `domain/`, `sincronizarFila` → `application/use-cases/`, `armazenamento.ts` e `cacheConsultas.ts` → `infrastructure/indexeddb/`, `contexto.tsx` e `BarraSincronizacao.tsx` → `presentation/miniapp/`).
 - Migrar telemetria de erros do cliente (`Erros.tsx`) e resumo de órfãos de storage.
-- **Verificação:** `npm test -- offline erro`, `npm run test:e2e -- e2e/offline.spec.ts e2e/sw.spec.ts`.
+- **Critério de pronto:** `npm test -- offline erro`, `npm run test:e2e -- e2e/offline.spec.ts e2e/sw.spec.ts` verdes; adaptadores legados `supabase.ts` e `fixture.ts` reduzidos a fachadas vazias prontas para remoção na Fase 6.
 
 ---
 
@@ -598,9 +589,9 @@ flowchart LR
     F0["Fase 0<br/>Aliases, Lint (warn)<br/>e Baseline TDD"]
     F1["Fase 1<br/>Raiz: DOCS */ -> obras/"]
     F2["Fase 2<br/>shared/kernel,<br/>shared/infra, shared/ui"]
-    F3["Fase 3<br/>Segregacao de Portas<br/>+ Contract Tests"]
-    F4["Fase 4 (Onda 1)<br/>ra -> modelos -> plantas"]
-    F5["Fase 5 (Onda 2)<br/>acessos -> obras -> fiscalizacao<br/>-> relatorios/servidor -> operacao"]
+    F3["Fase 3 (Piloto / Lever)<br/>ra: porta + contract test<br/>+ adaptador + telas"]
+    F4["Fase 4 (Onda 1)<br/>modelos -> plantas"]
+    F5["Fase 5 (Onda 2)<br/>acessos -> obras -> fiscalizacao<br/>-> relatorios -> operacao"]
     F6["Fase 6<br/>Composition Roots,<br/>Remover Shims, Lint (error)"]
 
     F0 --> F1 --> F2 --> F3 --> F4 --> F5 --> F6
@@ -631,7 +622,7 @@ Cada fase ou subfase deste plano deve ser conduzida seguindo o ciclo do **`ub-mo
    - **Foundational Thinking:** acertar o formato dos dados/contratos antes de mover a lógica; fazer primeiro o que desbloqueia as fases seguintes (aliases, `shared/kernel`, portas segregadas).
    - **Boundary Discipline & Type System Discipline:** validar e parsear dados externos (Supabase, PDF, Telegram, IndexedDB) na borda (`infrastructure/`); dentro de `domain/`, confiar nos tipos e manter regras de negócio em funções puras, tornando estados ilegais irrepresentáveis.
    - **TDD:** escrever o teste de caracterização ou teste de contrato falhando antes de alterar a estrutura, confirmar o motivo da falha e aplicar a menor mudança para passar.
-   - **Build the Lever:** migrar o primeiro contexto manualmente (Fase 4A — `ra`) para validar o padrão; só então consolidar regras de lint/scripts repetíveis para os demais contextos.
+   - **Build the Lever:** migrar o primeiro contexto manualmente (Fase 3 — `ra`) para validar o padrão; só então consolidar regras de lint/scripts repetíveis para os demais contextos.
 
 2. **Then Make it Right (Refatoração Verificável):**
    - **Refactoring:** *fixar o comportamento atual → alterar a estrutura → provar que o comportamento não mudou*.
