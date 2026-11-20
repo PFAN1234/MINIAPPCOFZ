@@ -77,4 +77,15 @@ e2e Playwright, `docs/admin.md`, aplicar migrations em produção (API de gerenc
 
 ## Resultado do spike
 
-_(preencher na etapa 0)_
+Feito em 2026-11-20.
+
+**R1 — resolvido.** O `ARQ.frag` publicado (R06, 12,4 MB; 33,4 MB descomprimido) traz 27.121 itens, 21.245 GlobalIds, atributos de todos os itens, 23.419 relações e a estrutura espacial completa (IFCPROJECT › IFCSITE › IFCBUILDING › IFCBUILDINGSTOREY). Também traz IFCPROPERTYSET/IFCPROPERTYSINGLEVALUE, materiais e tipos. Não traz IFCELEMENTQUANTITY nem IFCSPACE. O `IfcImporter` padrão já inclui as duas classes, então a ausência vem da exportação do Revit (sem "quantidades base" e sem ambientes). O painel de quantidades mostra "sem quantidades no IFC" nesse caso. Não é preciso republicar.
+
+**API real (`@thatopen/components` 3.6.0 + `components-front` 3.6.1):**
+
+- Existem: `Highlighter`, `Hoverer`, `Outliner`, `PostproductionRenderer`, `Mesher`, as quatro medições (`Length`/`Area`/`Volume`/`AngleMeasurement`), `ClipStyler`/`ClipEdges` (front); `Hider` (`set`/`isolate`/`toggle`), `Classifier` (`byCategory`/`byIfcBuildingStorey`/`byModel`), `ItemsFinder`, `Clipper`, `Views` (`createFromIfcStoreys`, `createElevations`, `open`/`close`), `OrthoPerspectiveCamera` com `PlanMode`/`FirstPersonMode`/`OrbitMode`, `BCFTopics` (`export` → Blob, `load`), `Viewpoints`, `Grids`, `BoundingBoxer` (core).
+- Não existe no v3: **minimapa**. Será implementado no adaptador (câmera ortográfica de topo).
+- Disponíveis e fora do escopo da v1: verificação IDS (`IDSSpecifications`), exportação DXF, desenhos técnicos e anotações, nuvem de pontos e splats.
+- `potree-core` é peer opcional; não foi instalado.
+
+**Tamanho:** `components-front` tem 688 kB sem minificar. O chunk do visualizador será medido no build da etapa 2 e não entra no precache. A medição de memória com todas as disciplinas fica para o e2e da etapa 2, porque hoje só há o ARQ publicado localmente.

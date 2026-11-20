@@ -49,7 +49,7 @@ modules/issues/{domain,application/ports,infra,presentation/admin}   (inclui bcf
 
 - Segue `docs/padrao-contexto-modulo.md`: portas segregadas com contract test, adaptadores Supabase e fixture, fronteiras do ESLint em `error`.
 - `documentos` e `issues` não importam `three`: a vista da issue e os vínculos usam tipos puros (`Vista`, `RefElemento`).
-- Dependência nova: `@thatopen/components-front` na mesma versão de `@thatopen/components` (exata).
+- Dependência nova: `@thatopen/components-front` 3.6.1, versão exata (peer `potree-core` é opcional e não é instalado).
 
 ### 3.1 Porta `MotorVisualizador`
 
@@ -95,9 +95,9 @@ Estados da tela: sem WebGL, carregando (com progresso por disciplina), erro por 
 | --- | --- | --- |
 | Navegação | Orbitar, pan, zoom, enquadrar tudo/seleção, eixos e cubo de vista, contorno de arestas, grade | `SimpleWorld`, `OrthoPerspectiveCamera`, `Grids`, `PostproductionRenderer` (front) |
 | Itens | Árvore espacial, categorias IFC, lista de modelos com liga/desliga, busca por nome | `Classifier`, dados de estrutura espacial do `FragmentsModel` |
-| Visibilidade | Selecionar (clique, Ctrl+clique), destacar ao passar, ocultar, isolar, fantasma, mostrar tudo, colorir por categoria/disciplina | `Highlighter` (front), `Hider` |
-| Inspeção | Atributos, property sets, quantidades, contagem por classe, busca por atributo | `FragmentsModel.getItemsData`, `ItemsFinder` |
-| Cortes e vistas | Planos de corte, plantas por pavimento, elevações, orto/perspectiva, minimapa, caminhar | `Clipper`, `Views`/plantas (front), `camera-controls` em primeira pessoa |
+| Visibilidade | Selecionar (clique, Ctrl+clique), destacar ao passar, ocultar, isolar, fantasma, mostrar tudo, colorir por categoria/disciplina | `Highlighter`, `Hoverer`, `Outliner` (front), `Hider`, `Classifier` |
+| Inspeção | Atributos, property sets, quantidades (quando o IFC trouxer), contagem por classe, busca por atributo | `FragmentsModel.getItemsData` (relação `IsDefinedBy`), `ItemsFinder` |
+| Cortes e vistas | Planos de corte (com preenchimento de seção), plantas por pavimento, elevações, orto/perspectiva, minimapa, caminhar | `Clipper` + `ClipStyler` (front), `Views.createFromIfcStoreys` / `Views.createElevations`, `OrthoPerspectiveCamera` (`PlanMode`, `FirstPersonMode`). Minimapa não existe no v3: implementação própria no adaptador (segunda câmera ortográfica de topo em canvas pequeno) |
 | Medições | Distância, área, volume, ângulo; lista e apagar; unidades m, m², m³, graus com 2 casas | `LengthMeasurement`, `AreaMeasurement`, `VolumeMeasurement`, `AngleMeasurement` (front) |
 | Issues | Criar a partir da vista, marcadores, restaurar vista, BCF | `BCFTopics`, `Viewpoints` |
 

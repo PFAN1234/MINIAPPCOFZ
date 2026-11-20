@@ -456,7 +456,7 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelos.md`. Branch `feature/admin-central-modelos`, PR único ao fim.
 
 - [x] Decisões fechadas com o usuário (2026-11-20).
-- [ ] 0 Spike (API v3, propriedades no `.frag`, tamanho do chunk)
+- [x] 0 Spike: R1 resolvido (`.frag` traz psets, espacial e GlobalId); minimapa próprio; chunk medido na etapa 2
 - [ ] 1 Página, tema e casca
 - [ ] 2 Motor 3D e navegação
 - [ ] 3 Inspeção
