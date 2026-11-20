@@ -4,7 +4,7 @@ import { useFila, useFotosLocais } from '../offline/contexto.tsx'
 import type { Progresso } from '@modules/fiscalizacao/application/use-cases/envio.ts'
 import type { ItemEncerramento, ItemFila } from '../offline/fila.ts'
 import { Horario } from './Horario.tsx'
-import { SeloRA } from './MiniaturaRegistro.tsx'
+import { SeloRA } from '@modules/fiscalizacao/presentation/miniapp/MiniaturaRegistro.tsx'
 import { VisualizadorFotos } from '../shared/ui/midia/VisualizadorFotos.tsx'
 
 function textoProgresso(progresso: Progresso | null): string {

@@ -3,15 +3,15 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import App from '../App.tsx'
-import { RepositorioProvider } from '../dados/contexto.tsx'
-import { ErroEnvio, MENSAGEM_REDE } from '../dados/erros.ts'
-import { criarRepositorioFixture } from '../dados/fixture.ts'
-import type { Repositorio } from '../dados/repositorio.ts'
-import { MENSAGEM_COTA } from '../offline/armazenamento.ts'
+import App from '../../../../App.tsx'
+import { RepositorioProvider } from '../../../../dados/contexto.tsx'
+import { ErroEnvio, MENSAGEM_REDE } from '../../../../dados/erros.ts'
+import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
+import type { Repositorio } from '../../../../dados/repositorio.ts'
+import { MENSAGEM_COTA } from '../../../../offline/armazenamento.ts'
 
-vi.mock('../shared/infra/browser/imagem.ts', async (original) => ({
-  ...(await original<typeof import('../shared/infra/browser/imagem.ts')>()),
+vi.mock('@shared/infra/browser/imagem.ts', async (original) => ({
+  ...(await original<typeof import('@shared/infra/browser/imagem.ts')>()),
   prepararFoto: vi.fn(async () => ({
     id: crypto.randomUUID(),
     blob: new Blob(['jpeg'], { type: 'image/jpeg' }),

@@ -555,9 +555,9 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 - **Parte 3 (telas e hooks) concluída:** telas admin e hooks em `modules/obras/presentation/admin/` e telas miniapp (`Obras`, `Obra`, `Ambiente`) em `modules/obras/presentation/miniapp/`; chunks e precache inalterados; e2e 16/16.
 - **Critério de pronto:** `npm test -- obra etapa`, `npm run test:e2e -- e2e/navegacao.spec.ts e2e/etapas.spec.ts e2e/admin-obra.spec.ts e2e/admin-etapas.spec.ts` verdes.
 
-#### Fase 5C — Contexto `fiscalizacao`
-- Extrair `Registros` (*discriminated union* `Servico | Pendencia`), `Encerramentos`, `Observações do Dia`, `Publicações` e `use-cases/` de envio idempotente (`dados/envio.ts`).
-- **Critério de pronto:** `npm test -- registro pendencia observac`, `npm run test:e2e -- e2e/novo-registro.spec.ts e2e/pendencias.spec.ts e2e/observacoes.spec.ts` verdes.
+#### Fase 5C — Contexto `fiscalizacao` — concluída (partes 1 e 2)
+- Extraídos `Registros`, `Encerramentos`, `Publicações`, `use-cases/envio.ts` e telas/componentes (`NovoRegistro`, `Pendencias`, `PendenciaDetalhe`, `Publicacoes`, `Registros`, `CartaoPendencia`, `ListaRegistros`, `MiniaturaRegistro`) em `modules/fiscalizacao/`. (`Observações do Dia` segue junto com boletins na 5D.)
+- **Critério de pronto:** `npm test -- registro pendencia`, `npm run test:e2e -- e2e/novo-registro.spec.ts e2e/pendencias.spec.ts` verdes (10/10).
 
 #### Fase 5D — Contexto `relatorios` (Frontend)
 - Extrair `Relatórios`, `Painel` (`util/painel.ts`, `util/periodo.ts` → `domain/`), `Boletins` e `EditorBoletim` (`fixtureBoletim.ts` → `infrastructure/fixture/`).

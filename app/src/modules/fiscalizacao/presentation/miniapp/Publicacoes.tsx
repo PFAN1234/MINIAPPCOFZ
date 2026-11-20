@@ -1,10 +1,10 @@
 import type { PublicacaoProblema } from '@modules/fiscalizacao/domain/tipos.ts'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { EstadoConsulta, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
-import { Horario } from '../components/Horario.tsx'
-import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
-import { useObra, usePublicacoesProblema, useResolverPublicacao } from '../dados/hooks.ts'
+import { EstadoConsulta, EstadoVazio } from '@shared/ui/feedback/Estado.tsx'
+import { Horario } from '../../../../components/Horario.tsx'
+import { TopoTela } from '@shared/ui/layout/TopoTela.tsx'
+import { useObra, usePublicacoesProblema, useResolverPublicacao } from '../../../../dados/hooks.ts'
 
 import type { ObraDetalhe } from '@modules/obras/domain/tipos.ts'
 

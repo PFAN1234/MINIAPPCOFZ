@@ -424,4 +424,10 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - Lacunas: constantes e `ErroAdmin` seguem em `admin/dados/tipos.ts` (adaptadores importam de lá); `fixtureBoletim.ts` (helpers de campos da etapa) segue em `admin/dados` até a 5D; boletins da fixture limpos via callback `aoExcluirEtapa`.
 - [x] Parte 3 (telas e `hooks.ts`): telas admin (`ObrasAdmin`, `ObraAdmin`, `Organizacao`, `ArquivarExcluir`, `EtapaAdmin`, `FormularioEtapa`, `MapaEscolha`, `Aditivos`, `Responsaveis`, `ArquivarExcluirEtapa` + testes) e hooks admin movidos para `modules/obras/presentation/admin/`; telas miniapp (`Obras`, `Obra`, `Ambiente` + 5 arquivos de teste) movidas para `modules/obras/presentation/miniapp/`. `Registros.tsx` fica para a 5C (depende de `fiscalizacao`).
 - Estado final da 5B: typecheck, eslint (0 avisos), build e build:fixture verdes; 913 testes em 109 arquivos; e2e `navegacao`, `etapas`, `admin-obra`, `admin-etapas` 16/16; chunks (`MapaEscolha` lazy incluído) e `precache-manifest.json` idênticos aos de antes.
-- Próximo: 5C (`fiscalizacao`).
+
+## Arquitetura — Fase 5C (contexto `fiscalizacao`)
+
+- [x] Parte 1 (domínio, portas, use-case e adaptadores): `modules/fiscalizacao/{domain/tipos.ts, application/ports/{RegistrosRepositorio,PublicacoesRepositorio}, application/use-cases/envio.ts, infra/{RegistrosSupabaseAdapter,PublicacoesSupabaseAdapter,RegistrosFixtureAdapter,PublicacoesFixtureAdapter}}`; `FiscalizacaoFixture.contract.test.ts` (+9 testes de contrato).
+- [x] Parte 2 (telas e componentes): `NovoRegistro`, `Pendencias`, `PendenciaDetalhe`, `Publicacoes`, `Registros`, `CartaoPendencia`, `ListaRegistros`, `MiniaturaRegistro` e testes movidos para `modules/fiscalizacao/presentation/miniapp/`.
+- Estado final da 5C: typecheck, eslint (0 avisos), build e build:fixture verdes; 922 testes em 110 arquivos; e2e `novo-registro` e `pendencias` 10/10; chunks e `precache-manifest.json` inalterados.
+- Próximo: 5D (`relatorios`).

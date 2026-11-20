@@ -3,10 +3,10 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import App from '../App.tsx'
-import { RepositorioProvider } from '../dados/contexto.tsx'
-import { criarRepositorioFixture } from '../dados/fixture.ts'
-import type { Repositorio } from '../dados/repositorio.ts'
+import App from '../../../../App.tsx'
+import { RepositorioProvider } from '../../../../dados/contexto.tsx'
+import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
+import type { Repositorio } from '../../../../dados/repositorio.ts'
 
 vi.mock('@modules/ra/presentation/miniapp/TelaRA.tsx', () => ({
   default: () => {

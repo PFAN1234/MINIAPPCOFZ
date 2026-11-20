@@ -1,9 +1,9 @@
 import type { RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import { Link } from 'react-router'
-import { useUrlsImagens } from '../dados/hooks.ts'
+import { useUrlsImagens } from '../../../../dados/hooks.ts'
 
-import { formatarDataHora, formatarRelativo } from '../shared/kernel/formato.ts'
-import { IconeChevron } from '../shared/ui/icones/Icones.tsx'
+import { formatarDataHora, formatarRelativo } from '@shared/kernel/formato.ts'
+import { IconeChevron } from '@shared/ui/icones/Icones.tsx'
 
 export function SeloSituacao({ situacao }: { situacao: RegistroResumo['situacao'] }) {
   return situacao === 'resolvida' ? (

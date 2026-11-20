@@ -87,3 +87,8 @@ Todo uso de `three` fica em `modules/ra/infra/three/` (`motor.ts`, `malha.ts`, `
 
 - Ao mover telas com `vi.mock` global (como `MapaEscolha.tsx` em `shared/test/setup.ts`), atualizar o caminho do mock para o alias `@modules/...` junto com a movimentação; caso contrário o jsdom tenta carregar a dependência real (Leaflet).
 - Separar os hooks do contexto de `admin/dados/hooks.ts` para `modules/<ctx>/presentation/admin/hooks.ts` reduz o acoplamento das telas e mantém as chaves de cache do React Query idênticas.
+
+### Lições da Fase 5C (`fiscalizacao`)
+
+- Use-cases com orquestração real (`enviarRegistro`, `enviarEncerramento`) recebem apenas `Pick<Porta, ...>` em vez da fachada `Repositorio`, desacoplando `application/use-cases/` do restante do app.
+- Adaptador fixture de registros expõe `todos()` para alimentar o cálculo de contagens em `ObrasFixtureAdapter` sem duplicar estado nem criar dependência cíclica.

@@ -4,11 +4,11 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
-import { RepositorioProvider } from '../dados/contexto.tsx'
-import { criarRepositorioFixture } from '../dados/fixture.ts'
+import { RepositorioProvider } from '../../../../dados/contexto.tsx'
+import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
 
-import type { ItemFila } from '../offline/fila.ts'
-import { OfflineProvider } from '../offline/contexto.tsx'
+import type { ItemFila } from '../../../../offline/fila.ts'
+import { OfflineProvider } from '../../../../offline/contexto.tsx'
 import { ListaRegistros } from './ListaRegistros.tsx'
 
 async function carregar(): Promise<RegistroResumo[]> {

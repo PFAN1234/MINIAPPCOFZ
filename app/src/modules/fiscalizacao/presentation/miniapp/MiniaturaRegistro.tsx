@@ -1,8 +1,8 @@
 import type { RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import { useState } from 'react'
-import { useUrlsImagens } from '../dados/hooks.ts'
+import { useUrlsImagens } from '../../../../dados/hooks.ts'
 
-import { VisualizadorFotos } from '../shared/ui/midia/VisualizadorFotos.tsx'
+import { VisualizadorFotos } from '@shared/ui/midia/VisualizadorFotos.tsx'
 
 export function SeloRA({ fotos }: { fotos: readonly { origem?: string }[] }) {
   if (!fotos.some((f) => f.origem === 'ra_modelo')) return null
