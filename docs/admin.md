@@ -215,10 +215,10 @@ Sigla e revisão saem do nome no padrão `<obra>-<projeto>-<SIGLA>-<REV>` (ex.: 
 | Peça | Onde |
 | --- | --- |
 | Migration | `supabase/migrations/20261112120000_admin_modelo.sql` |
-| Regras e publicação | `app/src/admin/modelo/modelos.ts` (sigla/revisão do nome, limite, conferência do `.frag`, hash, caminho, envio + RPC) |
-| Conversão | `app/src/admin/modelo/conversor.ts` e `conversor.worker.ts`; o `web-ifc.wasm` é servido em `/web-ifc/<versão>/` (plugin `wasmWebIfc` no `vite.config.ts`) |
+| Regras e publicação | `app/src/modules/modelos/domain/modelos.ts` (sigla/revisão do nome, limite, conferência do `.frag`, hash, caminho, envio + RPC) |
+| Conversão | `app/src/modules/modelos/infra/conversor.ts` e `conversor.worker.ts`; o `web-ifc.wasm` é servido em `/web-ifc/<versão>/` (plugin `wasmWebIfc` no `vite.config.ts`) |
 | Tela | `app/src/admin/telas/modelo/ModelosObra.tsx` |
-| Testes | `app/src/admin/modelo/modelos.node.test.ts`, `app/src/admin/telas/modelo/ModelosObra.test.tsx`, `app/e2e/admin-modelo.spec.ts` (converte de verdade `e2e/fixtures/TESTE-01-EST-R01.ifc`, gerado por `e2e/fixtures/gerar_ifc_teste.py`, e envia o `ARQ.frag` da HTO), `tests/db/test_admin_modelo.py` |
+| Testes | `app/src/modules/modelos/infra/modelos.node.test.ts`, `app/src/admin/telas/modelo/ModelosObra.test.tsx`, `app/e2e/admin-modelo.spec.ts` (converte de verdade `e2e/fixtures/TESTE-01-EST-R01.ifc`, gerado por `e2e/fixtures/gerar_ifc_teste.py`, e envia o `ARQ.frag` da HTO), `tests/db/test_admin_modelo.py` |
 
 ### Banco e Storage (`20261112120000_admin_modelo.sql`)
 

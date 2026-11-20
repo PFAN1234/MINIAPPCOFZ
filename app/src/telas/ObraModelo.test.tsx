@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
-import type { ModeloFrag } from '../modelo/modelos.ts'
+import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
 import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 function repoComModelos(modelos: ModeloFrag[] | Error) {

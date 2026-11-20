@@ -3,27 +3,7 @@
  * Nos testes, um conversor falso entra pelo `ConversorProvider`.
  */
 import { createContext, createElement, useContext, type ReactNode } from 'react'
-
-export interface PedidoConversao {
-  arquivo: Blob
-  /** Pasta (URL absoluta, com barra no fim) onde está o `web-ifc.wasm`. */
-  wasm: string
-}
-
-export type MensagemConversor =
-  | { tipo: 'progresso'; fracao: number; etapa: string; estado: string }
-  | { tipo: 'pronto'; frag: Uint8Array }
-  | { tipo: 'erro'; mensagem: string }
-
-export interface ProgressoConversao {
-  /** 0 a 1. */
-  fracao: number
-  texto: string
-}
-
-export interface Conversor {
-  converter(arquivo: Blob, aoProgredir: (p: ProgressoConversao) => void, sinal?: AbortSignal): Promise<Uint8Array>
-}
+import type { Conversor, MensagemConversor, PedidoConversao } from '../application/ports/ConversorIfcPort.port.ts'
 
 const ETAPAS: Record<string, string> = {
   conversion: 'Convertendo',

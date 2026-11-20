@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
-import type { ModeloFrag } from '../modelo/modelos.ts'
+import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
 import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 const ARQ: ModeloFrag = { sigla: 'ARQ', revisao: 'R06', arquivo: 'ARQ.frag', bytes: 1, hash: 'abc' }

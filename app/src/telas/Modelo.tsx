@@ -6,8 +6,8 @@ import { IconeCubo } from '../shared/ui/icones/Icones.tsx'
 import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import { useRepositorio } from '../dados/contexto.tsx'
 import { useObra } from '../dados/hooks.ts'
-import { modeloComCache } from '../modelo/cacheModelo.ts'
-import type { ModeloFrag } from '../modelo/modelos.ts'
+import { modeloComCache } from '@modules/modelos/infra/cacheModelo.ts'
+import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
 
 // Three.js e That Open ficam fora do pacote inicial.
 const VisualizadorModelo = lazy(() => import('../modelo/VisualizadorModelo.tsx'))

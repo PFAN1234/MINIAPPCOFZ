@@ -1,20 +1,20 @@
 // @vitest-environment node
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { criarRepositorioAdminFixture } from '../dados/fixture.ts'
+import { criarRepositorioAdminFixture } from '../../../admin/dados/fixture.ts'
 import { mensagemErroConversao, pastaWasm, textoEtapa } from './conversor.ts'
+import { publicarModelo } from '../application/use-cases/publicarModelo.ts'
 import {
   caminhoModelo,
-  hashModelo,
   LIMITE_FRAG,
   pareceFrag,
   problemaFrag,
   problemaRevisaoModelo,
   problemaSigla,
-  publicarModelo,
   siglaERevisao,
   tipoDoArquivo,
-} from './modelos.ts'
+} from '../domain/modelos.ts'
+import { hashModelo } from './modelosLocais.ts'
 
 // O .frag real da HTO (lido a partir de app/, a pasta do Vitest).
 const fragHto = new Uint8Array(readFileSync('public/modelos/hto/ARQ.frag'))
@@ -70,7 +70,7 @@ describe('modelo: publicação (fixture)', () => {
   it('envia ao bucket modelos e registra; a mesma sigla substitui; retirar vai ao histórico', async () => {
     const repo = criarRepositorioAdminFixture()
     const obra = (await repo.obterObra('hto')).obra
-    const deps = { enviarArquivo: repo.enviarArquivo.bind(repo), registrarModelo: repo.registrarModelo.bind(repo) }
+    const deps = { enviarArquivo: repo.enviarArquivo.bind(repo), registrarModelo: repo.registrarModelo.bind(repo), hash: hashModelo }
     const m = await publicarModelo({ deps, obra, sigla: 'ARQ', revisao: 'R06', frag: fragHto, origem: 'frag', arquivoNome: 'ARQ.frag' })
     expect(m).toMatchObject({ sigla: 'ARQ', revisao: 'R06', bytes: fragHto.byteLength, hash: 'dffa24c612d76690' })
     expect(m.caminho).toBe(`${obra.id}/ARQ/dffa24c612d76690.frag`)

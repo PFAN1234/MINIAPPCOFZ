@@ -1,3 +1,5 @@
+import type { CacheModeloPort } from '../application/ports/CacheModeloPort.port.ts'
+
 const NOME_CACHE = 'modelos-v1'
 
 /**
@@ -6,10 +8,7 @@ const NOME_CACHE = 'modelos-v1'
  * Sem Cache API (jsdom, navegador restrito) ou com o cache cheio, só baixa. O `sw.js` não
  * apaga este cache (ver `CACHE_MODELOS`).
  */
-export async function modeloComCache(
-  chave: string,
-  baixar: () => Promise<ArrayBuffer>,
-): Promise<ArrayBuffer> {
+export const modeloComCache: CacheModeloPort = async (chave, baixar) => {
   const [prefixo] = chave.split('@')
   const url = `/__modelo-cache/${chave}`
   let cache: Cache | undefined

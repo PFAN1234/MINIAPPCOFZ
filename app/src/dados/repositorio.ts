@@ -29,10 +29,12 @@ import type {
   MatrizAcessos,
   PapelAcesso,
 } from './tipos.ts'
-import type { ModeloFrag } from '../modelo/modelos.ts'
+import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 
-export interface Repositorio extends Pick<RaRepositorio, 'obterGeometria'> {
+export interface Repositorio
+  extends Pick<RaRepositorio, 'obterGeometria'>,
+    Pick<ModelosRepositorio, 'listarModelos' | 'baixarModelo'> {
   /** Obras em que o usuário participa, cada uma com a sua etapa. */
   listarObras(): Promise<ObraDaLista[]>
   /** Totais por obra visível (serviços, pendências abertas e resolvidas) e o papel do usuário. */
@@ -85,10 +87,6 @@ export interface Repositorio extends Pick<RaRepositorio, 'obterGeometria'> {
   marcarPublicada(id: number): Promise<void>
   /** Localiza um registro visível ao usuário (para o link `startapp`); null se não houver. */
   localizarRegistro(id: string): Promise<RegistroLocalizado | null>
-  /** `.frag` publicados da obra (um por disciplina), por sigla. Lista vazia se não há nenhum. */
-  listarModelos(slug: string): Promise<ModeloFrag[]>
-  /** Baixa o `.frag`. O cache por hash fica a cargo de quem chama (`modeloComCache`). */
-  baixarModelo(slug: string, modelo: ModeloFrag): Promise<ArrayBuffer>
   /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */
   idUsuario(): Promise<string | null>
   /** O usuário é admin do Mini App (site de administração)? */

@@ -1,7 +1,7 @@
 /**
  * Modelos 3D da obra (`/admin/obras/<slug>/modelos`): os `.frag` publicados por disciplina, o
  * envio de um modelo novo e o histórico. O IFC é convertido neste navegador, num Web Worker
- * (`modelo/conversor.ts`); um `.frag` já convertido (script `npm run modelos`) vai direto.
+ * (`modules/modelos/infra/conversor.ts`); um `.frag` já convertido (script `npm run modelos`) vai direto.
  * Nada é gravado até "Publicar".
  */
 import { useQueryClient } from '@tanstack/react-query'
@@ -10,8 +10,10 @@ import { Link, useParams } from 'react-router'
 import { ComDados, mensagemDe } from '../../componentes.tsx'
 import { useRepositorioAdmin } from '../../dados/contexto.tsx'
 import { useModelosAdmin, useObraAdmin, useRetirarModelo } from '../../dados/hooks.ts'
-import type { DadosModelos, EventoModelo, ModeloAdmin, ObraAdmin } from '../../dados/tipos.ts'
-import { useConversor, type ProgressoConversao } from '../../modelo/conversor.ts'
+import type { ObraAdmin } from '../../dados/tipos.ts'
+import type { DadosModelos, EventoModelo, ModeloAdmin } from '@modules/modelos/domain/tipos.ts'
+import type { ProgressoConversao } from '@modules/modelos/application/ports/ConversorIfcPort.port.ts'
+import { useConversor } from '@modules/modelos/infra/conversor.ts'
 import {
   AVISO_IFC,
   LIMITE_FRAG,
@@ -19,11 +21,12 @@ import {
   problemaFrag,
   problemaRevisaoModelo,
   problemaSigla,
-  publicarModelo,
   siglaERevisao,
   tipoDoArquivo,
   type TipoArquivo,
-} from '../../modelo/modelos.ts'
+} from '@modules/modelos/domain/modelos.ts'
+import { publicarModelo } from '@modules/modelos/application/use-cases/publicarModelo.ts'
+import { hashModelo } from '@modules/modelos/infra/modelosLocais.ts'
 
 export default function ModelosObra() {
   const { slug = '' } = useParams()
@@ -233,6 +236,7 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
       const modelo = await publicarModelo({
         deps: {
           enviarArquivo: repo.enviarArquivo.bind(repo),
+          hash: hashModelo,
           registrarModelo: async (s, r) => {
             setFase({
               tipo: 'publicando',

@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
+import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
 import { criarRaSupabase } from '@modules/ra/infra/RaSupabaseAdapter.ts'
-import { erroDeColunaAusente } from '../shared/infra/errosSupabase.ts'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import { entrarComTelegram } from './login.ts'
 import { configurarEnvioErros } from '../shared/infra/erros.ts'
@@ -8,7 +8,6 @@ import { limitesPeriodo } from '../util/periodo.ts'
 import { nomeMostrado } from './nome.ts'
 import { FUSO_PADRAO, dataNoFuso } from '../shared/kernel/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
-import type { ModeloFrag } from '../modelo/modelos.ts'
 import { dentroDoTelegram, idUsuarioTelegram, initData } from '../shared/infra/telegram/telegram.ts'
 import type {
   Ambiente,
@@ -211,6 +210,7 @@ export function criarRepositorioSupabase(
 ): Repositorio {
   configurarEnvioErros(cliente, 'miniapp')
   const ra = criarRaSupabase(cliente)
+  const modelos = criarModelosSupabase(cliente)
   async function obraPorSlug(slug: string): Promise<ObraResumo> {
     const linha = checar(
       await cliente.from('obra').select('id, slug, nome').eq('slug', slug).maybeSingle(),
@@ -893,38 +893,8 @@ export function criarRepositorioSupabase(
       await chamar('marcar_publicada', { p_id: id })
     },
 
-    async listarModelos(slug) {
-      const obra = await obraPorSlug(slug)
-      const comMatriz = await cliente
-        .from('modelo')
-        .select('sigla, revisao, caminho, bytes, hash, matriz')
-        .eq('obra_id', obra.id)
-        .order('sigla')
-      const resposta = erroDeColunaAusente(comMatriz.error)
-        ? await cliente.from('modelo').select('sigla, revisao, caminho, bytes, hash').eq('obra_id', obra.id).order('sigla')
-        : comMatriz
-      const linhas = checar(resposta) as Linha[]
-      return linhas.map(
-        (l): ModeloFrag => ({
-          sigla: String(l.sigla),
-          revisao: l.revisao == null ? null : String(l.revisao),
-          arquivo: String(l.caminho),
-          bytes: Number(l.bytes),
-          hash: String(l.hash),
-          ...(Array.isArray(l.matriz) && l.matriz.length === 16 ? { matriz: l.matriz.map(Number) } : {}),
-        }),
-      )
-    },
-
-    async baixarModelo(_slug, modelo) {
-      try {
-        const { data, error } = await cliente.storage.from('modelos').download(modelo.arquivo)
-        if (error) throw error
-        return await data.arrayBuffer()
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
+    listarModelos: modelos.listarModelos,
+    baixarModelo: modelos.baixarModelo,
 
     async urlsImagens(paths, bucket = 'plantas') {
       const unicos = [...new Set(paths)]

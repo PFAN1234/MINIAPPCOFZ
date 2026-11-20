@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPonteiro } from 'react'
 import { Link } from 'react-router'
-import type { ModeloFrag } from '../../../../modelo/modelos.ts'
+import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
 import { marcadorParaPixel } from '@shared/kernel/coordenadas.ts'
 import { abrirCamera, capturarPar, fecharCamera } from '@modules/ra/infra/browser/camera.ts'
 import { type GeometriaAmbiente } from '@modules/ra/domain/tipos.ts'

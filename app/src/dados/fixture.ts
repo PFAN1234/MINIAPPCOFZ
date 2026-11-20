@@ -5,12 +5,12 @@
  */
 import ambientesJson from '../../../data/hto/ambientes.json'
 import plantasJson from '../../../data/hto/plantas.json'
+import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
 import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
 import { nomeMostrado } from './nome.ts'
 import { dataNoFuso, formatarDia } from '../shared/kernel/fuso.ts'
 import { dentroDoPeriodo } from '../util/periodo.ts'
-import { baixarModeloLocal, listarModelosLocais } from '../modelo/modelos.ts'
 import type { Repositorio } from './repositorio.ts'
 import type {
   Ambiente,
@@ -784,10 +784,11 @@ export function criarRepositorioFixture(
   }
 
   const ra = criarRaFixture()
+  const modelos = criarModelosFixture()
 
   return {
-    listarModelos: listarModelosLocais,
-    baixarModelo: baixarModeloLocal,
+    listarModelos: modelos.listarModelos,
+    baixarModelo: modelos.baixarModelo,
     obterGeometria: ra.obterGeometria,
     async idUsuario() {
       return 'usuario-teste'

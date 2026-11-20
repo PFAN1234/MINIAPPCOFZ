@@ -1,22 +1,5 @@
-/**
- * Um `.frag` de uma disciplina. `arquivo` é onde o repositório o encontra: nome do arquivo em
- * `/modelos/<obra>/` na fixture, caminho no bucket `modelos` no Supabase. `hash` identifica o
- * conteúdo (chave do cache no aparelho).
- */
-export interface ModeloFrag {
-  sigla: string
-  revisao: string | null
-  arquivo: string
-  bytes: number
-  hash: string
-  /** Correção opcional (16 números, ordem `THREE.Matrix4.elements`) sobre as coordenadas do `.frag`. */
-  matriz?: number[]
-}
-
-/** Coloca o modelo de referência (`ARQ` por padrão) antes dos demais, preservando a ordem relativa. */
-export function ordenarPorReferencia(modelos: readonly ModeloFrag[], referencia = 'ARQ'): ModeloFrag[] {
-  return [...modelos].sort((a, b) => Number(b.sigla === referencia) - Number(a.sigla === referencia))
-}
+import { sha256Hex } from '../../../admin/planta/servico.ts'
+import type { ModeloFrag } from '../domain/modelos.ts'
 
 export function temWebGL(): boolean {
   try {
@@ -44,4 +27,9 @@ export async function baixarModeloLocal(slug: string, modelo: ModeloFrag): Promi
 
 export function urlModelo(slug: string, modelo: ModeloFrag): string {
   return `/modelos/${encodeURIComponent(slug)}/${encodeURIComponent(modelo.arquivo)}?v=${modelo.hash}`
+}
+
+/** Hash do conteúdo como no script (16 primeiros hex do SHA-256): chave do cache no aparelho. */
+export async function hashModelo(bytes: Uint8Array): Promise<string> {
+  return (await sha256Hex(bytes)).slice(0, 16)
 }

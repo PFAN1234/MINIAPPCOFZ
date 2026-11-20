@@ -7,7 +7,8 @@ import AdminApp from '../../AdminApp.tsx'
 import { RepositorioAdminProvider } from '../../dados/contexto.tsx'
 import { criarRepositorioAdminFixture } from '../../dados/fixture.ts'
 import { criarEntrada } from '../../entrada.ts'
-import { ConversorProvider, type Conversor } from '../../modelo/conversor.ts'
+import type { Conversor } from '@modules/modelos/application/ports/ConversorIfcPort.port.ts'
+import { ConversorProvider } from '@modules/modelos/infra/conversor.ts'
 
 const FRAG = new Uint8Array([0x78, 0x9c, 1, 2, 3, 4])
 

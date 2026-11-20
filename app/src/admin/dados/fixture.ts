@@ -4,6 +4,7 @@
  * organização "CO-FZ" sem logo, tudo em memória. Reproduz as regras das RPCs (slug, pavimento com
  * ambientes, último admin, etapas). Nunca entra no build de produção.
  */
+import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
 import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
 import ambientesCofz from '../../../../data/cofz/ambientes.json'
 import obraCofz from '../../../../data/cofz/obra.json'
@@ -45,9 +46,7 @@ import {
   type PapelAcesso,
   type Responsavel,
   type Organizacao,
-  type EventoModelo,
   type Exclusao,
-  type ModeloAdmin,
   type ObraAdmin,
   type ObraLista,
   type PavimentoAdmin,
@@ -528,8 +527,6 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
   ])
   const publicacoes: (Publicacao & { obra_id: string })[] = []
   const arquivos = new Map<string, Blob>()
-  const modelosPorObra = new Map<string, ModeloAdmin[]>()
-  const historicoModelos: (EventoModelo & { obra_id: string })[] = []
   const exclusoes: Exclusao[] = []
   /** Arquivos da obra por bucket (o id da obra é a 1ª pasta em todos). */
   const arquivosDaObra = (obraId: string) =>
@@ -544,7 +541,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       ambientes: planta?.ambientes.length ?? 0,
       pavimentos: o.pavimentos.length,
       plantas: planta?.plantas.size ?? 0,
-      modelos: modelosPorObra.get(o.id)?.length ?? 0,
+      modelos: modelos.quantidade(o.id),
       participantes: 0,
       publicacoes_telegram: 0,
       arquivos: contagem,
@@ -609,7 +606,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     const resumo = resumoDe(o)
     obras.splice(obras.indexOf(o), 1)
     plantaPorObra.delete(o.id)
-    modelosPorObra.delete(o.id)
+    modelos.removerObra(o.id)
     const removidos: Record<BucketObra, number> = { fotos: 0, plantas: 0, originais: 0, modelos: 0 }
     for (const k of [...arquivos.keys()]) {
       const [bucket, obraId] = k.split('/')
@@ -618,7 +615,6 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       removidos[bucket as BucketObra]++
     }
     for (let i = publicacoes.length - 1; i >= 0; i--) if (publicacoes[i].obra_id === o.id) publicacoes.splice(i, 1)
-    for (let i = historicoModelos.length - 1; i >= 0; i--) if (historicoModelos[i].obra_id === o.id) historicoModelos.splice(i, 1)
     const agora = new Date().toISOString()
     const exclusao: Exclusao = {
       id: `exclusao-${++sequencia}`,
@@ -642,6 +638,13 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     [...o.pavimentos].sort((a, b) => a.ordem - b.ordem || a.codigo.localeCompare(b.codigo))
 
   const ra = criarRaFixture({ exigirAdmin })
+  const modelos = criarModelosFixture({
+    exigirAdmin,
+    obraPorSlug,
+    tamanhoArquivo: (caminho) => arquivos.get(`modelos/${caminho}`)?.size,
+    proximoId: () => ++sequencia,
+    nomeUsuario: VOCE.nome,
+  })
 
   return {
     listarRA: ra.listarRA,
@@ -1427,75 +1430,9 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       return { exclusao_id: e.id, obra_id: e.obra_id, arquivos_removidos: e.arquivos_removidos ?? {}, pendente: false }
     },
 
-    async listarModelosAdmin(slug) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      return copia({
-        modelos: [...(modelosPorObra.get(o.id) ?? [])].sort((a, b) => a.sigla.localeCompare(b.sigla)),
-        historico: historicoModelos.filter((h) => h.obra_id === o.id).map((h) => ({ ...h, obra_id: undefined })),
-      })
-    },
-
-    async registrarModelo(slug, r) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      if (!/^[A-Z]{2,4}$/.test(r.sigla)) throw new ErroAdmin('Sigla inválida: use de 2 a 4 letras maiúsculas (ex.: ARQ).')
-      if (r.caminho !== `${o.id}/${r.sigla}/${r.hash}.frag`) throw new ErroAdmin('Caminho do modelo não confere.')
-      const arq = arquivos.get(`modelos/${r.caminho}`)
-      if (!arq) throw new ErroAdmin(`Modelo não encontrado no Storage (modelos/${r.caminho}): envie o arquivo antes de registrar.`)
-      if (arq.size !== r.bytes) throw new ErroAdmin(`O arquivo no Storage tem ${arq.size} bytes, e não ${r.bytes}.`)
-      const agora = new Date().toISOString()
-      const modelo: ModeloAdmin = {
-        sigla: r.sigla,
-        revisao: r.revisao,
-        caminho: r.caminho,
-        bytes: r.bytes,
-        hash: r.hash,
-        atualizado_em: agora,
-      }
-      modelosPorObra.set(o.id, [...(modelosPorObra.get(o.id) ?? []).filter((m) => m.sigla !== r.sigla), modelo])
-      historicoModelos.unshift({
-        obra_id: o.id,
-        id: `pubmod-${++sequencia}`,
-        acao: 'publicado',
-        sigla: r.sigla,
-        revisao: r.revisao,
-        bytes: r.bytes,
-        hash: r.hash,
-        origem: r.origem,
-        arquivo_nome: r.arquivo_nome ?? null,
-        ifc_bytes: r.ifc_bytes ?? null,
-        publicado_em: agora,
-        publicado_por_nome: VOCE.nome,
-      })
-      return copia(modelo)
-    },
-
-    async retirarModelo(slug, sigla) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      const lista = modelosPorObra.get(o.id) ?? []
-      const m = lista.find((x) => x.sigla === sigla)
-      if (!m) throw new ErroAdmin(`Não há modelo publicado com a sigla ${sigla} nesta obra.`)
-      modelosPorObra.set(
-        o.id,
-        lista.filter((x) => x.sigla !== sigla),
-      )
-      historicoModelos.unshift({
-        obra_id: o.id,
-        id: `pubmod-${++sequencia}`,
-        acao: 'retirado',
-        sigla,
-        revisao: m.revisao,
-        bytes: m.bytes,
-        hash: m.hash,
-        origem: null,
-        arquivo_nome: null,
-        ifc_bytes: null,
-        publicado_em: new Date().toISOString(),
-        publicado_por_nome: VOCE.nome,
-      })
-    },
+    listarModelosAdmin: modelos.listarModelosAdmin,
+    registrarModelo: modelos.registrarModelo,
+    retirarModelo: modelos.retirarModelo,
 
     async baixarOriginal(caminho) {
       exigirAdmin()

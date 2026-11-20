@@ -5,8 +5,9 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { type GeometriaAmbiente } from '@modules/ra/domain/tipos.ts'
 import { caixaDeCorte } from '@modules/ra/infra/three/geometria3d.ts'
-import { planosDeCorte, posicaoInterna } from './corte.ts'
-import { ordenarPorReferencia, temWebGL, type ModeloFrag } from './modelos.ts'
+import { planosDeCorte, posicaoInterna } from '@modules/modelos/infra/three/corte.ts'
+import { ordenarPorReferencia, type ModeloFrag } from '@modules/modelos/domain/modelos.ts'
+import { temWebGL } from '@modules/modelos/infra/modelosLocais.ts'
 
 type Estado = { tipo: 'carregando'; texto: string } | { tipo: 'pronto' } | { tipo: 'erro'; texto: string }
 

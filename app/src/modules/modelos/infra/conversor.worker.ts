@@ -5,7 +5,7 @@
  * blocos de 1 MB direto do arquivo (`FileReaderSync`), sem copiar tudo para a memória do JS.
  */
 import { IfcImporter } from '@thatopen/fragments'
-import type { MensagemConversor, PedidoConversao } from './conversor.ts'
+import type { MensagemConversor, PedidoConversao } from '../application/ports/ConversorIfcPort.port.ts'
 
 const BLOCO = 1024 * 1024
 

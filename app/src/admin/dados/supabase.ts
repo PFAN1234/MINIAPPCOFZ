@@ -3,6 +3,7 @@
  * navegador, chave separada da do Mini App), Edge Function `admin-sessao` para entrar e
  * RPCs `admin_*` para os dados.
  */
+import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
 import { criarRaSupabase } from '@modules/ra/infra/RaSupabaseAdapter.ts'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { criarClienteSupabase } from '../../dados/supabase.ts'
@@ -38,11 +39,8 @@ import {
   type ResultadoExclusaoEtapa,
   type ResumoEtapa,
   type DadosEditorPlanta,
-  type DadosModelos,
   type Exclusao,
-  type ModeloAdmin,
   type Publicacao,
-  type RegistroModelo,
   type ResultadoExclusao,
   type ResumoObra,
   type ResultadoPublicacao,
@@ -397,6 +395,7 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
   }
 
   const ra = criarRaSupabase(cliente, rpc)
+  const modelos = criarModelosSupabase(cliente, rpc)
 
   return {
     listarRA: ra.listarRA,
@@ -848,23 +847,9 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       return excluirUma({ acao: 'limpar', exclusao_id: id })
     },
 
-    async listarModelosAdmin(slug) {
-      const d = await rpc<DadosModelos | null>('admin_listar_modelos', { p_slug: slug })
-      const numero = (v: unknown) => (v == null ? null : Number(v))
-      return {
-        modelos: (d?.modelos ?? []).map((m) => ({ ...m, bytes: Number(m.bytes) })),
-        historico: (d?.historico ?? []).map((h) => ({ ...h, bytes: numero(h.bytes), ifc_bytes: numero(h.ifc_bytes) })),
-      }
-    },
-
-    async registrarModelo(slug, registro: RegistroModelo) {
-      const m = await rpc<ModeloAdmin>('admin_registrar_modelo', { p_slug: slug, p: registro })
-      return { ...m, bytes: Number(m.bytes) }
-    },
-
-    async retirarModelo(slug, sigla) {
-      await rpc('admin_retirar_modelo', { p_slug: slug, p_sigla: sigla })
-    },
+    listarModelosAdmin: modelos.listarModelosAdmin,
+    registrarModelo: modelos.registrarModelo,
+    retirarModelo: modelos.retirarModelo,
 
     async listarAdmins() {
       return ((await rpc<Linha[]>('admin_listar_admins')) ?? []).map(

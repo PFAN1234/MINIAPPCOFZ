@@ -1,3 +1,4 @@
+import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 import type {
   Admin,
@@ -20,7 +21,6 @@ import type {
   MatrizAcessosAdmin,
   PapelAcesso,
   Responsavel,
-  DadosModelos,
   DadosObra,
   DadosWidget,
   Exclusao,
@@ -30,11 +30,9 @@ import type {
   ObraAdmin,
   Organizacao,
   ObraLista,
-  ModeloAdmin,
   ObraSalva,
   PavimentoResumo,
   Publicacao,
-  RegistroModelo,
   ResultadoExclusao,
   ResultadoExclusaoBoletim,
   ResultadoExclusaoEtapa,
@@ -44,7 +42,9 @@ import type {
   UsuarioApp,
 } from './tipos.ts'
 
-export interface RepositorioAdmin extends Pick<RaRepositorio, 'listarRA' | 'definirQr' | 'removerQr'> {
+export interface RepositorioAdmin
+  extends Pick<RaRepositorio, 'listarRA' | 'definirQr' | 'removerQr'>,
+    Pick<ModelosRepositorio, 'listarModelosAdmin' | 'registrarModelo' | 'retirarModelo'> {
   /** Há sessão? É de um admin? */
   estadoSessao(): Promise<EstadoSessao>
   /** Troca o token do link `#entrar=` (uso único) por sessão. */
@@ -153,13 +153,6 @@ export interface RepositorioAdmin extends Pick<RaRepositorio, 'listarRA' | 'defi
   baixarOriginal(caminho: string): Promise<Uint8Array>
   /** RPC `admin_publicar_revisao` (payload montado em planta/publicar.ts). */
   publicarRevisao(slug: string, payload: unknown): Promise<ResultadoPublicacao>
-
-  /** Modelo 3D (fase 3): modelos publicados e histórico (`admin_listar_modelos`). */
-  listarModelosAdmin(slug: string): Promise<DadosModelos>
-  /** RPC `admin_registrar_modelo`, depois de enviar o `.frag` ao bucket `modelos`. */
-  registrarModelo(slug: string, registro: RegistroModelo): Promise<ModeloAdmin>
-  /** RPC `admin_retirar_modelo`: tira a disciplina do visualizador (o arquivo fica guardado). */
-  retirarModelo(slug: string, sigla: string): Promise<void>
 
   listarAdmins(): Promise<Admin[]>
   incluirAdmin(usuarioId: string): Promise<void>

@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useMemo } from 'react'
 import { Link } from 'react-router'
 import { useRepositorio } from '../dados/contexto.tsx'
-import { modeloComCache } from '../modelo/cacheModelo.ts'
-import type { ModeloFrag } from '../modelo/modelos.ts'
+import { modeloComCache } from '@modules/modelos/infra/cacheModelo.ts'
+import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
 import { IconeChevron, IconeCubo } from '../shared/ui/icones/Icones.tsx'
 
 // Three.js e That Open ficam fora do pacote inicial, como na tela Modelo.

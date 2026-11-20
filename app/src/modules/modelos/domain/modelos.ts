@@ -1,12 +1,29 @@
 /**
- * Regras do envio de modelo 3D (fase 3): sigla e revisão pelo nome do arquivo, limites,
- * conferência do `.frag` e a publicação (envio ao bucket `modelos` + `admin_registrar_modelo`).
- * O `.frag` vem da conversão do IFC neste navegador (`conversor.ts`) ou pronto, do script
- * `npm run modelos`.
+ * Regras puras do modelo 3D: o `.frag` de cada disciplina (`ModeloFrag`), a ordem de exibição
+ * e as regras do envio pelo admin (sigla e revisão pelo nome do arquivo, limites e conferência
+ * do `.frag`). O `.frag` vem da conversão do IFC no navegador ou pronto, do script `npm run modelos`.
  */
-import type { Bucket, ModeloAdmin, RegistroModelo } from '../dados/tipos.ts'
-import { REVISAO_VALIDA } from '../planta/editor.ts'
-import { sha256Hex } from '../planta/servico.ts'
+import { REVISAO_VALIDA } from '../../../admin/planta/editor.ts'
+
+/**
+ * Um `.frag` de uma disciplina. `arquivo` é onde o repositório o encontra: nome do arquivo em
+ * `/modelos/<obra>/` na fixture, caminho no bucket `modelos` no Supabase. `hash` identifica o
+ * conteúdo (chave do cache no aparelho).
+ */
+export interface ModeloFrag {
+  sigla: string
+  revisao: string | null
+  arquivo: string
+  bytes: number
+  hash: string
+  /** Correção opcional (16 números, ordem `THREE.Matrix4.elements`) sobre as coordenadas do `.frag`. */
+  matriz?: number[]
+}
+
+/** Coloca o modelo de referência (`ARQ` por padrão) antes dos demais, preservando a ordem relativa. */
+export function ordenarPorReferencia(modelos: readonly ModeloFrag[], referencia = 'ARQ'): ModeloFrag[] {
+  return [...modelos].sort((a, b) => Number(b.sigla === referencia) - Number(a.sigla === referencia))
+}
 
 /** Limite de upload do Supabase no plano grátis (vale para cada arquivo). */
 export const LIMITE_FRAG = 50 * 1024 * 1024
@@ -68,51 +85,7 @@ export function mb(bytes: number): string {
   return `${(bytes / 1024 / 1024).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} MB`
 }
 
-/** Hash do conteúdo como no script (16 primeiros hex do SHA-256): chave do cache no aparelho. */
-export async function hashModelo(bytes: Uint8Array): Promise<string> {
-  return (await sha256Hex(bytes)).slice(0, 16)
-}
-
 /** Caminho endereçado pelo conteúdo: um `.frag` novo nunca sobrescreve o anterior. */
 export function caminhoModelo(obraId: string, sigla: string, hash: string): string {
   return `${obraId}/${sigla}/${hash}.frag`
-}
-
-export interface DepsModelo {
-  enviarArquivo(bucket: Bucket, caminho: string, arquivo: Blob, tipo: string): Promise<void>
-  registrarModelo(slug: string, registro: RegistroModelo): Promise<ModeloAdmin>
-}
-
-/** Envia o `.frag` e registra o modelo (a RPC confere o arquivo no Storage). */
-export async function publicarModelo(args: {
-  deps: DepsModelo
-  obra: { id: string; slug: string }
-  sigla: string
-  revisao: string | null
-  frag: Uint8Array
-  origem: TipoArquivo
-  arquivoNome: string
-  ifcBytes?: number | null
-}): Promise<ModeloAdmin> {
-  const { deps, obra, sigla, revisao, frag, origem, arquivoNome, ifcBytes } = args
-  const problema = problemaSigla(sigla) ?? problemaRevisaoModelo(revisao ?? '') ?? problemaFrag(frag)
-  if (problema) throw new Error(problema)
-  const hash = await hashModelo(frag)
-  const caminho = caminhoModelo(obra.id, sigla, hash)
-  await deps.enviarArquivo(
-    'modelos',
-    caminho,
-    new Blob([frag as BlobPart], { type: 'application/octet-stream' }),
-    'application/octet-stream',
-  )
-  return deps.registrarModelo(obra.slug, {
-    sigla,
-    revisao: revisao || null,
-    caminho,
-    bytes: frag.byteLength,
-    hash,
-    origem,
-    arquivo_nome: arquivoNome,
-    ifc_bytes: ifcBytes ?? null,
-  })
 }
