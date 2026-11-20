@@ -8,8 +8,9 @@ import { criarSessaoAdminSupabase } from '@modules/acessos/infra/SessaoAdminSupa
 import { criarEtapasAdminSupabase } from '@modules/obras/infra/EtapasAdminSupabaseAdapter.ts'
 import { criarObrasAdminSupabase } from '@modules/obras/infra/ObrasAdminSupabaseAdapter.ts'
 import { criarOrganizacaoAdminSupabase } from '@modules/obras/infra/OrganizacaoAdminSupabaseAdapter.ts'
-import { MENSAGEM_REDE, textoOuNulo, type Linha } from '@modules/obras/infra/validacao.ts'
+import { MENSAGEM_REDE } from '@modules/obras/infra/validacao.ts'
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
+import { criarTelemetriaSupabase } from '@modules/operacao/infra/TelemetriaSupabaseAdapter.ts'
 import { criarPlantasSupabase } from '@modules/plantas/infra/PlantasSupabaseAdapter.ts'
 import { criarRaSupabase } from '@modules/ra/infra/RaSupabaseAdapter.ts'
 import { criarBoletinsAdminSupabase } from '@modules/relatorios/infra/BoletinsAdminSupabaseAdapter.ts'
@@ -17,7 +18,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { criarClienteSupabase } from '../../dados/supabase.ts'
 import { configurarEnvioErros } from '../../shared/infra/erros.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
-import { ErroAdmin, type ErroCliente, type ResumoOrfaos } from './tipos.ts'
+import { ErroAdmin } from './tipos.ts'
 
 export const CHAVE_SESSAO_ADMIN = 'miniappcofz-admin-auth'
 
@@ -104,6 +105,7 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
   const organizacao = criarOrganizacaoAdminSupabase(cliente, rpc, base)
   const obras = criarObrasAdminSupabase(rpc, funcaoExcluir)
   const boletins = criarBoletinsAdminSupabase(cliente, rpc, funcaoExcluir, erroDaRpc)
+  const telemetria = criarTelemetriaSupabase(rpc)
 
   return {
     listarRA: ra.listarRA,
@@ -168,43 +170,7 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     listarModelosAdmin: modelos.listarModelosAdmin,
     registrarModelo: modelos.registrarModelo,
     retirarModelo: modelos.retirarModelo,
-
-    async listarErrosCliente(limite = 200) {
-      return ((await rpc<Linha[]>('admin_listar_erros_cliente', { p_limite: limite })) ?? []).map(
-        (l): ErroCliente => ({
-          id: Number(l.id),
-          criado_em: String(l.criado_em),
-          usuario_id: l.usuario_id == null ? null : String(l.usuario_id),
-          usuario_nome: l.usuario_nome == null ? null : String(l.usuario_nome),
-          app: l.app === 'admin' ? 'admin' : 'miniapp',
-          versao: l.versao == null ? null : String(l.versao),
-          rota: l.rota == null ? null : String(l.rota),
-          mensagem: String(l.mensagem),
-          pilha: l.pilha == null ? null : String(l.pilha),
-          agente: l.agente == null ? null : String(l.agente),
-          contexto: (l.contexto ?? null) as Record<string, unknown> | null,
-        }),
-      )
-    },
-
-    async resumoOrfaos() {
-      const r = (await rpc<Linha>('admin_resumo_orfaos')) ?? {}
-      const lista = (v: unknown) => (Array.isArray(v) ? (v as Linha[]) : [])
-      const numeroOuNulo = (v: unknown) => (v == null ? null : Number(v))
-      return {
-        buckets: lista(r.buckets).map((b) => ({
-          bucket: String(b.bucket),
-          quantidade: Number(b.quantidade),
-          bytes: Number(b.bytes),
-        })),
-        maiores: lista(r.maiores).map((m) => ({
-          bucket: String(m.bucket),
-          caminho: String(m.caminho),
-          tamanho: numeroOuNulo(m.tamanho),
-          criado_em: textoOuNulo(m.criado_em),
-          detectado_em: String(m.detectado_em),
-        })),
-      } satisfies ResumoOrfaos
-    },
+    listarErrosCliente: telemetria.listarErrosCliente,
+    resumoOrfaos: telemetria.resumoOrfaos,
   }
 }

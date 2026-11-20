@@ -8,7 +8,7 @@ import { TopoTela } from '@shared/ui/layout/TopoTela.tsx'
 import { useAvisoDaRota } from '../../../../components/useAvisoDaRota.ts'
 import { useAmbiente, useGeometria, useModelos, useRegistros } from '../../../../dados/hooks.ts'
 import type { AmbienteDetalhe } from '@modules/obras/domain/tipos.ts'
-import { useRegistrosLocais } from '../../../../offline/contexto.tsx'
+import { useRegistrosLocais } from '@modules/operacao/presentation/miniapp/contexto.tsx'
 import { recursos } from '../../../../recursos.ts'
 import { formatarArea } from '@shared/kernel/formato.ts'
 

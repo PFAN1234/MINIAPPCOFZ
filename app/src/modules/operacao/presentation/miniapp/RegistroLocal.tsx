@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { useFila, useFotosLocais } from '../offline/contexto.tsx'
+import { useFila, useFotosLocais } from './contexto.tsx'
 import type { Progresso } from '@modules/fiscalizacao/application/use-cases/envio.ts'
-import type { ItemEncerramento, ItemFila } from '../offline/fila.ts'
-import { Horario } from './Horario.tsx'
+import type { ItemEncerramento, ItemFila } from '@modules/operacao/application/use-cases/fila.ts'
+import { Horario } from '../../../../components/Horario.tsx'
 import { SeloRA } from '@modules/fiscalizacao/presentation/miniapp/MiniaturaRegistro.tsx'
-import { VisualizadorFotos } from '../shared/ui/midia/VisualizadorFotos.tsx'
+import { VisualizadorFotos } from '@shared/ui/midia/VisualizadorFotos.tsx'
 
 function textoProgresso(progresso: Progresso | null): string {
   if (!progresso) return 'Enviando…'

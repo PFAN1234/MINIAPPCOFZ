@@ -5,7 +5,7 @@ import { TopoTela } from '@shared/ui/layout/TopoTela.tsx'
 import { ErroEnvio } from '../../../../dados/erros.ts'
 import { useDefinirAcesso, useMatrizAcessos } from '../../../../dados/hooks.ts'
 import type { MatrizAcessos, PapelAcesso, PessoaAcesso } from '@modules/acessos/domain/tipos.ts'
-import { useUsuarioId } from '../../../../offline/contexto.tsx'
+import { useUsuarioId } from '@modules/operacao/presentation/miniapp/contexto.tsx'
 import { normalizarTexto } from '@shared/kernel/busca.ts'
 import { useOnline } from '@shared/infra/browser/online.ts'
 

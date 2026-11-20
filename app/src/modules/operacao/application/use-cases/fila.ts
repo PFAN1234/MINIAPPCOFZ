@@ -2,7 +2,7 @@
  * Fila de envio dos registros guardados no aparelho. Envia um de cada vez
  * (ordem de criação), reaproveitando `enviarRegistro`, que é idempotente.
  */
-import { ErroEnvio, type TipoErroEnvio } from '../dados/erros.ts'
+import { ErroEnvio, type TipoErroEnvio } from '../../../../dados/erros.ts'
 import {
   enviarEncerramento,
   enviarRegistro,
@@ -10,14 +10,14 @@ import {
   type Rascunho,
   type RascunhoEncerramento,
 } from '@modules/fiscalizacao/application/use-cases/envio.ts'
-import type { Repositorio } from '../dados/repositorio.ts'
-import type { FotoPreparada } from '../shared/infra/browser/imagem.ts'
+import type { Repositorio } from '../../../../dados/repositorio.ts'
+import type { FotoPreparada } from '@shared/infra/browser/imagem.ts'
 import type {
   Armazenamento,
   EncerramentoLocal,
   ObservacaoLocal,
   RegistroLocal,
-} from './armazenamento.ts'
+} from '@modules/operacao/infra/indexeddb/armazenamento.ts'
 
 export type EstadoItem = 'aguardando' | 'enviando' | 'erro'
 export interface ItemFila {

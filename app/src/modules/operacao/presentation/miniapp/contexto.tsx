@@ -15,13 +15,13 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
-import { EstadoCarregando, EstadoErro } from '../shared/ui/feedback/Estado.tsx'
-import { TelaDeEntrada } from '../shared/ui/layout/FaixaIdentidade.tsx'
-import { useRepositorio } from '../dados/contexto.tsx'
+import { EstadoCarregando, EstadoErro } from '@shared/ui/feedback/Estado.tsx'
+import { TelaDeEntrada } from '@shared/ui/layout/FaixaIdentidade.tsx'
+import { useRepositorio } from '../../../../dados/contexto.tsx'
 
 import { dentroDoPeriodo } from '@shared/kernel/periodo.ts'
-import { abrirArmazenamento, type Armazenamento } from './armazenamento.ts'
-import { persistirCache, restaurarCache } from './cacheConsultas.ts'
+import { abrirArmazenamento, type Armazenamento } from '@modules/operacao/infra/indexeddb/armazenamento.ts'
+import { persistirCache, restaurarCache } from '@modules/operacao/infra/indexeddb/cacheConsultas.ts'
 import {
   criarFila,
   type EstadoFila,
@@ -29,7 +29,7 @@ import {
   type ItemEncerramento,
   type ItemFila,
   type ItemObservacao,
-} from './fila.ts'
+} from '@modules/operacao/application/use-cases/fila.ts'
 
 interface Pronto {
   usuarioId: string

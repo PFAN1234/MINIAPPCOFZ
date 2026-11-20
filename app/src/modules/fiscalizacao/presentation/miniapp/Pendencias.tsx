@@ -6,12 +6,12 @@ import { Aviso } from '@shared/ui/feedback/Aviso.tsx'
 import { CartaoPendencia } from './CartaoPendencia.tsx'
 import { EstadoConsulta, EstadoVazio } from '@shared/ui/feedback/Estado.tsx'
 import { IconeFiltro } from '@shared/ui/icones/Icones.tsx'
-import { RegistroLocal } from '../../../../components/RegistroLocal.tsx'
+import { RegistroLocal } from '@modules/operacao/presentation/miniapp/RegistroLocal.tsx'
 import { TopoTela } from '@shared/ui/layout/TopoTela.tsx'
 import { useAvisoDaRota } from '../../../../components/useAvisoDaRota.ts'
 import { useObra, useRegistros } from '../../../../dados/hooks.ts'
 
-import { useRegistrosLocais } from '../../../../offline/contexto.tsx'
+import { useRegistrosLocais } from '@modules/operacao/presentation/miniapp/contexto.tsx'
 import { ordenarNatural } from '@shared/kernel/ordenacao.ts'
 
 /** Na rota da obra, o subtítulo do topo leva de volta à obra. */

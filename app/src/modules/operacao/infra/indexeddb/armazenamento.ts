@@ -5,7 +5,7 @@ import type { FotoEnviada, TipoRegistro } from '@modules/fiscalizacao/domain/tip
  * blobs no IndexedDB). Sem IndexedDB, cai para a memória.
  */
 import { openDB, type DBSchema, type IDBPDatabase, type IDBPTransaction } from 'idb'
-import type { TipoErroEnvio } from '../dados/erros.ts'
+import type { TipoErroEnvio } from '../../../../dados/erros.ts'
 
 export interface RegistroLocal {
   id: string // = Rascunho.id

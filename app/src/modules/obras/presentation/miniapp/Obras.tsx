@@ -20,7 +20,7 @@ import {
   useSouAdmin,
 } from '../../../../dados/hooks.ts'
 import { abrirLink } from '@shared/infra/telegram/telegram.ts'
-import { useUsuarioId } from '../../../../offline/contexto.tsx'
+import { useUsuarioId } from '@modules/operacao/presentation/miniapp/contexto.tsx'
 import { etapasDasAbas } from '@modules/obras/domain/etapas.ts'
 import { useEtapaEscolhida } from '@modules/obras/presentation/miniapp/useEtapaGuardada.ts'
 import { useOnline } from '@shared/infra/browser/online.ts'

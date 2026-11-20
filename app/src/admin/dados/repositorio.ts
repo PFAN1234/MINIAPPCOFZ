@@ -8,7 +8,7 @@ import type { ModelosRepositorio } from '@modules/modelos/application/ports/Mode
 import type { PlantasRepositorio } from '@modules/plantas/application/ports/PlantasRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 import type { BoletinsAdminRepositorio } from '@modules/relatorios/application/ports/BoletinsAdminRepositorio.port.ts'
-import type { ErroCliente, ResumoOrfaos } from './tipos.ts'
+import type { TelemetriaRepositorio } from '@modules/operacao/application/ports/TelemetriaRepositorio.port.ts'
 
 export interface RepositorioAdmin
   extends SessaoAdminRepositorio,
@@ -19,13 +19,9 @@ export interface RepositorioAdmin
     OrganizacaoAdminRepositorio,
     ObrasAdminRepositorio,
     BoletinsAdminRepositorio,
+    TelemetriaRepositorio,
     Pick<ModelosRepositorio, 'listarModelosAdmin' | 'registrarModelo' | 'retirarModelo'>,
-    Pick<PlantasRepositorio, 'obterEditorPlanta' | 'listarPublicacoes' | 'enviarArquivo' | 'baixarOriginal' | 'publicarRevisao'> {
-  /** RPC `admin_listar_erros_cliente`: erros do Mini App e do site, do mais recente ao mais antigo. */
-  listarErrosCliente(limite?: number): Promise<ErroCliente[]>
-  /** RPC `admin_resumo_orfaos`: arquivos órfãos por bucket e os 100 maiores (nada é apagado). */
-  resumoOrfaos(): Promise<ResumoOrfaos>
-}
+    Pick<PlantasRepositorio, 'obterEditorPlanta' | 'listarPublicacoes' | 'enviarArquivo' | 'baixarOriginal' | 'publicarRevisao'> {}
 
 /** Como no app: a fixture só entra no build com `VITE_DADOS=fixture`. */
 export async function criarRepositorioAdmin(): Promise<RepositorioAdmin> {

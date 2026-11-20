@@ -564,10 +564,10 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 - **`app/servidor/{boletim,relatorio}/`:** mantido plano e local (*"If the code is already clear and local, leave it"*), sem alterar `app/api/*.ts` nem `app/vercel.json`.
 - **Critério de pronto:** `npm test -- relatorio boletim servidor` e e2e `observacoes` e `admin-etapas` (5/5) verdes.
 
-#### Fase 5E — Contexto `operacao`
-- Migrar `offline/` (`fila.ts` → `domain/`, `sincronizarFila` → `application/use-cases/`, `armazenamento.ts` e `cacheConsultas.ts` → `infrastructure/indexeddb/`, `contexto.tsx` e `BarraSincronizacao.tsx` → `presentation/miniapp/`).
-- Migrar telemetria de erros do cliente (`Erros.tsx`) e resumo de órfãos de storage.
-- **Critério de pronto:** `npm test -- offline erro`, `npm run test:e2e -- e2e/offline.spec.ts e2e/sw.spec.ts` verdes; adaptadores legados `supabase.ts` e `fixture.ts` reduzidos a fachadas vazias prontas para remoção na Fase 6.
+#### Fase 5E — Contexto `operacao` — concluída
+- Migrados `offline/` (`armazenamento` e `cacheConsultas` → `infra/indexeddb/`, `fila` → `application/use-cases/`, `contexto`, `BarraSincronizacao` e `RegistroLocal` → `presentation/miniapp/`).
+- Migrada telemetria de erros do cliente (`Erros.tsx`, `hooks.ts`) e resumo de órfãos de storage (`TelemetriaRepositorio` + adaptadores Supabase e Fixture + contract test).
+- **Critério de pronto:** `npm test -- offline erro`, `npm run test:e2e -- e2e/offline.spec.ts e2e/sw.spec.ts e2e/admin.spec.ts` (8/8) verdes; fachadas `Repositorio` e `RepositorioAdmin` 100% compostas por portas.
 
 ---
 

@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react'
-import { ComDados } from '../componentes.tsx'
-import { useErrosCliente, useResumoOrfaos } from '../dados/hooks.ts'
+import { ComDados } from '../../../../admin/componentes.tsx'
+import { useErrosCliente, useResumoOrfaos } from './hooks.ts'
 
 function quando(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })

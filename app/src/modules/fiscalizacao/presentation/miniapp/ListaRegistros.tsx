@@ -2,11 +2,11 @@ import type { RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 
-import type { ItemFila } from '../../../../offline/fila.ts'
+import type { ItemFila } from '@modules/operacao/application/use-cases/fila.ts'
 import { Horario } from '../../../../components/Horario.tsx'
 import { EstadoVazio } from '@shared/ui/feedback/Estado.tsx'
 import { MiniaturaRegistro } from './MiniaturaRegistro.tsx'
-import { RegistroLocal } from '../../../../components/RegistroLocal.tsx'
+import { RegistroLocal } from '@modules/operacao/presentation/miniapp/RegistroLocal.tsx'
 
 function Selo({ registro }: { registro: RegistroResumo }) {
   if (registro.tipo === 'servico') return <span className="selo selo-servico">Serviço</span>

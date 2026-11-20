@@ -9,7 +9,7 @@ import { useTelaCheia } from '@shared/infra/browser/telaCheia.ts'
 import { useRepositorio } from '../../../../dados/contexto.tsx'
 import { useAmbiente, useGeometria, useModelos, useUrlsImagens } from '../../../../dados/hooks.ts'
 import { criarRascunho } from '@modules/fiscalizacao/application/use-cases/envio.ts'
-import { useFila } from '../../../../offline/contexto.tsx'
+import { useFila } from '@modules/operacao/presentation/miniapp/contexto.tsx'
 
 import type { AmbienteDetalhe } from '@modules/obras/domain/tipos.ts'
 import { disableClosingConfirmation, enableClosingConfirmation } from '@shared/infra/telegram/telegram.ts'

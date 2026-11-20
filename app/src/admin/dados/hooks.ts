@@ -56,16 +56,6 @@ export function useAdmins() {
   return useQuery({ queryKey: ['admin', 'admins'], queryFn: () => repo.listarAdmins() })
 }
 
-export function useResumoOrfaos() {
-  const repo = useRepositorioAdmin()
-  return useQuery({ queryKey: ['admin', 'orfaos'], queryFn: () => repo.resumoOrfaos() })
-}
-
-export function useErrosCliente() {
-  const repo = useRepositorioAdmin()
-  return useQuery({ queryKey: ['admin', 'erros-cliente'], queryFn: () => repo.listarErrosCliente() })
-}
-
 export function useUsuarios() {
   const repo = useRepositorioAdmin()
   return useQuery({ queryKey: ['admin', 'usuarios'], queryFn: () => repo.listarUsuarios() })

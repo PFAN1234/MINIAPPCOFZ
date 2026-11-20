@@ -436,4 +436,10 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Parte 1 (domínio, portas, adaptadores e `camposEtapa`): `modules/relatorios/{domain/{tipos,tiposAdmin,painel}, application/ports/{RelatoriosRepositorio,ObservacoesRepositorio,BoletinsAdminRepositorio}, infra/*}`; `admin/dados/fixtureBoletim.ts` movido para `modules/obras/infra/camposEtapa.ts`; `util/periodo.ts` (+ `dataValida`/`somarDias`) movido para `shared/kernel/periodo.ts`; contract tests (+9 testes).
 - [x] Parte 2 (telas, componentes e hooks): `Relatorios`, `PainelRelatorios`, `GraficoAcumulado`, `GraficoPorObra`, `CartaoObservacoes` (+ testes) movidos para `modules/relatorios/presentation/miniapp/`; `Boletins`, `EditorBoletim`, `EmitirOuPrever`, `Tabelas`, `util` (+ testes) e hooks admin movidos para `modules/relatorios/presentation/admin/`.
 - Estado final da 5D: typecheck, eslint (0 avisos), build e build:fixture verdes; 931 testes em 112 arquivos; e2e `observacoes` e `admin-etapas` 5/5; chunks e `precache-manifest.json` inalterados.
-- Próximo: 5E (`operacao`).
+
+## Arquitetura — Fase 5E (contexto `operacao`)
+
+- [x] Telemetria e manutenção: `modules/operacao/{domain/tipos.ts, application/ports/TelemetriaRepositorio.{port,contract}.ts, infra/Telemetria{Supabase,Fixture}Adapter.ts, presentation/admin/{Erros.tsx,hooks.ts}}`; `OperacaoFixture.contract.test.ts` (+2 testes).
+- [x] Offline: `offline/{armazenamento,cacheConsultas}` → `modules/operacao/infra/indexeddb/`; `offline/fila` → `modules/operacao/application/use-cases/`; `offline/contexto` e `components/{BarraSincronizacao,RegistroLocal}` → `modules/operacao/presentation/miniapp/`.
+- Estado final da 5E: typecheck, eslint (0 avisos), build e build:fixture verdes; 933 testes em 113 arquivos; e2e `offline`, `sw` e `admin` 8/8; fachadas `Repositorio` e `RepositorioAdmin` 100% compostas por portas.
+- Próximo: Fase 6 (fechamento).

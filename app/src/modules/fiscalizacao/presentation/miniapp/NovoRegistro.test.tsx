@@ -8,7 +8,7 @@ import { RepositorioProvider } from '../../../../dados/contexto.tsx'
 import { ErroEnvio, MENSAGEM_REDE } from '../../../../dados/erros.ts'
 import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
 import type { Repositorio } from '../../../../dados/repositorio.ts'
-import { MENSAGEM_COTA } from '../../../../offline/armazenamento.ts'
+import { MENSAGEM_COTA } from '@modules/operacao/infra/indexeddb/armazenamento.ts'
 
 vi.mock('@shared/infra/browser/imagem.ts', async (original) => ({
   ...(await original<typeof import('@shared/infra/browser/imagem.ts')>()),

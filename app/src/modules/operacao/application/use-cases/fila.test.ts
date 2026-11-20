@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { criarRascunho, criarRascunhoEncerramento } from '@modules/fiscalizacao/application/use-cases/envio.ts'
-import { ErroEnvio, MENSAGEM_REDE } from '../dados/erros.ts'
-import type { Repositorio } from '../dados/repositorio.ts'
+import { ErroEnvio, MENSAGEM_REDE } from '../../../../dados/erros.ts'
+import type { Repositorio } from '../../../../dados/repositorio.ts'
 import {
   abrirArmazenamento,
   criarArmazenamentoMemoria,
@@ -9,7 +9,7 @@ import {
   type EncerramentoLocal,
   type ObservacaoLocal,
   type RegistroLocal,
-} from './armazenamento.ts'
+} from '@modules/operacao/infra/indexeddb/armazenamento.ts'
 import {
   criarFila,
   type Fila,

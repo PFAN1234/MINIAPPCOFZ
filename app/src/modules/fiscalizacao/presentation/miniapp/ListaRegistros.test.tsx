@@ -7,8 +7,8 @@ import { describe, expect, it } from 'vitest'
 import { RepositorioProvider } from '../../../../dados/contexto.tsx'
 import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
 
-import type { ItemFila } from '../../../../offline/fila.ts'
-import { OfflineProvider } from '../../../../offline/contexto.tsx'
+import type { ItemFila } from '@modules/operacao/application/use-cases/fila.ts'
+import { OfflineProvider } from '@modules/operacao/presentation/miniapp/contexto.tsx'
 import { ListaRegistros } from './ListaRegistros.tsx'
 
 async function carregar(): Promise<RegistroResumo[]> {
