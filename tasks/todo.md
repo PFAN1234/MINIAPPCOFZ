@@ -457,7 +457,7 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
 
 - [x] Decisões fechadas com o usuário (2026-11-20).
 - [x] 0 Spike: R1 resolvido (`.frag` traz psets, espacial e GlobalId); minimapa próprio; chunk medido na etapa 2
-- [ ] 1 Página, tema e casca
+- [x] 1 Página, tema e casca (migration `admin_central_obras` ainda não aplicada)
 - [ ] 2 Motor 3D e navegação
 - [ ] 3 Inspeção
 - [ ] 4 Cortes, vistas e medições
