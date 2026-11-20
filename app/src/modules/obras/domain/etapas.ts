@@ -1,7 +1,6 @@
-import { useState } from 'react'
-import type { Etapa, EtapaInicio, ObraDaLista } from '../dados/tipos.ts'
+import type { Etapa, EtapaInicio, ObraDaLista } from './tipos.ts'
 import type { ObraDisponivel } from '@modules/acessos/domain/tipos.ts'
-import { compararNatural } from '../shared/kernel/ordenacao.ts'
+import { compararNatural } from '@shared/kernel/ordenacao.ts'
 
 /**
  * Etapas da tela inicial: as das obras do usuário e as das "Outras obras" que ele pode pedir,
@@ -54,22 +53,4 @@ export function guardarEtapa(usuarioId: string, etapaId: string): void {
   } catch {
     // Sem armazenamento: a escolha não sobrevive ao fechar o app.
   }
-}
-
-/**
- * Etapa escolhida na tela inicial, lembrada no aparelho. A guardada que não está mais na lista
- * (etapa arquivada, acesso removido) dá lugar à primeira, sem apagar a escolha: ela volta a valer
- * se a etapa reaparecer (por exemplo, quando as "Outras obras" terminam de carregar).
- */
-export function useEtapaEscolhida(
-  usuarioId: string,
-  etapas: readonly Etapa[],
-): [Etapa | null, (etapaId: string) => void] {
-  const [escolhida, setEscolhida] = useState(() => lerEtapaGuardada(usuarioId))
-  const atual = etapas.find((e) => e.id === escolhida) ?? etapas[0] ?? null
-  function escolher(etapaId: string) {
-    setEscolhida(etapaId)
-    guardarEtapa(usuarioId, etapaId)
-  }
-  return [atual, escolher]
 }

@@ -5,7 +5,7 @@ import { IconeCubo } from '@shared/ui/icones/Icones.tsx'
 import { TopoTela } from '@shared/ui/layout/TopoTela.tsx'
 import { useRepositorio } from '../../../../dados/contexto.tsx'
 import { useAmbiente, useGeometria, useModelos } from '../../../../dados/hooks.ts'
-import type { AmbienteDetalhe } from '../../../../dados/tipos.ts'
+import type { AmbienteDetalhe } from '@modules/obras/domain/tipos.ts'
 import { modeloComCache } from '@modules/modelos/infra/cacheModelo.ts'
 import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
 

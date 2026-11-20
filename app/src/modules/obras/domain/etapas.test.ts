@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ObraDaLista } from '../dados/tipos.ts'
+import type { ObraDaLista } from './tipos.ts'
 import { etapasDasObras } from './etapas.ts'
 
 const etapa2 = { id: 'e2', slug: '2a-etapa', nome: '2ª ETAPA', ordem: 2 }

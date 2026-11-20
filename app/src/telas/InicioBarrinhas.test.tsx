@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
-import type { ResumoObra } from '../dados/tipos.ts'
+import type { ResumoObra } from '@modules/obras/domain/tipos.ts'
 import { renderizarApp } from '../shared/test/renderApp.tsx'
 import { textoPendenciasResolvidas, textoServicos } from '../shared/kernel/formato.ts'
 

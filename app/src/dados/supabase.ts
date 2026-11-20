@@ -2,6 +2,9 @@ import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@
 import { criarAcessosSupabase } from '@modules/acessos/infra/AcessosSupabaseAdapter.ts'
 import { criarEquipeServicoSupabase } from '@modules/acessos/infra/EquipeServicoSupabaseAdapter.ts'
 import { criarSessaoSupabase } from '@modules/acessos/infra/SessaoSupabaseAdapter.ts'
+import { criarEtapasInicioSupabase } from '@modules/obras/infra/EtapasInicioSupabaseAdapter.ts'
+import { criarObrasSupabase } from '@modules/obras/infra/ObrasSupabaseAdapter.ts'
+import { criarOrganizacaoSupabase } from '@modules/obras/infra/OrganizacaoSupabaseAdapter.ts'
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
 import { criarRaSupabase } from '@modules/ra/infra/RaSupabaseAdapter.ts'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
@@ -10,7 +13,8 @@ import { limitesPeriodo } from '../util/periodo.ts'
 import { nomeMostrado } from './nome.ts'
 import { FUSO_PADRAO, dataNoFuso } from '../shared/kernel/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
-import type { Ambiente, AmbienteDetalhe, DetalhePlanta, EstadoPublicacao, EtapaInicio, FiltroRegistros, FotoRegistro, ImagemPlanta, Marcador, NovaObservacao, NovoEncerramento, NovoRegistro, Etapa, Observacao, ObservacoesDoDia, ObraDaLista, ObraDetalhe, ObraResumo, Organizacao, ResumoObra, Pavimento, PendenciaDetalhe, Planta, PublicacaoProblema, RecortePt, RegistroLocalizado, RegistroResumo, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
+import type { EstadoPublicacao, FiltroRegistros, FotoRegistro, NovaObservacao, NovoEncerramento, NovoRegistro, Observacao, ObservacoesDoDia, PendenciaDetalhe, PublicacaoProblema, RegistroLocalizado, RegistroResumo, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
+import type { ObraResumo } from '@modules/obras/domain/tipos.ts'
 
 const SEGUNDOS_URL_ASSINADA = 3600
 const LOTE_IN = 100
@@ -33,22 +37,6 @@ export function criarClienteSupabase(opcoes?: SupabaseClientOptions<'public'>): 
   return createClient(url, chave, opcoes)
 }
 
-/** URL pública do logo no bucket (público) `organizacao`. */
-export function urlPublicaLogo(logoPath: string): string {
-  const base = String(import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '')
-  const caminho = logoPath.split('/').map(encodeURIComponent).join('/')
-  return `${base}/storage/v1/object/public/organizacao/${caminho}`
-}
-
-function mapearEtapa(l: Linha | null | undefined): Etapa {
-  return {
-    id: String(l?.id ?? ''),
-    slug: String(l?.slug ?? ''),
-    nome: String(l?.nome ?? ''),
-    ordem: Number(l?.ordem ?? 0),
-  }
-}
-
 function checar<T>(resposta: { data: T | null; error: { message: string } | null }): T {
   if (resposta.error) throw new Error(resposta.error.message)
   return resposta.data as T
@@ -60,59 +48,6 @@ function lotes<T>(itens: T[]): T[][] {
   const saida: T[][] = []
   for (let i = 0; i < itens.length; i += LOTE_IN) saida.push(itens.slice(i, i + LOTE_IN))
   return saida
-}
-
-function imagem(path: unknown, largura: unknown, altura: unknown): ImagemPlanta {
-  return { path: String(path), largura: Number(largura), altura: Number(altura) }
-}
-
-function numeros(valor: unknown): number[] {
-  return (valor as unknown[]).map(Number)
-}
-
-function mapearPlanta(l: Linha): Planta {
-  return {
-    id: String(l.id),
-    revisao: String(l.revisao),
-    pagina_pt: [Number(l.pagina_largura_pt), Number(l.pagina_altura_pt)],
-    recorte_pt: numeros(l.recorte_pt) as RecortePt,
-    imagem: imagem(l.imagem_path, l.imagem_largura, l.imagem_altura),
-    imagem_hd: l.imagem_hd_path
-      ? imagem(l.imagem_hd_path, l.imagem_hd_largura, l.imagem_hd_altura)
-      : null,
-  }
-}
-
-function mapearPavimentos(pavs: Linha[], plantas: Linha[]): Pavimento[] {
-  return pavs.map((p) => {
-    const planta = plantas.find((x) => x.pavimento_id === p.id)
-    return {
-      id: String(p.id),
-      codigo: String(p.codigo),
-      nome: String(p.nome),
-      ordem: Number(p.ordem),
-      planta: planta ? mapearPlanta(planta) : null,
-    }
-  })
-}
-
-function mapearAmbiente(
-  l: Linha,
-  codigoPavimento: Map<string, string>,
-  pendencias: Map<string, number>,
-): Ambiente {
-  return {
-    id: String(l.id),
-    codigo: String(l.codigo),
-    pavimento_codigo: codigoPavimento.get(String(l.pavimento_id)) ?? '',
-    nome_operacional: String(l.nome_operacional),
-    nome_planta: l.nome_planta == null ? null : String(l.nome_planta),
-    categoria: String(l.categoria),
-    area_m2: l.area_m2 == null ? null : Number(l.area_m2),
-    marcadores: (l.marcadores as Marcador[] | null) ?? [],
-    pendencias_abertas: pendencias.get(String(l.id)) ?? 0,
-    ativo: l.ativo !== false,
-  }
 }
 
 const MENSAGEM_JA_ENCERRADA = 'Esta pendência já foi encerrada.'
@@ -135,9 +70,6 @@ function mapearObservacao(l: Linha, padrao: { minha: boolean; travada: boolean }
 const COLUNAS_REGISTRO =
   'id, tipo, situacao, legenda, capturado_em, recebido_em, autor:usuario(nome, nome_exibicao), '
 
-const COLUNAS_AMBIENTE =
-  'id, codigo, pavimento_id, nome_operacional, nome_planta, categoria, area_m2, marcadores, ativo'
-
 export function criarRepositorioSupabase(
   cliente: SupabaseClient = criarClienteSupabase(),
 ): Repositorio {
@@ -147,20 +79,9 @@ export function criarRepositorioSupabase(
   const acessos = criarAcessosSupabase(cliente)
   const sessao = criarSessaoSupabase(cliente)
   const equipe = criarEquipeServicoSupabase(cliente)
-  async function obraPorSlug(slug: string): Promise<ObraResumo> {
-    const linha = checar(
-      await cliente.from('obra').select('id, slug, nome').eq('slug', slug).maybeSingle(),
-    ) as ObraResumo | null
-    if (!linha) throw new Error('Obra não encontrada.')
-    return linha
-  }
-
-  async function plantasAtivas(obraId: string): Promise<Linha[]> {
-    return checar(
-      await cliente.from('planta').select('*').eq('obra_id', obraId).eq('ativa', true),
-    ) as Linha[]
-  }
-
+  const obras = criarObrasSupabase(cliente)
+  const organizacao = criarOrganizacaoSupabase(cliente)
+  const etapasInicio = criarEtapasInicioSupabase(cliente)
   /** Consultas separadas (sem embed) para evitar ambiguidade de relacionamento no PostgREST. */
   async function fotosDosRegistros(ids: string[]): Promise<Map<string, FotoRegistro[]>> {
     const mapa = new Map<string, FotoRegistro[]>()
@@ -274,6 +195,12 @@ export function criarRepositorioSupabase(
     equipeServico: equipe.equipeServico,
     fazerCheckin: equipe.fazerCheckin,
     fazerCheckout: equipe.fazerCheckout,
+    listarObras: obras.listarObras,
+    resumoObras: obras.resumoObras,
+    obterObra: obras.obterObra,
+    obterAmbiente: obras.obterAmbiente,
+    organizacao: organizacao.organizacao,
+    etapasInicio: etapasInicio.etapasInicio,
     obrasDisponiveis: acessos.obrasDisponiveis,
     solicitarAcesso: acessos.solicitarAcesso,
     listarSolicitacoes: acessos.listarSolicitacoes,
@@ -283,42 +210,6 @@ export function criarRepositorioSupabase(
     listarParticipantes: acessos.listarParticipantes,
     definirPapel: acessos.definirPapel,
     removerParticipante: acessos.removerParticipante,
-
-    async resumoObras() {
-      try {
-        const { data, error } = await cliente.rpc('resumo_obras')
-        if (error) throw error
-        return ((data ?? []) as Linha[]).map(
-          (l): ResumoObra => ({
-            obra_id: String(l.obra_id),
-            papel: l.papel === 'gestor' || l.papel === 'equipe' ? l.papel : null,
-            servicos: Number(l.servicos ?? 0),
-            abertas: Number(l.abertas ?? 0),
-            resolvidas: Number(l.resolvidas ?? 0),
-          }),
-        )
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async etapasInicio() {
-      try {
-        const { data, error } = await cliente.rpc('etapas_inicio')
-        if (error) throw error
-        return ((data ?? []) as Linha[]).map(
-          (l): EtapaInicio => ({
-            id: String(l.id),
-            slug: String(l.slug ?? ''),
-            nome: String(l.nome),
-            ordem: Number(l.ordem ?? 0),
-            participa: l.participa === true,
-          }),
-        )
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
 
     async relatorios(): Promise<Relatorios> {
       const d = (await chamar('listar_relatorios', {})) as Linha | null
@@ -458,126 +349,6 @@ export function criarRepositorioSupabase(
         mensagens: { apagadas: Number(m.apagadas ?? 0), falhas: Number(m.falhas ?? 0) },
         arquivos_erro: typeof json.arquivos_erro === 'string' ? json.arquivos_erro : null,
       }
-    },
-
-    async listarObras() {
-      const linhas = checar(
-        await cliente
-          .from('obra')
-          .select('id, slug, nome, etapa(id, slug, nome, ordem)')
-          .order('ordem')
-          .order('nome'),
-      ) as Linha[]
-      return linhas.map(
-        (l): ObraDaLista => ({
-          id: String(l.id),
-          slug: String(l.slug),
-          nome: String(l.nome),
-          etapa: mapearEtapa(l.etapa as Linha | null),
-        }),
-      )
-    },
-
-    async organizacao(): Promise<Organizacao> {
-      try {
-        const { data, error } = await cliente.rpc('organizacao')
-        if (error) throw error
-        const l = (Array.isArray(data) ? data[0] : data) as Linha | null
-        const logo = typeof l?.logo_path === 'string' && l.logo_path ? l.logo_path : null
-        return {
-          nome: typeof l?.nome === 'string' ? l.nome : '',
-          logo_url: logo ? urlPublicaLogo(logo) : null,
-        }
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async obterObra(slug): Promise<ObraDetalhe> {
-      const obra = await obraPorSlug(slug)
-      const { data: sessao } = await cliente.auth.getSession()
-      const [pavs, plantas, ambs, abertas, partic] = await Promise.all([
-        cliente.from('pavimento').select('*').eq('obra_id', obra.id).order('ordem'),
-        plantasAtivas(obra.id),
-        cliente.from('ambiente').select(COLUNAS_AMBIENTE).eq('obra_id', obra.id).order('ordem'),
-        cliente
-          .from('registro')
-          .select('ambiente_id')
-          .eq('obra_id', obra.id)
-          .eq('tipo', 'pendencia')
-          .eq('situacao', 'aberta'),
-        cliente
-          .from('participacao')
-          .select('papel')
-          .eq('obra_id', obra.id)
-          .eq('usuario_id', sessao.session?.user.id ?? '')
-          .maybeSingle(),
-      ])
-      const papel = (checar(partic) as Linha | null)?.papel === 'gestor' ? 'gestor' : 'equipe'
-      const pavimentos = mapearPavimentos(checar(pavs) as Linha[], plantas)
-      const codigos = new Map(pavimentos.map((p) => [p.id, p.codigo]))
-      const contagem = new Map<string, number>()
-      for (const r of checar(abertas) as Linha[]) {
-        const id = String(r.ambiente_id)
-        contagem.set(id, (contagem.get(id) ?? 0) + 1)
-      }
-      const ambientes = (checar(ambs) as Linha[]).map((a) =>
-        mapearAmbiente(a, codigos, contagem),
-      )
-      return { obra, papel, pavimentos, ambientes }
-    },
-
-    async obterAmbiente(slug, codigo): Promise<AmbienteDetalhe> {
-      const obra = await obraPorSlug(slug)
-      const linha = checar(
-        await cliente
-          .from('ambiente')
-          .select(COLUNAS_AMBIENTE)
-          .eq('obra_id', obra.id)
-          .eq('codigo', codigo)
-          .maybeSingle(),
-      ) as Linha | null
-      if (!linha) throw new Error('Ambiente não encontrado.')
-      const [pav, plantas, abertas] = await Promise.all([
-        cliente.from('pavimento').select('*').eq('id', linha.pavimento_id).single(),
-        cliente
-          .from('planta')
-          .select('*')
-          .eq('pavimento_id', linha.pavimento_id)
-          .eq('ativa', true),
-        cliente
-          .from('registro')
-          .select('id', { count: 'exact', head: true })
-          .eq('ambiente_id', linha.id)
-          .eq('tipo', 'pendencia')
-          .eq('situacao', 'aberta'),
-      ])
-      const pavLinha = checar(pav) as Linha
-      const plantaLinhas = checar(plantas) as Linha[]
-      const pavimento = mapearPavimentos([pavLinha], plantaLinhas)[0]
-      const ambiente = mapearAmbiente(
-        linha,
-        new Map([[pavimento.id, pavimento.codigo]]),
-        new Map([[String(linha.id), abertas.count ?? 0]]),
-      )
-      let detalhe: DetalhePlanta | null = null
-      if (pavimento.planta) {
-        const d = checar(
-          await cliente
-            .from('planta_detalhe')
-            .select('imagem_path, recorte_pt, largura, altura')
-            .eq('planta_id', pavimento.planta.id)
-            .eq('ambiente_id', linha.id)
-            .maybeSingle(),
-        ) as Linha | null
-        if (d) {
-          detalhe = {
-            imagem: imagem(d.imagem_path, d.largura, d.altura),
-            recorte_pt: numeros(d.recorte_pt) as RecortePt,
-          }
-        }
-      }
-      return { obra, ambiente, pavimento, planta: pavimento.planta, detalhe }
     },
 
     async listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]> {

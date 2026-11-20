@@ -4,7 +4,8 @@ import { EstadoConsulta, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
 import { Horario } from '../components/Horario.tsx'
 import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import { useObra, usePublicacoesProblema, useResolverPublicacao } from '../dados/hooks.ts'
-import type { ObraDetalhe, PublicacaoProblema } from '../dados/tipos.ts'
+import type { PublicacaoProblema } from '../dados/tipos.ts'
+import type { ObraDetalhe } from '@modules/obras/domain/tipos.ts'
 
 /** Publicações com problema da obra (só gestor). */
 export default function PublicacoesTela() {

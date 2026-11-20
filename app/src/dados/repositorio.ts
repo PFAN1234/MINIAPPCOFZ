@@ -1,7 +1,10 @@
-import type { AmbienteDetalhe, CaminhoFoto, EtapaInicio, NovaObservacao, NovoEncerramento, Observacao, ObservacoesDoDia, PendenciaDetalhe, PublicacaoProblema, NovoRegistro, FiltroRegistros, ObraDetalhe, ObraDaLista, Organizacao, RegistroLocalizado, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim, RegistroResumo, ResumoObra } from './tipos.ts'
+import type { CaminhoFoto, NovaObservacao, NovoEncerramento, Observacao, ObservacoesDoDia, PendenciaDetalhe, PublicacaoProblema, NovoRegistro, FiltroRegistros, RegistroLocalizado, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim, RegistroResumo } from './tipos.ts'
 import type { AcessosRepositorio } from '@modules/acessos/application/ports/AcessosRepositorio.port.ts'
 import type { EquipeServicoRepositorio } from '@modules/acessos/application/ports/EquipeServicoRepositorio.port.ts'
 import type { SessaoRepositorio } from '@modules/acessos/application/ports/SessaoRepositorio.port.ts'
+import type { EtapasInicioRepositorio } from '@modules/obras/application/ports/EtapasInicioRepositorio.port.ts'
+import type { ObrasRepositorio } from '@modules/obras/application/ports/ObrasRepositorio.port.ts'
+import type { OrganizacaoRepositorio } from '@modules/obras/application/ports/OrganizacaoRepositorio.port.ts'
 import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 
@@ -10,14 +13,10 @@ export interface Repositorio
     SessaoRepositorio,
     EquipeServicoRepositorio,
     AcessosRepositorio,
+    ObrasRepositorio,
+    OrganizacaoRepositorio,
+    EtapasInicioRepositorio,
     Pick<ModelosRepositorio, 'listarModelos' | 'baixarModelo'> {
-  /** Obras em que o usuário participa, cada uma com a sua etapa. */
-  listarObras(): Promise<ObraDaLista[]>
-  /** Totais por obra visível (serviços, pendências abertas e resolvidas) e o papel do usuário. */
-  resumoObras(): Promise<ResumoObra[]>
-  /** Pavimentos (com planta ativa), ambientes e pendências abertas por ambiente. */
-  obterObra(slug: string): Promise<ObraDetalhe>
-  obterAmbiente(slug: string, codigo: string): Promise<AmbienteDetalhe>
   listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]>
   /** Pessoas que têm registros nas obras visíveis (`autores_registros`), pelo nome mostrado. */
   autoresRegistros(): Promise<{ id: string; nome: string }[]>
@@ -68,16 +67,12 @@ export interface Repositorio
   emitirBoletim(slug: string, data: string): Promise<void>
   /** Admin: exclui o dia inteiro do boletim (revisões, PDFs e mensagem no grupo). */
   excluirBoletim(id: string): Promise<ResultadoExclusaoBoletim>
-  /** Nome e logo da organização militar (faixa de identidade do topo). */
-  organizacao(): Promise<Organizacao>
   /** Observações de hoje na obra (dia no fuso da etapa), com o estado de travada do dia. */
   observacoesDoDia(obraId: string): Promise<ObservacoesDoDia>
   /** Cria (id novo) ou edita o texto (id existente). Idempotente. Falhas sobem como `ErroEnvio`. */
   salvarObservacao(dados: NovaObservacao): Promise<Observacao>
   /** Só o autor e antes da emissão do boletim; id inexistente não é erro. Falhas sobem como `ErroEnvio`. */
   excluirObservacao(id: string): Promise<void>
-  /** Etapas ativas, com a participação do usuário. */
-  etapasInicio(): Promise<EtapaInicio[]>
   /** Equipe de serviço da etapa (abertos e encerrados nas últimas 24 h). */
   /** Check-in (exige estar a até 1 km da etapa). Falhas sobem como `ErroEnvio`. */
   /** Fecha o serviço aberto do usuário. Devolve a equipe da etapa dele. */

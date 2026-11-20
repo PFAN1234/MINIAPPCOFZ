@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { Organizacao } from '../../../dados/tipos.ts'
+import type { Organizacao } from '@modules/obras/domain/tipos.ts'
 
 /** Nome do app, na faixa de identidade do topo e nas telas de entrada. */
 export const NOME_APP = 'Fiscal Bot'

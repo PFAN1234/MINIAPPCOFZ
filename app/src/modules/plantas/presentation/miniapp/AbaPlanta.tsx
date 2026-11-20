@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import { useUrlsImagens } from '../../../../dados/hooks.ts'
-import type { ObraDetalhe } from '../../../../dados/tipos.ts'
+import type { ObraDetalhe } from '@modules/obras/domain/tipos.ts'
 import { filtrarAmbientes } from '@shared/kernel/busca.ts'
 import { ordenarNatural } from '@shared/kernel/ordenacao.ts'
 import { EstadoVazio } from '@shared/ui/feedback/Estado.tsx'

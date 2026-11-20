@@ -8,7 +8,7 @@ import { useAvisoDaRota } from '../components/useAvisoDaRota.ts'
 import { useAutoresRegistros, useObras, useRegistros } from '../dados/hooks.ts'
 import type { FiltroRegistros } from '../dados/tipos.ts'
 import { useRegistrosLocais } from '../offline/contexto.tsx'
-import { etapasDasObras } from '../util/etapas.ts'
+import { etapasDasObras } from '@modules/obras/domain/etapas.ts'
 
 const PASSO = 50
 

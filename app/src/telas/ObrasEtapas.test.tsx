@@ -6,7 +6,7 @@ import type { Repositorio } from '../dados/repositorio.ts'
 import { criarRepositorioSupabase } from '../dados/supabase.ts'
 import type { EquipeServico, Posicao } from '@modules/acessos/domain/tipos.ts'
 import { renderizarApp } from '../shared/test/renderApp.tsx'
-import { chaveEtapaGuardada } from '../util/etapas.ts'
+import { chaveEtapaGuardada } from '@modules/obras/domain/etapas.ts'
 import { ErroLocalizacao } from '../shared/infra/browser/localizacao.ts'
 
 const POSICAO: Posicao = { latitude: -3.7, longitude: -38.5, precisao: 12 }

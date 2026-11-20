@@ -1,5 +1,5 @@
 import { useUrlsImagens } from '../../../../dados/hooks.ts'
-import type { AmbienteDetalhe } from '../../../../dados/tipos.ts'
+import type { AmbienteDetalhe } from '@modules/obras/domain/tipos.ts'
 import { marcadorParaPixel } from '@shared/kernel/coordenadas.ts'
 import { Pino } from '../../../../components/Pino.tsx'
 

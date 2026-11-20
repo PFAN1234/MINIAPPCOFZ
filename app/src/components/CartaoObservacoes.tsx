@@ -5,7 +5,8 @@
  */
 import { useState, type FormEvent } from 'react'
 import { useAlterarObservacao, useObservacoesDoDia } from '../dados/hooks.ts'
-import type { Observacao, ObraResumo } from '../dados/tipos.ts'
+import type { Observacao } from '../dados/tipos.ts'
+import type { ObraResumo } from '@modules/obras/domain/tipos.ts'
 import { useFila, useObservacoesLocais } from '../offline/contexto.tsx'
 import type { ItemObservacao } from '../offline/fila.ts'
 import { FUSO_PADRAO, dataNoFuso, formatarDia, horaNoFuso } from '../shared/kernel/fuso.ts'
