@@ -16,6 +16,8 @@ export interface DepsModelosFixture {
   obraPorSlug?: (slug: string) => { id: string }
   /** Obras da Central de modelos; o padrão traz a HTO e uma obra sem arquivos. */
   obras?: () => { id: string; slug: string; nome: string }[]
+  /** Séries de documentos vigentes da obra (a Central conta); o padrão é 0. */
+  documentos?: (obraId: string) => number
   /** Tamanho do arquivo enviado ao bucket `modelos` (caminho dentro do bucket); `undefined` se não houver. */
   tamanhoArquivo?: (caminho: string) => number | undefined
   /** Numeração dos eventos do histórico (compartilhada com o resto da fixture, se houver). */
@@ -43,6 +45,7 @@ export function criarModelosFixture(deps: DepsModelosFixture = {}): ModelosFixtu
       { id: 'obra-hto', slug: 'hto', nome: 'HTO' },
       { id: 'obra-vazia', slug: 'vazia', nome: 'Obra sem arquivos' },
     ],
+    documentos = () => 0,
     tamanhoArquivo = () => undefined,
     proximoId = () => ++contador,
     nomeUsuario = 'Você',
@@ -73,7 +76,7 @@ export function criarModelosFixture(deps: DepsModelosFixture = {}): ModelosFixtu
           slug: o.slug,
           nome: o.nome,
           disciplinas: lista.length,
-          documentos: 0,
+          documentos: documentos(o.id),
           issues_abertas: 0,
           atualizado_em: datas.length ? datas.sort().at(-1)! : null,
         }
