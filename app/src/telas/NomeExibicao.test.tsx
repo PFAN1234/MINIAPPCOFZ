@@ -1,6 +1,6 @@
 import { screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { renderizarApp } from '../test/renderApp.tsx'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 // Na fixture, "Patricio Ferreira" (Telegram) tem o nome de exibição CP PATRICIO; os demais não têm.
 describe('nome de exibição nas telas', () => {

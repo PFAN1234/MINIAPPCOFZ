@@ -103,7 +103,7 @@ def main():
     scene = trimesh.Scene()
     disciplines = {}
     for code in ('ANT', 'TLD', 'ARQ'):
-        path = next((ROOT / 'DOCS HTO/IFC').glob('*-' + code + '-*.ifc'))
+        path = next((ROOT / 'obras/hto/ifc').glob('*-' + code + '-*.ifc'))
         model = ifcopenshell.open(str(path))
         elements = [e for e in model.by_type('IfcElement') if not e.is_a('IfcOpeningElement')]
         by_id = {e.id(): e for e in elements}

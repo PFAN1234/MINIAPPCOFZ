@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { criarRepositorioSupabase, urlPublicaLogo } from './supabase.ts'
+import { criarRepositorioSupabase } from './supabase.ts'
+import { urlPublicaLogo } from '@modules/obras/infra/OrganizacaoSupabaseAdapter.ts'
 
 const ETAPA = { id: 'e2', slug: '2a-etapa', nome: '2ª ETAPA', ordem: 2 }
 

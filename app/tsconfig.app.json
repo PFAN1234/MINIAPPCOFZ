@@ -8,6 +8,11 @@
     "allowArbitraryExtensions": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
+    "paths": {
+      "@shared/*": ["./src/shared/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@apps/*": ["./src/apps/*"]
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",

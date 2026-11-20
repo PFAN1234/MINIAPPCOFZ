@@ -17,7 +17,7 @@ def mesh(obj):
     return np.array(s.geometry.verts).reshape(-1,3),np.array(s.geometry.faces).reshape(-1,3)
 def bounds(v):return [v.min(axis=0).tolist(),v.max(axis=0).tolist()]
 def dump(name,data): (OUT/name).write_text(json.dumps(data,ensure_ascii=False,indent=2,default=str))
-for path in sorted((ROOT/'DOCS HTO/IFC').glob('*.ifc')):
+for path in sorted((ROOT/'obras/hto/ifc').glob('*.ifc')):
     start=time.time(); print('OPEN',path.name,flush=True); f=ifcopenshell.open(str(path)); scale=unit.calculate_unit_scale(f)
     report={'file':path.name,'bytes':path.stat().st_size,'schema':f.schema,'ifcopenshell':ifcopenshell.version,'length_unit_to_m':scale,'units':[x.get_info() for x in f.by_type('IfcUnitAssignment')[0].Units],'entities_count':len(list(f)),'products_count':len(f.by_type('IfcProduct')),'element_counts':dict(collections.Counter(x.is_a() for x in f.by_type('IfcElement'))),'contexts':[],'spatial':[],'spaces':[],'geolocation':{}}
     for c in f.by_type('IfcGeometricRepresentationContext',include_subtypes=False):

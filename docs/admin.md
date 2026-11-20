@@ -120,10 +120,10 @@ O admin envia o PDF de arquitetura de um pavimento e publica a planta pelo naveg
 | Peça | Onde |
 | --- | --- |
 | Migration | `supabase/migrations/20261112090000_admin_planta.sql` |
-| Port do Python (módulos puros) | `app/src/admin/planta/`: `pdf.ts` e `spans.ts` (texto como o PyMuPDF), `metricasFonte.ts` (Ascent/Descent do FontDescriptor), `extrair.ts` (`extrair_ambientes.py`), `plantas.ts` (contas do `gerar_plantas.py`), `render.ts` (imagens, prova, WebP), `editor.ts` (edições → configuração), `publicar.ts` (envio + RPC) |
+| Port do Python (módulos puros) | `app/src/modules/plantas/{domain,infra/pdf}/`: `pdf.ts` e `spans.ts` (texto como o PyMuPDF), `metricasFonte.ts` (Ascent/Descent do FontDescriptor), `extrair.ts` (`extrair_ambientes.py`), `plantas.ts` (contas do `gerar_plantas.py`), `render.ts` (imagens, prova, WebP), `editor.ts` (edições → configuração), `publicar.ts` (envio + RPC) |
 | pdf.js no navegador | `planta/carregarPdfJs.ts` (worker, fontes padrão e WASM servidos pelo Vite) e `planta/servicoNavegador.ts`, carregados sob demanda só pelo editor |
-| Telas | `app/src/admin/telas/planta/` (`EditorPlanta.tsx`, `Recorte.tsx`, `Ambientes.tsx`, `NovaRevisao.tsx`, `PlantaObra.tsx`) |
-| Testes | `app/src/admin/planta/*.test.ts` (paridade em `paridade.node.test.ts`), `app/src/admin/telas/planta/EditorPlanta.test.tsx`, `app/e2e/planta.spec.ts`, `tests/db/test_admin_planta.py` |
+| Telas | `app/src/modules/plantas/presentation/admin/` (`EditorPlanta.tsx`, `Recorte.tsx`, `Ambientes.tsx`, `NovaRevisao.tsx`, `PlantaObra.tsx`) |
+| Testes | `app/src/modules/plantas/{domain,infra/pdf}/*.test.ts` (paridade em `paridade.node.test.ts`), `app/src/modules/plantas/presentation/admin/EditorPlanta.test.tsx`, `app/e2e/planta.spec.ts`, `tests/db/test_admin_planta.py` |
 
 ### Fluxo no site
 
@@ -166,7 +166,7 @@ Tudo continua no formato do `obra.json`, em `obra_config.config`:
 
 ### Paridade com o Python
 
-`app/src/admin/planta/paridade.node.test.ts` (Vitest em Node, pdf.js `legacy` e `@napi-rs/canvas`) lê os três PDFs com a configuração de `data/<slug>/obra.json` e confere contra os JSON gerados pelo PyMuPDF:
+`app/src/modules/plantas/infra/pdf/paridade.node.test.ts` (Vitest em Node, pdf.js `legacy` e `@napi-rs/canvas`) lê os três PDFs com a configuração de `data/<slug>/obra.json` e confere contra os JSON gerados pelo PyMuPDF:
 
 | | HTO (2 PDFs) | COFZ (1 PDF) | Tolerância |
 | --- | --- | --- | --- |
@@ -215,10 +215,10 @@ Sigla e revisão saem do nome no padrão `<obra>-<projeto>-<SIGLA>-<REV>` (ex.: 
 | Peça | Onde |
 | --- | --- |
 | Migration | `supabase/migrations/20261112120000_admin_modelo.sql` |
-| Regras e publicação | `app/src/admin/modelo/modelos.ts` (sigla/revisão do nome, limite, conferência do `.frag`, hash, caminho, envio + RPC) |
-| Conversão | `app/src/admin/modelo/conversor.ts` e `conversor.worker.ts`; o `web-ifc.wasm` é servido em `/web-ifc/<versão>/` (plugin `wasmWebIfc` no `vite.config.ts`) |
-| Tela | `app/src/admin/telas/modelo/ModelosObra.tsx` |
-| Testes | `app/src/admin/modelo/modelos.node.test.ts`, `app/src/admin/telas/modelo/ModelosObra.test.tsx`, `app/e2e/admin-modelo.spec.ts` (converte de verdade `e2e/fixtures/TESTE-01-EST-R01.ifc`, gerado por `e2e/fixtures/gerar_ifc_teste.py`, e envia o `ARQ.frag` da HTO), `tests/db/test_admin_modelo.py` |
+| Regras e publicação | `app/src/modules/modelos/domain/modelos.ts` (sigla/revisão do nome, limite, conferência do `.frag`, hash, caminho, envio + RPC) |
+| Conversão | `app/src/modules/modelos/infra/conversor.ts` e `conversor.worker.ts`; o `web-ifc.wasm` é servido em `/web-ifc/<versão>/` (plugin `wasmWebIfc` no `vite.config.ts`) |
+| Tela | `app/src/modules/modelos/presentation/admin/ModelosObra.tsx` |
+| Testes | `app/src/modules/modelos/infra/modelos.node.test.ts`, `app/src/modules/modelos/presentation/admin/ModelosObra.test.tsx`, `app/e2e/admin-modelo.spec.ts` (converte de verdade `e2e/fixtures/TESTE-01-EST-R01.ifc`, gerado por `e2e/fixtures/gerar_ifc_teste.py`, e envia o `ARQ.frag` da HTO), `tests/db/test_admin_modelo.py` |
 
 ### Banco e Storage (`20261112120000_admin_modelo.sql`)
 
@@ -351,7 +351,7 @@ Contrato: `docs/contrato-boletim.md` (parte 3). O banco agenda e guarda (`boleti
 
 ## Realidade aumentada (QR)
 
-Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra, ao lado de "Modelos 3D"). Cadastra a posição do QR de cada ambiente e imprime a folha A4 que o Mini App lê para alinhar o modelo 3D com a obra. Contrato de dados em `docs/contrato-ra.md`; código em `app/src/admin/telas/ra/` e `app/src/admin/ra/` (`qr.ts`, `geometria.ts`).
+Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra, ao lado de "Modelos 3D"). Cadastra a posição do QR de cada ambiente e imprime a folha A4 que o Mini App lê para alinhar o modelo 3D com a obra. Contrato de dados em `docs/contrato-ra.md`; código em `app/src/modules/ra/presentation/admin/` e `app/src/modules/ra/domain/` (`qr.ts`, `geometria.ts`).
 
 **Pré-requisito:** a obra precisa ter a geometria dos ambientes (`scripts/gerar_geometria.py --obra <slug>` e aplicar o seed). Sem ela a página mostra "Esta obra ainda não tem a geometria dos ambientes…".
 
@@ -378,7 +378,7 @@ Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra,
 | --- | --- |
 | RPCs | `admin_listar_ra(p_obra)`, `admin_definir_qr(p_ambiente, p_parede, p_distancia_m, p_altura_m, p_lado_m)`, `admin_remover_qr(p_ambiente)` |
 | Repositório | `listarRA`, `definirQr`, `removerQr` (`dados/`; a fixture traz dois ambientes da HTO com geometria, um deles com QR) |
-| Testes | `app/src/admin/ra/*.test.ts`, `app/src/admin/telas/ra/RaObra.test.tsx` |
+| Testes | `app/src/modules/ra/domain/*.test.ts`, `app/src/modules/ra/presentation/admin/RaObra.test.tsx` |
 
 ## Erros do cliente
 

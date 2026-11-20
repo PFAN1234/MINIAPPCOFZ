@@ -3,7 +3,7 @@
   "nome": "COFZ",
   "status": "aguardando_revisao_humana",
   "revisao": "R06",
-  "pasta_pdf": "DOCS COFZ/PDF",
+  "pasta_pdf": "obras/cofz/pdf",
   "pavimentos": [
     {
       "codigo": "terreo",

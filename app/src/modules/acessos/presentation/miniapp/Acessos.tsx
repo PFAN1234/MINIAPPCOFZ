@@ -1,0 +1,36 @@
+import { Link, useParams } from 'react-router'
+import { EstadoConsulta, EstadoVazio } from '@shared/ui/feedback/Estado.tsx'
+import { PedidosAcesso } from '@modules/acessos/presentation/miniapp/PedidosAcesso.tsx'
+import { TopoTela } from '@shared/ui/layout/TopoTela.tsx'
+import { useObra } from '../../../../dados/hooks.ts'
+import type { ObraDetalhe } from '@modules/obras/domain/tipos.ts'
+
+/** Rota mantida por causa do link do bot (`acessos_<slug>`); o dia a dia fica na Gestão. */
+export default function Acessos() {
+  const { slug = '' } = useParams()
+  const obra = useObra(slug)
+  return (
+    <EstadoConsulta consulta={obra} topo={<TopoTela titulo="Pedidos de acesso" />}>
+      {(detalhe) => <AcessosCarregados detalhe={detalhe} />}
+    </EstadoConsulta>
+  )
+}
+
+function AcessosCarregados({ detalhe }: { detalhe: ObraDetalhe }) {
+  const { obra, papel } = detalhe
+  return (
+    <section aria-labelledby="titulo-acessos">
+      <TopoTela titulo="Pedidos de acesso" idTitulo="titulo-acessos" subtitulo={obra.nome} />
+      {papel !== 'gestor' ? (
+        <EstadoVazio titulo="Só gestores da obra veem os pedidos de acesso." />
+      ) : (
+        <>
+          <PedidosAcesso obraId={obra.id} />
+          <Link className="atalho" to="/acessos">
+            Controle de acesso
+          </Link>
+        </>
+      )}
+    </section>
+  )
+}

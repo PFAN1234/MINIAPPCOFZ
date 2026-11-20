@@ -4,7 +4,7 @@ Data: 2026-11-05. Estado: diagnóstico exploratório; federação ainda não val
 
 ## Documentos e ambiente piloto
 
-Os originais são duas plantas PDF de arquitetura, revisões R05, e três modelos IFC2X3: ARQ R05, ANT R01 e TLD R00, em `DOCS HTO/`. Os inventários, textos, imagens e scripts de reprodução estão em `artifacts/validation/`.
+Os originais são duas plantas PDF de arquitetura, revisões R05, e três modelos IFC2X3: ARQ R05, ANT R01 e TLD R00, em `obras/hto/`. Os inventários, textos, imagens e scripts de reprodução estão em `artifacts/validation/`.
 
 O APTO. 101 do térreo corresponde geometricamente ao IfcSpace `0vfo$Cu9vBkhdNguKiGtzT`, cujo Name é `23`. O nome numérico do espaço não é o número do apartamento. A associação se apoia na área IFC de 23,8788 m² versus 23,88 m² na planta, no retângulo interno de 6,03 × 3,96 m e na vizinhança: apartamento 102, despensa e banheiro 101. A aprovação operacional do vínculo continua sendo uma etapa humana antes de liberar o ambiente à equipe.
 

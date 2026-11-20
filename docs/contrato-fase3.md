@@ -117,7 +117,7 @@ O estado de aba, pavimento, busca e foco fica na URL, para o BackButton e o reca
 
 ## D. Planta
 
-- `app/src/components/PlantaViewer.tsx`:
+- `app/src/modules/plantas/presentation/miniapp/PlantaViewer.tsx`:
   - a imagem fica dentro de `react-zoom-pan-pinch`, com SVG por cima no mesmo sistema de coordenadas da imagem;
   - os pinos têm **tamanho constante na tela** (escala inversa ao zoom), **todos com a mesma cor e o mesmo tamanho**, com a ponta no ponto do marcador;
   - o selo com a contagem de pendências abertas fica ao lado do pino;

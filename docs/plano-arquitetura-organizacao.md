@@ -46,7 +46,7 @@ O código passa a ser organizado em torno de **Contextos Delimitados (Bounded Co
 | **`obras`** | **Core** — Estrutura física e contratual | `Obra`, `Etapa`, `Pavimento`, `Ambiente`, `Aditivo`, `Responsavel`, `Organizacao` | `telas/Obra*`, `admin/telas/etapa/*`, `admin/telas/obra/*`, `admin/telas/Organizacao*`, `util/etapas.ts` |
 | **`fiscalizacao`** | **Core** — Execução de campo e acompanhamento | `Registro` (Serviço/Pendência), `Encerramento`, `ObservacaoDoDia`, `Foto`, `PublicacaoOutbox` | `telas/NovoRegistro*`, `telas/Registros*`, `telas/Pendencia*`, `telas/Publicacoes*`, `components/CartaoObservacoes*`, `dados/envio.ts` |
 | **`acessos`** | **Supporting** — Identidade, autorização e presença | `Sessao`, `Usuario`, `PapelObra`, `SolicitacaoAcesso`, `MatrizAcessos`, `EquipeServico` (Check-in/out) | `telas/Acessos*`, `admin/telas/Pessoas*`, `admin/telas/Admins*`, `admin/telas/Entrar*`, `dados/login.ts`, `dados/nome.ts`, `components/EquipeServico*` |
-| **`plantas`** | **Supporting** — Engenharia 2D e revisão de PDFs | `Planta`, `RevisaoPlanta`, `Recorte`, `SpanTexto`, `AmbienteExtraido` | `admin/planta/*`, `admin/telas/planta/*`, `components/AbaPlanta*`, `components/PlantaViewer*`, `components/OndeFica*` |
+| **`plantas`** | **Supporting** — Engenharia 2D e revisão de PDFs | `Planta`, `RevisaoPlanta`, `Recorte`, `SpanTexto`, `AmbienteExtraido` | `modules/plantas/*`, `modules/plantas/presentation/admin/*`, `modules/plantas/presentation/miniapp/*` |
 | **`modelos`** | **Supporting** — BIM / Modelo Federado 3D | `ModeloFrag`, `Disciplina`, `PlanoCorte`, `CacheModelo` | `modelo/*`, `admin/modelo/*`, `admin/telas/modelo/*`, `telas/Modelo.tsx`, `telas/AmbienteModelo.tsx` |
 | **`ra`** | **Supporting** — Realidade Aumentada em campo | `GeometriaAmbiente`, `MarcadorQr`, `Pose`, `Orientacao`, `Malha` | `ra/*`, `admin/ra/*`, `admin/telas/ra/*` |
 | **`relatorios`** | **Core** — Boletim Diário, Pendências e Painel | `Boletim`, `EdicaoBoletim`, `PedidoEmissao`, `Clima`, `RelatorioPendencias`, `PainelRelatorios` | `telas/Relatorios*`, `admin/telas/boletins/*`, `util/painel.ts`, `util/periodo.ts`, `servidor/boletim/*`, `servidor/relatorio/*` |
@@ -505,7 +505,7 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 ---
 
-### Fase 3 — Alavanca / Piloto Ponta a Ponta: Contexto `ra` (*Build the Lever*)
+### Fase 3 — Alavanca / Piloto Ponta a Ponta: Contexto `ra` (*Build the Lever*) — **concluída** (2026-11-19; telas em `presentation/`, padrão em `docs/padrao-contexto-modulo.md`)
 
 **Objetivo:** Provar todo o padrão arquitetural (porta segregada + *Contract Test* + fatiamento do adaptador Supabase/Fixture + composição na fachada `Repositorio`/`RepositorioAdmin` + unificação de duplicação entre Mini App e Admin) no menor contexto autocontido antes de replicar nos demais.
 
@@ -519,18 +519,18 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 ---
 
-### Fase 4 — Migração por Contexto Delimitado — Onda 1 (Baixo Acoplamento)
+### Fase 4 — Migração por Contexto Delimitado — Onda 1 (Baixo Acoplamento) — concluída (4A e 4B)
 
 **Objetivo:** Replicar o padrão validado na Fase 3 nos outros dois contextos técnicos de baixo acoplamento. Um PR por subfase:
 
-#### Fase 4A — Contexto `modelos` (Modelos 3D / IFC → `.frag`)
+#### Fase 4A — Contexto `modelos` (Modelos 3D / IFC → `.frag`) — concluída (partes 1 e 2)
 - `domain/`: `modelos.ts`, `corte.ts` (unificando regras de disciplinas e corte).
 - `application/`: portas `ModelosRepositorio`, `CacheModeloPort`, `ConversorIfcPort` + `use-cases/carregarModeloComCache`.
 - `infrastructure/`: `cacheModelo.ts`, `conversor.ts`, `conversor.worker.ts`, adaptadores Supabase/Fixture de modelos.
 - `presentation/`: `miniapp/` (`VisualizadorModelo`, `PreviaModelo`, `Modelo`, `AmbienteModelo`) e `admin/` (`ModelosObra`).
 - **Critério de pronto:** `conversor.worker` e `VisualizadorModelo` continuam fora do `precache-manifest.json`; `modelos.node.test.ts`, `npm test -- modelo` e `npm run test:e2e -- e2e/modelo.spec.ts e2e/admin-modelo.spec.ts` verdes.
 
-#### Fase 4B — Contexto `plantas` (PDF, Extração e Revisões 2D)
+#### Fase 4B — Contexto `plantas` (PDF, Extração e Revisões 2D) — concluída (partes 1 e 2)
 - `domain/`: `tipos.ts`, `extrair.ts`, `spans.ts`, `editor.ts`, `sinteticos.ts`, `metricasFonte.ts`.
 - `application/`: portas `PlantasRepositorio`, `ServicoPdfPort` + `use-cases/` (`extrairPlanta`, `publicarRevisaoPlanta`).
 - `infrastructure/`: `carregarPdfJs.ts`, `pdf.ts`, `render.ts`, `servicoNavegador.ts`, `servicoFalso.ts`, adaptadores Supabase/Fixture.
@@ -543,42 +543,45 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 **Objetivo:** Migrar os contextos centrais de negócio fatiando o restante dos adaptadores monolíticos (`dados/` e `admin/dados/`), extraindo cada porta *just-in-time* com seu *Contract Test*. Um PR por subfase:
 
-#### Fase 5A — Contexto `acessos`
+#### Fase 5A — Contexto `acessos` — concluída (partes 1 e 2)
+- `presentation/`: `miniapp/` (`Acessos`, `AcessosEquipe`, `PedidosAcesso`, `EquipeServico`) e `admin/` (`Pessoas`, `Admins`, `Entrar`); chunks e precache idênticos aos de antes.
 - Extrair `Sessao`, `Acessos`, `Pessoas`, `Admins` e `EquipeServico` (check-in/out) dos adaptadores monolíticos, com portas segregadas (sem `use-cases/` vazios).
 - **Critério de pronto:** `npm test -- acesso`, `npm run test:e2e -- e2e/acesso.spec.ts` verdes.
 
-#### Fase 5B — Contexto `obras`
+#### Fase 5B — Contexto `obras` — concluída (partes 1, 2 e 3)
 - Extrair `Obras`, `Etapas` (com `util/etapas.ts` → `domain/`), `Pavimentos`, `Ambientes`, `Aditivos`, `Responsáveis` e `Organização`, com portas segregadas (regras de escrita permanecem nas RPCs).
+- **Parte 1 (lado Mini App) concluída:** domínio, portas e adaptadores em `modules/obras`.
+- **Parte 2 (lado admin) concluída:** portas `EtapasAdmin`, `OrganizacaoAdmin` e `ObrasAdmin`, adaptadores Supabase e Fixture (estado injetado) e tipos em `domain/tiposAdmin.ts`; `RepositorioAdmin` compõe as portas.
+- **Parte 3 (telas e hooks) concluída:** telas admin e hooks em `modules/obras/presentation/admin/` e telas miniapp (`Obras`, `Obra`, `Ambiente`) em `modules/obras/presentation/miniapp/`; chunks e precache inalterados; e2e 16/16.
 - **Critério de pronto:** `npm test -- obra etapa`, `npm run test:e2e -- e2e/navegacao.spec.ts e2e/etapas.spec.ts e2e/admin-obra.spec.ts e2e/admin-etapas.spec.ts` verdes.
 
-#### Fase 5C — Contexto `fiscalizacao`
-- Extrair `Registros` (*discriminated union* `Servico | Pendencia`), `Encerramentos`, `Observações do Dia`, `Publicações` e `use-cases/` de envio idempotente (`dados/envio.ts`).
-- **Critério de pronto:** `npm test -- registro pendencia observac`, `npm run test:e2e -- e2e/novo-registro.spec.ts e2e/pendencias.spec.ts e2e/observacoes.spec.ts` verdes.
+#### Fase 5C — Contexto `fiscalizacao` — concluída (partes 1 e 2)
+- Extraídos `Registros`, `Encerramentos`, `Publicações`, `use-cases/envio.ts` e telas/componentes (`NovoRegistro`, `Pendencias`, `PendenciaDetalhe`, `Publicacoes`, `Registros`, `CartaoPendencia`, `ListaRegistros`, `MiniaturaRegistro`) em `modules/fiscalizacao/`. (`Observações do Dia` segue junto com boletins na 5D.)
+- **Critério de pronto:** `npm test -- registro pendencia`, `npm run test:e2e -- e2e/novo-registro.spec.ts e2e/pendencias.spec.ts` verdes (10/10).
 
-#### Fase 5D — Contexto `relatorios` (Frontend)
-- Extrair `Relatórios`, `Painel` (`util/painel.ts`, `util/periodo.ts` → `domain/`), `Boletins` e `EditorBoletim` (`fixtureBoletim.ts` → `infrastructure/fixture/`).
+#### Fase 5D — Contexto `relatorios` (Frontend) — concluída (partes 1 e 2)
+- Extraídos `Relatórios`, `Observações do Dia`, `Painel` (`util/painel.ts` → `domain/painel.ts`), `Boletins` e `EditorBoletim` em `modules/relatorios/`; `admin/dados/fixtureBoletim.ts` resolvido como `modules/obras/infra/camposEtapa.ts` e `util/periodo.ts` movido para `shared/kernel/periodo.ts`.
 - **`app/servidor/{boletim,relatorio}/`:** mantido plano e local (*"If the code is already clear and local, leave it"*), sem alterar `app/api/*.ts` nem `app/vercel.json`.
-- **Critério de pronto:** `npm test -- relatorio boletim servidor` e `BOLETIM_EXIGIR_CHROMIUM=1 npx vitest run servidor` verdes.
+- **Critério de pronto:** `npm test -- relatorio boletim servidor` e e2e `observacoes` e `admin-etapas` (5/5) verdes.
 
-#### Fase 5E — Contexto `operacao`
-- Migrar `offline/` (`fila.ts` → `domain/`, `sincronizarFila` → `application/use-cases/`, `armazenamento.ts` e `cacheConsultas.ts` → `infrastructure/indexeddb/`, `contexto.tsx` e `BarraSincronizacao.tsx` → `presentation/miniapp/`).
-- Migrar telemetria de erros do cliente (`Erros.tsx`) e resumo de órfãos de storage.
-- **Critério de pronto:** `npm test -- offline erro`, `npm run test:e2e -- e2e/offline.spec.ts e2e/sw.spec.ts` verdes; adaptadores legados `supabase.ts` e `fixture.ts` reduzidos a fachadas vazias prontas para remoção na Fase 6.
+#### Fase 5E — Contexto `operacao` — concluída
+- Migrados `offline/` (`armazenamento` e `cacheConsultas` → `infra/indexeddb/`, `fila` → `application/use-cases/`, `contexto`, `BarraSincronizacao` e `RegistroLocal` → `presentation/miniapp/`).
+- Migrada telemetria de erros do cliente (`Erros.tsx`, `hooks.ts`) e resumo de órfãos de storage (`TelemetriaRepositorio` + adaptadores Supabase e Fixture + contract test).
+- **Critério de pronto:** `npm test -- offline erro`, `npm run test:e2e -- e2e/offline.spec.ts e2e/sw.spec.ts e2e/admin.spec.ts` (8/8) verdes; fachadas `Repositorio` e `RepositorioAdmin` 100% compostas por portas.
 
 ---
 
-### Fase 6 — Consolidação dos Composition Roots, Limpeza de Shims e Blindagem de Lint
+### Fase 6 — Consolidação dos Composition Roots, Limpeza de Shims e Blindagem de Lint — concluída
 
 **Objetivo:** Finalizar a transição removendo camadas temporárias e travando as fronteiras arquiteturais no CI.
 
-- **Ações:**
-  1. Mover `App.tsx`, `App.test.tsx`, `main.tsx` para `app/src/apps/miniapp/` e `AdminApp.tsx`, `AdminApp.test.tsx`, `admin/main.tsx`, `admin.css` para `app/src/apps/admin/`.
-  2. Atualizar `app/index.html` (`/src/apps/miniapp/main.tsx`), `app/admin.html` (`/src/apps/admin/main.tsx`) e `app/vite.config.ts` (`setupFiles: ['./src/shared/test/setup.ts']`).
-  3. Remover todos os arquivos *shim* (re-exports temporários) e os antigos adaptadores monolíticos `src/dados/supabase.ts`, `src/dados/fixture.ts`, `src/admin/dados/supabase.ts`, `src/admin/dados/fixture.ts`.
-  4. Promover as regras de fronteira no `app/eslint.config.js` de `warn` para **`error`**, garantindo que nenhuma regressão arquitetural passe no CI.
-  5. Conferir `app/dist/precache-manifest.json` após `npm run build` para confirmar que nenhum chunk exclusivo de `apps/admin/` ou `modules/*/presentation/admin/` entrou no precache do Mini App.
-  6. Atualizar `README.md`, `CLAUDE.md` e `tasks/todo.md` refletindo a nova estrutura.
-- **Verificação final:** executar **todos** os 5 jobs espelhados de `.github/workflows/ci.yml` (App, E2E + Chromium, Python, Edge Functions Deno, Banco Postgres).
+- **Ações concluídas:**
+  1. Movidos `App.tsx`, `App.test.tsx`, `main.tsx` para `app/src/apps/miniapp/` e `AdminApp.tsx`, `AdminApp.test.tsx`, `admin/main.tsx`, `admin.css` para `app/src/apps/admin/`.
+  2. Atualizados `app/index.html` (`/src/apps/miniapp/main.tsx`) e `app/admin.html` (`/src/apps/admin/main.tsx`); `Marcador` e `RecortePt` movidos para `shared/kernel/tipos.ts`.
+  3. Removidos todos os 31 arquivos *shim* de compatibilidade (re-exports temporários da Fase 2) e a pasta `app/src/util/`; `dados/{supabase,fixture}.ts` e `admin/dados/{supabase,fixture}.ts` mantidos apenas como fábricas de composição das portas.
+  4. Promovidas as regras de fronteira no `app/eslint.config.js` de `warn` para **`error`**.
+  5. Conferido `app/dist/precache-manifest.json` após `npm run build` (19 arquivos, nenhum chunk exclusivo do Admin).
+- **Verificação final:** `tsc -b`, `eslint --max-warnings 0` (com fronteiras em `error`), 933 testes Vitest em 113 arquivos, `build`, `build:fixture` e suíte E2E completa (48/48) verdes.
 
 ---
 

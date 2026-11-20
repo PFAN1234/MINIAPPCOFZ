@@ -1,5 +1,6 @@
+import { useOrganizacao } from '@modules/obras/presentation/admin/hooks.ts'
 import { useId, useState, type ReactNode } from 'react'
-import { useOrganizacao } from './dados/hooks.ts'
+
 import { CATEGORIAS, ROTULO_CATEGORIA } from './dados/tipos.ts'
 
 export const NOME_APP = 'Fiscal Bot'

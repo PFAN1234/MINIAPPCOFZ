@@ -143,7 +143,7 @@ Procedimento em `tasks/plano-app.md` (seção "Novas obras"). Decisões de 2026-
 - [x] Configuração por obra (`data/<slug>/obra.json`), começando pela HTO com os valores hoje fixos nos scripts; inclui `renomear`, `categorias` e `ambientes_manuais` (cômodo sem rótulo, pino colocado à mão).
 - [x] Scripts com `--obra <slug>` e extrator lendo os PDFs direto, sem o `inventory.json` de diagnóstico.
 - [x] Pipeline da HTO reproduz os JSON, as imagens e `supabase/seed/hto.sql` sem diferença de conteúdo (só o campo `fonte` e a ordem das chaves de `plantas.json`, mantido como estava); pytest passa.
-- [x] COFZ: PDF em `DOCS COFZ/PDF/` (DE009 R06, pavimento único), triagem, extração e imagens; 19 ambientes (17 rotulados + WC da chefia e Sala de apoio à mão), `supabase/seed/cofz.sql`. Decisões de 2026-11-11: nome "COFZ", circulações numeradas por área, "DA" → "Sala DA".
+- [x] COFZ: PDF em `obras/cofz/pdf/` (DE009 R06, pavimento único), triagem, extração e imagens; 19 ambientes (17 rotulados + WC da chefia e Sala de apoio à mão), `supabase/seed/cofz.sql`. Decisões de 2026-11-11: nome "COFZ", circulações numeradas por área, "DA" → "Sala DA".
 - [ ] COFZ: revisão humana da `data/cofz/plantas/R06/terreo/prova.png` e dos nomes → `status: revisado`.
 - [x] COFZ: seed aplicado no `miniappcofz-dev` (19 ambientes, 19 recortes) e 21 imagens no bucket `plantas` via `assinar-envio-plantas` (2026-11-11).
 - [ ] Tópico no grupo de teste, `/vincular_obra <slug>` e registro publicado no tópico certo.
@@ -210,7 +210,7 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
   - [x] Vercel: `VITE_TELEGRAM_BOT` = `diarioobra_cofz_bot` (o deploy novo vem com o merge na main).
   - [x] Conferir: botão "Administração" e link abrem o site logado (Patrício, 2026-11-11). Falta: link não vale de novo; Login Widget entra com admin e recusa outra conta.
   - [x] Banco único (decisão de 2026-11-12): migration, função `admin-sessao` e seeds já estão no `miniappcofz-dev`, que é o banco oficial; não há produção separada.
-- [x] Fase 2 (código, 2026-11-12): planta no navegador. Migration `20261112090000_admin_planta.sql` (bucket `originais`, gravação do admin em `plantas`, `publicacao_planta`, RPCs `admin_publicar_revisao`, `admin_editor_planta`, `admin_listar_publicacoes`); port do extrator e das imagens em `app/src/admin/planta/` com paridade (HTO e COFZ); editor em `/admin/obras/<slug>/planta/<pavimento>`; histórico na página da obra. Documentação em `docs/admin.md` ("Planta (fase 2)").
+- [x] Fase 2 (código, 2026-11-12): planta no navegador. Migration `20261112090000_admin_planta.sql` (bucket `originais`, gravação do admin em `plantas`, `publicacao_planta`, RPCs `admin_publicar_revisao`, `admin_editor_planta`, `admin_listar_publicacoes`); port do extrator e das imagens em `app/src/modules/plantas/domain/` com paridade (HTO e COFZ); editor em `/admin/obras/<slug>/planta/<pavimento>`; histórico na página da obra. Documentação em `docs/admin.md` ("Planta (fase 2)").
 - [ ] Fase 2 no `miniappcofz-dev` (migration aplicada em 2026-11-12; falta o teste de fumaça; passo a passo em `docs/admin.md`, "Planta (fase 2)" → "Aplicar num projeto"):
   - [x] Aplicar a migration `20261112090000_admin_planta.sql` (cria o bucket `originais` e as políticas de Storage).
   - [x] Conferir: bucket `originais` privado, 50 MB, só `application/pdf`; políticas `originais_admin_*` e `plantas_admin_*` em `storage.objects`.
@@ -313,7 +313,7 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 Plano: `tasks/plano-organizacao-pastas.md` (decisões de 2026-11-12; registrado em `docs/ROADMAP.md`).
 
 - [x] Fase 1: capturas `Screenshot 2026-11-06 *.png` removidas da raiz em 2026-11-12 (commit `ef7277c`, ficam no histórico); READMEs já ajustados.
-- [ ] Fase 2: padronizar `DOCS COFZ/` e `DOCS HTO/` (e `public/ifc/`) → `obras/<slug>/`, atualizar `.gitignore`, `data/*/obra.json`, re-executar o pipeline Python (`extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `importar_config_obras.py`) e atualizar `app/e2e/planta.spec.ts` e scripts/docs.
+- [x] Fase 2: padronizar `DOCS COFZ/` e `DOCS HTO/` (e `public/ifc/`) → `obras/<slug>/`, atualizar `.gitignore`, `data/*/obra.json`, re-executar o pipeline Python (`extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `importar_config_obras.py`) e atualizar `app/e2e/planta.spec.ts` e scripts/docs.
 - [ ] Fase 3: atualizar o `README.md` raiz para refletir o estado atual do projeto.
 - [ ] Fase 4 (após estabilização das entregas de UI): organizar `app/src/` em `miniapp/` e `shared/` (mantendo `admin/` isolado) e validar `precache-manifest.json`.
 
@@ -385,3 +385,68 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] E2E: testes da Gestão passam a usar o Controle de acesso (PR #57).
 - [ ] Depois de conferir a lista de órfãos por alguns dias: remoção real por Edge Function (API do Storage), tratando envios de planta/modelo pendentes há mais de 7 dias.
 - [ ] Backup e restauração do Postgres e do Storage (adiado pelo usuário).
+
+## Arquitetura — Fase 0 (baseline)
+
+- [x] Fase 0 de `docs/plano-arquitetura-organizacao.md` concluída: aliases `@shared`/`@modules`/`@apps` (tsconfig.app, herdado por tsconfig.testes-node; vite/vitest), pastas `src/shared/{kernel,infra,ui,test}`, `src/modules`, `src/apps/{miniapp,admin}`, fronteiras de lint em `warn` (validadas com arquivo violador temporário, removido) e smoke de alias.
+- Baseline: typecheck, lint (0 warnings), build e build:fixture verdes; 856 testes em 101 arquivos (855 anteriores + 1 smoke).
+- `precache-manifest.json`: 18 arquivos; `VisualizadorModelo`, `motor-3d`, `jsQR` e `conversor.worker` existem em `dist/assets` (4 chunks) e ficam fora do manifesto, como esperado.
+
+## Arquitetura — Fase 3 (contexto `ra`)
+
+- [x] Fase 3 concluída: `modules/ra/{domain,application,infra,presentation}`; porta + contract test (fixture e Supabase), telas em `presentation/{miniapp,admin}`. Padrão registrado em `docs/padrao-contexto-modulo.md`.
+- Estado final: typecheck, eslint (0 avisos), build e build:fixture verdes; 862 testes em 103 arquivos; e2e `ra.spec.ts` 3/3; chunks lazy (`TelaRA`, `DiagnosticoRA`, `motor-3d`) inalterados.
+
+## Arquitetura — Fase 4A (contexto `modelos`)
+
+- [x] Fase 4A concluída: `modules/modelos/{domain,application,infra,presentation}`; telas em `presentation/{miniapp,admin}`.
+- Estado final: typecheck, eslint (0 avisos), build e build:fixture verdes; 867 testes em 105 arquivos; e2e `modelo.spec.ts` e `admin-modelo.spec.ts` 5/5; `VisualizadorModelo`, `motor-3d`, `jsQR`, `conversor.worker` fora do precache (manifesto igual, exceto a versão).
+
+## Arquitetura — Fase 4B (contexto `plantas`)
+
+- [x] Fase 4B concluída: `modules/plantas/{domain,application,infra,presentation}`; telas em `presentation/{miniapp,admin}`.
+- Estado final: 872 testes; `pdfjs-dist`/`pdf.worker` fora do bundle inicial e do precache.
+
+## Arquitetura — Fase 5A (contexto `acessos`)
+
+- [x] Fase 5A concluída: `modules/acessos/{domain,application,infra,presentation}`; 5 portas (`Acessos`, `AcessosAdmin`, `Sessao`, `SessaoAdmin`, `EquipeServico`), adaptadores Supabase e Fixture, telas em `presentation/{miniapp,admin}`.
+- Estado final: typecheck, eslint (0 avisos), build e build:fixture verdes; 890 testes em 107 arquivos; e2e `acesso.spec.ts` e `admin.spec.ts` 6/6; chunks e precache idênticos aos de antes.
+- Lacunas conhecidas: sem contract test de `SessaoAdminRepositorio` (coberto por `AdminApp.test`); `acessos-supabase.test.ts` segue em `dados/`; `NomeExibicao.test.tsx` fica em `telas/` (cruza contextos).
+- Próximo: 5B (`obras`).
+
+## Arquitetura — Fase 5B (contexto `obras`)
+
+- [x] Parte 1 (lado Mini App): `modules/obras/{domain,application/ports,infra}`; portas `Obras`, `Organizacao`, `EtapasInicio`; adaptadores Supabase e Fixture (estado injetado); `util/etapas.ts` virou `domain/etapas.ts` (puro) + `presentation/miniapp/useEtapaGuardada.ts`.
+- Estado: typecheck, eslint (0 avisos), build e build:fixture verdes; 898 testes (890 + 8 de contrato).
+- Lacunas: sem contract test contra Supabase (mock já coberto por `dados/etapas-supabase.test.ts`); `Marcador` e `RecortePt` ficam em `dados/tipos.ts` (usados por `shared/kernel/coordenadas` e plantas).
+- [x] Parte 2 (lado admin): portas `EtapasAdmin`, `OrganizacaoAdmin`, `ObrasAdmin` + contratos (`ObrasAdminFixture.contract.test.ts`); adaptadores Supabase e Fixture em `modules/obras/infra`; tipos admin em `domain/tiposAdmin.ts`; `RepositorioAdmin` compõe as portas.
+- Estado: typecheck, eslint (0 avisos), build e build:fixture verdes; 913 testes em 109 arquivos (898 + 15 de contrato).
+- Lacunas: constantes e `ErroAdmin` seguem em `admin/dados/tipos.ts` (adaptadores importam de lá); `fixtureBoletim.ts` (helpers de campos da etapa) segue em `admin/dados` até a 5D; boletins da fixture limpos via callback `aoExcluirEtapa`.
+- [x] Parte 3 (telas e `hooks.ts`): telas admin (`ObrasAdmin`, `ObraAdmin`, `Organizacao`, `ArquivarExcluir`, `EtapaAdmin`, `FormularioEtapa`, `MapaEscolha`, `Aditivos`, `Responsaveis`, `ArquivarExcluirEtapa` + testes) e hooks admin movidos para `modules/obras/presentation/admin/`; telas miniapp (`Obras`, `Obra`, `Ambiente` + 5 arquivos de teste) movidas para `modules/obras/presentation/miniapp/`. `Registros.tsx` fica para a 5C (depende de `fiscalizacao`).
+- Estado final da 5B: typecheck, eslint (0 avisos), build e build:fixture verdes; 913 testes em 109 arquivos; e2e `navegacao`, `etapas`, `admin-obra`, `admin-etapas` 16/16; chunks (`MapaEscolha` lazy incluído) e `precache-manifest.json` idênticos aos de antes.
+
+## Arquitetura — Fase 5C (contexto `fiscalizacao`)
+
+- [x] Parte 1 (domínio, portas, use-case e adaptadores): `modules/fiscalizacao/{domain/tipos.ts, application/ports/{RegistrosRepositorio,PublicacoesRepositorio}, application/use-cases/envio.ts, infra/{RegistrosSupabaseAdapter,PublicacoesSupabaseAdapter,RegistrosFixtureAdapter,PublicacoesFixtureAdapter}}`; `FiscalizacaoFixture.contract.test.ts` (+9 testes de contrato).
+- [x] Parte 2 (telas e componentes): `NovoRegistro`, `Pendencias`, `PendenciaDetalhe`, `Publicacoes`, `Registros`, `CartaoPendencia`, `ListaRegistros`, `MiniaturaRegistro` e testes movidos para `modules/fiscalizacao/presentation/miniapp/`.
+- Estado final da 5C: typecheck, eslint (0 avisos), build e build:fixture verdes; 922 testes em 110 arquivos; e2e `novo-registro` e `pendencias` 10/10; chunks e `precache-manifest.json` inalterados.
+
+## Arquitetura — Fase 5D (contexto `relatorios`)
+
+- [x] Parte 1 (domínio, portas, adaptadores e `camposEtapa`): `modules/relatorios/{domain/{tipos,tiposAdmin,painel}, application/ports/{RelatoriosRepositorio,ObservacoesRepositorio,BoletinsAdminRepositorio}, infra/*}`; `admin/dados/fixtureBoletim.ts` movido para `modules/obras/infra/camposEtapa.ts`; `util/periodo.ts` (+ `dataValida`/`somarDias`) movido para `shared/kernel/periodo.ts`; contract tests (+9 testes).
+- [x] Parte 2 (telas, componentes e hooks): `Relatorios`, `PainelRelatorios`, `GraficoAcumulado`, `GraficoPorObra`, `CartaoObservacoes` (+ testes) movidos para `modules/relatorios/presentation/miniapp/`; `Boletins`, `EditorBoletim`, `EmitirOuPrever`, `Tabelas`, `util` (+ testes) e hooks admin movidos para `modules/relatorios/presentation/admin/`.
+- Estado final da 5D: typecheck, eslint (0 avisos), build e build:fixture verdes; 931 testes em 112 arquivos; e2e `observacoes` e `admin-etapas` 5/5; chunks e `precache-manifest.json` inalterados.
+
+## Arquitetura — Fase 5E (contexto `operacao`)
+
+- [x] Telemetria e manutenção: `modules/operacao/{domain/tipos.ts, application/ports/TelemetriaRepositorio.{port,contract}.ts, infra/Telemetria{Supabase,Fixture}Adapter.ts, presentation/admin/{Erros.tsx,hooks.ts}}`; `OperacaoFixture.contract.test.ts` (+2 testes).
+- [x] Offline: `offline/{armazenamento,cacheConsultas}` → `modules/operacao/infra/indexeddb/`; `offline/fila` → `modules/operacao/application/use-cases/`; `offline/contexto` e `components/{BarraSincronizacao,RegistroLocal}` → `modules/operacao/presentation/miniapp/`.
+- Estado final da 5E: typecheck, eslint (0 avisos), build e build:fixture verdes; 933 testes em 113 arquivos; e2e `offline`, `sw` e `admin` 8/8; fachadas `Repositorio` e `RepositorioAdmin` 100% compostas por portas.
+
+## Arquitetura — Fase 6 (fechamento)
+
+- [x] Composition Roots movidos para `apps/miniapp/{App,App.test,main}` e `apps/admin/{AdminApp,AdminApp.test,main,admin.css}`; `index.html` e `admin.html` atualizados.
+- [x] `Marcador` e `RecortePt` movidos de `dados/tipos.ts` para `shared/kernel/tipos.ts`; `util/util.test.ts` movido para `shared/kernel/util.test.ts`.
+- [x] Todos os 31 shims de re-export da Fase 2 removidos (`components/*`, `util/*`, `telegram*.ts`, `registrarSw.ts`); pasta `util/` removida.
+- [x] Regras de fronteira `no-restricted-imports` promovidas de `warn` para `error` em `app/eslint.config.js`.
+- Estado final da Fase 6: typecheck, eslint (0 erros/avisos com fronteiras em `error`), build e build:fixture verdes; 933 testes em 113 arquivos; suíte E2E completa 48/48; `precache-manifest.json` inalterado (19 arquivos, nenhum chunk do Admin).

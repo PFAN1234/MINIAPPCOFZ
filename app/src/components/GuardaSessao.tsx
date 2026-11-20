@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { useSessao } from '../dados/hooks.ts'
-import { EstadoCarregando, EstadoErro } from './Estado.tsx'
-import { TelaDeEntrada } from './FaixaIdentidade.tsx'
-import { NOME_APP } from './identidade.ts'
+import { EstadoCarregando, EstadoErro } from '../shared/ui/feedback/Estado.tsx'
+import { TelaDeEntrada } from '../shared/ui/layout/FaixaIdentidade.tsx'
+import { NOME_APP } from '../shared/ui/layout/identidade.ts'
 
 /** Em modo Supabase sem sessão, pede para abrir pelo Telegram (login real na fase 6). */
 export function GuardaSessao({ children }: { children: ReactNode }) {

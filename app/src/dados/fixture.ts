@@ -5,63 +5,30 @@
  */
 import ambientesJson from '../../../data/hto/ambientes.json'
 import plantasJson from '../../../data/hto/plantas.json'
-import geometriaJson from '../../../data/hto/geometria.json'
+import { criarAcessosFixture, ID_PATRICIO, ID_USUARIO, NOME_PATRICIO } from '@modules/acessos/infra/AcessosFixtureAdapter.ts'
+import { criarEquipeServicoFixture } from '@modules/acessos/infra/EquipeServicoFixtureAdapter.ts'
+import { criarSessaoFixture } from '@modules/acessos/infra/SessaoFixtureAdapter.ts'
+import { criarPublicacoesFixture } from '@modules/fiscalizacao/infra/PublicacoesFixtureAdapter.ts'
+import { criarRegistrosFixture } from '@modules/fiscalizacao/infra/RegistrosFixtureAdapter.ts'
+import { criarEtapasInicioFixture } from '@modules/obras/infra/EtapasInicioFixtureAdapter.ts'
+import { criarObrasFixture } from '@modules/obras/infra/ObrasFixtureAdapter.ts'
+import { criarOrganizacaoFixture } from '@modules/obras/infra/OrganizacaoFixtureAdapter.ts'
+import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
+import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
+import { criarObservacoesFixture, type ObservacaoSalva } from '@modules/relatorios/infra/ObservacoesFixtureAdapter.ts'
+import { criarRelatoriosFixture } from '@modules/relatorios/infra/RelatoriosFixtureAdapter.ts'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
-import { nomeMostrado } from './nome.ts'
-import { dataNoFuso, formatarDia } from '../util/fuso.ts'
-import { dentroDoPeriodo } from '../util/periodo.ts'
-import { baixarModeloLocal, listarModelosLocais } from '../modelo/modelos.ts'
+import { dataNoFuso } from '../shared/kernel/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
-import type {
-  Ambiente,
-  AmbienteDetalhe,
-  Encerramento,
-  DetalhePlanta,
-  EquipeServico,
-  EstadoPublicacao,
-  EtapaInicio,
-  MembroServico,
-  FiltroRegistros,
-  LinkAdmin,
-  FotoRegistro,
-  ImagemPlanta,
-  NovaObservacao,
-  NovoEncerramento,
-  NovoRegistro,
-  Etapa,
-  Observacao,
-  ObservacoesDoDia,
-  ObraDaLista,
-  ObraDetalhe,
-  ObraDisponivel,
-  ObraResumo,
-  Organizacao,
-  PapelObra,
-  Participante,
-  Pavimento,
-  PendenciaDetalhe,
-  Planta,
-  PublicacaoProblema,
-  RecortePt,
-  RegistroLocalizado,
-  RegistroResumo,
-  ResumoObra,
-  SolicitacaoAcesso,
-  MatrizAcessos,
-  PapelAcesso,
-  BoletimRelatorio,
-  EtapaRelatorio,
-  PainelRelatorios,
-  Relatorios,
-  ResultadoExclusaoBoletim,
-} from './tipos.ts'
+import type { RecortePt } from '@shared/kernel/tipos.ts'
+import type { Encerramento, EstadoPublicacao, FotoRegistro, PublicacaoProblema, RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
+import type { Ambiente, DetalhePlanta, ImagemPlanta, Etapa, ObraDaLista, Pavimento, Planta } from '@modules/obras/domain/tipos.ts'
+import type { PapelObra } from '@modules/acessos/domain/tipos.ts'
 
 const ID_HTO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 const ID_AURORA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e02'
 
-const ID_DEMONSTRACAO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e03'
 const ID_ALOJAMENTOS = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e04'
-const ID_PEDIDO_MARIA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4f01'
 
 /** Etapas da fixture: as obras atuais na 2ª, uma obra simples na 3ª (testes do seletor). */
 export const ETAPA_2: Etapa = {
@@ -85,44 +52,6 @@ export const ETAPA_4: Etapa = {
   ordem: 4,
 }
 
-/** Como a linha padrão de `organizacao` no banco: "CO-FZ", sem logo. */
-const NOME_ORGANIZACAO = 'CO-FZ'
-
-/** Obra em que o usuário de teste está no grupo do Telegram, mas sem acesso. */
-const OBRA_DEMONSTRACAO: ObraResumo = {
-  id: ID_DEMONSTRACAO,
-  slug: 'demonstracao',
-  nome: 'Obra Demonstração',
-}
-
-const PEDIDO_MARIA: SolicitacaoAcesso = {
-  id: ID_PEDIDO_MARIA,
-  usuario_id: '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a01',
-  nome: 'Maria Souza',
-  username: 'maria',
-  criado_em: '2026-11-09T18:30:00Z',
-}
-
-const ID_USUARIO = 'usuario-teste'
-const ID_MARCOS = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a02'
-const ID_JOAO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a03'
-const ID_PATRICIO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a04'
-
-/**
- * Pessoa com nome de exibição (definido pelo admin no site): o app mostra `CP PATRICIO`, e não o
- * nome do Telegram. As demais pessoas da fixture não têm nome de exibição e aparecem pelo do Telegram.
- */
-const PATRICIO = { nome: 'Patricio Ferreira', nome_exibicao: 'CP PATRICIO' }
-const NOME_PATRICIO = nomeMostrado(PATRICIO)!
-
-const PARTICIPANTES_BASE: (Participante & { papel_inicial: PapelObra })[] = [
-  { usuario_id: ID_USUARIO, nome: 'Você (teste)', username: 'voce', papel: 'gestor', papel_inicial: 'gestor', desde: '2026-10-20T12:00:00Z' },
-  { usuario_id: ID_MARCOS, nome: 'Marcos Teixeira', username: 'marcos', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-22T14:30:00Z' },
-  { usuario_id: ID_JOAO, nome: 'João Lima', username: 'joao', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-25T09:10:00Z' },
-  { usuario_id: ID_PATRICIO, nome: NOME_PATRICIO, username: 'patricio', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-26T11:00:00Z' },
-]
-
-const ID_ANA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a05'
 
 const OBRAS: ObraDaLista[] = [
   { id: ID_HTO, slug: 'hto', nome: 'HTO', etapa: ETAPA_2 },
@@ -341,67 +270,19 @@ const REGISTROS: RegistroResumo[] = [
   r(6, 'pendencia', 'resolvida', 'terreo-circulacao-sul', NOME_PATRICIO, '2026-11-03T15:45:00Z', 'Rejunte irregular no piso, já refeito.', 'publicado', 1),
 ]
 
-function porRecente(a: RegistroResumo, b: RegistroResumo): number {
-  return b.recebido_em.localeCompare(a.recebido_em)
-}
-
-function contarAbertas(registros: RegistroResumo[]): Map<string, number> {
-  const m = new Map<string, number>()
-  for (const x of registros) {
-    if (x.tipo === 'pendencia' && x.situacao === 'aberta') {
-      m.set(x.ambiente.id, (m.get(x.ambiente.id) ?? 0) + 1)
-    }
-  }
-  return m
-}
-
-function ambientesComContagem(registros: RegistroResumo[]): Ambiente[] {
-  const abertas = contarAbertas(registros)
-  return AMBIENTES_BASE.map((a) => ({ ...a, pendencias_abertas: abertas.get(a.id) ?? 0 }))
-}
-
-function obraPorSlug(slug: string): ObraResumo {
-  const obra = OBRAS.find((o) => o.slug === slug)
-  if (!obra) throw new Error('Obra não encontrada.')
-  return { id: obra.id, slug: obra.slug, nome: obra.nome }
-}
-
 /** `<obra_id>/<revisao>/<pavimento>/...` vira `/__plantas/<revisao>/<pavimento>/...`. */
 export function urlLocalDaImagem(path: string): string {
   const [, ...resto] = path.split('/')
   return `/__plantas/${resto.join('/')}`
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const LIMITE_BLOB = 10 * 1024 * 1024
 const AUTOR_FIXTURE = 'Você (teste)'
 const NOME_POR_ID: Record<string, string> = { [ID_USUARIO]: AUTOR_FIXTURE, [ID_PATRICIO]: NOME_PATRICIO }
-
-function falhaValidacao(msg: string): never {
-  throw new ErroEnvio('validacao', msg)
-}
-
-function inteiroPositivo(v: unknown): boolean {
-  return typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 999_999_999
-}
 
 const CHAVE_SERVIDOR = 'fixture-servidor'
 
 /** Fuso da 2ª etapa (a da HTO), como no banco. */
 const FUSO_FIXTURE = 'America/Fortaleza'
-const MENSAGEM_SO_AUTOR = 'Só o autor pode alterar a observação'
-
-/** Observação guardada no "servidor" da fixture. */
-interface ObservacaoSalva {
-  id: string
-  obraId: string
-  autorId: string
-  autorNome: string
-  data: string
-  texto: string
-  escrito_em: string
-  editado_em: string | null
-}
 
 /**
  * Duas observações de hoje na HTO (uma de CP PATRICIO, outra do usuário de teste), com horas
@@ -456,15 +337,6 @@ interface EstadoSalvo {
   observacoes: ObservacaoSalva[]
 }
 
-function blobParaDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const leitor = new FileReader()
-    leitor.onload = () => resolve(String(leitor.result))
-    leitor.onerror = () => reject(leitor.error ?? new Error('Falha ao ler a foto.'))
-    leitor.readAsDataURL(blob)
-  })
-}
-
 function dataUrlParaBlob(url: string): Blob {
   const virgula = url.indexOf(',')
   const cabecalho = url.slice(5, virgula) // depois de "data:"
@@ -516,68 +388,6 @@ const ETAPAS_RELATORIO = [
   { id: ETAPA_3.id, slug: '3a-etapa', nome: ETAPA_3.nome, sigla: '3ª', horario: '17:30' },
 ]
 
-function boletimFixture(
-  etapa: { id: string; slug: string; nome: string },
-  data: string,
-  revisao: number,
-  emitidoEm: string,
-): BoletimRelatorio {
-  const numero = `${etapa.slug.slice(0, 2).toUpperCase()}-${data.replaceAll('-', '')}${revisao > 0 ? `-R${revisao}` : ''}`
-  return {
-    id: `boletim-${etapa.slug}-${data}-${revisao}`,
-    etapa_id: etapa.id,
-    etapa_slug: etapa.slug,
-    etapa_nome: etapa.nome,
-    data,
-    revisao,
-    numero,
-    emitido_em: emitidoEm,
-    pdf_path: `${etapa.id}/${data}-${revisao}.pdf`,
-    publicado: true,
-    ultima_revisao: true,
-  }
-}
-
-/** Boletins de dias anteriores (o de hoje nasce na emissão); o de dois dias atrás da 2ª etapa tem retificação. */
-function boletinsIniciais(dia: string): BoletimRelatorio[] {
-  const antes = (n: number) => dataNoFuso(new Date(new Date(`${dia}T12:00:00Z`).getTime() - n * 86_400_000), 'UTC')
-  const [e2, e3] = ETAPAS_RELATORIO
-  return [
-    boletimFixture(e2, antes(1), 0, `${antes(1)}T21:00:00Z`),
-    boletimFixture(e3, antes(1), 0, `${antes(1)}T20:30:00Z`),
-    boletimFixture(e2, antes(2), 1, `${antes(2)}T22:10:00Z`),
-    boletimFixture(e2, antes(2), 0, `${antes(2)}T21:00:00Z`),
-  ]
-}
-
-/** Painel determinístico: ~5 semanas até `hoje`, 3 obras da 2ª etapa, pendências em parte resolvidas. */
-export function painelFixture(hoje: string): PainelRelatorios {
-  const obras = [
-    { id: ID_HTO, slug: 'hto', nome: 'HTO' },
-    { id: ID_AURORA, slug: 'aurora', nome: 'Residencial Aurora' },
-    { id: 'obra-quadra-fixture', slug: 'quadra', nome: 'Quadra Poliesportiva' },
-  ]
-  const base = new Date(`${hoje}T12:00:00Z`).getTime()
-  const dias: PainelRelatorios['dias'] = []
-  const total = 35
-  for (let i = total - 1; i >= 0; i--) {
-    const d = new Date(base - i * 86_400_000)
-    const dow = d.getUTCDay()
-    if (dow === 0) continue // domingo sem movimento
-    const dia = d.toISOString().slice(0, 10)
-    const k = total - 1 - i
-    obras.forEach((obra, o) => {
-      if (dow === 6 && o !== 0) return
-      if ((k + o) % 5 === 4) return // alguns dias sem movimento
-      const servicos = 1 + ((k * 3 + o * 2) % 4)
-      const pendencias = (k * 7 + o * 3) % 5 === 0 ? 2 : (k + o) % 3 === 0 ? 1 : 0
-      const resolvidas = k > 6 && (k * 5 + o) % 4 === 0 ? 1 : 0
-      if (servicos + pendencias + resolvidas > 0) dias.push({ obra_id: obra.id, dia, servicos, pendencias, resolvidas })
-    })
-  }
-  return { etapa: { id: ETAPA_2.id, slug: '2a-etapa', nome: ETAPA_2.nome, hoje }, obras, dias }
-}
-
 export function criarRepositorioFixture(
   opcoes: {
     persistencia?: Storage | null
@@ -611,49 +421,6 @@ export function criarRepositorioFixture(
   const removidos = salvo.removidos
   const publicacoes = salvo.publicacoes
   const observacoes = salvo.observacoes
-  // Equipe de serviço: só em memória. A 4ª etapa já tem um colega de serviço (usuário não participa dela).
-  const etapasServico = [ETAPA_2, ETAPA_3, ETAPA_4]
-  let servicos: (MembroServico & { etapa_id: string })[] = [
-    {
-      id: 'servico-colega',
-      etapa_id: ETAPA_4.id,
-      usuario_id: 'usuario-colega',
-      nome: 'SD COLEGA',
-      entrada_em: new Date(Date.now() - 2 * 3_600_000).toISOString(),
-      saida_em: null,
-      saida_automatica: false,
-      eu: false,
-    },
-  ]
-  let proximoServico = 1
-  function equipeDaEtapa(etapaId: string): EquipeServico {
-    const etapa = etapasServico.find((e) => e.id === etapaId)
-    if (!etapa) throw new ErroEnvio('nao_encontrado', 'Etapa não encontrada')
-    const aberto = servicos.find((s) => s.eu && s.saida_em === null)
-    const etapaAberto = aberto && etapasServico.find((e) => e.id === aberto.etapa_id)
-    return {
-      etapa_id: etapa.id,
-      participa: etapa.id !== ETAPA_4.id,
-      tem_localizacao: true,
-      meu_servico:
-        aberto && etapaAberto
-          ? { id: aberto.id, etapa_id: aberto.etapa_id, etapa_nome: etapaAberto.nome, entrada_em: aberto.entrada_em }
-          : null,
-      equipe: servicos
-        .filter((s) => s.etapa_id === etapa.id)
-        .sort((a, b) => Number(b.saida_em === null) - Number(a.saida_em === null) || b.entrada_em.localeCompare(a.entrada_em))
-        .map((s) => ({
-          id: s.id,
-          usuario_id: s.usuario_id,
-          nome: s.nome,
-          entrada_em: s.entrada_em,
-          saida_em: s.saida_em,
-          saida_automatica: s.saida_automatica,
-          eu: s.eu,
-        })),
-    }
-  }
-
   function persistir(): void {
     if (!persistencia) return
     try {
@@ -679,740 +446,133 @@ export function criarRepositorioFixture(
       throw new ErroEnvio('rede', MENSAGEM_REDE)
     }
   }
-  const todosEncerramentos = () => [...ENCERRAMENTOS_BASE, ...novosEncerramentos]
-  const encerramentoDe = (registroId: string) =>
-    todosEncerramentos().find((e) => e.registro_id === registroId)
-  /** Registros com a situação e a publicação atuais (encerramentos e republicações aplicados). */
-  const todos = (): RegistroResumo[] =>
-    [...REGISTROS, ...novos].map((x) => {
-      const pub = PUBLICACOES_BASE.find((p) => p.registro_id === x.id)
-      const pavimento = PAVIMENTOS.find(
-        (p) => p.codigo === AMBIENTES_BASE.find((a) => a.id === x.ambiente.id)?.pavimento_codigo,
-      )?.nome
-      return {
-        ...x,
-        ambiente: { ...x.ambiente, pavimento },
-        situacao: x.tipo === 'pendencia' && encerramentoDe(x.id) ? 'resolvida' : x.situacao,
-        publicacao: pub ? (publicacoes[String(pub.id)] ?? x.publicacao) : x.publicacao,
-      }
-    })
 
-  function vinculada(path: string): boolean {
-    return (
-      novos.some((n) => n.fotos.some((f) => f.path === path)) ||
-      novosEncerramentos.some((n) => n.fotos.some((f) => f.path === path))
-    )
-  }
+  const acessos = criarAcessosFixture({
+    admin: opcoes.admin === true,
+    estado: { pedidos, decisoes, papeis, removidos },
+    persistir,
+    exigirRede,
+    obras: OBRAS,
+  })
+  const { papelUsuario, exigirGestor } = acessos
+  const sessao = criarSessaoFixture({ admin: opcoes.admin === true, idUsuario: ID_USUARIO, exigirRede })
+  const equipe = criarEquipeServicoFixture({
+    etapas: [ETAPA_2, ETAPA_3, ETAPA_4],
+    etapaSemParticipacao: ETAPA_4.id,
+    exigirRede,
+  })
 
-  function papelUsuario(): PapelObra {
-    return papeis[ID_USUARIO] ?? 'gestor'
-  }
+  const registros = criarRegistrosFixture({
+    obras: OBRAS,
+    obraComDados: ID_HTO,
+    pavimentos: PAVIMENTOS,
+    ambientes: AMBIENTES_BASE,
+    registrosBase: REGISTROS,
+    encerramentosBase: ENCERRAMENTOS_BASE,
+    publicacoesBase: PUBLICACOES_BASE,
+    nomesPorId: NOME_POR_ID,
+    autorFixture: AUTOR_FIXTURE,
+    estado: {
+      registros: novos,
+      encerramentos: novosEncerramentos,
+      publicacoes,
+      blobs,
+      dataUrls,
+      urlsDosBlobs,
+    },
+    papelUsuario,
+    exigirRede,
+    persistir,
+    temPersistencia: persistencia !== null,
+    urlLocalDaImagem,
+  })
+  const publicacoesRepo = criarPublicacoesFixture({
+    publicacoesBase: PUBLICACOES_BASE,
+    estado: publicacoes,
+    obraComDados: ID_HTO,
+    exigirGestor,
+    exigirRede,
+    persistir,
+  })
 
-  function exigirGestor(obraId: string): void {
-    if (obraId !== ID_HTO || papelUsuario() !== 'gestor') {
-      throw new ErroEnvio('permissao', 'Só gestores da obra podem fazer isto.')
-    }
-  }
-
-  function participantesAtuais(): Participante[] {
-    return PARTICIPANTES_BASE.filter((p) => !removidos.includes(p.usuario_id)).map(
-      ({ papel_inicial, ...p }) => ({ ...p, papel: papeis[p.usuario_id] ?? papel_inicial }),
-    )
-  }
-
-  // Lista de acessos: só em memória. A HTO segue os participantes; as outras obras, esta tabela.
-  const acessosFora: Record<string, Record<string, 'equipe' | 'gestor'>> = {
-    [ID_AURORA]: { [ID_MARCOS]: 'equipe' },
-    [ID_ALOJAMENTOS]: {},
-  }
-  const adminsDoGrupo = [ID_ANA]
-  const outrasPessoas = { [ID_ANA]: { nome: 'Ana Prado', username: 'anaprado' }, [PEDIDO_MARIA.usuario_id]: { nome: PEDIDO_MARIA.nome, username: PEDIDO_MARIA.username } }
-
-  function papelNaObra(obraId: string, usuarioId: string): 'nenhum' | 'equipe' | 'gestor' {
-    if (adminsDoGrupo.includes(usuarioId)) return 'gestor'
-    if (obraId === ID_HTO) {
-      const p = participantesAtuais().find((x) => x.usuario_id === usuarioId)
-      return p ? p.papel : (acessosFora[ID_HTO]?.[usuarioId] ?? 'nenhum')
-    }
-    return acessosFora[obraId]?.[usuarioId] ?? 'nenhum'
-  }
-
-  function exigirOutroGestor(usuarioId: string): void {
-    const outros = participantesAtuais().filter(
-      (p) => p.papel === 'gestor' && p.usuario_id !== usuarioId,
-    )
-    if (outros.length === 0) {
-      throw new ErroEnvio('validacao', 'A obra precisa de pelo menos um gestor.')
-    }
-  }
+  const obras = criarObrasFixture({
+    obras: OBRAS,
+    obraComDados: ID_HTO,
+    pavimentos: PAVIMENTOS,
+    ambientes: AMBIENTES_BASE,
+    detalhePlanta,
+    registros: registros.todos,
+    papelUsuario,
+  })
+  const organizacao = criarOrganizacaoFixture(opcoes.logo)
+  const etapasInicio = criarEtapasInicioFixture([ETAPA_2, ETAPA_3, ETAPA_4], ETAPA_4.id)
 
   const hoje = () => dataNoFuso(new Date(), FUSO_FIXTURE)
-  const boletinsRel: BoletimRelatorio[] = boletinsIniciais(hoje())
-  /** Como `privado.boletim_emitido`: só o dia de hoje pode estar emitido na fixture. */
-  const diaTravado = (data: string) => opcoes.boletimEmitido === true && data === hoje()
+  const relatoriosRepo = criarRelatoriosFixture({
+    admin: opcoes.admin === true,
+    etapas: ETAPAS_RELATORIO,
+    etapaPrincipalId: ETAPA_2.id,
+    hoje,
+    exigirRede,
+  })
+  const observacoesRepo = criarObservacoesFixture({
+    observacoes,
+    fuso: FUSO_FIXTURE,
+    boletimEmitido: opcoes.boletimEmitido === true,
+    idUsuario: ID_USUARIO,
+    autorFixture: AUTOR_FIXTURE,
+    obrasIds: OBRAS.map((o) => o.id),
+    exigirRede,
+    persistir,
+  })
 
-  function exigirDiaAberto(data: string): void {
-    if (diaTravado(data)) {
-      falhaValidacao(`O boletim de ${formatarDia(data)} já foi emitido; a correção é feita por retificação`)
-    }
-  }
-
-  function exigirObra(obraId: string): void {
-    if (!OBRAS.some((o) => o.id === obraId)) {
-      throw new ErroEnvio('permissao', 'Sem permissão nesta obra')
-    }
-  }
-
-  function observacaoPublica(o: ObservacaoSalva): Observacao {
-    return {
-      id: o.id,
-      data: o.data,
-      texto: o.texto,
-      escrito_em: o.escrito_em,
-      editado_em: o.editado_em,
-      autor: { id: o.autorId, nome: o.autorNome },
-      minha: o.autorId === ID_USUARIO,
-      travada: diaTravado(o.data),
-    }
-  }
-
-  function publicacaoProblema(id: number): PublicacaoProblema {
-    const base = PUBLICACOES_BASE.find((p) => p.id === id)
-    if (!base) throw new ErroEnvio('nao_encontrado', 'Publicação não encontrada.')
-    const estado = publicacoes[String(id)] ?? 'falhou'
-    return { ...base, estado }
-  }
+  const ra = criarRaFixture()
+  const modelos = criarModelosFixture()
 
   return {
-    listarModelos: listarModelosLocais,
-    baixarModelo: baixarModeloLocal,
-    async obterGeometria(obra, ambiente) {
-      if (obra.slug !== geometriaJson.obra) return null
-      const g = (geometriaJson.ambientes as Record<string, { contorno: number[][]; contorno_pagina?: number[][]; y_piso: number; y_teto: number }>)[
-        ambiente.codigo
-      ]
-      if (!g) return null
-      return {
-        contorno: g.contorno.map(([x, z]) => [x, z]),
-        ...(g.contorno_pagina ? { contornoPagina: g.contorno_pagina.map(([x, y]) => [x, y] as [number, number]) } : {}),
-        yPiso: g.y_piso,
-        yTeto: g.y_teto,
-        // QR de teste só no Apto. 101: parede 1, a 1,20 m do canto, centro a 1,50 m.
-        qr: ambiente.codigo === 'terreo-apto-101' ? { parede: 0, distancia_m: 1.2, altura_m: 1.5, lado_m: 0.18 } : null,
-        referencial: { sigla: geometriaJson.referencial.sigla, coordenadas: geometriaJson.referencial.coordenadas },
-        matrizes: {},
-      }
-    },
-    async idUsuario() {
-      return 'usuario-teste'
-    },
-
-    async souAdmin() {
-      return opcoes.admin === true
-    },
-
-    async etapasInicio(): Promise<EtapaInicio[]> {
-      return etapasServico.map((e) => ({ ...e, participa: e.id !== ETAPA_4.id }))
-    },
-
-    async equipeServico(etapaId) {
-      return equipeDaEtapa(etapaId)
-    },
-
-    async fazerCheckin(etapaId) {
-      exigirRede()
-      const atual = equipeDaEtapa(etapaId)
-      if (!atual.participa) throw new ErroEnvio('permissao', 'Você não participa desta etapa')
-      if (atual.meu_servico) {
-        throw new ErroEnvio('conflito', `Você já está de serviço na ${atual.meu_servico.etapa_nome}`)
-      }
-      servicos = [
-        ...servicos,
-        {
-          id: `servico-${proximoServico++}`,
-          etapa_id: etapaId,
-          usuario_id: 'usuario-teste',
-          nome: 'CP TESTE',
-          entrada_em: new Date().toISOString(),
-          saida_em: null,
-          saida_automatica: false,
-          eu: true,
-        },
-      ]
-      return equipeDaEtapa(etapaId)
-    },
-
-    async fazerCheckout() {
-      exigirRede()
-      const aberto = servicos.find((s) => s.eu && s.saida_em === null)
-      if (!aberto) throw new ErroEnvio('nao_encontrado', 'Você não está de serviço')
-      servicos = servicos.map((s) => (s === aberto ? { ...s, saida_em: new Date().toISOString() } : s))
-      return equipeDaEtapa(aberto.etapa_id)
-    },
-
-    async relatorios(): Promise<Relatorios> {
-      const dia = hoje()
-      const etapas: EtapaRelatorio[] = ETAPAS_RELATORIO.map((e) => {
-        const ultimo = boletinsRel.find((b) => b.etapa_slug === e.slug && b.data === dia)
-        return {
-          ...e,
-          hoje: dia,
-          registros_hoje: e.slug === '2a-etapa' ? 4 : 0,
-          boletim_hoje: ultimo
-            ? { id: ultimo.id, numero: ultimo.numero, revisao: ultimo.revisao, emitido_em: ultimo.emitido_em }
-            : null,
-          pedido_hoje: null,
-        }
-      })
-      const boletins = boletinsRel.map((b) => ({
-        ...b,
-        ultima_revisao: !boletinsRel.some((o) => o.etapa_slug === b.etapa_slug && o.data === b.data && o.revisao > b.revisao),
-      }))
-      return { admin: opcoes.admin === true, etapas, boletins }
-    },
-
-    async painelRelatorios(etapaId): Promise<PainelRelatorios> {
-      if (etapaId !== ETAPA_2.id) {
-        return { etapa: { id: etapaId, slug: '', nome: '', hoje: hoje() }, obras: [], dias: [] }
-      }
-      return painelFixture(hoje())
-    },
-
-    async exportarPendencias() {
-      await new Promise((r) => setTimeout(r, 800))
-      return 'https://exemplo.invalid/relatorios/pendencias-exemplo.pdf'
-    },
-
-    async urlPdfBoletim(caminho) {
-      return `https://exemplo.invalid/boletins/${caminho}`
-    },
-
-    async emitirBoletim(slug, data) {
-      exigirRede()
-      if (opcoes.admin !== true) throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem emitir boletins.')
-      const etapa = ETAPAS_RELATORIO.find((e) => e.slug === slug)
-      if (!etapa) throw new ErroEnvio('nao_encontrado', 'Etapa não encontrada.')
-      const doDia = boletinsRel.filter((b) => b.etapa_slug === slug && b.data === data)
-      const revisao = doDia.length === 0 ? 0 : Math.max(...doDia.map((b) => b.revisao)) + 1
-      boletinsRel.push(boletimFixture(etapa, data, revisao, new Date().toISOString()))
-      boletinsRel.sort((a, b) => b.data.localeCompare(a.data) || b.revisao - a.revisao)
-    },
-
-    async excluirBoletim(id): Promise<ResultadoExclusaoBoletim> {
-      exigirRede()
-      if (opcoes.admin !== true) throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem excluir boletins.')
-      const alvo = boletinsRel.find((b) => b.id === id)
-      if (!alvo) throw new ErroEnvio('nao_encontrado', 'Boletim não encontrado.')
-      const dia = boletinsRel.filter((b) => b.etapa_slug === alvo.etapa_slug && b.data === alvo.data)
-      for (const b of dia) boletinsRel.splice(boletinsRel.indexOf(b), 1)
-      return { numero: alvo.numero, data: alvo.data, revisoes: dia.length, mensagens: { apagadas: 1, falhas: 0 }, arquivos_erro: null }
-    },
-
-    async criarLinkAdmin(): Promise<LinkAdmin> {
-      exigirRede()
-      if (opcoes.admin !== true) {
-        throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem abrir a administração.')
-      }
-      const base = typeof location === 'undefined' ? 'http://localhost' : location.origin
-      return {
-        url: `${base}/admin/#entrar=fixture`,
-        expira_em: new Date(Date.now() + 120_000).toISOString(),
-      }
-    },
-
-    async resumoObras(): Promise<ResumoObra[]> {
-      const registros = todos()
-      return OBRAS.map((o) => {
-        const dela = registros.filter((x) => x.obra.id === o.id)
-        return {
-          obra_id: o.id,
-          // No fixture só a HTO tem participação; nas outras o usuário só vê a obra.
-          papel: o.id === ID_HTO ? papelUsuario() : null,
-          servicos: dela.filter((x) => x.tipo === 'servico').length,
-          abertas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'aberta').length,
-          resolvidas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'resolvida').length,
-        }
-      })
-    },
-
-    async listarObras() {
-      return OBRAS.map((o) => ({ ...o, etapa: { ...o.etapa } }))
-    },
-
-    async organizacao(): Promise<Organizacao> {
-      return { nome: NOME_ORGANIZACAO, logo_url: opcoes.logo || null }
-    },
-
-    async obterObra(slug): Promise<ObraDetalhe> {
-      const obra = obraPorSlug(slug)
-      if (obra.id !== ID_HTO) return { obra, papel: 'equipe', pavimentos: [], ambientes: [] }
-      return { obra, papel: papelUsuario(), pavimentos: PAVIMENTOS, ambientes: ambientesComContagem(todos()) }
-    },
-
-    async obterAmbiente(slug, codigo): Promise<AmbienteDetalhe> {
-      const obra = obraPorSlug(slug)
-      const ambiente = ambientesComContagem(todos()).find((a) => a.codigo === codigo)
-      if (obra.id !== ID_HTO || !ambiente) throw new Error('Ambiente não encontrado.')
-      const pavimento = PAVIMENTOS.find((p) => p.codigo === ambiente.pavimento_codigo)!
-      return {
-        obra,
-        ambiente,
-        pavimento,
-        planta: pavimento.planta,
-        detalhe: detalhePlanta(pavimento.codigo, ambiente.codigo),
-      }
-    },
-
-    async listarRegistros(filtro: FiltroRegistros) {
-      let lista = todos()
-        .filter(
-          (x) =>
-            (!filtro.obraId || x.obra.id === filtro.obraId) &&
-            (!filtro.obraSlug || x.obra.slug === filtro.obraSlug) &&
-            (!filtro.ambienteId || x.ambiente.id === filtro.ambienteId) &&
-            (!filtro.ambienteCodigo || x.ambiente.codigo === filtro.ambienteCodigo) &&
-            (!filtro.tipo || x.tipo === filtro.tipo) &&
-            (!filtro.situacao || x.situacao === filtro.situacao) &&
-            (!filtro.etapaId || OBRAS.find((o) => o.id === x.obra.id)?.etapa.id === filtro.etapaId) &&
-            (!filtro.autorId || x.autor === NOME_POR_ID[filtro.autorId]) &&
-            dentroDoPeriodo(x.capturado_em, filtro.de, filtro.ate),
-        )
-        .sort(porRecente)
-      if (filtro.limite) lista = lista.slice(0, filtro.limite)
-      return lista.map((x) => ({ ...x, fotos: x.fotos.map((f) => ({ ...f })) }))
-    },
-
-    async autoresRegistros() {
-      const nomes = new Set(todos().map((x) => x.autor))
-      return Object.entries(NOME_POR_ID)
-        .filter(([, nome]) => nomes.has(nome))
-        .map(([id, nome]) => ({ id, nome }))
-        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-    },
-
-    async urlsImagens(paths, bucket = 'plantas') {
-      return Object.fromEntries(
-        paths.map((p) => {
-          const blob = bucket === 'fotos' ? blobs.get(p) : undefined
-          if (!blob) return [p, urlLocalDaImagem(p)]
-          let url = urlsDosBlobs.get(p)
-          if (!url) {
-            url = URL.createObjectURL(blob)
-            urlsDosBlobs.set(p, url)
-          }
-          return [p, url]
-        }),
-      )
-    },
-
-    async enviarFoto({ obraId, registroId, fotoId }, blob) {
-      exigirRede()
-      for (const [v, nome] of [[obraId, 'obra'], [registroId, 'registro'], [fotoId, 'foto']] as const) {
-        if (!UUID.test(v)) falhaValidacao(`Identificador inválido (${nome}).`)
-      }
-      if (blob.type !== '' && blob.type !== 'image/jpeg') falhaValidacao('A foto deve ser JPEG.')
-      if (blob.size > LIMITE_BLOB) falhaValidacao('A foto é grande demais para ser enviada.')
-      const path = `${obraId}/${registroId}/${fotoId}.jpg`
-      // Como a política fotos_update: foto já vinculada não pode ser sobrescrita.
-      if (vinculada(path)) {
-        throw new ErroEnvio('permissao', 'Sem permissão para enviar esta foto.')
-      }
-      const url = persistencia ? await blobParaDataUrl(blob) : null
-      blobs.set(path, blob)
-      if (url) {
-        dataUrls.set(path, url)
-        persistir()
-      }
-    },
-
-    async obrasDisponiveis(): Promise<ObraDisponivel[]> {
-      return [
-        {
-          ...OBRA_DEMONSTRACAO,
-          solicitacao: pedidos[ID_DEMONSTRACAO] ?? null,
-          etapa_id: ETAPA_2.id,
-          etapa_nome: ETAPA_2.nome,
-          etapa_ordem: ETAPA_2.ordem,
-        },
-      ]
-    },
-
-    async solicitarAcesso(obraId) {
-      exigirRede()
-      if (obraId !== ID_DEMONSTRACAO) {
-        throw new ErroEnvio('permissao', 'Entre no grupo da obra no Telegram para pedir acesso.')
-      }
-      pedidos[obraId] = 'pendente'
-      persistir()
-    },
-
-    async listarSolicitacoes(obraId) {
-      if (obraId !== ID_HTO) {
-        throw new ErroEnvio('permissao', 'Só gestores da obra veem os pedidos de acesso.')
-      }
-      return decisoes[ID_PEDIDO_MARIA] ? [] : [{ ...PEDIDO_MARIA }]
-    },
-
-    async decidirSolicitacao(id, aprovar) {
-      exigirRede()
-      if (id !== ID_PEDIDO_MARIA) throw new ErroEnvio('nao_encontrado', 'Pedido não encontrado.')
-      const nova = aprovar ? 'aprovada' : 'recusada'
-      const atual = decisoes[id]
-      if (atual && atual !== nova) throw new ErroEnvio('conflito', 'Pedido já decidido.')
-      decisoes[id] = nova
-      if (aprovar) (acessosFora[ID_HTO] ??= {})[PEDIDO_MARIA.usuario_id] ??= 'equipe'
-      persistir()
-    },
-
-    async matrizAcessos(): Promise<MatrizAcessos> {
-      if (papelUsuario() !== 'gestor' && opcoes.admin !== true) {
-        throw new ErroEnvio('permissao', 'Só gestores veem a lista de acessos.')
-      }
-      const nomes: Record<string, { nome: string; username: string | null }> = {
-        ...outrasPessoas,
-        ...Object.fromEntries(PARTICIPANTES_BASE.map((p) => [p.usuario_id, { nome: p.nome, username: p.username }])),
-      }
-      const pedidoMaria = decisoes[ID_PEDIDO_MARIA] ? [] : [ID_HTO]
-      const pessoas = Object.entries(nomes).map(([id, n]) => {
-        const acessos: Record<string, 'equipe' | 'gestor'> = {}
-        for (const o of OBRAS) {
-          const papel = papelNaObra(o.id, id)
-          if (papel !== 'nenhum') acessos[o.id] = papel
-        }
-        return {
-          id,
-          nome: n.nome,
-          username: n.username,
-          admin: adminsDoGrupo.includes(id),
-          vistoEm: '2026-11-15T14:00:00Z',
-          acessos,
-          pedidos: id === PEDIDO_MARIA.usuario_id ? pedidoMaria : [],
-        }
-      })
-      pessoas.sort(
-        (a, b) =>
-          Number(b.pedidos.length > 0) - Number(a.pedidos.length > 0) ||
-          a.nome.localeCompare(b.nome, 'pt-BR') ||
-          a.id.localeCompare(b.id),
-      )
-      return { obras: OBRAS.map((o) => ({ id: o.id, slug: o.slug, nome: o.nome })), pessoas }
-    },
-
-    async definirAcesso(obraId, usuarioId, papel: PapelAcesso) {
-      exigirRede()
-      if (papelUsuario() !== 'gestor' && opcoes.admin !== true) {
-        throw new ErroEnvio('permissao', 'Só gestores alteram acessos.')
-      }
-      if (papel !== 'nenhum' && papel !== 'equipe' && papel !== 'gestor') falhaValidacao('Acesso inválido.')
-      if (!OBRAS.some((o) => o.id === obraId)) throw new ErroEnvio('nao_encontrado', 'Obra não encontrada.')
-      if (adminsDoGrupo.includes(usuarioId) && papel !== 'gestor') {
-        falhaValidacao('Administradores do grupo são gestores de todas as obras.')
-      }
-      const atual = papelNaObra(obraId, usuarioId)
-      if (atual === 'gestor' && papel !== 'gestor') {
-        const gestores = [...PARTICIPANTES_BASE.map((p) => p.usuario_id), ...Object.keys(outrasPessoas)].filter(
-          (id) => id !== usuarioId && papelNaObra(obraId, id) === 'gestor',
-        )
-        if (gestores.length === 0) falhaValidacao('A obra precisa de pelo menos um gestor.')
-      }
-      const base = obraId === ID_HTO && PARTICIPANTES_BASE.some((p) => p.usuario_id === usuarioId)
-      if (base) {
-        const i = removidos.indexOf(usuarioId)
-        if (papel === 'nenhum') {
-          if (i < 0) removidos.push(usuarioId)
-        } else {
-          if (i >= 0) removidos.splice(i, 1)
-          papeis[usuarioId] = papel
-        }
-      } else {
-        const tabela = (acessosFora[obraId] ??= {})
-        if (papel === 'nenhum') delete tabela[usuarioId]
-        else tabela[usuarioId] = papel
-      }
-      if (obraId === ID_HTO && usuarioId === PEDIDO_MARIA.usuario_id) {
-        decisoes[ID_PEDIDO_MARIA] ??= papel === 'nenhum' ? 'recusada' : 'aprovada'
-      }
-      persistir()
-    },
-
-    async obterPendencia(id): Promise<PendenciaDetalhe | null> {
-      const registro = todos().find((x) => x.id === id && x.tipo === 'pendencia')
-      if (!registro) return null
-      const amb = AMBIENTES_BASE.find((a) => a.id === registro.ambiente.id)!
-      const pav = PAVIMENTOS.find((p) => p.codigo === amb.pavimento_codigo)!
-      const enc = encerramentoDe(id)
-      return {
-        registro: { ...registro, fotos: registro.fotos.map((f) => ({ ...f })) },
-        pavimento: { codigo: pav.codigo, nome: pav.nome },
-        papel: papelUsuario(),
-        encerramento: enc
-          ? {
-              id: enc.id,
-              observacao: enc.observacao,
-              encerrado_em: enc.encerrado_em,
-              gestor: enc.gestor,
-              fotos: enc.fotos.map((f) => ({ ...f })),
-              publicacao: enc.publicacao,
-            }
-          : null,
-      }
-    },
-
-    async encerrarPendencia(d: NovoEncerramento) {
-      exigirRede()
-      if (!UUID.test(d.id) || !UUID.test(d.registroId)) falhaValidacao('Identificadores obrigatórios')
-      const registro = todos().find((x) => x.id === d.registroId && x.tipo === 'pendencia')
-      if (!registro) throw new ErroEnvio('nao_encontrado', 'Pendência não encontrada.')
-      // Qualquer participante da obra (equipe ou gestor) encerra; no fixture só a HTO tem participação.
-      if (registro.obra.id !== ID_HTO) throw new ErroEnvio('permissao', 'Você não participa desta obra.')
-
-      const existente = todosEncerramentos().find((e) => e.id === d.id)
-      if (existente) {
-        if (existente.registro_id === d.registroId) return { id: existente.id }
-        throw new ErroEnvio('conflito', 'encerramento_id em uso')
-      }
-      if (registro.situacao === 'resolvida') {
-        throw new ErroEnvio('conflito', 'Esta pendência já foi encerrada.')
-      }
-      const observacao = (d.observacao ?? '').replace(/^\s+|\s+$/g, '')
-      if (observacao.length > 1000) falhaValidacao('A observação deve ter até 1000 caracteres')
-      if (!Array.isArray(d.fotos) || d.fotos.length < 1 || d.fotos.length > 10) {
-        falhaValidacao('Envie de 1 a 10 fotos')
-      }
-      const vistos = new Set<string>()
-      d.fotos.forEach((f, i) => {
-        if (typeof f.id !== 'string' || !UUID.test(f.id)) {
-          falhaValidacao(`Foto ${i + 1} com identificador inválido`)
-        }
-        const chave = f.id.toLowerCase()
-        if (vistos.has(chave)) falhaValidacao('Identificador de foto repetido')
-        vistos.add(chave)
-        for (const campo of ['largura', 'altura', 'bytes'] as const) {
-          if (!inteiroPositivo(f[campo])) {
-            falhaValidacao(`Foto ${i + 1}: ${campo} deve ser um inteiro positivo`)
-          }
-        }
-      })
-      const fotos: FotoRegistro[] = d.fotos.map((f) => ({
-        id: f.id,
-        path: `${registro.obra.id}/${d.registroId}/${f.id}.jpg`,
-        largura: f.largura,
-        altura: f.altura,
-      }))
-      for (const f of fotos) {
-        if (!blobs.has(f.path)) {
-          falhaValidacao(`Foto ${f.id} ainda não foi enviada ao armazenamento`)
-        }
-      }
-      novosEncerramentos.push({
-        id: d.id,
-        registro_id: d.registroId,
-        observacao: observacao || null,
-        encerrado_em: new Date().toISOString(),
-        gestor: AUTOR_FIXTURE,
-        fotos,
-        publicacao: 'pendente',
-      })
-      persistir()
-      return { id: d.id }
-    },
-
-    async listarParticipantes(obraId) {
-      exigirGestor(obraId)
-      return participantesAtuais().sort(
-        (a, b) =>
-          Number(b.papel === 'gestor') - Number(a.papel === 'gestor') ||
-          a.nome.localeCompare(b.nome, 'pt-BR'),
-      )
-    },
-
-    async definirPapel(obraId, usuarioId, papel) {
-      exigirRede()
-      exigirGestor(obraId)
-      if (papel !== 'equipe' && papel !== 'gestor') falhaValidacao('Papel inválido')
-      const atual = participantesAtuais().find((p) => p.usuario_id === usuarioId)
-      if (!atual) throw new ErroEnvio('nao_encontrado', 'Participante não encontrado.')
-      if (atual.papel === 'gestor' && papel === 'equipe') exigirOutroGestor(usuarioId)
-      papeis[usuarioId] = papel
-      persistir()
-    },
-
-    async removerParticipante(obraId, usuarioId) {
-      exigirRede()
-      exigirGestor(obraId)
-      const atual = participantesAtuais().find((p) => p.usuario_id === usuarioId)
-      if (!atual) throw new ErroEnvio('nao_encontrado', 'Participante não encontrado.')
-      if (atual.papel === 'gestor') exigirOutroGestor(usuarioId)
-      removidos.push(usuarioId)
-      persistir()
-    },
-
-    async listarPublicacoesProblema(obraId) {
-      exigirGestor(obraId)
-      return PUBLICACOES_BASE.map((p) => publicacaoProblema(p.id))
-        .filter((p) => p.estado === 'incerto' || p.estado === 'falhou')
-        .sort((a, b) => b.atualizado_em.localeCompare(a.atualizado_em))
-    },
-
-    async republicar(id) {
-      exigirRede()
-      const p = publicacaoProblema(id)
-      exigirGestor(ID_HTO)
-      if (p.estado !== 'incerto' && p.estado !== 'falhou') {
-        falhaValidacao('Só publicações incertas ou com falha podem ser reenviadas.')
-      }
-      publicacoes[String(id)] = 'pendente'
-      persistir()
-    },
-
-    async marcarPublicada(id) {
-      exigirRede()
-      const p = publicacaoProblema(id)
-      exigirGestor(ID_HTO)
-      if (p.estado !== 'incerto' && p.estado !== 'falhou') {
-        falhaValidacao('Só publicações incertas ou com falha podem ser marcadas como publicadas.')
-      }
-      publicacoes[String(id)] = 'publicado'
-      persistir()
-    },
-
-    async localizarRegistro(id): Promise<RegistroLocalizado | null> {
-      const reg = todos().find((x) => x.id === id)
-      return reg ? { slug: reg.obra.slug, codigo: reg.ambiente.codigo, tipo: reg.tipo } : null
-    },
-
-    async observacoesDoDia(obraId): Promise<ObservacoesDoDia> {
-      exigirObra(obraId)
-      const data = hoje()
-      return {
-        data,
-        fuso: FUSO_FIXTURE,
-        travada: diaTravado(data),
-        observacoes: observacoes
-          .filter((o) => o.obraId === obraId && o.data === data)
-          .sort((a, b) => a.escrito_em.localeCompare(b.escrito_em) || a.id.localeCompare(b.id))
-          .map(observacaoPublica),
-      }
-    },
-
-    async salvarObservacao(d: NovaObservacao) {
-      exigirRede()
-      if (typeof d.id !== 'string' || !UUID.test(d.id)) falhaValidacao('Identificador da observação inválido')
-      const texto = String(d.texto ?? '').replace(/^\s+|\s+$/g, '')
-      if (texto.length < 1 || texto.length > 1000) {
-        falhaValidacao('A observação deve ter de 1 a 1000 caracteres')
-      }
-      const existente = observacoes.find((o) => o.id === d.id)
-      if (!existente) {
-        exigirObra(d.obraId)
-        const escrito = Date.parse(d.escritoEm)
-        if (Number.isNaN(escrito)) falhaValidacao('Data e hora da observação inválidas')
-        if (escrito > Date.now() + 5 * 60_000) {
-          falhaValidacao('A hora da observação está no futuro; confira o relógio do aparelho')
-        }
-        const data = dataNoFuso(new Date(escrito), FUSO_FIXTURE)
-        exigirDiaAberto(data)
-        const nova: ObservacaoSalva = {
-          id: d.id,
-          obraId: d.obraId,
-          autorId: ID_USUARIO,
-          autorNome: AUTOR_FIXTURE,
-          data,
-          texto,
-          escrito_em: new Date(escrito).toISOString(),
-          editado_em: null,
-        }
-        observacoes.push(nova)
-        persistir()
-        return observacaoPublica(nova)
-      }
-      if (existente.autorId !== ID_USUARIO) throw new ErroEnvio('permissao', MENSAGEM_SO_AUTOR)
-      if (existente.texto === texto) return observacaoPublica(existente) // reenvio idempotente
-      exigirDiaAberto(existente.data)
-      existente.texto = texto
-      existente.editado_em = new Date().toISOString()
-      persistir()
-      return observacaoPublica(existente)
-    },
-
-    async excluirObservacao(id) {
-      exigirRede()
-      const i = observacoes.findIndex((o) => o.id === id)
-      if (i < 0) return
-      if (observacoes[i].autorId !== ID_USUARIO) throw new ErroEnvio('permissao', MENSAGEM_SO_AUTOR)
-      exigirDiaAberto(observacoes[i].data)
-      observacoes.splice(i, 1)
-      persistir()
-    },
-
-    async concluirRegistro(d: NovoRegistro) {
-      exigirRede()
-      const amb = AMBIENTES_BASE.find((a) => a.id === d.ambienteId)
-      if (!UUID.test(d.id) || !d.ambienteId) falhaValidacao('Identificadores obrigatórios')
-      if (!amb) throw new ErroEnvio('nao_encontrado', 'Ambiente não encontrado')
-
-      const existente = novos.find((n) => n.id === d.id)
-      if (existente) {
-        if (existente.ambiente.id === d.ambienteId) return { id: existente.id }
-        throw new ErroEnvio('conflito', 'registro_id em uso')
-      }
-
-      if (d.tipo !== 'servico' && d.tipo !== 'pendencia') falhaValidacao('Tipo de registro inválido')
-      const legenda = (d.legenda ?? '').replace(/^\s+|\s+$/g, '')
-      if (legenda.length < 1 || legenda.length > 1000) {
-        falhaValidacao('A legenda deve ter de 1 a 1000 caracteres')
-      }
-      const capturado = Date.parse(d.capturadoEm)
-      if (Number.isNaN(capturado) || capturado > Date.now() + 5 * 60_000) {
-        falhaValidacao('Data de captura inválida')
-      }
-
-      if (!Array.isArray(d.fotos) || d.fotos.length < 1 || d.fotos.length > 10) {
-        falhaValidacao('Envie de 1 a 10 fotos')
-      }
-      const vistos = new Set<string>()
-      d.fotos.forEach((f, i) => {
-        if (typeof f.id !== 'string' || !UUID.test(f.id)) {
-          falhaValidacao(`Foto ${i + 1} com identificador inválido`)
-        }
-        const chave = f.id.toLowerCase()
-        if (vistos.has(chave)) falhaValidacao('Identificador de foto repetido')
-        vistos.add(chave)
-        for (const campo of ['largura', 'altura', 'bytes'] as const) {
-          if (!inteiroPositivo(f[campo])) {
-            falhaValidacao(`Foto ${i + 1}: ${campo} deve ser um inteiro positivo`)
-          }
-        }
-      })
-      const fotos: FotoRegistro[] = d.fotos.map((f) => ({
-        id: f.id,
-        path: `${ID_HTO}/${d.id}/${f.id}.jpg`,
-        largura: f.largura,
-        altura: f.altura,
-        ...(f.origem ? { origem: f.origem } : {}),
-      }))
-      for (const f of fotos) {
-        if (!blobs.has(f.path)) {
-          falhaValidacao(`Foto ${f.id} ainda não foi enviada ao armazenamento`)
-        }
-      }
-
-      const agora = new Date().toISOString()
-      novos.push({
-        id: d.id,
-        tipo: d.tipo,
-        situacao: d.tipo === 'pendencia' ? 'aberta' : null,
-        legenda,
-        autor: AUTOR_FIXTURE,
-        capturado_em: new Date(capturado).toISOString(),
-        recebido_em: agora,
-        ambiente: { id: amb.id, codigo: amb.codigo, nome: amb.nome_operacional },
-        obra: { id: ID_HTO, slug: 'hto', nome: 'HTO' },
-        fotos,
-        publicacao: 'pendente',
-      })
-      persistir()
-      return { id: d.id }
-    },
+    listarModelos: modelos.listarModelos,
+    baixarModelo: modelos.baixarModelo,
+    obterGeometria: ra.obterGeometria,
+    idUsuario: sessao.idUsuario,
+    souAdmin: sessao.souAdmin,
+    criarLinkAdmin: sessao.criarLinkAdmin,
+    equipeServico: equipe.equipeServico,
+    fazerCheckin: equipe.fazerCheckin,
+    fazerCheckout: equipe.fazerCheckout,
+    listarObras: obras.listarObras,
+    resumoObras: obras.resumoObras,
+    obterObra: obras.obterObra,
+    obterAmbiente: obras.obterAmbiente,
+    organizacao: organizacao.organizacao,
+    etapasInicio: etapasInicio.etapasInicio,
+    obrasDisponiveis: acessos.obrasDisponiveis,
+    solicitarAcesso: acessos.solicitarAcesso,
+    listarSolicitacoes: acessos.listarSolicitacoes,
+    decidirSolicitacao: acessos.decidirSolicitacao,
+    matrizAcessos: acessos.matrizAcessos,
+    definirAcesso: acessos.definirAcesso,
+    listarParticipantes: acessos.listarParticipantes,
+    definirPapel: acessos.definirPapel,
+    removerParticipante: acessos.removerParticipante,
+    listarRegistros: registros.listarRegistros,
+    autoresRegistros: registros.autoresRegistros,
+    urlsImagens: registros.urlsImagens,
+    enviarFoto: registros.enviarFoto,
+    concluirRegistro: registros.concluirRegistro,
+    obterPendencia: registros.obterPendencia,
+    encerrarPendencia: registros.encerrarPendencia,
+    localizarRegistro: registros.localizarRegistro,
+    listarPublicacoesProblema: publicacoesRepo.listarPublicacoesProblema,
+    republicar: publicacoesRepo.republicar,
+    marcarPublicada: publicacoesRepo.marcarPublicada,
+    relatorios: relatoriosRepo.relatorios,
+    painelRelatorios: relatoriosRepo.painelRelatorios,
+    exportarPendencias: relatoriosRepo.exportarPendencias,
+    urlPdfBoletim: relatoriosRepo.urlPdfBoletim,
+    emitirBoletim: relatoriosRepo.emitirBoletim,
+    excluirBoletim: relatoriosRepo.excluirBoletim,
+    observacoesDoDia: observacoesRepo.observacoesDoDia,
+    salvarObservacao: observacoesRepo.salvarObservacao,
+    excluirObservacao: observacoesRepo.excluirObservacao,
   }
 }

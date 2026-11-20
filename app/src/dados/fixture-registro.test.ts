@@ -1,7 +1,7 @@
+import type { NovoRegistro } from '@modules/fiscalizacao/domain/tipos.ts'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { enviarRegistro, criarRascunho } from './envio.ts'
+import { enviarRegistro, criarRascunho } from '@modules/fiscalizacao/application/use-cases/envio.ts'
 import { criarRepositorioFixture } from './fixture.ts'
-import type { NovoRegistro } from './tipos.ts'
 
 const OBRA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 const AMB_ID = async (repo: ReturnType<typeof criarRepositorioFixture>) =>

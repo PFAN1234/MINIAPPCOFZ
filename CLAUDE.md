@@ -14,7 +14,7 @@
 
 - Textos, commits e documentação em português do Brasil.
 - Plano de implementação: `tasks/plano-app.md`; checklist: `tasks/todo.md`. O visualizador do modelo federado é a última fase.
-- Originais em `DOCS HTO/` são apenas lidos; os IFCs não ficam no Git.
+- Originais em `obras/hto/` são apenas lidos; os IFCs não ficam no Git.
 - Dados da HTO: `scripts/extrair_ambientes.py` e `scripts/gerar_plantas.py` (ver `scripts/README.md`).
 
 ## Economia de tokens

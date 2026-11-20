@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router'
 import { useOrganizacao } from '../dados/hooks.ts'
-import { useBackButtonTelegram } from '../telegramBack.ts'
-import { BarraSincronizacao } from './BarraSincronizacao.tsx'
-import { BarraInferior } from './BarraInferior.tsx'
-import { FaixaDoTopo } from './faixaDoTopo.ts'
-import { OrganizacaoContexto } from './identidade.ts'
-import { TelaCheiaContexto } from './telaCheia.ts'
+import { useBackButtonTelegram } from '../shared/infra/telegram/telegramBack.ts'
+import { BarraSincronizacao } from '@modules/operacao/presentation/miniapp/BarraSincronizacao.tsx'
+import { BarraInferior } from '../shared/ui/layout/BarraInferior.tsx'
+import { FaixaDoTopo } from '../shared/ui/layout/faixaDoTopo.ts'
+import { OrganizacaoContexto } from '../shared/ui/layout/identidade.ts'
+import { TelaCheiaContexto } from '../shared/infra/browser/telaCheia.ts'
 
 /**
  * Moldura das telas. Cada tela desenha o próprio topo (`TopoTela`), com a faixa de identidade

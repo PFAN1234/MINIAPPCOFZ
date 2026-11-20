@@ -66,7 +66,7 @@ Decisões da implementação (2026-11-11):
 
 Documentação: `docs/admin.md`, "Planta (fase 2)".
 
-1. [x] Porta para TypeScript (`app/src/admin/planta/`) de `extrair_ambientes.py` (pareamento nome ↔ `A=xx m²`, nomes fixos, numeração de repetidos, rótulos duplos, ambientes manuais, base anterior, `manter_codigo`, `diferencas`) e de `gerar_plantas.py` (recorte, máscaras, visão geral, HD, recortes por ambiente, prova).
+1. [x] Porta para TypeScript (`app/src/modules/plantas/domain/`) de `extrair_ambientes.py` (pareamento nome ↔ `A=xx m²`, nomes fixos, numeração de repetidos, rótulos duplos, ambientes manuais, base anterior, `manter_codigo`, `diferencas`) e de `gerar_plantas.py` (recorte, máscaras, visão geral, HD, recortes por ambiente, prova).
 2. [x] Testes de paridade: HTO e COFZ dão os mesmos ambientes, códigos e pinos (desvio de 1·10⁻⁶) e os mesmos recortes e tamanhos (0,002 pt, 0 px) que os JSON gerados pelo Python.
 3. [x] Editor: desenhar recorte e máscaras sobre a prancha, arrastar pinos, renomear e categorizar, incluir ambiente sem rótulo, revisar repetidos; tela de nova revisão com novos, removidos, renomeados sugeridos (confirmar = `manter_codigo`).
 4. [x] Publicar: PDF em `originais`, imagens em `plantas` e `admin_publicar_revisao`; histórico em `publicacao_planta`; status da obra (`aguardando_revisao_humana` → `revisado`).

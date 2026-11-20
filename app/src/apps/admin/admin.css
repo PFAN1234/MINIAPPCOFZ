@@ -1,0 +1,1309 @@
+/* Site de administração: layout para computador, sempre claro (cores de estilo/tokens.css). */
+@import '../../shared/ui/estilo/tokens.css';
+@import '../../shared/ui/estilo/fontes.css';
+
+/* Apelidos dos nomes antigos durante a migração para estilo/tokens.css (saem na V5). */
+:root {
+  --adm-bg: var(--fundo);
+  --adm-superficie: var(--superficie);
+  --adm-texto: var(--texto);
+  --adm-suave: var(--texto-suave);
+  --adm-borda: var(--borda);
+  --adm-destaque: var(--destaque);
+  --adm-destaque-texto: var(--destaque-texto);
+  --adm-erro: var(--erro);
+  --adm-erro-bg: color-mix(in srgb, var(--erro) 8%, var(--superficie));
+  --adm-ok: var(--ok);
+  --adm-ok-bg: color-mix(in srgb, var(--ok) 6%, var(--superficie));
+  --adm-info-bg: color-mix(in srgb, var(--servico) 8%, var(--superficie));
+  font-family: var(--fonte-texto);
+  line-height: 1.45;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--adm-bg);
+  color: var(--adm-texto);
+}
+
+a {
+  color: var(--link);
+}
+
+:focus-visible {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+.adm-marca {
+  font-family: var(--fonte-titulo);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 16px;
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin: 0 0 12px;
+}
+
+.adm-topo {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 32px;
+  color: var(--texto-no-azul);
+  background: var(--azul);
+  border-bottom: 1px solid var(--azul-borda);
+}
+
+/* Sobre o azul, o anel de foco azul some: usa o amarelo. */
+.adm-topo :focus-visible {
+  outline-color: var(--destaque);
+}
+
+.adm-topo .adm-botao {
+  color: var(--texto-no-azul);
+  border-color: var(--azul-borda);
+}
+
+.adm-marca {
+  font-weight: 600;
+}
+
+.adm-nav {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+}
+
+.adm-nav a {
+  text-decoration: none;
+  color: var(--texto-suave-no-azul);
+  padding: 4px 2px;
+  border-bottom: 2px solid transparent;
+}
+
+.adm-nav a.active {
+  color: var(--texto-no-azul);
+  border-bottom-color: var(--destaque);
+}
+
+.adm-usuario {
+  color: var(--texto-suave-no-azul);
+}
+
+.adm-conteudo {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.adm-entrada {
+  max-width: 560px;
+  margin: 10vh auto;
+  padding: 32px;
+  background: var(--adm-superficie);
+  border: 1px solid var(--adm-borda);
+  border-radius: 12px;
+}
+
+.adm-widget {
+  margin: 20px 0;
+  min-height: 40px;
+}
+
+.adm-estado {
+  padding: 32px;
+  color: var(--adm-suave);
+  text-align: center;
+}
+
+.adm-secao {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--adm-superficie);
+  border: 1px solid var(--adm-borda);
+  border-radius: 12px;
+}
+
+.adm-titulo-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.adm-titulo-linha h1 {
+  margin: 0;
+}
+
+.adm-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--adm-superficie);
+}
+
+.adm-tabela th,
+.adm-tabela td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--adm-borda);
+  vertical-align: middle;
+}
+
+.adm-tabela th {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--adm-suave);
+}
+
+.adm-num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.adm-form {
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+}
+
+.adm-form label,
+.adm-campo {
+  display: grid;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.adm-campo {
+  max-width: 420px;
+  margin-bottom: 16px;
+}
+
+input,
+select {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--adm-borda);
+  border-radius: 6px;
+  background: var(--adm-superficie);
+  color: var(--adm-texto);
+  width: 100%;
+}
+
+input:disabled {
+  opacity: 0.7;
+}
+
+.adm-input-curto {
+  width: 6em;
+}
+
+.adm-pares {
+  border: 1px solid var(--adm-borda);
+  border-radius: 8px;
+  padding: 12px 16px 16px;
+  margin: 0 0 16px;
+}
+
+.adm-pares legend {
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.adm-pares .adm-tabela {
+  margin-bottom: 10px;
+}
+
+.adm-acoes {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+td.adm-acoes {
+  margin: 0;
+}
+
+a.adm-botao {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Filtros da aba Boletins */
+.adm-filtros {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: end;
+  margin: 12px 0;
+}
+
+.adm-botao {
+  display: inline-block;
+  font: inherit;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--adm-borda);
+  background: var(--adm-superficie);
+  color: var(--adm-texto);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.adm-botao:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.adm-botao-principal {
+  background: var(--adm-destaque);
+  border-color: var(--adm-destaque);
+  color: var(--adm-destaque-texto);
+}
+
+.adm-botao-perigo {
+  background: var(--adm-erro);
+  border-color: var(--adm-erro);
+  color: #ffffff;
+}
+
+.adm-botao-discreto {
+  background: transparent;
+}
+
+.adm-dica {
+  color: var(--adm-suave);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.adm-alerta {
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.adm-alerta p {
+  margin: 0 0 8px;
+}
+
+.adm-alerta-erro {
+  color: var(--adm-erro);
+  background: var(--adm-erro-bg);
+}
+
+.adm-alerta-ok {
+  color: var(--adm-ok);
+  background: var(--adm-ok-bg);
+}
+
+.adm-alerta-info {
+  background: var(--adm-info-bg);
+}
+
+.adm-selo {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  border: 1px solid var(--adm-borda);
+}
+
+.adm-selo-revisado {
+  color: #fff;
+  background: var(--ok);
+  border-color: transparent;
+}
+
+.adm-selo-aguardando_revisao_humana {
+  color: var(--incerto);
+  border-color: currentColor;
+}
+
+.adm-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Select ao lado do botão (ex.: Incluir admin): sem a margem de baixo do campo. */
+.adm-acoes .adm-campo {
+  margin-bottom: 0;
+}
+
+.adm-opcao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 400;
+}
+
+.adm-opcao input,
+.adm-opcao select {
+  width: auto;
+}
+
+.adm-acoes-fim {
+  justify-content: flex-end;
+}
+
+.adm-lista-limpa {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.adm-alerta-aviso {
+  background: color-mix(in srgb, var(--destaque) 14%, var(--superficie));
+  color: var(--incerto);
+}
+
+.adm-alerta ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
+/* --- Editor de planta --------------------------------------------------------------------- */
+
+.adm-conteudo:has(.adm-editor) {
+  max-width: 1680px;
+}
+
+.adm-etapas ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+
+.adm-etapa {
+  font: inherit;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--adm-borda);
+  background: var(--adm-superficie);
+  color: var(--adm-texto);
+  cursor: pointer;
+}
+
+.adm-etapa:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.adm-etapa-atual {
+  background: var(--adm-destaque);
+  border-color: var(--adm-destaque);
+  color: var(--adm-destaque-texto);
+}
+
+.adm-editor section {
+  margin-bottom: 16px;
+}
+
+.adm-prancha {
+  position: relative;
+  border: 1px solid var(--adm-borda);
+  background: var(--superficie);
+  min-height: 120px;
+  margin: 12px 0;
+}
+
+.adm-prancha img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.adm-sobreposicao {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.adm-ret-recorte {
+  fill: color-mix(in srgb, var(--servico) 6%, transparent);
+  stroke: var(--servico);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+  cursor: move;
+}
+
+.adm-ret-mascara {
+  fill: color-mix(in srgb, var(--superficie) 75%, transparent);
+  stroke: var(--erro);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  cursor: move;
+}
+
+.adm-ret-sel {
+  stroke-width: 4;
+}
+
+.adm-alca {
+  fill: var(--superficie);
+  stroke: var(--azul);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  cursor: nwse-resize;
+}
+
+.adm-tabela-compacta th,
+.adm-tabela-compacta td {
+  padding: 4px 6px;
+}
+
+.adm-linha-sel {
+  background: var(--adm-info-bg);
+}
+
+.adm-linha-revisar td:first-child {
+  box-shadow: inset 3px 0 0 var(--incerto);
+}
+
+.adm-selo-revisar {
+  color: var(--incerto);
+  border-color: currentColor;
+  margin-left: 6px;
+}
+
+.adm-codigo {
+  display: block;
+  color: var(--adm-suave);
+  font-size: 0.75rem;
+}
+
+.adm-botao-mini {
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  margin-left: 4px;
+}
+
+.adm-editor-ambientes {
+  display: grid;
+  grid-template-columns: minmax(560px, 6fr) 6fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.adm-editor-tabela {
+  max-height: 78vh;
+  overflow: auto;
+}
+
+.adm-editor-planta {
+  position: sticky;
+  top: 8px;
+}
+
+.adm-rolagem {
+  overflow: auto;
+  max-height: 72vh;
+  border: 1px solid var(--adm-borda);
+}
+
+.adm-rolagem .adm-prancha {
+  margin: 0;
+  border: 0;
+}
+
+.adm-area-planta {
+  position: relative;
+}
+
+.adm-aviso-flutuante {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 10px;
+  max-width: calc(100% - 16px);
+  border: 1px solid var(--adm-borda);
+  border-radius: 6px;
+  background: var(--adm-superficie);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+}
+
+.adm-cursor-mira {
+  cursor: crosshair;
+}
+
+.adm-pino {
+  fill: var(--destaque);
+  stroke: var(--azul);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  cursor: grab;
+}
+
+.adm-pino-miolo {
+  fill: var(--superficie);
+  stroke: none;
+}
+
+.adm-pino-sel {
+  fill: var(--servico);
+}
+
+.adm-pino-novo {
+  fill: var(--ok);
+}
+
+.adm-novo-ambiente {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid var(--adm-borda);
+  border-radius: 8px;
+  background: var(--adm-superficie);
+}
+
+.adm-removido {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--adm-borda);
+}
+
+.adm-prova img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.adm-progresso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.adm-progresso progress {
+  width: 320px;
+}
+
+.adm-editor-tabela select {
+  width: auto;
+  min-width: 9.5em;
+}
+
+.adm-editor-tabela input {
+  min-width: 11em;
+}
+
+/* Arquivar ou excluir obra (fim da página da obra). */
+.adm-secao-perigo {
+  border-top: 2px solid var(--adm-erro);
+}
+
+.adm-bloco + .adm-bloco {
+  margin-top: 20px;
+}
+
+.adm-bloco h3 {
+  margin: 12px 0 4px;
+  font-size: 1rem;
+}
+
+.adm-selo-arquivada {
+  background: var(--adm-borda);
+  color: var(--adm-texto);
+}
+
+.adm-linha-arquivada td {
+  color: var(--adm-suave);
+}
+
+/* --- Identidade da OM (barra do topo e tela de entrada) ----------------------------------- */
+
+.adm-marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.adm-logo {
+  height: 28px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  display: block;
+}
+
+.adm-nome-om {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.adm-nome-om + .adm-nome-app {
+  padding-left: 10px;
+  border-left: 1px solid var(--azul-borda);
+  font-weight: 500;
+  color: var(--texto-suave-no-azul);
+}
+
+.adm-marca-grande {
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+}
+
+.adm-marca-grande .adm-logo {
+  height: 48px;
+}
+
+/* --- Etapas ------------------------------------------------------------------------------- */
+
+.adm-cartao-etapa .adm-titulo-linha {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.adm-cartao-etapa h2 {
+  margin-bottom: 4px;
+}
+
+.adm-cartao-etapa h2 a {
+  color: inherit;
+}
+
+.adm-meta-etapa {
+  margin: 0;
+}
+
+.adm-acoes-topo {
+  margin-top: 0;
+  flex-wrap: nowrap;
+}
+
+.adm-passos {
+  margin: 8px 0 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+}
+
+.adm-comando {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--adm-info-bg);
+  border: 1px solid var(--adm-borda);
+  user-select: all;
+}
+
+.adm-etapa-da-obra {
+  margin: -8px 0 16px;
+  color: var(--adm-suave);
+}
+
+.adm-alerta .adm-alerta-subtitulo {
+  margin-top: 10px;
+}
+
+/* --- Organização -------------------------------------------------------------------------- */
+
+.adm-form.adm-form-org {
+  max-width: 720px;
+}
+
+.adm-logo-linha {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.adm-logo-linha .adm-dica {
+  margin: 0 0 8px;
+}
+
+/* Flex (e não grid): com grid, o max-height em % da imagem não tinha altura definida para se
+   apoiar e um logo alto vazava da caixa. */
+.adm-logo-previa {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 200px;
+  height: 120px;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px dashed var(--adm-borda);
+  border-radius: 8px;
+  background: var(--azul);
+}
+
+.adm-logo-previa img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
+}
+
+.adm-logo-previa .adm-dica {
+  color: var(--texto-suave-no-azul);
+  margin: 0;
+}
+
+/* O input de arquivo fica oculto dentro do rótulo com cara de botão: o foco aparece no rótulo. */
+.adm-form label.adm-botao-arquivo {
+  display: inline-block;
+  font-weight: 400;
+}
+
+.adm-botao-arquivo:focus-within {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* Campo com a dica fora do rótulo (a dica entra por aria-describedby). */
+.adm-campo-com-dica {
+  display: grid;
+  gap: 4px;
+}
+
+/* Realidade aumentada (QR): desenho do ambiente e folha A4 de impressão. */
+.ra-ambiente {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.ra-desenho {
+  width: 100%;
+  max-height: 70vh;
+  background: var(--adm-superficie);
+  border: 1px solid var(--adm-borda);
+  border-radius: 8px;
+}
+
+.ra-planta-comodo {
+  fill: var(--adm-info-bg);
+  fill-opacity: 0.45;
+  stroke: var(--adm-destaque);
+  stroke-linejoin: round;
+}
+
+.ra-piso {
+  fill: var(--adm-info-bg);
+  stroke: var(--adm-texto);
+  stroke-width: 0.04;
+  stroke-linejoin: round;
+}
+
+.ra-rotulo,
+.ra-canto-num {
+  fill: var(--adm-suave);
+}
+
+.ra-canto {
+  fill: var(--adm-texto);
+}
+
+.ra-qr {
+  stroke: var(--adm-destaque);
+  stroke-linecap: butt;
+}
+
+.ra-qr-centro {
+  fill: var(--adm-erro);
+}
+
+.ra-folha {
+  display: none;
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media (max-width: 800px) {
+  .ra-ambiente {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .adm-topo,
+  .ra-tela {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+  }
+
+  .adm-conteudo {
+    padding: 0;
+    margin: 0;
+    max-width: none;
+  }
+
+  .ra-folha {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 210mm;
+    height: 297mm;
+    padding: 10mm 8mm;
+    overflow: hidden;
+    break-after: avoid;
+    background: #fff;
+    color: #000;
+    text-align: center;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .ra-folha p,
+  .ra-folha h2 {
+    margin: 0;
+  }
+
+  .ra-folha-obra {
+    font-size: 12pt;
+  }
+
+  .ra-folha-titulo {
+    font-size: 24pt;
+  }
+
+  .ra-folha-sub {
+    font-size: 12pt;
+    margin-bottom: 4mm !important;
+  }
+
+  .ra-folha-qr {
+    background: #fff;
+    line-height: 0;
+    flex: none;
+  }
+
+  .ra-folha-qr svg {
+    display: block;
+  }
+
+  .ra-folha-instrucao {
+    font-size: 14pt;
+    font-weight: 600;
+    margin-top: 4mm !important;
+  }
+
+  .ra-folha-aviso {
+    font-size: 12pt;
+    margin: 3mm 0 4mm !important;
+  }
+
+  .ra-folha-rodape {
+    font-size: 8pt;
+    margin-top: 3mm !important;
+    word-break: break-all;
+  }
+}
+
+/* --- Boletim: cadastro da etapa, pessoas e cabeçalho ------------------------------------------ */
+
+textarea {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--adm-borda);
+  border-radius: 6px;
+  background: var(--adm-superficie);
+  color: var(--adm-texto);
+  width: 100%;
+  resize: vertical;
+}
+
+.adm-form.adm-form-etapa,
+.adm-form.adm-form-aditivo {
+  max-width: none;
+}
+
+.adm-campo-form > label {
+  display: block;
+}
+
+.adm-rolagem {
+  overflow-x: auto;
+}
+
+.adm-form-etapa .adm-secao {
+  margin-top: 0;
+}
+
+.adm-grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.adm-campo-form {
+  display: grid;
+  gap: 4px;
+  align-content: start;
+}
+
+.adm-campo-form > label {
+  font-weight: 500;
+}
+
+.adm-campo-largo {
+  grid-column: 1 / -1;
+}
+
+.adm-obrigatorio::after {
+  content: ' *';
+  color: var(--adm-erro);
+}
+
+.adm-mapa {
+  margin: 0;
+}
+
+.adm-mapa-escolha {
+  width: 100%;
+  height: 320px;
+  position: relative;
+  z-index: 0;
+  border: 1px solid var(--adm-borda);
+  border-radius: 8px;
+  background: var(--adm-bg);
+}
+
+.adm-mapa-escolha.leaflet-container {
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: crosshair;
+}
+
+.adm-mapa-escolha .leaflet-control-layers-expanded {
+  padding: 4px 10px;
+}
+
+.adm-mapa-escolha .leaflet-control-layers-base {
+  display: flex;
+  gap: 12px;
+}
+
+.adm-mapa-escolha .leaflet-control-layers-base span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.adm-mapa-escolha .leaflet-control-layers-selector {
+  margin: 0;
+  top: 0;
+}
+
+.adm-mapa figcaption {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: var(--adm-suave);
+}
+
+.adm-campo-curto {
+  max-width: 260px;
+  margin-bottom: 0;
+}
+
+.adm-resumo-prazo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 16px;
+  margin: 0 0 16px;
+}
+
+.adm-resumo-prazo dt {
+  font-size: 0.85rem;
+  color: var(--adm-suave);
+}
+
+.adm-resumo-prazo dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.adm-form-aditivo {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--adm-borda);
+}
+
+.adm-form-aditivo h3 {
+  margin: 8px 0 0;
+}
+
+.adm-titulo-etapa {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adm-titulo-etapa h2 {
+  margin: 0;
+}
+
+.adm-selo-sigla {
+  background: var(--adm-bg);
+}
+
+.adm-selo-incompleto {
+  background: color-mix(in srgb, var(--aviso, #d99a00) 15%, var(--adm-superficie));
+  border-color: var(--aviso, #d99a00);
+}
+
+.adm-campo-busca {
+  max-width: 420px;
+  margin: 12px 0;
+}
+
+.adm-linha-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.adm-linha-form input {
+  min-width: 12em;
+}
+
+.adm-lista-simples {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.adm-linha-cabecalho {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.adm-linha-cabecalho input {
+  flex: 1;
+  min-width: 0;
+}
+
+.adm-cabecalho-previa {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px dashed var(--adm-borda);
+  border-radius: 8px;
+  background: var(--adm-bg);
+}
+
+.adm-cabecalho-previa img {
+  max-height: 64px;
+  max-width: 120px;
+  object-fit: contain;
+}
+
+.adm-cabecalho-previa p {
+  margin: 0;
+  text-align: center;
+}
+
+.adm-cabecalho-linha {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.adm-cabecalho-nome {
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .adm-grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .adm-form-etapa .adm-secao {
+    padding: 16px;
+  }
+
+  .adm-linha-form {
+    flex-wrap: wrap;
+  }
+
+  .adm-tabela-pessoas,
+  .adm-tabela-pessoas tbody,
+  .adm-tabela-pessoas tr,
+  .adm-tabela-pessoas td {
+    display: block;
+  }
+
+  .adm-tabela-pessoas thead {
+    display: none;
+  }
+
+  .adm-tabela-pessoas tr {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--adm-borda);
+  }
+
+  .adm-tabela-pessoas td {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .adm-topo {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 12px 16px;
+  }
+
+  .adm-nav {
+    order: 3;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+
+  .adm-conteudo {
+    padding: 16px;
+  }
+
+  .adm-secao {
+    position: relative;
+    overflow-x: auto;
+  }
+}
+
+/* Boletins da etapa (prévia, emissão, pedidos e emitidos). */
+.adm-boletim-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.adm-boletim-acoes .adm-campo-form {
+  max-width: 220px;
+}
+
+.adm-selo-erro {
+  color: var(--adm-erro);
+  border-color: currentColor;
+}
+
+/* Editor do boletim emitido. */
+.adm-editor-barra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.adm-editor-item {
+  border: 1px solid var(--adm-borda);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: var(--adm-superficie);
+}
+
+.adm-editor-item-topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.adm-editor-oculto {
+  opacity: 0.5;
+}
+
+.adm-editor-texto {
+  margin: 6px 0;
+}
+
+.adm-editor-texto-botao {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: text;
+  text-decoration: underline dotted;
+}
+
+.adm-editor-fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+}
+
+.adm-editor-fotos li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.adm-editor-encerramento {
+  border-left: 3px solid var(--adm-borda);
+  padding-left: 8px;
+  margin-top: 6px;
+}
+
+.adm-subtitulo {
+  margin: -4px 0 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--adm-suave);
+}

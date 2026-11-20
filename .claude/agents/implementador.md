@@ -21,7 +21,7 @@ Você implementa uma tarefa do projeto Fiscal Bot (Mini App do Telegram para fis
 
 - Toque só nos arquivos que o prompt autoriza. Precisou de outro? Pare e relate.
 - O trecho do contrato que vale para você está no prompt. Não leia documentos longos inteiros (`docs/contrato-*.md`, `tasks/plano-*.md`, migrations): use `grep` e leia só as linhas necessárias.
-- Nunca: `git push`, aplicar algo no banco de produção (`scripts/supabase_api.py aplicar`, ferramentas do Supabase), mexer em `DOCS HTO/`, publicar funções ou mudar a Vercel.
+- Nunca: `git push`, aplicar algo no banco de produção (`scripts/supabase_api.py aplicar`, ferramentas do Supabase), mexer em `obras/hto/`, publicar funções ou mudar a Vercel.
 
 ## Economia
 

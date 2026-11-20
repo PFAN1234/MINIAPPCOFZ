@@ -1,6 +1,6 @@
 {
   "obra": "cofz",
-  "fonte": "DOCS COFZ/PDF/ (configuração em data/cofz/obra.json)",
+  "fonte": "obras/cofz/pdf/ (configuração em data/cofz/obra.json)",
   "status": "aguardando_revisao_humana",
   "revisao_humana": null,
   "coordenadas": "marcadores normalizados na página do PDF (0–1, origem no canto superior esquerdo); x = centro do rótulo, y = topo do nome; o pino é desenhado acima desse ponto",
@@ -18,7 +18,7 @@
       "nome_planta": "CIRCULAÇÃO",
       "categoria": "circulacao",
       "area_m2": 8.64,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -41,7 +41,7 @@
       "nome_planta": "CIRCULAÇÃO",
       "categoria": "circulacao",
       "area_m2": 15.29,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -64,7 +64,7 @@
       "nome_planta": "CIRCULAÇÃO",
       "categoria": "circulacao",
       "area_m2": 21.47,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -87,7 +87,7 @@
       "nome_planta": "COMISSÃO DE OBRAS",
       "categoria": "area_comum",
       "area_m2": 46.81,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -110,7 +110,7 @@
       "nome_planta": "COPA",
       "categoria": "servico",
       "area_m2": 15.16,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -133,7 +133,7 @@
       "nome_planta": "CPD",
       "categoria": "servico",
       "area_m2": 2.58,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -156,7 +156,7 @@
       "nome_planta": "DML",
       "categoria": "servico",
       "area_m2": 2.9,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -179,7 +179,7 @@
       "nome_planta": "RECEPÇÃO",
       "categoria": "servico",
       "area_m2": 20.49,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -202,7 +202,7 @@
       "nome_planta": "DA",
       "categoria": "area_comum",
       "area_m2": 20.44,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -225,7 +225,7 @@
       "nome_planta": "SALA DA CHEFIA",
       "categoria": "area_comum",
       "area_m2": 22.77,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -248,7 +248,7 @@
       "nome_planta": null,
       "categoria": "area_comum",
       "area_m2": null,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -271,7 +271,7 @@
       "nome_planta": "SALA DE CONTROLE",
       "categoria": "area_comum",
       "area_m2": 15.33,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -294,7 +294,7 @@
       "nome_planta": "SALA DE REUNIÕES",
       "categoria": "area_comum",
       "area_m2": 30.77,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -317,7 +317,7 @@
       "nome_planta": "SALA IMERSIVA",
       "categoria": "area_comum",
       "area_m2": 55.82,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -340,7 +340,7 @@
       "nome_planta": "SALÃO DE ACESSO",
       "categoria": "area_comum",
       "area_m2": 42.41,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -363,7 +363,7 @@
       "nome_planta": null,
       "categoria": "banheiro",
       "area_m2": null,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -386,7 +386,7 @@
       "nome_planta": "WC FEM",
       "categoria": "banheiro",
       "area_m2": 14.12,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -409,7 +409,7 @@
       "nome_planta": "WC MASC",
       "categoria": "banheiro",
       "area_m2": 12.02,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [
@@ -432,7 +432,7 @@
       "nome_planta": "WC PCD",
       "categoria": "banheiro",
       "area_m2": 3.52,
-      "pdf": "DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf",
+      "pdf": "obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf",
       "pagina": 1,
       "revisao": "R06",
       "marcadores": [

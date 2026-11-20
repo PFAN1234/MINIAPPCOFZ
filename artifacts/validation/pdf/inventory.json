@@ -12,7 +12,7 @@
   },
   "documents": [
     {
-      "path": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "path": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "sha256": "2a82b438ac9ca4f7c5caac3e7624af11a2991578d8c2fa1fcf087d70c817e8ba",
       "bytes": 3753418,
       "page_count": 1,
@@ -22052,7 +22052,7 @@
       ]
     },
     {
-      "path": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "path": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "sha256": "09340f1d2ad133996484f0781a399351df93744bf46decfe00e7058c7d5e50cd",
       "bytes": 3250606,
       "page_count": 1,

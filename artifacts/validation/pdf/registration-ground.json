@@ -1,7 +1,7 @@
 {
-  "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+  "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
   "page": 1,
-  "ifc": "DOCS HTO/IFC/CE01-14PE01-ARQ-R05.ifc",
+  "ifc": "obras/hto/ifc/CE01-14PE01-ARQ-R05.ifc",
   "ifc_coordinate_frame": "bbox_world_m/footprint_world_xy_m from inspection JSON; excludes IfcGeometricRepresentationContext georeferencing offset",
   "method": "axis swap + uniform scale + translation fitted to two visually measured opposite APTO101 interior corners; independent Vestiário Masc corner control",
   "equations": {

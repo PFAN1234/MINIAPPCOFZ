@@ -1,6 +1,6 @@
 {
   "obra": "hto",
-  "fonte": "DOCS HTO/PDF/ (configuração em data/hto/obra.json)",
+  "fonte": "obras/hto/pdf/ (configuração em data/hto/obra.json)",
   "status": "revisado",
   "revisao_humana": {
     "data": "2026-11-09",
@@ -34,7 +34,7 @@
       "nome_planta": "ADMIN.",
       "categoria": "servico",
       "area_m2": 21.35,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -57,7 +57,7 @@
       "nome_planta": "ALOJAMENTO",
       "categoria": "servico",
       "area_m2": 9.78,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -80,7 +80,7 @@
       "nome_planta": "APTO. 101",
       "categoria": "apartamento",
       "area_m2": 23.88,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -103,7 +103,7 @@
       "nome_planta": "APTO. 102",
       "categoria": "apartamento",
       "area_m2": 23.7,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -126,7 +126,7 @@
       "nome_planta": "APTO. 103",
       "categoria": "apartamento",
       "area_m2": 23.52,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -149,7 +149,7 @@
       "nome_planta": "APTO. 104",
       "categoria": "apartamento",
       "area_m2": 23.19,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -172,7 +172,7 @@
       "nome_planta": "APTO. 105",
       "categoria": "apartamento",
       "area_m2": 18.51,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -195,7 +195,7 @@
       "nome_planta": "APTO. AUTORIDADES (01)",
       "categoria": "apartamento",
       "area_m2": 23.82,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -218,7 +218,7 @@
       "nome_planta": "APTO. AUTORIDADES (02)",
       "categoria": "apartamento",
       "area_m2": 23.88,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -241,7 +241,7 @@
       "nome_planta": "APTO. AUTORIDADES (03)",
       "categoria": "apartamento",
       "area_m2": 23.82,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -264,7 +264,7 @@
       "nome_planta": "APTO. AUTORIDADES (04)",
       "categoria": "apartamento",
       "area_m2": 23.82,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -287,7 +287,7 @@
       "nome_planta": "BHO 101",
       "categoria": "banheiro",
       "area_m2": 5.24,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -310,7 +310,7 @@
       "nome_planta": "BHO 102",
       "categoria": "banheiro",
       "area_m2": 5.46,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -333,7 +333,7 @@
       "nome_planta": "BHO 103",
       "categoria": "banheiro",
       "area_m2": 5.12,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -356,7 +356,7 @@
       "nome_planta": "BHO 104",
       "categoria": "banheiro",
       "area_m2": 5.27,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -379,7 +379,7 @@
       "nome_planta": "BHO 105",
       "categoria": "banheiro",
       "area_m2": 5.16,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -402,7 +402,7 @@
       "nome_planta": "BHO ADM",
       "categoria": "banheiro",
       "area_m2": 3.62,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -425,7 +425,7 @@
       "nome_planta": "BHO AUT. (01)",
       "categoria": "banheiro",
       "area_m2": 5.25,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -448,7 +448,7 @@
       "nome_planta": "BHO AUT. (02)",
       "categoria": "banheiro",
       "area_m2": 5.41,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -471,7 +471,7 @@
       "nome_planta": "BHO AUT. (03)",
       "categoria": "banheiro",
       "area_m2": 5.09,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -494,7 +494,7 @@
       "nome_planta": "BHO AUT. (04)",
       "categoria": "banheiro",
       "area_m2": 5.35,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -517,7 +517,7 @@
       "nome_planta": "BARBEARIA",
       "categoria": "area_comum",
       "area_m2": 15.41,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -540,7 +540,7 @@
       "nome_planta": "BUFFET",
       "categoria": "area_comum",
       "area_m2": 34.78,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -563,7 +563,7 @@
       "nome_planta": "CIRC. NORTE",
       "categoria": "circulacao",
       "area_m2": 33.61,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -586,7 +586,7 @@
       "nome_planta": "CIRC. SUL",
       "categoria": "circulacao",
       "area_m2": 107.67,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -619,7 +619,7 @@
       "nome_planta": "COPA ADM.",
       "categoria": "servico",
       "area_m2": 5.86,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -642,7 +642,7 @@
       "nome_planta": "COPA HÓSPEDES",
       "categoria": "servico",
       "area_m2": 17.15,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -665,7 +665,7 @@
       "nome_planta": "COPA SALÃO",
       "categoria": "servico",
       "area_m2": 22.05,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -688,7 +688,7 @@
       "nome_planta": "CPD",
       "categoria": "servico",
       "area_m2": 6.35,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -711,7 +711,7 @@
       "nome_planta": "DEPÓSITO",
       "categoria": "servico",
       "area_m2": 5.5,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -734,7 +734,7 @@
       "nome_planta": "DESPENSA",
       "categoria": "servico",
       "area_m2": 5.45,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -757,7 +757,7 @@
       "nome_planta": "DML",
       "categoria": "servico",
       "area_m2": 6.08,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -780,7 +780,7 @@
       "nome_planta": "Jardim",
       "categoria": "externa",
       "area_m2": 18.83,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -803,7 +803,7 @@
       "nome_planta": "Jardim",
       "categoria": "externa",
       "area_m2": null,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -826,7 +826,7 @@
       "nome_planta": "LAVAND. HÓSPEDES",
       "categoria": "servico",
       "area_m2": 33.94,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -849,7 +849,7 @@
       "nome_planta": "LOBBY",
       "categoria": "area_comum",
       "area_m2": 37.19,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -872,7 +872,7 @@
       "nome_planta": "Piscina",
       "categoria": "externa",
       "area_m2": 151.33,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -895,7 +895,7 @@
       "nome_planta": "RECEPÇÃO",
       "categoria": "servico",
       "area_m2": 9.35,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -918,7 +918,7 @@
       "nome_planta": "SALÃO DE ESPERA",
       "categoria": "area_comum",
       "area_m2": 7.45,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -941,7 +941,7 @@
       "nome_planta": "SALÃO DE EVENTOS",
       "categoria": "area_comum",
       "area_m2": 158.59,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -964,7 +964,7 @@
       "nome_planta": "VEST. FEM.",
       "categoria": "vestiario",
       "area_m2": 21.58,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -987,7 +987,7 @@
       "nome_planta": "VEST. MASC.",
       "categoria": "vestiario",
       "area_m2": 14.49,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1010,7 +1010,7 @@
       "nome_planta": "VEST. MASC. (CHUVEIROS)",
       "categoria": "vestiario",
       "area_m2": 15.12,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1033,7 +1033,7 @@
       "nome_planta": "VEST. MASC. (MICTÓRIOS)",
       "categoria": "vestiario",
       "area_m2": 9.97,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1056,7 +1056,7 @@
       "nome_planta": "APTO. 201",
       "categoria": "apartamento",
       "area_m2": 24.13,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1079,7 +1079,7 @@
       "nome_planta": "APTO. 202",
       "categoria": "apartamento",
       "area_m2": 24.56,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1102,7 +1102,7 @@
       "nome_planta": "APTO. 203",
       "categoria": "apartamento",
       "area_m2": 24.43,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1125,7 +1125,7 @@
       "nome_planta": "APTO. 204",
       "categoria": "apartamento",
       "area_m2": 24.56,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1148,7 +1148,7 @@
       "nome_planta": "APTO. 205",
       "categoria": "apartamento",
       "area_m2": 24.43,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1171,7 +1171,7 @@
       "nome_planta": "APTO. 206",
       "categoria": "apartamento",
       "area_m2": 24.56,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1194,7 +1194,7 @@
       "nome_planta": "APTO. 207",
       "categoria": "apartamento",
       "area_m2": 24.43,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1217,7 +1217,7 @@
       "nome_planta": "APTO. 208",
       "categoria": "apartamento",
       "area_m2": 24.43,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1240,7 +1240,7 @@
       "nome_planta": "APTO. 209",
       "categoria": "apartamento",
       "area_m2": 24.43,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1263,7 +1263,7 @@
       "nome_planta": "APTO. 210",
       "categoria": "apartamento",
       "area_m2": 23.57,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1286,7 +1286,7 @@
       "nome_planta": "APTO. 211",
       "categoria": "apartamento",
       "area_m2": 20.58,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1309,7 +1309,7 @@
       "nome_planta": "APTO. 212",
       "categoria": "apartamento",
       "area_m2": 25.51,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1332,7 +1332,7 @@
       "nome_planta": "APTO. 213",
       "categoria": "apartamento",
       "area_m2": 25.55,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1355,7 +1355,7 @@
       "nome_planta": "APTO. 214",
       "categoria": "apartamento",
       "area_m2": 25.45,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1378,7 +1378,7 @@
       "nome_planta": "APTO. 215",
       "categoria": "apartamento",
       "area_m2": 24.86,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1401,7 +1401,7 @@
       "nome_planta": "APTO. 216",
       "categoria": "apartamento",
       "area_m2": 25.25,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1424,7 +1424,7 @@
       "nome_planta": "APTO. 217",
       "categoria": "apartamento",
       "area_m2": 25.79,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1447,7 +1447,7 @@
       "nome_planta": "APTO. 218",
       "categoria": "apartamento",
       "area_m2": 25.84,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1470,7 +1470,7 @@
       "nome_planta": "APTO. 219",
       "categoria": "apartamento",
       "area_m2": 22.4,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1493,7 +1493,7 @@
       "nome_planta": "BHO 201",
       "categoria": "banheiro",
       "area_m2": 5.39,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1516,7 +1516,7 @@
       "nome_planta": "BHO 202",
       "categoria": "banheiro",
       "area_m2": 5.23,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1539,7 +1539,7 @@
       "nome_planta": "BHO 203",
       "categoria": "banheiro",
       "area_m2": 5.39,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1562,7 +1562,7 @@
       "nome_planta": "BHO 204",
       "categoria": "banheiro",
       "area_m2": 5.23,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1585,7 +1585,7 @@
       "nome_planta": "BHO 205",
       "categoria": "banheiro",
       "area_m2": 5.36,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1608,7 +1608,7 @@
       "nome_planta": "BHO 206",
       "categoria": "banheiro",
       "area_m2": 5.32,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1631,7 +1631,7 @@
       "nome_planta": "BHO 207",
       "categoria": "banheiro",
       "area_m2": 5.39,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1654,7 +1654,7 @@
       "nome_planta": "BHO 208",
       "categoria": "banheiro",
       "area_m2": 5.23,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1677,7 +1677,7 @@
       "nome_planta": "BHO 209",
       "categoria": "banheiro",
       "area_m2": 5.39,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1700,7 +1700,7 @@
       "nome_planta": "BHO 210",
       "categoria": "banheiro",
       "area_m2": 5.23,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1723,7 +1723,7 @@
       "nome_planta": "BHO 211",
       "categoria": "banheiro",
       "area_m2": 8.95,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1746,7 +1746,7 @@
       "nome_planta": "BHO 212",
       "categoria": "banheiro",
       "area_m2": 7.86,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1769,7 +1769,7 @@
       "nome_planta": "BHO 213",
       "categoria": "banheiro",
       "area_m2": 8.14,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1792,7 +1792,7 @@
       "nome_planta": "BHO 214",
       "categoria": "banheiro",
       "area_m2": 8.26,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1815,7 +1815,7 @@
       "nome_planta": "BHO 215",
       "categoria": "banheiro",
       "area_m2": 8.28,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1838,7 +1838,7 @@
       "nome_planta": "BHO 216",
       "categoria": "banheiro",
       "area_m2": 7.97,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1861,7 +1861,7 @@
       "nome_planta": "BHO 217",
       "categoria": "banheiro",
       "area_m2": 7.95,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1884,7 +1884,7 @@
       "nome_planta": "BHO 218",
       "categoria": "banheiro",
       "area_m2": 7.83,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1907,7 +1907,7 @@
       "nome_planta": "BHO 219",
       "categoria": "banheiro",
       "area_m2": 7.91,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1930,7 +1930,7 @@
       "nome_planta": "BHO Tripulação",
       "categoria": "banheiro",
       "area_m2": 4.55,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1953,7 +1953,7 @@
       "nome_planta": "Circulação",
       "categoria": "circulacao",
       "area_m2": 233.0,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -1986,7 +1986,7 @@
       "nome_planta": "COWORKING",
       "categoria": "area_comum",
       "area_m2": 29.84,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -2009,7 +2009,7 @@
       "nome_planta": "DML / ROUPARIA",
       "categoria": "servico",
       "area_m2": 19.65,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [
@@ -2032,7 +2032,7 @@
       "nome_planta": "SALA DE APOIO",
       "categoria": "area_comum",
       "area_m2": 19.62,
-      "pdf": "DOCS HTO/PDF/CE01-14PE01-ARQ-DE018-R05.pdf",
+      "pdf": "obras/hto/pdf/CE01-14PE01-ARQ-DE018-R05.pdf",
       "pagina": 1,
       "revisao": "R05",
       "marcadores": [

@@ -1,134 +1,29 @@
-import type {
-  AmbienteDetalhe,
-  CaminhoFoto,
-  EquipeServico,
-  EtapaInicio,
-  Posicao,
-  NovaObservacao,
-  NovoEncerramento,
-  Observacao,
-  ObservacoesDoDia,
-  Participante,
-  PendenciaDetalhe,
-  PublicacaoProblema,
-  PapelObra,
-  NovoRegistro,
-  FiltroRegistros,
-  LinkAdmin,
-  ObraDetalhe,
-  ObraDaLista,
-  ObraDisponivel,
-  Organizacao,
-  RegistroLocalizado,
-  PainelRelatorios,
-  Relatorios,
-  ResultadoExclusaoBoletim,
-  RegistroResumo,
-  ResumoObra,
-  SolicitacaoAcesso,
-  MatrizAcessos,
-  PapelAcesso,
-} from './tipos.ts'
-import type { ModeloFrag } from '../modelo/modelos.ts'
-import type { GeometriaAmbiente } from '../ra/geometria.ts'
+import type { AcessosRepositorio } from '@modules/acessos/application/ports/AcessosRepositorio.port.ts'
+import type { EquipeServicoRepositorio } from '@modules/acessos/application/ports/EquipeServicoRepositorio.port.ts'
+import type { SessaoRepositorio } from '@modules/acessos/application/ports/SessaoRepositorio.port.ts'
+import type { PublicacoesRepositorio } from '@modules/fiscalizacao/application/ports/PublicacoesRepositorio.port.ts'
+import type { RegistrosRepositorio } from '@modules/fiscalizacao/application/ports/RegistrosRepositorio.port.ts'
+import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
+import type { EtapasInicioRepositorio } from '@modules/obras/application/ports/EtapasInicioRepositorio.port.ts'
+import type { ObrasRepositorio } from '@modules/obras/application/ports/ObrasRepositorio.port.ts'
+import type { OrganizacaoRepositorio } from '@modules/obras/application/ports/OrganizacaoRepositorio.port.ts'
+import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
+import type { ObservacoesRepositorio } from '@modules/relatorios/application/ports/ObservacoesRepositorio.port.ts'
+import type { RelatoriosRepositorio } from '@modules/relatorios/application/ports/RelatoriosRepositorio.port.ts'
 
-export interface Repositorio {
-  /** Obras em que o usuário participa, cada uma com a sua etapa. */
-  listarObras(): Promise<ObraDaLista[]>
-  /** Totais por obra visível (serviços, pendências abertas e resolvidas) e o papel do usuário. */
-  resumoObras(): Promise<ResumoObra[]>
-  /** Pavimentos (com planta ativa), ambientes e pendências abertas por ambiente. */
-  obterObra(slug: string): Promise<ObraDetalhe>
-  obterAmbiente(slug: string, codigo: string): Promise<AmbienteDetalhe>
-  listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]>
-  /** Pessoas que têm registros nas obras visíveis (`autores_registros`), pelo nome mostrado. */
-  autoresRegistros(): Promise<{ id: string; nome: string }[]>
-  /** URL assinada (1 h) ou local na fixture, indexada pelo caminho recebido. */
-  urlsImagens(
-    paths: string[],
-    bucket?: 'plantas' | 'fotos',
-  ): Promise<Record<string, string>>
-  /** Envia o JPEG para `<obraId>/<registroId>/<fotoId>.jpg` (reenvio permitido até vincular). */
-  enviarFoto(caminho: CaminhoFoto, blob: Blob): Promise<void>
-  /** Idempotente pelo `id`. Falhas sobem como `ErroEnvio`. */
-  concluirRegistro(dados: NovoRegistro): Promise<{ id: string }>
-  /**
-   * Só na implementação Supabase: há sessão ativa? Ausente na fixture, que
-   * dispensa login. Sem sessão o app pede para abrir pelo Telegram.
-   */
-  temSessao?(): Promise<boolean>
-  /** Obras do grupo do Telegram do usuário em que ele ainda não tem acesso. */
-  obrasDisponiveis(): Promise<ObraDisponivel[]>
-  /** Pede acesso à obra (idempotente se já há pedido pendente). Falhas sobem como `ErroEnvio`. */
-  solicitarAcesso(obraId: string): Promise<void>
-  /** Pedidos pendentes da obra, do mais antigo ao mais novo; só o gestor pode ver. */
-  listarSolicitacoes(obraId: string): Promise<SolicitacaoAcesso[]>
-  /** Gestor aprova ou recusa um pedido. Falhas sobem como `ErroEnvio`. */
-  decidirSolicitacao(id: string, aprovar: boolean): Promise<void>
-  /** Lista de pessoas x obras (só gestor de alguma obra). Falhas sobem como `ErroEnvio`. */
-  matrizAcessos(): Promise<MatrizAcessos>
-  /** Define o acesso de uma pessoa a uma obra (qualquer gestor, qualquer obra). Falhas sobem como `ErroEnvio`. */
-  definirAcesso(obraId: string, usuarioId: string, papel: PapelAcesso): Promise<void>
-  /** Pendência com fotos, ambiente, pavimento, papel do usuário e encerramento; null se não houver acesso. */
-  obterPendencia(id: string): Promise<PendenciaDetalhe | null>
-  /** Idempotente pelo `id`. Falhas sobem como `ErroEnvio` (`conflito` se já encerrada). */
-  encerrarPendencia(dados: NovoEncerramento): Promise<{ id: string }>
-  /** Participantes da obra (só gestor), gestores primeiro. */
-  listarParticipantes(obraId: string): Promise<Participante[]>
-  definirPapel(obraId: string, usuarioId: string, papel: PapelObra): Promise<void>
-  removerParticipante(obraId: string, usuarioId: string): Promise<void>
-  /** Publicações `incerto`/`falhou` (e pendentes com muitas tentativas), mais recentes primeiro. */
-  listarPublicacoesProblema(obraId: string): Promise<PublicacaoProblema[]>
-  /** Volta a publicação para a fila de envio. */
-  republicar(id: number): Promise<void>
-  /** Gestor confirma que a mensagem já está no tópico. */
-  marcarPublicada(id: number): Promise<void>
-  /** Localiza um registro visível ao usuário (para o link `startapp`); null se não houver. */
-  localizarRegistro(id: string): Promise<RegistroLocalizado | null>
-  /** `.frag` publicados da obra (um por disciplina), por sigla. Lista vazia se não há nenhum. */
-  listarModelos(slug: string): Promise<ModeloFrag[]>
-  /** Baixa o `.frag`. O cache por hash fica a cargo de quem chama (`modeloComCache`). */
-  baixarModelo(slug: string, modelo: ModeloFrag): Promise<ArrayBuffer>
-  /**
-   * Geometria do ambiente para a realidade aumentada (contorno, piso, forro, QR e
-   * referencial dos modelos); null se o ambiente não tem geometria.
-   */
-  obterGeometria(obra: { id: string; slug: string }, ambiente: { id: string; codigo: string }): Promise<GeometriaAmbiente | null>
-  /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */
-  idUsuario(): Promise<string | null>
-  /** O usuário é admin do Mini App (site de administração)? */
-  souAdmin(): Promise<boolean>
-  /** Link de uso único (2 min) para abrir o site de administração já com a sessão. */
-  criarLinkAdmin(): Promise<LinkAdmin>
-  /** Aba Relatórios: situação de hoje por etapa e boletins emitidos. */
-  relatorios(): Promise<Relatorios>
-  /** Painel da aba Relatórios: movimento por obra e dia da etapa, até hoje. */
-  painelRelatorios(etapaId: string): Promise<PainelRelatorios>
-  /** Gera o PDF de pendências (etapa inteira ou uma obra) e devolve a URL assinada. */
-  exportarPendencias(etapaId: string, obraId: string | null): Promise<string>
-  /** URL assinada (5 min) do PDF de um boletim. */
-  urlPdfBoletim(caminho: string): Promise<string>
-  /** Admin: pede a emissão agora (nova revisão se já houver boletim no dia). Falhas sobem como `ErroEnvio`. */
-  emitirBoletim(slug: string, data: string): Promise<void>
-  /** Admin: exclui o dia inteiro do boletim (revisões, PDFs e mensagem no grupo). */
-  excluirBoletim(id: string): Promise<ResultadoExclusaoBoletim>
-  /** Nome e logo da organização militar (faixa de identidade do topo). */
-  organizacao(): Promise<Organizacao>
-  /** Observações de hoje na obra (dia no fuso da etapa), com o estado de travada do dia. */
-  observacoesDoDia(obraId: string): Promise<ObservacoesDoDia>
-  /** Cria (id novo) ou edita o texto (id existente). Idempotente. Falhas sobem como `ErroEnvio`. */
-  salvarObservacao(dados: NovaObservacao): Promise<Observacao>
-  /** Só o autor e antes da emissão do boletim; id inexistente não é erro. Falhas sobem como `ErroEnvio`. */
-  excluirObservacao(id: string): Promise<void>
-  /** Etapas ativas, com a participação do usuário. */
-  etapasInicio(): Promise<EtapaInicio[]>
-  /** Equipe de serviço da etapa (abertos e encerrados nas últimas 24 h). */
-  equipeServico(etapaId: string): Promise<EquipeServico>
-  /** Check-in (exige estar a até 1 km da etapa). Falhas sobem como `ErroEnvio`. */
-  fazerCheckin(etapaId: string, posicao: Posicao): Promise<EquipeServico>
-  /** Fecha o serviço aberto do usuário. Devolve a equipe da etapa dele. */
-  fazerCheckout(): Promise<EquipeServico>
-}
+export interface Repositorio
+  extends Pick<RaRepositorio, 'obterGeometria'>,
+    SessaoRepositorio,
+    EquipeServicoRepositorio,
+    AcessosRepositorio,
+    ObrasRepositorio,
+    OrganizacaoRepositorio,
+    EtapasInicioRepositorio,
+    RegistrosRepositorio,
+    PublicacoesRepositorio,
+    RelatoriosRepositorio,
+    ObservacoesRepositorio,
+    Pick<ModelosRepositorio, 'listarModelos' | 'baixarModelo'> {}
 
 /**
  * Ponto único de criação. A fixture entra por `import()` dinâmico atrás de uma

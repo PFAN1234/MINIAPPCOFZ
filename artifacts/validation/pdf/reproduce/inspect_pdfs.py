@@ -4,7 +4,7 @@ root=Path(__file__).resolve().parents[4]
 out=root/'artifacts/validation/pdf'
 out.mkdir(parents=True,exist_ok=True)
 inv={'coordinate_system':{'unit':'PDF point (1/72 inch)','origin':'top-left of unrotated page','bbox_order':['x0','y0','x1','y1'],'normalized_bbox':'coordinates divided by page width and height'},'documents':[]}
-for path in sorted((root/'DOCS HTO/PDF').glob('*.pdf')):
+for path in sorted((root/'obras/hto/pdf').glob('*.pdf')):
  doc=fitz.open(path)
  record={'path':str(path.relative_to(root)),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'bytes':path.stat().st_size,'page_count':len(doc),'pages':[]}
  for i,p in enumerate(doc):
@@ -33,6 +33,6 @@ for path in sorted((root/'DOCS HTO/PDF').glob('*.pdf')):
 print(json.dumps([{k:v for k,v in d.items() if k!='pages'}|{'pages':[{'page':p['page'],'dimensions':[p['width_points'],p['height_points']],'span_count':len(p['text_spans']),'title_candidates':p['floor_title_candidates'],'room_candidate_count':len(p['room_label_candidates']),'vestiarios':[s for s in p['text_spans'] if 'vest' in s['text'].lower()]} for p in d['pages']]} for d in inv['documents']],ensure_ascii=False,indent=2))
 
 # Detail clips used for visual room identification; raster scale is pixels/point.
-p=fitz.open(root/'DOCS HTO/PDF/CE01-14PE01-ARQ-DE017-R05.pdf')[0]
+p=fitz.open(root/'obras/hto/pdf/CE01-14PE01-ARQ-DE017-R05.pdf')[0]
 p.get_pixmap(matrix=fitz.Matrix(3,3),clip=fitz.Rect(355,70,730,345),alpha=False).save(out/'ground-vestiarios-detail.png')
 p.get_pixmap(matrix=fitz.Matrix(4,4),clip=fitz.Rect(810,700,1050,870),alpha=False).save(out/'ground-apto101-detail.png')

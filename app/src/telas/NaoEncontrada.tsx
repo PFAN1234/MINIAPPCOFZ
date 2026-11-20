@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
-import { EstadoVazio } from '../components/Estado.tsx'
-import { IconeLupa } from '../components/Icones.tsx'
-import { TopoTela } from '../components/TopoTela.tsx'
+import { EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
+import { IconeLupa } from '../shared/ui/icones/Icones.tsx'
+import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 
 /** Endereço que não existe no app (rota `*`). */
 export default function NaoEncontrada() {

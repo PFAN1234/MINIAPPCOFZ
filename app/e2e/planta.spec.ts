@@ -5,7 +5,7 @@ import { expect, test } from '@playwright/test'
 // pdf.js no navegador, e a publicação no repositório em memória.
 test.use({ viewport: { width: 1440, height: 900 }, isMobile: false, hasTouch: false })
 
-const PDF_COFZ = fileURLToPath(new URL('../../DOCS COFZ/PDF/CE01-01PE02-ARQ-DE009-R06.pdf', import.meta.url))
+const PDF_COFZ = fileURLToPath(new URL('../../obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf', import.meta.url))
 
 test('envia o PDF da COFZ, confere os ambientes, arrasta e acrescenta pinos e publica', async ({ page }) => {
   test.setTimeout(240_000)

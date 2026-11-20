@@ -27,12 +27,12 @@ Reduzir o ruído na raiz do repositório, eliminar nomes de diretórios com espa
 
 ### Fase 2 — Padronização de `DOCS COFZ/` e `DOCS HTO/` → `obras/<slug>/`
 
-1. [ ] Mover `DOCS COFZ/PDF/` → `obras/cofz/pdf/` e `DOCS COFZ/README.md` → `obras/cofz/README.md`.
-2. [ ] Mover `DOCS HTO/PDF/` → `obras/hto/pdf/` e `DOCS HTO/README.md` → `obras/hto/README.md`.
-3. [ ] Mover o diretório local ignorado `public/ifc/` → `obras/hto/ifc/`.
-4. [ ] Atualizar `.gitignore`: trocar `/DOCS */IFC/*.ifc` e `/public/ifc/` por `/obras/*/ifc/*.ifc`.
-5. [ ] Atualizar `"pasta_pdf"` em `data/hto/obra.json` (`"obras/hto/pdf"`) e `data/cofz/obra.json` (`"obras/cofz/pdf"`).
-6. [ ] Re-executar o pipeline Python para manter paridade dos JSONs e seeds:
+1. [x] Mover `DOCS COFZ/PDF/` → `obras/cofz/pdf/` e `DOCS COFZ/README.md` → `obras/cofz/README.md`.
+2. [x] Mover `DOCS HTO/PDF/` → `obras/hto/pdf/` e `DOCS HTO/README.md` → `obras/hto/README.md`.
+3. [x] Mover o diretório local ignorado `public/ifc/` → `obras/hto/ifc/`.
+4. [x] Atualizar `.gitignore`: trocar `/DOCS */IFC/*.ifc` e `/public/ifc/` por `/obras/*/ifc/*.ifc`.
+5. [x] Atualizar `"pasta_pdf"` em `data/hto/obra.json` (`"obras/hto/pdf"`) e `data/cofz/obra.json` (`"obras/cofz/pdf"`).
+6. [x] Re-executar o pipeline Python para manter paridade dos JSONs e seeds:
    ```bash
    python3 scripts/extrair_ambientes.py --obra hto
    python3 scripts/gerar_plantas.py --obra hto
@@ -44,7 +44,7 @@ Reduzir o ruído na raiz do repositório, eliminar nomes de diretórios com espa
 
    python3 scripts/importar_config_obras.py
    ```
-7. [ ] Atualizar caminhos diretos em:
+7. [x] Atualizar caminhos diretos em:
    - `app/e2e/planta.spec.ts` (`PDF_COFZ` → `../../obras/cofz/pdf/CE01-01PE02-ARQ-DE009-R06.pdf`)
    - `artifacts/validation/pdf/reproduce/inspect_pdfs.py` (`DOCS HTO/PDF` → `obras/hto/pdf`)
    - `dashboard/index.html`, `scripts/README.md`, `docs/validacao-hto.md`, `CLAUDE.md`, `README.md`, `docs/ROADMAP.md`
