@@ -419,4 +419,7 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Parte 1 (lado Mini App): `modules/obras/{domain,application/ports,infra}`; portas `Obras`, `Organizacao`, `EtapasInicio`; adaptadores Supabase e Fixture (estado injetado); `util/etapas.ts` virou `domain/etapas.ts` (puro) + `presentation/miniapp/useEtapaGuardada.ts`.
 - Estado: typecheck, eslint (0 avisos), build e build:fixture verdes; 898 testes (890 + 8 de contrato).
 - Lacunas: sem contract test contra Supabase (mock já coberto por `dados/etapas-supabase.test.ts`); `Marcador` e `RecortePt` ficam em `dados/tipos.ts` (usados por `shared/kernel/coordenadas` e plantas).
-- [ ] Parte 2 (admin) e parte 3 (telas) pendentes.
+- [x] Parte 2 (lado admin): portas `EtapasAdmin`, `OrganizacaoAdmin`, `ObrasAdmin` + contratos (`ObrasAdminFixture.contract.test.ts`); adaptadores Supabase e Fixture em `modules/obras/infra`; tipos admin em `domain/tiposAdmin.ts`; `RepositorioAdmin` compõe as portas.
+- Estado: typecheck, eslint (0 avisos), build e build:fixture verdes; 913 testes em 109 arquivos (898 + 15 de contrato).
+- Lacunas: constantes e `ErroAdmin` seguem em `admin/dados/tipos.ts` (adaptadores importam de lá); `fixtureBoletim.ts` (helpers de campos da etapa) segue em `admin/dados` até a 5D; boletins da fixture limpos via callback `aoExcluirEtapa`.
+- [ ] Parte 3 (telas e `hooks.ts`) pendente.

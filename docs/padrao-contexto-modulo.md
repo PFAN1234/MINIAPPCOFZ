@@ -77,3 +77,8 @@ Todo uso de `three` fica em `modules/ra/infra/three/` (`motor.ts`, `malha.ts`, `
 ### Lições da Fase 5A (`acessos`)
 
 - Tela só do contexto sai de `telas/`, `components/` e `admin/telas/` junto com seu teste; `NomeExibicao.test.tsx` cruza contextos e fica onde está. Um script que reescreve imports relativos para alias (`@shared/`, `@modules/`) evita erro manual; imports de `dados/` e `admin/` seguem relativos até a Fase 5.
+
+### Lições da Fase 5B parte 2 (`obras` admin)
+
+- Fixture que divide estado com outro contexto (etapas, obras, boletins) recebe os arrays mutáveis por parâmetro e dependências cruzadas por callback (`removerObra`, `aoExcluirEtapa`), nunca por global; o contrato descreve a semente que espera.
+- Tipos movidos por script que reescreve imports (aspas simples e duplas) e tipos de memória da fixture exportados do próprio adaptador.

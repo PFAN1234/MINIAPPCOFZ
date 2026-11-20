@@ -551,6 +551,7 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 #### Fase 5B — Contexto `obras`
 - Extrair `Obras`, `Etapas` (com `util/etapas.ts` → `domain/`), `Pavimentos`, `Ambientes`, `Aditivos`, `Responsáveis` e `Organização`, com portas segregadas (regras de escrita permanecem nas RPCs).
 - **Parte 1 (lado Mini App) concluída:** domínio, portas e adaptadores em `modules/obras`; admin (parte 2) e telas (parte 3) pendentes.
+- **Parte 2 (lado admin) concluída:** portas `EtapasAdmin`, `OrganizacaoAdmin` e `ObrasAdmin`, adaptadores Supabase e Fixture (estado injetado) e tipos em `domain/tiposAdmin.ts`; `RepositorioAdmin` compõe as portas. Telas e `hooks.ts` (parte 3) pendentes.
 - **Critério de pronto:** `npm test -- obra etapa`, `npm run test:e2e -- e2e/navegacao.spec.ts e2e/etapas.spec.ts e2e/admin-obra.spec.ts e2e/admin-etapas.spec.ts` verdes.
 
 #### Fase 5C — Contexto `fiscalizacao`
