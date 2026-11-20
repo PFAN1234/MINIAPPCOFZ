@@ -127,7 +127,7 @@ export default function BarraSuperior({
       >
         Grade
       </button>
-      <div className="central-grupo" role="group" aria-label="Vista">
+      <div className="central-barra-grupo" role="group" aria-label="Vista">
         <button
           type="button"
           className="central-botao"

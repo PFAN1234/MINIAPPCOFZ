@@ -132,6 +132,23 @@
   padding: 8px 8px 8px 52px;
   background: var(--c-painel);
   border-bottom: 1px solid var(--c-borda);
+  align-items: center;
+}
+.central-barra-grupo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 6px;
+  border-left: 1px solid var(--c-borda);
+}
+.central-barra select {
+  max-width: 160px;
+  padding: 4px 6px;
+  background: var(--c-fundo);
+  color: var(--c-texto);
+  border: 1px solid var(--c-borda);
+  border-radius: 4px;
+  font: inherit;
 }
 .central-canvas {
   position: relative;
