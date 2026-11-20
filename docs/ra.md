@@ -46,11 +46,11 @@ Conferido em 2026-11-13 com os modelos publicados da HTO: o ARQ R06 (hash `497ec
 
 ## Código
 
-- `app/src/ra/pose.ts`: conta do alinhamento (dois cantos, QR, erro do terceiro canto).
-- `app/src/ra/orientacao.ts`: sensores (evento do navegador e API do Telegram).
-- `app/src/ra/motor.ts`: cena 3D, corte em volta do ambiente e contorno.
-- `app/src/ra/camera.ts`, `leitorQr.ts`: câmera, captura do par e leitura do QR.
-- `app/src/ra/TelaRA.tsx`: a tela; `DiagnosticoRA.tsx`: teste do aparelho.
+- `app/src/modules/ra/infra/three/pose.ts`: conta do alinhamento (dois cantos, QR, erro do terceiro canto).
+- `app/src/modules/ra/infra/three/orientacao.ts`: sensores (evento do navegador e API do Telegram).
+- `app/src/modules/ra/infra/three/motor.ts`: cena 3D, corte em volta do ambiente e contorno.
+- `app/src/modules/ra/infra/browser/camera.ts`, `leitorQr.ts`: câmera, captura do par e leitura do QR.
+- `app/src/modules/ra/presentation/miniapp/TelaRA.tsx`: a tela; `DiagnosticoRA.tsx`: teste do aparelho.
 - `scripts/gerar_geometria.py`: vínculo ambiente ↔ IfcSpace e geometria.
 
 ## Planta baixa no ajuste do QR (admin)
@@ -59,4 +59,4 @@ Na página de RA do admin, o ambiente aberto mostra a planta real do pavimento, 
 
 ## Visualizar modelo (sem RA)
 
-Na tela do ambiente, o botão **Visualizar modelo** abre o modelo 3D federado, sem câmera nem sensores, cortado em volta do ambiente (a mesma caixa de corte da RA) e com a câmera por dentro dele (centro do ambiente, 1,5 m do piso): um dedo ou botão esquerdo gira a vista no lugar, dois dedos ou botão direito andam pelo ambiente, pinça ou roda dá zoom, e **Voltar ao centro** recoloca a câmera. Dá para ligar/desligar disciplinas. Não há colisão: a câmera atravessa paredes. O chip **Só este ambiente** liga/desliga o corte. Aparece com as mesmas condições do botão da RA (ambiente ativo com geometria e obra com modelo). Código: `app/src/telas/AmbienteModelo.tsx`, `app/src/modelo/VisualizadorModelo.tsx` (prop `ambiente`) e `app/src/modelo/corte.ts`.
+Na tela do ambiente, o botão **Visualizar modelo** abre o modelo 3D federado, sem câmera nem sensores, cortado em volta do ambiente (a mesma caixa de corte da RA) e com a câmera por dentro dele (centro do ambiente, 1,5 m do piso): um dedo ou botão esquerdo gira a vista no lugar, dois dedos ou botão direito andam pelo ambiente, pinça ou roda dá zoom, e **Voltar ao centro** recoloca a câmera. Dá para ligar/desligar disciplinas. Não há colisão: a câmera atravessa paredes. O chip **Só este ambiente** liga/desliga o corte. Aparece com as mesmas condições do botão da RA (ambiente ativo com geometria e obra com modelo). Código: `app/src/modules/modelos/presentation/miniapp/AmbienteModelo.tsx`, `app/src/modules/modelos/presentation/miniapp/VisualizadorModelo.tsx` (prop `ambiente`) e `app/src/modules/modelos/infra/three/corte.ts`.

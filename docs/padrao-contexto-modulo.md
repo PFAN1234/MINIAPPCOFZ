@@ -61,3 +61,9 @@ Todo uso de `three` fica em `modules/ra/infra/three/` (`motor.ts`, `malha.ts`, `
 5. Mover telas para `presentation/miniapp/` e `presentation/admin/` (`git mv`, imports por alias, sem shims); apagar pastas antigas vazias.
 6. Procurar caminhos antigos em `vite.config.ts`, `e2e/`, `scripts/` e `docs/`.
 7. Conferir: `npm run typecheck`, `npx eslint src --max-warnings 0`, suíte completa, `npm run build`, `npm run build:fixture`, e2e do contexto e chunks de `dist/assets`.
+
+### Lições da Fase 4A (`modelos`)
+
+- Use-case só quando há lógica real: `publicarModelo` recebe o `hash` injetado (o SHA-256 vem do navegador/teste), por isso é testável sem I/O; um repasse sem regra não ganha use-case.
+- O contrato da porta, `contratoX`, recebe um `criar()` que devolve o adaptador e os helpers de teste (por exemplo, semear dados); fixture e Supabase rodam o mesmo contrato.
+- O chunk herda o nome do arquivo-fonte, não da pasta: mover `VisualizadorModelo.tsx` não mudou o nome, então a regex do precache em `vite.config.ts` continuou valendo. Confira `dist/assets` e `precache-manifest.json` antes e depois de mover.

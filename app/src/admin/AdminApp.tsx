@@ -16,7 +16,7 @@ import EtapaAdmin, { NovaEtapa } from './telas/etapa/EtapaAdmin.tsx'
 import Organizacao from './telas/Organizacao.tsx'
 import Pessoas from './telas/Pessoas.tsx'
 import EditorPlanta from './telas/planta/EditorPlanta.tsx'
-import ModelosObra from './telas/modelo/ModelosObra.tsx'
+import ModelosObra from '@modules/modelos/presentation/admin/ModelosObra.tsx'
 import PlantaObra from './telas/planta/PlantaObra.tsx'
 import RaObra from '@modules/ra/presentation/admin/RaObra.tsx'
 

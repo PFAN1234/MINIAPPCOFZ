@@ -217,8 +217,8 @@ Sigla e revisão saem do nome no padrão `<obra>-<projeto>-<SIGLA>-<REV>` (ex.: 
 | Migration | `supabase/migrations/20261112120000_admin_modelo.sql` |
 | Regras e publicação | `app/src/modules/modelos/domain/modelos.ts` (sigla/revisão do nome, limite, conferência do `.frag`, hash, caminho, envio + RPC) |
 | Conversão | `app/src/modules/modelos/infra/conversor.ts` e `conversor.worker.ts`; o `web-ifc.wasm` é servido em `/web-ifc/<versão>/` (plugin `wasmWebIfc` no `vite.config.ts`) |
-| Tela | `app/src/admin/telas/modelo/ModelosObra.tsx` |
-| Testes | `app/src/modules/modelos/infra/modelos.node.test.ts`, `app/src/admin/telas/modelo/ModelosObra.test.tsx`, `app/e2e/admin-modelo.spec.ts` (converte de verdade `e2e/fixtures/TESTE-01-EST-R01.ifc`, gerado por `e2e/fixtures/gerar_ifc_teste.py`, e envia o `ARQ.frag` da HTO), `tests/db/test_admin_modelo.py` |
+| Tela | `app/src/modules/modelos/presentation/admin/ModelosObra.tsx` |
+| Testes | `app/src/modules/modelos/infra/modelos.node.test.ts`, `app/src/modules/modelos/presentation/admin/ModelosObra.test.tsx`, `app/e2e/admin-modelo.spec.ts` (converte de verdade `e2e/fixtures/TESTE-01-EST-R01.ifc`, gerado por `e2e/fixtures/gerar_ifc_teste.py`, e envia o `ARQ.frag` da HTO), `tests/db/test_admin_modelo.py` |
 
 ### Banco e Storage (`20261112120000_admin_modelo.sql`)
 
@@ -351,7 +351,7 @@ Contrato: `docs/contrato-boletim.md` (parte 3). O banco agenda e guarda (`boleti
 
 ## Realidade aumentada (QR)
 
-Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra, ao lado de "Modelos 3D"). Cadastra a posição do QR de cada ambiente e imprime a folha A4 que o Mini App lê para alinhar o modelo 3D com a obra. Contrato de dados em `docs/contrato-ra.md`; código em `app/src/admin/telas/ra/` e `app/src/admin/ra/` (`qr.ts`, `geometria.ts`).
+Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra, ao lado de "Modelos 3D"). Cadastra a posição do QR de cada ambiente e imprime a folha A4 que o Mini App lê para alinhar o modelo 3D com a obra. Contrato de dados em `docs/contrato-ra.md`; código em `app/src/modules/ra/presentation/admin/` e `app/src/modules/ra/domain/` (`qr.ts`, `geometria.ts`).
 
 **Pré-requisito:** a obra precisa ter a geometria dos ambientes (`scripts/gerar_geometria.py --obra <slug>` e aplicar o seed). Sem ela a página mostra "Esta obra ainda não tem a geometria dos ambientes…".
 
@@ -378,7 +378,7 @@ Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra,
 | --- | --- |
 | RPCs | `admin_listar_ra(p_obra)`, `admin_definir_qr(p_ambiente, p_parede, p_distancia_m, p_altura_m, p_lado_m)`, `admin_remover_qr(p_ambiente)` |
 | Repositório | `listarRA`, `definirQr`, `removerQr` (`dados/`; a fixture traz dois ambientes da HTO com geometria, um deles com QR) |
-| Testes | `app/src/admin/ra/*.test.ts`, `app/src/admin/telas/ra/RaObra.test.tsx` |
+| Testes | `app/src/modules/ra/domain/*.test.ts`, `app/src/modules/ra/presentation/admin/RaObra.test.tsx` |
 
 ## Erros do cliente
 

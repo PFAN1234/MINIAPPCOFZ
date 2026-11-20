@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useState } from 'react'
 import { Link, useParams } from 'react-router'
-import { EstadoCarregando, EstadoConsulta } from '../shared/ui/feedback/Estado.tsx'
-import { IconeCubo } from '../shared/ui/icones/Icones.tsx'
-import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
-import { useRepositorio } from '../dados/contexto.tsx'
-import { useObra } from '../dados/hooks.ts'
+import { EstadoCarregando, EstadoConsulta } from '@shared/ui/feedback/Estado.tsx'
+import { IconeCubo } from '@shared/ui/icones/Icones.tsx'
+import { TopoTela } from '@shared/ui/layout/TopoTela.tsx'
+import { useRepositorio } from '../../../../dados/contexto.tsx'
+import { useObra } from '../../../../dados/hooks.ts'
 import { modeloComCache } from '@modules/modelos/infra/cacheModelo.ts'
 import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
 
 // Three.js e That Open ficam fora do pacote inicial.
-const VisualizadorModelo = lazy(() => import('../modelo/VisualizadorModelo.tsx'))
+const VisualizadorModelo = lazy(() => import('@modules/modelos/presentation/miniapp/VisualizadorModelo.tsx'))
 
 /** Disciplinas previstas para o modelo federado; as sem `.frag` ficam desabilitadas. */
 const DISCIPLINAS = ['ARQ', 'ELT', 'HID', 'ESG', 'DRE', 'PCI', 'VES', 'TLD', 'ANT']

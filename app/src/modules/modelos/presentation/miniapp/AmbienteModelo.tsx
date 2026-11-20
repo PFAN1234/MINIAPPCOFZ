@@ -1,16 +1,16 @@
 import { lazy, Suspense, useCallback, useMemo } from 'react'
 import { Link, useParams } from 'react-router'
-import { EstadoCarregando, EstadoConsulta } from '../shared/ui/feedback/Estado.tsx'
-import { IconeCubo } from '../shared/ui/icones/Icones.tsx'
-import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
-import { useRepositorio } from '../dados/contexto.tsx'
-import { useAmbiente, useGeometria, useModelos } from '../dados/hooks.ts'
-import type { AmbienteDetalhe } from '../dados/tipos.ts'
+import { EstadoCarregando, EstadoConsulta } from '@shared/ui/feedback/Estado.tsx'
+import { IconeCubo } from '@shared/ui/icones/Icones.tsx'
+import { TopoTela } from '@shared/ui/layout/TopoTela.tsx'
+import { useRepositorio } from '../../../../dados/contexto.tsx'
+import { useAmbiente, useGeometria, useModelos } from '../../../../dados/hooks.ts'
+import type { AmbienteDetalhe } from '../../../../dados/tipos.ts'
 import { modeloComCache } from '@modules/modelos/infra/cacheModelo.ts'
 import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
 
 // Three.js e That Open ficam fora do pacote inicial.
-const VisualizadorModelo = lazy(() => import('../modelo/VisualizadorModelo.tsx'))
+const VisualizadorModelo = lazy(() => import('@modules/modelos/presentation/miniapp/VisualizadorModelo.tsx'))
 
 export default function AmbienteModelo() {
   const { slug = '', codigo = '' } = useParams()

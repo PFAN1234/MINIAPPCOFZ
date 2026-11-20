@@ -1,9 +1,9 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { criarRepositorioFixture } from '../dados/fixture.ts'
+import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
 import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
-import { renderizarApp } from '../shared/test/renderApp.tsx'
+import { renderizarApp } from '@shared/test/renderApp.tsx'
 
 function repoComModelos(modelos: ModeloFrag[] | Error) {
   return {
@@ -16,7 +16,7 @@ function repoComModelos(modelos: ModeloFrag[] | Error) {
 }
 
 // jsdom não tem WebGL: o visualizador real é testado no navegador (e2e).
-vi.mock('../modelo/VisualizadorModelo.tsx', () => ({
+vi.mock('@modules/modelos/presentation/miniapp/VisualizadorModelo.tsx', () => ({
   default: ({ ativos }: { ativos: ReadonlySet<string> }) => (
     <div data-testid="visualizador">ativos: {[...ativos].join(',')}</div>
   ),

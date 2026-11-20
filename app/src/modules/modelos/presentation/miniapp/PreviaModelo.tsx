@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
 import { lazy, Suspense, useCallback, useMemo } from 'react'
 import { Link } from 'react-router'
-import { useRepositorio } from '../dados/contexto.tsx'
+import { useRepositorio } from '../../../../dados/contexto.tsx'
 import { modeloComCache } from '@modules/modelos/infra/cacheModelo.ts'
 import type { ModeloFrag } from '@modules/modelos/domain/modelos.ts'
-import { IconeChevron, IconeCubo } from '../shared/ui/icones/Icones.tsx'
+import { IconeChevron, IconeCubo } from '@shared/ui/icones/Icones.tsx'
 
 // Three.js e That Open ficam fora do pacote inicial, como na tela Modelo.
-const VisualizadorModelo = lazy(() => import('../modelo/VisualizadorModelo.tsx'))
+const VisualizadorModelo = lazy(() => import('@modules/modelos/presentation/miniapp/VisualizadorModelo.tsx'))
 
 const SO_ARQ: ReadonlySet<string> = new Set(['ARQ'])
 

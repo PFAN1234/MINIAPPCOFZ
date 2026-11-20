@@ -523,7 +523,7 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 **Objetivo:** Replicar o padrão validado na Fase 3 nos outros dois contextos técnicos de baixo acoplamento. Um PR por subfase:
 
-#### Fase 4A — Contexto `modelos` (Modelos 3D / IFC → `.frag`)
+#### Fase 4A — Contexto `modelos` (Modelos 3D / IFC → `.frag`) — concluída (partes 1 e 2)
 - `domain/`: `modelos.ts`, `corte.ts` (unificando regras de disciplinas e corte).
 - `application/`: portas `ModelosRepositorio`, `CacheModeloPort`, `ConversorIfcPort` + `use-cases/carregarModeloComCache`.
 - `infrastructure/`: `cacheModelo.ts`, `conversor.ts`, `conversor.worker.ts`, adaptadores Supabase/Fixture de modelos.

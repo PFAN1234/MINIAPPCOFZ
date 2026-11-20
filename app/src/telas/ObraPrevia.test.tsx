@@ -17,7 +17,7 @@ function repoComModelos(modelos: ModeloFrag[] | Error) {
   }
 }
 
-vi.mock('../modelo/VisualizadorModelo.tsx', () => ({
+vi.mock('@modules/modelos/presentation/miniapp/VisualizadorModelo.tsx', () => ({
   default: ({
     modelos,
     ativos,

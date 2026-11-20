@@ -396,3 +396,8 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 
 - [x] Fase 3 concluída: `modules/ra/{domain,application,infra,presentation}`; porta + contract test (fixture e Supabase), telas em `presentation/{miniapp,admin}`. Padrão registrado em `docs/padrao-contexto-modulo.md`.
 - Estado final: typecheck, eslint (0 avisos), build e build:fixture verdes; 862 testes em 103 arquivos; e2e `ra.spec.ts` 3/3; chunks lazy (`TelaRA`, `DiagnosticoRA`, `motor-3d`) inalterados.
+
+## Arquitetura — Fase 4A (contexto `modelos`)
+
+- [x] Fase 4A concluída: `modules/modelos/{domain,application,infra,presentation}`; telas em `presentation/{miniapp,admin}`.
+- Estado final: typecheck, eslint (0 avisos), build e build:fixture verdes; 867 testes em 105 arquivos; e2e `modelo.spec.ts` e `admin-modelo.spec.ts` 5/5; `VisualizadorModelo`, `motor-3d`, `jsQR`, `conversor.worker` fora do precache (manifesto igual, exceto a versão).
