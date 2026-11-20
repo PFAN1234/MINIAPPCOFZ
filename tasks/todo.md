@@ -143,7 +143,7 @@ Procedimento em `tasks/plano-app.md` (seção "Novas obras"). Decisões de 2026-
 - [x] Configuração por obra (`data/<slug>/obra.json`), começando pela HTO com os valores hoje fixos nos scripts; inclui `renomear`, `categorias` e `ambientes_manuais` (cômodo sem rótulo, pino colocado à mão).
 - [x] Scripts com `--obra <slug>` e extrator lendo os PDFs direto, sem o `inventory.json` de diagnóstico.
 - [x] Pipeline da HTO reproduz os JSON, as imagens e `supabase/seed/hto.sql` sem diferença de conteúdo (só o campo `fonte` e a ordem das chaves de `plantas.json`, mantido como estava); pytest passa.
-- [x] COFZ: PDF em `DOCS COFZ/PDF/` (DE009 R06, pavimento único), triagem, extração e imagens; 19 ambientes (17 rotulados + WC da chefia e Sala de apoio à mão), `supabase/seed/cofz.sql`. Decisões de 2026-11-11: nome "COFZ", circulações numeradas por área, "DA" → "Sala DA".
+- [x] COFZ: PDF em `obras/cofz/pdf/` (DE009 R06, pavimento único), triagem, extração e imagens; 19 ambientes (17 rotulados + WC da chefia e Sala de apoio à mão), `supabase/seed/cofz.sql`. Decisões de 2026-11-11: nome "COFZ", circulações numeradas por área, "DA" → "Sala DA".
 - [ ] COFZ: revisão humana da `data/cofz/plantas/R06/terreo/prova.png` e dos nomes → `status: revisado`.
 - [x] COFZ: seed aplicado no `miniappcofz-dev` (19 ambientes, 19 recortes) e 21 imagens no bucket `plantas` via `assinar-envio-plantas` (2026-11-11).
 - [ ] Tópico no grupo de teste, `/vincular_obra <slug>` e registro publicado no tópico certo.
@@ -313,7 +313,7 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 Plano: `tasks/plano-organizacao-pastas.md` (decisões de 2026-11-12; registrado em `docs/ROADMAP.md`).
 
 - [x] Fase 1: capturas `Screenshot 2026-11-06 *.png` removidas da raiz em 2026-11-12 (commit `ef7277c`, ficam no histórico); READMEs já ajustados.
-- [ ] Fase 2: padronizar `DOCS COFZ/` e `DOCS HTO/` (e `public/ifc/`) → `obras/<slug>/`, atualizar `.gitignore`, `data/*/obra.json`, re-executar o pipeline Python (`extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `importar_config_obras.py`) e atualizar `app/e2e/planta.spec.ts` e scripts/docs.
+- [x] Fase 2: padronizar `DOCS COFZ/` e `DOCS HTO/` (e `public/ifc/`) → `obras/<slug>/`, atualizar `.gitignore`, `data/*/obra.json`, re-executar o pipeline Python (`extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `importar_config_obras.py`) e atualizar `app/e2e/planta.spec.ts` e scripts/docs.
 - [ ] Fase 3: atualizar o `README.md` raiz para refletir o estado atual do projeto.
 - [ ] Fase 4 (após estabilização das entregas de UI): organizar `app/src/` em `miniapp/` e `shared/` (mantendo `admin/` isolado) e validar `precache-manifest.json`.
 

@@ -27,9 +27,9 @@ O GIF apresenta nove etapas, incluindo a abertura pelo Telegram, escolha da obra
 | `tasks/` | Plano e checklist de execução |
 | `artifacts/validation/` | Inventários, evidências e scripts de diagnóstico PDF/IFC |
 | `tests/` | Testes dos cálculos de geometria e registro |
-| `DOCS HTO/` | PDFs originais e instruções para fornecer os modelos IFC |
+| `obras/` | PDFs originais (`obras/<slug>/pdf/`) e instruções para fornecer os modelos IFC |
 
-Os dois PDFs originais estão em [DOCS HTO/PDF](DOCS%20HTO/PDF/). Os modelos IFC são mantidos separadamente; consulte [DOCS HTO/README.md](DOCS%20HTO/README.md).
+Os dois PDFs originais estão em [obras/hto/pdf](obras/hto/pdf/). Os modelos IFC são mantidos separadamente; consulte [obras/hto/README.md](obras/hto/README.md).
 
 ## Reproduzir o GIF
 

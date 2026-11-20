@@ -24,7 +24,7 @@ export function obraSintetica(revisao = 'R01', extra: Partial<ObraConfig> = {}):
     nome: 'Teste',
     status: 'aguardando_revisao_humana',
     revisao,
-    pasta_pdf: 'DOCS TESTE/PDF',
+    pasta_pdf: 'obras/teste/pdf',
     pavimentos: [{ codigo: 'terreo', nome: 'Térreo', ordem: 1, pdf: `X-${revisao}.pdf`, pagina: 1 }],
     prancha: { recorte_edificio: [0, 0, 1, 1], mascaras: [] },
     nomes_fixos: {},

@@ -7,14 +7,14 @@ Branch: `feature/visualizador-modelo-federado`. Substitui o item "Visualizador T
 - Bibliotecas: `@thatopen/components` 3.6, `@thatopen/fragments` 3.6, `three` 0.187 e `web-ifc` 0.0.79 (peer). `@thatopen/components-front` só se a v2 precisar de seleção/realce.
 - Origem dos `.frag`: banco de dados, inicialmente Supabase Storage. No teste local, arquivos em disco.
 - Conversão IFC → `.frag`: script Node offline (`scripts/ifc_para_frag.mjs`), não no navegador. O app só carrega `.frag`.
-- Pastas do teste: IFC em `public/ifc/` (raiz, fora do Git); `.frag` em `app/public/modelos/<obra>/` (o Vite serve em `/modelos/<obra>/<arquivo>.frag`; fora do Git e do precache do service worker).
+- Pastas do teste: IFC em `obras/hto/ifc/` (raiz, fora do Git); `.frag` em `app/public/modelos/<obra>/` (o Vite serve em `/modelos/<obra>/<arquivo>.frag`; fora do Git e do precache do service worker).
 - Escopo v1: carregar, orbitar/zoom/pan com toque, ligar/desligar cada disciplina, enquadrar a câmera. Sem seleção de elementos nem ligação ambiente → IfcSpace (v2/v3).
 - Primeiro modelo do teste: ARQ direto (~208 MB). Medir tempo e memória cedo; plano B abaixo.
 
 ## Arquitetura
 
 ```text
-public/ifc/*.ifc ──► scripts/ifc_para_frag.mjs ──► app/public/modelos/<obra>/<SIGLA>.frag
+obras/hto/ifc/*.ifc ──► scripts/ifc_para_frag.mjs ──► app/public/modelos/<obra>/<SIGLA>.frag
                                                    (+ manifesto.json)
                                                         │
 Supabase Storage (bucket `modelos`, privado) ◄── publicar_modelos.mjs (fase B)
@@ -32,8 +32,8 @@ App: Modelo.tsx ► useModeloFederado ► FragmentsManager ► Three.js (canvas)
 ### A — Conversão e visualizador local (esta branch)
 
 1. Dependências: `app`: `three`, `@thatopen/components`, `@thatopen/fragments`, `@types/three`. Raiz/scripts: `web-ifc`, `@thatopen/fragments` (importador). Verificar compatibilidade com Node 24 e Vite 8.
-2. `.gitignore`: `/public/ifc/`, `/app/public/modelos/`. Garantir que o `montarManifesto` do precache não inclua `/modelos/`.
-3. `scripts/ifc_para_frag.mjs --obra hto [--ifc <arquivo>]`: lê `public/ifc/*.ifc`, usa `IfcImporter` (`@thatopen/fragments`) com WASM do `web-ifc`, grava `<SIGLA>.frag` e atualiza `manifesto.json`. Sigla vem do nome do arquivo (`CE01-14PE01-ARQ-R05` → `ARQ`). Roda com `--max-old-space-size` alto; imprime tempo, tamanho do `.ifc` e do `.frag`. Teste com IFC pequeno (fixture mínimo) e verificação de saída.
+2. `.gitignore`: `/obras/*/ifc/*.ifc`, `/app/public/modelos/`. Garantir que o `montarManifesto` do precache não inclua `/modelos/`.
+3. `scripts/ifc_para_frag.mjs --obra hto [--ifc <arquivo>]`: lê `obras/hto/ifc/*.ifc`, usa `IfcImporter` (`@thatopen/fragments`) com WASM do `web-ifc`, grava `<SIGLA>.frag` e atualiza `manifesto.json`. Sigla vem do nome do arquivo (`CE01-14PE01-ARQ-R05` → `ARQ`). Roda com `--max-old-space-size` alto; imprime tempo, tamanho do `.ifc` e do `.frag`. Teste com IFC pequeno (fixture mínimo) e verificação de saída.
 4. `Modelo.tsx` + `VisualizadorModelo.tsx` (lazy): `Components` → `Worlds` (cena, câmera, renderer) → `FragmentsManager` com worker. Carrega cada `.frag`, adiciona à cena, enquadra (`fitToSphere`/bounding box). Estados: carregando com progresso, erro, vazio (sem modelos), sem WebGL.
 5. Chips de disciplina viram toggles reais (`aria-pressed`); chips sem `.frag` ficam desabilitados como hoje.
 6. Toque: orbitar 1 dedo, pan/zoom 2 dedos (CameraControls já cobre). Botão "Enquadrar". Respeitar `useVoltar`/BackButton do Telegram e liberar GPU ao desmontar (`dispose` de world, fragments, worker).
@@ -64,7 +64,7 @@ Seleção e propriedades; focar no ambiente (IfcSpace ↔ `ambientes.json`); cor
 
 ## Ordem de execução sugerida
 
-1. Você coloca `.ifc` em `public/ifc/`.
+1. Você coloca `.ifc` em `obras/hto/ifc/`.
 2. Passos A.1–A.3 (dependências, ignore, script) → conversão do ARQ e medição.
 3. A.4–A.6 (visualizador) → validar com o `.frag` real.
 4. A.7 (testes) → revisão → PR.

@@ -51,7 +51,7 @@ def test_detalhe_para_cada_ambiente(pav):
 @pytest.mark.parametrize("pav", PAVIMENTOS, ids=IDS)
 def test_sha256_do_pdf(pav):
     pdf = ROOT / pav["pdf"]
-    assert pdf.parent.name == "PDF" and pdf.is_file()
+    assert pdf.parent.name == "pdf" and pdf.is_file()
     assert hashlib.sha256(pdf.read_bytes()).hexdigest() == pav["sha256"]
 
 

@@ -1,14 +1,14 @@
 # Documentos HTO
 
-Os dois PDFs originais estão incluídos no repositório, em `PDF/`. Os modelos IFC são fornecidos separadamente e ignorados pelo Git; o modelo ARQ tem aproximadamente 208 MB. Os scripts esperam esta organização, relativa à raiz do repositório:
+Os dois PDFs originais estão incluídos no repositório, em `pdf/`. Os modelos IFC são fornecidos separadamente e ignorados pelo Git; o modelo ARQ tem aproximadamente 208 MB. Os scripts esperam esta organização, relativa à raiz do repositório:
 
 ```text
-DOCS HTO/
-├── IFC/
+obras/hto/
+├── ifc/
 │   ├── CE01-14PE01-ARQ-R05.ifc
 │   ├── CE01-14PE01-ANT-R01.ifc
 │   └── CE01-14PE01-TLD-R00.ifc
-└── PDF/
+└── pdf/
     ├── CE01-14PE01-ARQ-DE017-R05.pdf
     └── CE01-14PE01-ARQ-DE018-R05.pdf
 ```

@@ -1,6 +1,6 @@
 // Converte IFC em .frag (That Open Fragments) e atualiza o manifesto da obra.
-// Uso: npm run modelos -- --obra hto [--ifc ../public/ifc/CE01-14PE01-ARQ-R06.ifc]
-// Sem --ifc, converte todos os .ifc de ../public/ifc/. Sigla = 3º trecho do nome (CE01-14PE01-ARQ-R06 -> ARQ).
+// Uso: npm run modelos -- --obra hto [--ifc ../obras/hto/ifc/CE01-14PE01-ARQ-R06.ifc]
+// Sem --ifc, converte todos os .ifc de ../obras/hto/ifc/. Sigla = 3º trecho do nome (CE01-14PE01-ARQ-R06 -> ARQ).
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { createHash as hash } from 'node:crypto'
 import path from 'node:path'

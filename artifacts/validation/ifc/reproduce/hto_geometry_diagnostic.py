@@ -14,7 +14,7 @@ settings=ifcopenshell.geom.settings();settings.set('use-world-coords',True)
 origin=np.array([194.0316869938767,296.0942746757137,0.])
 colors={'ARQ':[185,190,195,255],'ANT':[240,130,30,255],'TLD':[40,100,220,255]}
 for code in ('ANT','TLD','ARQ'):
- p=next((ROOT/'DOCS HTO/IFC').glob('*'+code+'*.ifc'));f=ifcopenshell.open(str(p));els=f.by_type('IfcElement');print('GEOM',code,len(els),flush=True)
+ p=next((ROOT/'obras/hto/ifc').glob('*'+code+'*.ifc'));f=ifcopenshell.open(str(p));els=f.by_type('IfcElement');print('GEOM',code,len(els),flush=True)
  iterator=ifcopenshell.geom.iterator(settings,f,4,include=els)
  rec=[];selected=[];count=0;fail=[];minall=np.array([np.inf]*3);maxall=-minall
  if iterator.initialize():

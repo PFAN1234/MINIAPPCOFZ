@@ -13,7 +13,7 @@ Obras cadastradas: `hto` (R05, térreo e 1º pavimento, revisada) e `cofz` (R06,
 | `slug`, `nome` | Identificador (letras minúsculas, dígitos e hífen; vai para `obra.slug` no banco) e nome exibido. |
 | `status` | `aguardando_revisao_humana` ou `revisado`. `revisado` exige `revisao_humana` feita na mesma revisão da planta. |
 | `revisao` | Revisão vigente da planta (ex.: `R05`). Se o nome do PDF trouxer `-Rxx`, tem de bater. |
-| `pasta_pdf` | Pasta dos PDFs originais, somente leitura (ex.: `DOCS HTO/PDF`). |
+| `pasta_pdf` | Pasta dos PDFs originais, somente leitura (ex.: `obras/hto/pdf`). |
 | `pavimentos` | Lista com `codigo` (vai para o id dos ambientes e para os caminhos), `nome`, `ordem`, `pdf` (nome do arquivo na pasta) e `pagina` (começa em 1). |
 | `prancha` | `recorte_edificio` `[x0, y0, x1, y1]` e `mascaras` (`{"retangulo": [...], "descricao": ...}`), em coordenadas normalizadas da página (0–1, origem no canto superior esquerdo). O recorte contém o edifício inteiro; as máscaras cobrem de branco legendas, tabelas e carimbo que caírem dentro dele. `observacao` é livre. |
 | `nomes_fixos` | Nome na planta → nome operacional, para abreviações (`"VEST. FEM."` → `"Vestiário feminino"`). Sem entrada, vale a regra genérica do extrator (primeira letra maiúscula, `APTO.`, `BHO`...). |
@@ -56,7 +56,7 @@ O envio usa `x-upsert: true`, então pode ser repetido sem erro.
 
 ## Cadastrar uma obra nova
 
-1. Copiar os PDFs de arquitetura (um por pavimento, revisão vigente) para `DOCS <SIGLA>/PDF/`. Conferir que o texto é selecionável e que cada ambiente tem `A=xx m²` logo abaixo do nome.
+1. Copiar os PDFs de arquitetura (um por pavimento, revisão vigente) para `obras/<slug>/pdf/`. Conferir que o texto é selecionável e que cada ambiente tem `A=xx m²` logo abaixo do nome.
 2. Criar `data/<slug>/obra.json` a partir do da HTO ou da COFZ, com `status: aguardando_revisao_humana` e `revisao_humana: null`.
 3. Medir o recorte e as máscaras: renderizar a página com uma grade de coordenadas normalizadas e marcar onde ficam o edifício, as legendas, as tabelas, o título e o carimbo. O recorte não pode conter nenhum pedaço deles; onde o edifício avança sobre essas áreas, usar máscara.
 4. Rodar `extrair_ambientes.py` e `gerar_plantas.py` com `--obra <slug>`. Conferir a contagem e as áreas, olhar `prova.png` (cada pino acima do nome certo, nada de legenda ou carimbo na imagem) e ajustar `nomes_fixos`, `categorias` e `renomear`.
@@ -72,7 +72,7 @@ O código (id) de um ambiente não muda depois de publicado: `registro` referenc
 
 **b) Nova revisão do PDF:**
 
-1. Colocar o PDF novo em `DOCS <SIGLA>/PDF/` (os originais são só lidos; o PDF antigo pode ficar).
+1. Colocar o PDF novo em `obras/<slug>/pdf/` (os originais são só lidos; o PDF antigo pode ficar).
 2. No `obra.json`, atualizar `revisao` e o `pdf` de cada pavimento. Se a obra estava `revisado`, voltar o `status` para `aguardando_revisao_humana` (o extrator recusa `revisado` com `revisao_humana` de outra revisão).
 3. Rodar, na ordem:
    ```bash
@@ -96,7 +96,7 @@ Aplique o seed de preferência depois de confirmar as renomeações. Se ele for 
 
 ## Geometria dos ambientes para a RA
 
-`gerar_geometria.py` liga cada ambiente a um IfcSpace do inventário do IFC de arquitetura e grava o contorno no referencial do `ARQ.frag` (contrato em `docs/contrato-ra.md`). Configuração na chave `ra` de `data/<slug>/obra.json` (inventário, pavimento do app → pavimento do IFC, calibração PDF→IFC, transformação IFC→frag, referencial, `piso_acabado_m`, `pe_direito_m`, `tolerancia_marcador_m`). Não usa dependências além da biblioteca padrão e não altera `DOCS HTO/` nem `artifacts/`.
+`gerar_geometria.py` liga cada ambiente a um IfcSpace do inventário do IFC de arquitetura e grava o contorno no referencial do `ARQ.frag` (contrato em `docs/contrato-ra.md`). Configuração na chave `ra` de `data/<slug>/obra.json` (inventário, pavimento do app → pavimento do IFC, calibração PDF→IFC, transformação IFC→frag, referencial, `piso_acabado_m`, `pe_direito_m`, `tolerancia_marcador_m`). Não usa dependências além da biblioteca padrão e não altera `obras/hto/` nem `artifacts/`.
 
 ```bash
 python3 scripts/gerar_geometria.py --obra hto   # grava data/hto/geometria.json e supabase/seed/hto_geometria.sql

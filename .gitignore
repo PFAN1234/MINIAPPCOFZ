@@ -54,12 +54,11 @@ Thumbs.db
 .state/
 *.log
 
-# Modelos IFC originais (fornecidos separadamente; ver DOCS HTO/README.md)
-/DOCS */IFC/*.ifc
+# Modelos IFC originais (fornecidos separadamente; ver obras/hto/README.md)
+/obras/*/ifc/*.ifc
 
 # Exportações parciais / intermediárias
 *.staged.glb
 *.staged.json
 
 # Modelos 3D: o IFC original fica fora do Git; os .frag gerados (app/public/modelos/) são versionados
-/public/ifc/

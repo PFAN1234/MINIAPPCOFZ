@@ -3,8 +3,8 @@
 Originais da obra COFZ (edifício E-65 CO-FZ-COP, Projeto ITA / Campus Fortaleza — 2ª etapa). São apenas lidos pelos scripts; não editar.
 
 ```text
-DOCS COFZ/
-└── PDF/
+obras/cofz/
+└── pdf/
     └── CE01-01PE02-ARQ-DE009-R06.pdf   # Planta baixa — leiaute (pavimento único), escala 1:75, revisão R06
 ```
 

@@ -63,7 +63,7 @@ Giroscópio em modo relativo, sem bússola: a armadura e os quadros desviam o ma
 
 | Dado | Situação | Como obter |
 | --- | --- | --- |
-| IFC de elétrica da HTO | Não está no projeto | Usuário coloca em `DOCS HTO/IFC/`; converte com `npm run modelos` e publica pelo `/admin/` |
+| IFC de elétrica da HTO | Não está no projeto | Usuário coloca em `obras/hto/ifc/`; converte com `npm run modelos` e publica pelo `/admin/` |
 | ELT no mesmo referencial do ARQ | Desconhecido | Inventariar unidades e origem como foi feito para ANT/TLD (`docs/validacao-hto.md`); validar com pontos de controle; guardar a matriz por modelo |
 | Vínculo ambiente ↔ IfcSpace | Só o Apto. 101 | Script: o pino do ambiente, levado ao IFC pela calibração PDF → IFC, cai dentro de um IfcSpace; conferir pela área; revisão humana dos que não baterem. O 1º pavimento precisa de calibração própria |
 | Geometria do ambiente | Não existe | Do IfcSpace: contorno do piso, cota do piso acabado e pé-direito, no referencial do modelo; tabela `ambiente_geometria` |

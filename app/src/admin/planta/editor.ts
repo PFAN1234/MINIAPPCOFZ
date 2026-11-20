@@ -131,7 +131,7 @@ export function configDoPavimento(dados: DadosEditorPlanta, pav: string, e: Esta
     nome: dados.obra.nome,
     status: 'aguardando_revisao_humana',
     revisao: e.revisao,
-    pasta_pdf: typeof c.pasta_pdf === 'string' ? c.pasta_pdf : `DOCS ${dados.obra.slug.toUpperCase()}/PDF`,
+    pasta_pdf: typeof c.pasta_pdf === 'string' ? c.pasta_pdf : `obras/${dados.obra.slug}/pdf`,
     pavimentos: [{ codigo: pav, nome: pavDados.nome, ordem: pavDados.ordem, pdf: e.pdfNome || 'planta.pdf', pagina: e.pagina }],
     prancha: e.prancha,
     nomes_fixos: e.nomes_fixos,

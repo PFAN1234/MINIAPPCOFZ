@@ -3,7 +3,7 @@
   "nome": "HTO",
   "status": "revisado",
   "revisao": "R05",
-  "pasta_pdf": "DOCS HTO/PDF",
+  "pasta_pdf": "obras/hto/pdf",
   "pavimentos": [
     {
       "codigo": "terreo",
