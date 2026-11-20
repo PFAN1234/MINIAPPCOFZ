@@ -406,3 +406,10 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 
 - [x] Fase 4B concluída: `modules/plantas/{domain,application,infra,presentation}`; telas em `presentation/{miniapp,admin}`.
 - Estado final: 872 testes; `pdfjs-dist`/`pdf.worker` fora do bundle inicial e do precache.
+
+## Arquitetura — Fase 5A (contexto `acessos`)
+
+- [x] Fase 5A concluída: `modules/acessos/{domain,application,infra,presentation}`; 5 portas (`Acessos`, `AcessosAdmin`, `Sessao`, `SessaoAdmin`, `EquipeServico`), adaptadores Supabase e Fixture, telas em `presentation/{miniapp,admin}`.
+- Estado final: typecheck, eslint (0 avisos), build e build:fixture verdes; 890 testes em 107 arquivos; e2e `acesso.spec.ts` e `admin.spec.ts` 6/6; chunks e precache idênticos aos de antes.
+- Lacunas conhecidas: sem contract test de `SessaoAdminRepositorio` (coberto por `AdminApp.test`); `acessos-supabase.test.ts` segue em `dados/`; `NomeExibicao.test.tsx` fica em `telas/` (cruza contextos).
+- Próximo: 5B (`obras`).
