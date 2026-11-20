@@ -461,6 +461,8 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
 - [x] 2 Motor 3D e navegação (e2e `central-modelos.spec.ts` verde; `admin-modelo.spec.ts` volta na etapa 5)
 - [x] 3 Inspeção (propriedades por grupos, modo Inspecionar, filtro por atributo direto na sub-aba Filtro; psets no filtro ficam para depois; os .frag da HTO não trazem quantidades)
 - [ ] 4 Cortes, vistas e medições
+  - [x] 4A vistas (planta por pavimento, elevações N/S/L/O, 3D), cortes horizontais com lista e Del, caminhar, minimapa; e2e verde (4.5 min). Em aberto: orientação das elevações não conferida (supõe norte do projeto), corte sem preenchimento de seção, desenho do minimapa não conferido
+  - [ ] 4B medições (distância, área, volume, ângulo), painel com lista e apagar
 - [ ] 5 Gestão de modelos
 - [ ] 6 Documentos
 - [ ] 7 Issues e BCF
