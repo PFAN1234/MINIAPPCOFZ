@@ -1,3 +1,4 @@
+import type { Observacao } from '@modules/relatorios/domain/tipos.ts'
 /**
  * Cartão "Observações do dia" da página da obra (contrato do boletim, parte 2): lista de hoje
  * (no fuso da etapa), adicionar pela fila do aparelho (funciona sem sinal), editar e excluir as
@@ -5,7 +6,7 @@
  */
 import { useState, type FormEvent } from 'react'
 import { useAlterarObservacao, useObservacoesDoDia } from '../dados/hooks.ts'
-import type { Observacao } from '../dados/tipos.ts'
+
 import type { ObraResumo } from '@modules/obras/domain/tipos.ts'
 import { useFila, useObservacoesLocais } from '../offline/contexto.tsx'
 import type { ItemObservacao } from '../offline/fila.ts'

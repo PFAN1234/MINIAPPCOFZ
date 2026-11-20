@@ -5,7 +5,7 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from "react";
-import type { PontoSerie } from "../util/painel.ts";
+import type { PontoSerie } from "@modules/relatorios/domain/painel.ts";
 
 /** Largura inicial (antes de medir) e altura fixa, em px reais: o texto do SVG fica em 11 px em qualquer tela. */
 const L_PADRAO = 320;

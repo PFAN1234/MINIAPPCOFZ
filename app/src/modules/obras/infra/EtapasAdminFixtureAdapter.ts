@@ -1,5 +1,5 @@
 import type { UsuarioApp } from '@modules/acessos/domain/tipos.ts'
-import { aplicarCampos, calcularFaltando, calcularPrazo, camposDe } from '../../../admin/dados/fixtureBoletim.ts'
+import { aplicarCampos, calcularFaltando, calcularPrazo, camposDe } from '@modules/obras/infra/camposEtapa.ts'
 import { ErroAdmin } from '../../../admin/dados/tipos.ts'
 import type { EtapasAdminRepositorio } from '../application/ports/EtapasAdminRepositorio.port.ts'
 import type { Aditivo, BucketObra, CamposEtapa, EtapaDetalhe, EtapaLista, Responsavel, ResumoObra, Exclusao } from '../domain/tiposAdmin.ts'

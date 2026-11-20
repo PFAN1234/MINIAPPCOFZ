@@ -1,9 +1,10 @@
+import type { EtapaRelatorio, Relatorios as DadosRelatorios } from '@modules/relatorios/domain/tipos.ts'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
-import type { EtapaRelatorio, Relatorios as DadosRelatorios } from '../dados/tipos.ts'
+
 import * as telegram from '../shared/infra/telegram/telegram.ts'
 import { renderizarApp } from '../shared/test/renderApp.tsx'
 

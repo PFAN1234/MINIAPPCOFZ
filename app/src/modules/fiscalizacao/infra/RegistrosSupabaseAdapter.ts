@@ -13,7 +13,7 @@ import type {
 import type { ObraResumo } from '@modules/obras/domain/tipos.ts'
 import { ErroEnvio, erroDoSupabase } from '../../../dados/erros.ts'
 import { nomeMostrado } from '../../../dados/nome.ts'
-import { limitesPeriodo } from '../../../util/periodo.ts'
+import { limitesPeriodo } from '@shared/kernel/periodo.ts'
 
 const SEGUNDOS_URL_ASSINADA = 3600
 const LOTE_IN = 100

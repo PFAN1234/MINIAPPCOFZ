@@ -1,4 +1,4 @@
-import type { ObraPainel, PainelRelatorios } from '../dados/tipos.ts'
+import type { ObraPainel, PainelRelatorios } from './tipos.ts'
 
 export interface PontoSerie {
   dia: string

@@ -1,7 +1,8 @@
+import type { EdicaoBoletim, FiltroBoletins } from '@modules/relatorios/domain/tiposAdmin.ts'
 import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
-import type { EdicaoBoletim, FiltroBoletins } from './tipos.ts'
+
 import type { PapelAcesso } from '@modules/acessos/domain/tipos.ts'
 
 /** Depois de gravar algo ligado a obras/etapas, relê as consultas do admin (exceto sessão). */

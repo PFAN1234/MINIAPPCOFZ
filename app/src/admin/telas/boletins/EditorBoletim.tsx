@@ -1,3 +1,4 @@
+import type { BoletimDetalhe, EdicaoBoletim, FotoBoletim, SnapshotBoletim } from '@modules/relatorios/domain/tiposAdmin.ts'
 /**
  * Editor do boletim emitido (rota `/boletins/:id`): mostra o snapshot em blocos parecidos com o PDF e
  * deixa trocar textos, ocultar itens e fotos. Salva rascunho, pré-visualiza e gera a retificação.
@@ -15,7 +16,7 @@ import {
   useUrlPdfBoletim,
   useUrlsFotos,
 } from '../../dados/hooks.ts'
-import type { BoletimDetalhe, EdicaoBoletim, FotoBoletim, SnapshotBoletim } from '../../dados/tipos.ts'
+
 import { dataBr, dataHoraBr } from '../../formato.ts'
 import { abrir, rotuloPublicacao } from './util.ts'
 

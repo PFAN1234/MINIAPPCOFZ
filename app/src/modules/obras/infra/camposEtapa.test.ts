@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { criarRepositorioAdminFixture } from './fixture.ts'
-import { somarMeses } from './fixtureBoletim.ts'
+import { criarRepositorioAdminFixture } from '../../../admin/dados/fixture.ts'
+import { somarMeses } from './camposEtapa.ts'
 import type { DadosEtapa } from '@modules/obras/domain/tiposAdmin.ts'
 
 const nova = (extra: Partial<DadosEtapa> = {}): DadosEtapa => ({

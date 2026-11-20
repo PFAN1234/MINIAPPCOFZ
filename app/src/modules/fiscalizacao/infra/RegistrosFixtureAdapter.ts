@@ -14,7 +14,7 @@ import type {
 } from '@modules/fiscalizacao/domain/tipos.ts'
 import type { Ambiente, ObraDaLista, Pavimento } from '@modules/obras/domain/tipos.ts'
 import { ErroEnvio } from '../../../dados/erros.ts'
-import { dentroDoPeriodo } from '../../../util/periodo.ts'
+import { dentroDoPeriodo } from '@shared/kernel/periodo.ts'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LIMITE_BLOB = 10 * 1024 * 1024

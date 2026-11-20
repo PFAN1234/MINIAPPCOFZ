@@ -1,4 +1,4 @@
-import type { BoletimEmitido, EstadoEmissao } from '../../dados/tipos.ts'
+import type { BoletimEmitido, EstadoEmissao } from '@modules/relatorios/domain/tiposAdmin.ts'
 
 export const ROTULO_ESTADO: Record<EstadoEmissao, string> = {
   pendente: 'na fila',

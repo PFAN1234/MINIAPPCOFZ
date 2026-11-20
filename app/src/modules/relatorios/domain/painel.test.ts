@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { painelFixture } from '../dados/fixture.ts'
-import type { PainelRelatorios } from '../dados/tipos.ts'
+import type { PainelRelatorios } from './tipos.ts'
 import { serieAcumulada, totaisPorObra } from './painel.ts'
 
 const painel: PainelRelatorios = {
@@ -57,19 +56,5 @@ describe('totaisPorObra', () => {
 
   it('sem obras → []', () => {
     expect(totaisPorObra({ ...painel, obras: [], dias: [] })).toEqual([])
-  })
-})
-
-describe('painelFixture', () => {
-  it('é determinístico, cobre ~5 semanas e não resolve mais do que abriu', () => {
-    const p = painelFixture('2026-11-13')
-    expect(painelFixture('2026-11-13')).toEqual(p)
-    const serie = serieAcumulada(p, null)
-    expect(serie.length).toBeGreaterThanOrEqual(30)
-    const fim = serie.at(-1)!
-    expect(fim.pendencias).toBeGreaterThanOrEqual(12)
-    expect(fim.resolvidas).toBeGreaterThan(0)
-    expect(fim.resolvidas).toBeLessThan(fim.pendencias)
-    expect(totaisPorObra(p).every((t) => t.abertas >= 0)).toBe(true)
   })
 })

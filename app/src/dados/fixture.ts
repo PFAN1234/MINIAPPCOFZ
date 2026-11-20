@@ -15,10 +15,12 @@ import { criarObrasFixture } from '@modules/obras/infra/ObrasFixtureAdapter.ts'
 import { criarOrganizacaoFixture } from '@modules/obras/infra/OrganizacaoFixtureAdapter.ts'
 import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
 import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
+import { criarObservacoesFixture, type ObservacaoSalva } from '@modules/relatorios/infra/ObservacoesFixtureAdapter.ts'
+import { criarRelatoriosFixture } from '@modules/relatorios/infra/RelatoriosFixtureAdapter.ts'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
-import { dataNoFuso, formatarDia } from '../shared/kernel/fuso.ts'
+import { dataNoFuso } from '../shared/kernel/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
-import type { NovaObservacao, Observacao, ObservacoesDoDia, RecortePt, BoletimRelatorio, EtapaRelatorio, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
+import type { RecortePt } from './tipos.ts'
 import type { Encerramento, EstadoPublicacao, FotoRegistro, PublicacaoProblema, RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import type { Ambiente, DetalhePlanta, ImagemPlanta, Etapa, ObraDaLista, Pavimento, Planta } from '@modules/obras/domain/tipos.ts'
 import type { PapelObra } from '@modules/acessos/domain/tipos.ts'
@@ -274,31 +276,13 @@ export function urlLocalDaImagem(path: string): string {
   return `/__plantas/${resto.join('/')}`
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const AUTOR_FIXTURE = 'Você (teste)'
 const NOME_POR_ID: Record<string, string> = { [ID_USUARIO]: AUTOR_FIXTURE, [ID_PATRICIO]: NOME_PATRICIO }
-
-function falhaValidacao(msg: string): never {
-  throw new ErroEnvio('validacao', msg)
-}
 
 const CHAVE_SERVIDOR = 'fixture-servidor'
 
 /** Fuso da 2ª etapa (a da HTO), como no banco. */
 const FUSO_FIXTURE = 'America/Fortaleza'
-const MENSAGEM_SO_AUTOR = 'Só o autor pode alterar a observação'
-
-/** Observação guardada no "servidor" da fixture. */
-interface ObservacaoSalva {
-  id: string
-  obraId: string
-  autorId: string
-  autorNome: string
-  data: string
-  texto: string
-  escrito_em: string
-  editado_em: string | null
-}
 
 /**
  * Duas observações de hoje na HTO (uma de CP PATRICIO, outra do usuário de teste), com horas
@@ -403,68 +387,6 @@ const ETAPAS_RELATORIO = [
   { id: ETAPA_2.id, slug: '2a-etapa', nome: ETAPA_2.nome, sigla: '2ª', horario: '18:00' },
   { id: ETAPA_3.id, slug: '3a-etapa', nome: ETAPA_3.nome, sigla: '3ª', horario: '17:30' },
 ]
-
-function boletimFixture(
-  etapa: { id: string; slug: string; nome: string },
-  data: string,
-  revisao: number,
-  emitidoEm: string,
-): BoletimRelatorio {
-  const numero = `${etapa.slug.slice(0, 2).toUpperCase()}-${data.replaceAll('-', '')}${revisao > 0 ? `-R${revisao}` : ''}`
-  return {
-    id: `boletim-${etapa.slug}-${data}-${revisao}`,
-    etapa_id: etapa.id,
-    etapa_slug: etapa.slug,
-    etapa_nome: etapa.nome,
-    data,
-    revisao,
-    numero,
-    emitido_em: emitidoEm,
-    pdf_path: `${etapa.id}/${data}-${revisao}.pdf`,
-    publicado: true,
-    ultima_revisao: true,
-  }
-}
-
-/** Boletins de dias anteriores (o de hoje nasce na emissão); o de dois dias atrás da 2ª etapa tem retificação. */
-function boletinsIniciais(dia: string): BoletimRelatorio[] {
-  const antes = (n: number) => dataNoFuso(new Date(new Date(`${dia}T12:00:00Z`).getTime() - n * 86_400_000), 'UTC')
-  const [e2, e3] = ETAPAS_RELATORIO
-  return [
-    boletimFixture(e2, antes(1), 0, `${antes(1)}T21:00:00Z`),
-    boletimFixture(e3, antes(1), 0, `${antes(1)}T20:30:00Z`),
-    boletimFixture(e2, antes(2), 1, `${antes(2)}T22:10:00Z`),
-    boletimFixture(e2, antes(2), 0, `${antes(2)}T21:00:00Z`),
-  ]
-}
-
-/** Painel determinístico: ~5 semanas até `hoje`, 3 obras da 2ª etapa, pendências em parte resolvidas. */
-export function painelFixture(hoje: string): PainelRelatorios {
-  const obras = [
-    { id: ID_HTO, slug: 'hto', nome: 'HTO' },
-    { id: ID_AURORA, slug: 'aurora', nome: 'Residencial Aurora' },
-    { id: 'obra-quadra-fixture', slug: 'quadra', nome: 'Quadra Poliesportiva' },
-  ]
-  const base = new Date(`${hoje}T12:00:00Z`).getTime()
-  const dias: PainelRelatorios['dias'] = []
-  const total = 35
-  for (let i = total - 1; i >= 0; i--) {
-    const d = new Date(base - i * 86_400_000)
-    const dow = d.getUTCDay()
-    if (dow === 0) continue // domingo sem movimento
-    const dia = d.toISOString().slice(0, 10)
-    const k = total - 1 - i
-    obras.forEach((obra, o) => {
-      if (dow === 6 && o !== 0) return
-      if ((k + o) % 5 === 4) return // alguns dias sem movimento
-      const servicos = 1 + ((k * 3 + o * 2) % 4)
-      const pendencias = (k * 7 + o * 3) % 5 === 0 ? 2 : (k + o) % 3 === 0 ? 1 : 0
-      const resolvidas = k > 6 && (k * 5 + o) % 4 === 0 ? 1 : 0
-      if (servicos + pendencias + resolvidas > 0) dias.push({ obra_id: obra.id, dia, servicos, pendencias, resolvidas })
-    })
-  }
-  return { etapa: { id: ETAPA_2.id, slug: '2a-etapa', nome: ETAPA_2.nome, hoje }, obras, dias }
-}
 
 export function criarRepositorioFixture(
   opcoes: {
@@ -586,34 +508,23 @@ export function criarRepositorioFixture(
   const etapasInicio = criarEtapasInicioFixture([ETAPA_2, ETAPA_3, ETAPA_4], ETAPA_4.id)
 
   const hoje = () => dataNoFuso(new Date(), FUSO_FIXTURE)
-  const boletinsRel: BoletimRelatorio[] = boletinsIniciais(hoje())
-  /** Como `privado.boletim_emitido`: só o dia de hoje pode estar emitido na fixture. */
-  const diaTravado = (data: string) => opcoes.boletimEmitido === true && data === hoje()
-
-  function exigirDiaAberto(data: string): void {
-    if (diaTravado(data)) {
-      falhaValidacao(`O boletim de ${formatarDia(data)} já foi emitido; a correção é feita por retificação`)
-    }
-  }
-
-  function exigirObra(obraId: string): void {
-    if (!OBRAS.some((o) => o.id === obraId)) {
-      throw new ErroEnvio('permissao', 'Sem permissão nesta obra')
-    }
-  }
-
-  function observacaoPublica(o: ObservacaoSalva): Observacao {
-    return {
-      id: o.id,
-      data: o.data,
-      texto: o.texto,
-      escrito_em: o.escrito_em,
-      editado_em: o.editado_em,
-      autor: { id: o.autorId, nome: o.autorNome },
-      minha: o.autorId === ID_USUARIO,
-      travada: diaTravado(o.data),
-    }
-  }
+  const relatoriosRepo = criarRelatoriosFixture({
+    admin: opcoes.admin === true,
+    etapas: ETAPAS_RELATORIO,
+    etapaPrincipalId: ETAPA_2.id,
+    hoje,
+    exigirRede,
+  })
+  const observacoesRepo = criarObservacoesFixture({
+    observacoes,
+    fuso: FUSO_FIXTURE,
+    boletimEmitido: opcoes.boletimEmitido === true,
+    idUsuario: ID_USUARIO,
+    autorFixture: AUTOR_FIXTURE,
+    obrasIds: OBRAS.map((o) => o.id),
+    exigirRede,
+    persistir,
+  })
 
   const ra = criarRaFixture()
   const modelos = criarModelosFixture()
@@ -654,127 +565,14 @@ export function criarRepositorioFixture(
     listarPublicacoesProblema: publicacoesRepo.listarPublicacoesProblema,
     republicar: publicacoesRepo.republicar,
     marcarPublicada: publicacoesRepo.marcarPublicada,
-
-    async relatorios(): Promise<Relatorios> {
-      const dia = hoje()
-      const etapas: EtapaRelatorio[] = ETAPAS_RELATORIO.map((e) => {
-        const ultimo = boletinsRel.find((b) => b.etapa_slug === e.slug && b.data === dia)
-        return {
-          ...e,
-          hoje: dia,
-          registros_hoje: e.slug === '2a-etapa' ? 4 : 0,
-          boletim_hoje: ultimo
-            ? { id: ultimo.id, numero: ultimo.numero, revisao: ultimo.revisao, emitido_em: ultimo.emitido_em }
-            : null,
-          pedido_hoje: null,
-        }
-      })
-      const boletins = boletinsRel.map((b) => ({
-        ...b,
-        ultima_revisao: !boletinsRel.some((o) => o.etapa_slug === b.etapa_slug && o.data === b.data && o.revisao > b.revisao),
-      }))
-      return { admin: opcoes.admin === true, etapas, boletins }
-    },
-
-    async painelRelatorios(etapaId): Promise<PainelRelatorios> {
-      if (etapaId !== ETAPA_2.id) {
-        return { etapa: { id: etapaId, slug: '', nome: '', hoje: hoje() }, obras: [], dias: [] }
-      }
-      return painelFixture(hoje())
-    },
-
-    async exportarPendencias() {
-      await new Promise((r) => setTimeout(r, 800))
-      return 'https://exemplo.invalid/relatorios/pendencias-exemplo.pdf'
-    },
-
-    async urlPdfBoletim(caminho) {
-      return `https://exemplo.invalid/boletins/${caminho}`
-    },
-
-    async emitirBoletim(slug, data) {
-      exigirRede()
-      if (opcoes.admin !== true) throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem emitir boletins.')
-      const etapa = ETAPAS_RELATORIO.find((e) => e.slug === slug)
-      if (!etapa) throw new ErroEnvio('nao_encontrado', 'Etapa não encontrada.')
-      const doDia = boletinsRel.filter((b) => b.etapa_slug === slug && b.data === data)
-      const revisao = doDia.length === 0 ? 0 : Math.max(...doDia.map((b) => b.revisao)) + 1
-      boletinsRel.push(boletimFixture(etapa, data, revisao, new Date().toISOString()))
-      boletinsRel.sort((a, b) => b.data.localeCompare(a.data) || b.revisao - a.revisao)
-    },
-
-    async excluirBoletim(id): Promise<ResultadoExclusaoBoletim> {
-      exigirRede()
-      if (opcoes.admin !== true) throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem excluir boletins.')
-      const alvo = boletinsRel.find((b) => b.id === id)
-      if (!alvo) throw new ErroEnvio('nao_encontrado', 'Boletim não encontrado.')
-      const dia = boletinsRel.filter((b) => b.etapa_slug === alvo.etapa_slug && b.data === alvo.data)
-      for (const b of dia) boletinsRel.splice(boletinsRel.indexOf(b), 1)
-      return { numero: alvo.numero, data: alvo.data, revisoes: dia.length, mensagens: { apagadas: 1, falhas: 0 }, arquivos_erro: null }
-    },
-
-    async observacoesDoDia(obraId): Promise<ObservacoesDoDia> {
-      exigirObra(obraId)
-      const data = hoje()
-      return {
-        data,
-        fuso: FUSO_FIXTURE,
-        travada: diaTravado(data),
-        observacoes: observacoes
-          .filter((o) => o.obraId === obraId && o.data === data)
-          .sort((a, b) => a.escrito_em.localeCompare(b.escrito_em) || a.id.localeCompare(b.id))
-          .map(observacaoPublica),
-      }
-    },
-
-    async salvarObservacao(d: NovaObservacao) {
-      exigirRede()
-      if (typeof d.id !== 'string' || !UUID.test(d.id)) falhaValidacao('Identificador da observação inválido')
-      const texto = String(d.texto ?? '').replace(/^\s+|\s+$/g, '')
-      if (texto.length < 1 || texto.length > 1000) {
-        falhaValidacao('A observação deve ter de 1 a 1000 caracteres')
-      }
-      const existente = observacoes.find((o) => o.id === d.id)
-      if (!existente) {
-        exigirObra(d.obraId)
-        const escrito = Date.parse(d.escritoEm)
-        if (Number.isNaN(escrito)) falhaValidacao('Data e hora da observação inválidas')
-        if (escrito > Date.now() + 5 * 60_000) {
-          falhaValidacao('A hora da observação está no futuro; confira o relógio do aparelho')
-        }
-        const data = dataNoFuso(new Date(escrito), FUSO_FIXTURE)
-        exigirDiaAberto(data)
-        const nova: ObservacaoSalva = {
-          id: d.id,
-          obraId: d.obraId,
-          autorId: ID_USUARIO,
-          autorNome: AUTOR_FIXTURE,
-          data,
-          texto,
-          escrito_em: new Date(escrito).toISOString(),
-          editado_em: null,
-        }
-        observacoes.push(nova)
-        persistir()
-        return observacaoPublica(nova)
-      }
-      if (existente.autorId !== ID_USUARIO) throw new ErroEnvio('permissao', MENSAGEM_SO_AUTOR)
-      if (existente.texto === texto) return observacaoPublica(existente) // reenvio idempotente
-      exigirDiaAberto(existente.data)
-      existente.texto = texto
-      existente.editado_em = new Date().toISOString()
-      persistir()
-      return observacaoPublica(existente)
-    },
-
-    async excluirObservacao(id) {
-      exigirRede()
-      const i = observacoes.findIndex((o) => o.id === id)
-      if (i < 0) return
-      if (observacoes[i].autorId !== ID_USUARIO) throw new ErroEnvio('permissao', MENSAGEM_SO_AUTOR)
-      exigirDiaAberto(observacoes[i].data)
-      observacoes.splice(i, 1)
-      persistir()
-    },
+    relatorios: relatoriosRepo.relatorios,
+    painelRelatorios: relatoriosRepo.painelRelatorios,
+    exportarPendencias: relatoriosRepo.exportarPendencias,
+    urlPdfBoletim: relatoriosRepo.urlPdfBoletim,
+    emitirBoletim: relatoriosRepo.emitirBoletim,
+    excluirBoletim: relatoriosRepo.excluirBoletim,
+    observacoesDoDia: observacoesRepo.observacoesDoDia,
+    salvarObservacao: observacoesRepo.salvarObservacao,
+    excluirObservacao: observacoesRepo.excluirObservacao,
   }
 }

@@ -1,5 +1,6 @@
-import type { PainelRelatorios as Painel } from '../dados/tipos.ts'
-import { serieAcumulada, totaisPorObra } from '../util/painel.ts'
+import type { PainelRelatorios as Painel } from '@modules/relatorios/domain/tipos.ts'
+
+import { serieAcumulada, totaisPorObra } from '@modules/relatorios/domain/painel.ts'
 import { GraficoAcumulado, ddmm } from './GraficoAcumulado.tsx'
 import { GraficoPorObra } from './GraficoPorObra.tsx'
 

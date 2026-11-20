@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { criarRepositorioAdminSupabase, listaBoletinsDe } from './supabase.ts'
+import { listaBoletinsDe } from '@modules/relatorios/infra/BoletinsAdminSupabaseAdapter.ts'
+import { criarRepositorioAdminSupabase } from './supabase.ts'
 
 function clienteFalso(rpc: (nome: string, args: unknown) => { data: unknown; error: unknown }) {
   const assinar = vi.fn(async (caminho: string, segundos: number) => ({

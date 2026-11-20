@@ -1,4 +1,4 @@
-import { CAMPOS_VAZIOS } from '../../../../admin/dados/fixtureBoletim.ts'
+import { CAMPOS_VAZIOS } from '@modules/obras/infra/camposEtapa.ts'
 import { criarEtapasAdminFixture, type EtapaMemoria } from '../../infra/EtapasAdminFixtureAdapter.ts'
 import { criarObrasAdminFixture, type ObraMemoria } from '../../infra/ObrasAdminFixtureAdapter.ts'
 import { criarOrganizacaoAdminFixture } from '../../infra/OrganizacaoAdminFixtureAdapter.ts'

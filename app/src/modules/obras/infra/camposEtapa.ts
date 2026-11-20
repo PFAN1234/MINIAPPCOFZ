@@ -3,9 +3,12 @@
  * cálculos de `prazo` e `faltando` de `admin_obter_etapa` (docs/contrato-boletim.md). Nunca entra
  * no build de produção (só é importado por `fixture.ts`).
  */
-import { CNPJ } from '../formato.ts'
-import { ErroAdmin, ESTACAO_PADRAO, ESTACAO_RESERVA_PADRAO, FUSOS } from './tipos.ts'
+import { dataValida, somarDias } from '@shared/kernel/periodo.ts'
 import type { Aditivo, CamposEtapa, DadosEtapa, PrazoEtapa } from '@modules/obras/domain/tiposAdmin.ts'
+import { CNPJ } from '../../../admin/formato.ts'
+import { ErroAdmin, ESTACAO_PADRAO, ESTACAO_RESERVA_PADRAO, FUSOS } from '../../../admin/dados/tipos.ts'
+
+export { dataValida, somarDias }
 
 export const CAMPOS_VAZIOS: CamposEtapa = {
   sigla: null,
@@ -54,13 +57,6 @@ function numero(v: unknown, rotulo: string): number | null {
   const n = typeof v === 'number' ? v : Number(v)
   if (!Number.isFinite(n)) throw invalido(`${rotulo} precisa ser um número`)
   return n
-}
-
-export function dataValida(iso: string): boolean {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
-  if (!m) return false
-  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
-  return d.toISOString().slice(0, 10) === iso
 }
 
 /**
@@ -175,11 +171,6 @@ export function somarMeses(iso: string, meses: number): string {
   const mes = ((total % 12) + 12) % 12
   const ultimo = new Date(Date.UTC(ano, mes + 1, 0)).getUTCDate()
   return new Date(Date.UTC(ano, mes, Math.min(d, ultimo))).toISOString().slice(0, 10)
-}
-
-export function somarDias(iso: string, dias: number): string {
-  const [a, m, d] = iso.split('-').map(Number)
-  return new Date(Date.UTC(a, m - 1, d + dias)).toISOString().slice(0, 10)
 }
 
 /** `prazo` de `admin_obter_etapa`: só com data da OS e vigência. */

@@ -1,3 +1,4 @@
+import type { BoletimRelatorio, EtapaRelatorio, ResultadoExclusaoBoletim } from '@modules/relatorios/domain/tipos.ts'
 import { useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
 import { Abas } from "../shared/ui/inputs/Abas.tsx";
@@ -13,11 +14,7 @@ import {
   usePainelRelatorios,
   useRelatorios,
 } from "../dados/hooks.ts";
-import type {
-  BoletimRelatorio,
-  EtapaRelatorio,
-  ResultadoExclusaoBoletim,
-} from "../dados/tipos.ts";
+
 import { abrirLink } from "../shared/infra/telegram/telegram.ts";
 import { FUSO_PADRAO, formatarDia, horaNoFuso } from "../shared/kernel/fuso.ts";
 

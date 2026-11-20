@@ -1,4 +1,4 @@
-import type { TotalObra } from '../util/painel.ts'
+import type { TotalObra } from '@modules/relatorios/domain/painel.ts'
 
 function plural(n: number, um: string, varios: string) {
   return `${n} ${n === 1 ? um : varios}`

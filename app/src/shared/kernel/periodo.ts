@@ -23,3 +23,17 @@ export function dentroDoPeriodo(iso: string, de?: string, ate?: string): boolean
   const t = Date.parse(iso)
   return (!desde || t >= Date.parse(desde)) && (!antes || t < Date.parse(antes))
 }
+
+/** Confere se `iso` é uma data real no formato `AAAA-MM-DD`. */
+export function dataValida(iso: string): boolean {
+  const m = DATA.exec(iso)
+  if (!m) return false
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])))
+  return d.toISOString().slice(0, 10) === iso
+}
+
+/** Soma `dias` (positivo ou negativo) a uma data `AAAA-MM-DD` em UTC. */
+export function somarDias(iso: string, dias: number): string {
+  const [a, m, d] = iso.split('-').map(Number)
+  return new Date(Date.UTC(a, m - 1, d + dias)).toISOString().slice(0, 10)
+}
