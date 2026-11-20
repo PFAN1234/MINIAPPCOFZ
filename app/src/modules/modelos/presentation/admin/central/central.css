@@ -259,7 +259,7 @@
   position: absolute;
   top: 8px;
   left: 8px;
-  z-index: 2;
+  z-index: 6; /* clicável sobre a prévia de documento */
 }
 .central-barra {
   display: flex;
@@ -727,7 +727,7 @@
 .central-previa {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 5; /* acima das barras do 3D */
   display: flex;
   flex-direction: column;
   background: var(--c-fundo);
@@ -768,4 +768,11 @@
 .central-previa-meta dl,
 .central-previa-meta dd {
   margin: 0;
+}
+.central-previa-barra .central-botao-icone {
+  font-size: 1.15rem;
+}
+/* Ações de cada documento: texto à esquerda, histórico e retirar (ícones) à direita. */
+.central-docs-fim {
+  margin-left: auto;
 }

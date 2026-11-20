@@ -121,8 +121,9 @@ export default function PreviaDocumento({ doc, aoFechar }: Props) {
             <span className="central-gestao-acoes" role="group" aria-label="Páginas">
               <button
                 type="button"
-                className="central-botao"
+                className="central-botao central-botao-icone"
                 aria-label="Página anterior"
+                data-dica="Página anterior"
                 disabled={pagina <= 1}
                 onClick={() => irPara(pagina - 1)}
               >
@@ -133,8 +134,9 @@ export default function PreviaDocumento({ doc, aoFechar }: Props) {
               </span>
               <button
                 type="button"
-                className="central-botao"
+                className="central-botao central-botao-icone"
                 aria-label="Próxima página"
+                data-dica="Próxima página"
                 disabled={pagina >= total}
                 onClick={() => irPara(pagina + 1)}
               >
@@ -144,8 +146,9 @@ export default function PreviaDocumento({ doc, aoFechar }: Props) {
             <span className="central-gestao-acoes" role="group" aria-label="Zoom">
               <button
                 type="button"
-                className="central-botao"
+                className="central-botao central-botao-icone"
                 aria-label="Diminuir zoom"
+                data-dica="Diminuir zoom"
                 disabled={escala <= ZOOM_MIN}
                 onClick={() => setEscala((s) => limitar(s - PASSO))}
               >
@@ -154,8 +157,9 @@ export default function PreviaDocumento({ doc, aoFechar }: Props) {
               <span>{Math.round(escala * 100)}%</span>
               <button
                 type="button"
-                className="central-botao"
+                className="central-botao central-botao-icone"
                 aria-label="Aumentar zoom"
+                data-dica="Aumentar zoom"
                 disabled={escala >= ZOOM_MAX}
                 onClick={() => setEscala((s) => limitar(s + PASSO))}
               >

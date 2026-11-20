@@ -258,3 +258,17 @@ export const IconeInspecionar = ({ tamanho }: Props) => (
     <path d="m15.5 15.5 5 5M10.5 9.5v4M10.5 7.5v.01" />
   </Icone>
 )
+export const IconeHistorico = ({ tamanho }: Props) => (
+  <Icone tamanho={tamanho}>
+    <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+    <path d="M3 3v5h5" />
+    <path d="M12 7v5l3 2" />
+  </Icone>
+)
+export const IconeRetirar = ({ tamanho }: Props) => (
+  <Icone tamanho={tamanho}>
+    <rect x="3" y="4" width="18" height="5" rx="1" />
+    <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9" />
+    <path d="M10 13h4" />
+  </Icone>
+)

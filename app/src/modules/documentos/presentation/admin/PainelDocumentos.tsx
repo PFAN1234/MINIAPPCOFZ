@@ -9,6 +9,7 @@ import { ComDados, mensagemDe } from '../../../../admin/componentes.tsx'
 import { useRepositorioAdmin } from '../../../../admin/dados/contexto.tsx'
 import { useDocumentos, useHistoricoDocumento, useRetirarDocumento } from '../../../../admin/dados/hooks.ts'
 import type { ObraCentral } from '../../../modelos/domain/tipos.ts'
+import { IconeHistorico, IconeRetirar } from '../../../modelos/presentation/admin/central/icones.tsx'
 import {
   extensaoArquivo,
   mimeDoArquivo,
@@ -241,15 +242,22 @@ function Item({
         </button>
         <button
           type="button"
-          className="central-botao"
+          className="central-botao central-botao-icone central-docs-fim"
           aria-label="Histórico"
+          data-dica="Histórico de revisões"
           aria-expanded={historico}
           onClick={() => setHistorico((h) => !h)}
         >
-          Histórico
+          <IconeHistorico />
         </button>
-        <button type="button" className="central-botao" aria-label="Retirar" onClick={() => setConfirmando(true)}>
-          Retirar
+        <button
+          type="button"
+          className="central-botao central-botao-icone"
+          aria-label="Retirar"
+          data-dica="Retirar documento"
+          onClick={() => setConfirmando(true)}
+        >
+          <IconeRetirar />
         </button>
       </span>
       {confirmando && (
