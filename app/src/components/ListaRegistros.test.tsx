@@ -1,3 +1,4 @@
+import type { RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -5,7 +6,7 @@ import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
 import { RepositorioProvider } from '../dados/contexto.tsx'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
-import type { RegistroResumo } from '../dados/tipos.ts'
+
 import type { ItemFila } from '../offline/fila.ts'
 import { OfflineProvider } from '../offline/contexto.tsx'
 import { ListaRegistros } from './ListaRegistros.tsx'

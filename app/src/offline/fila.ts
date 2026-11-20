@@ -9,7 +9,7 @@ import {
   type Progresso,
   type Rascunho,
   type RascunhoEncerramento,
-} from '../dados/envio.ts'
+} from '@modules/fiscalizacao/application/use-cases/envio.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import type { FotoPreparada } from '../shared/infra/browser/imagem.ts'
 import type {

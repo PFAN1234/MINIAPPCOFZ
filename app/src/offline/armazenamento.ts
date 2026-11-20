@@ -1,3 +1,4 @@
+import type { FotoEnviada, TipoRegistro } from '@modules/fiscalizacao/domain/tipos.ts'
 /**
  * Armazenamento local (IndexedDB) dos registros ainda não enviados e do cache
  * de consultas. Fotos ficam como ArrayBuffer (o WebKit tem bugs antigos com
@@ -5,7 +6,6 @@
  */
 import { openDB, type DBSchema, type IDBPDatabase, type IDBPTransaction } from 'idb'
 import type { TipoErroEnvio } from '../dados/erros.ts'
-import type { FotoEnviada, TipoRegistro } from '../dados/tipos.ts'
 
 export interface RegistroLocal {
   id: string // = Rascunho.id

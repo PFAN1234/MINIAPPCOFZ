@@ -1,6 +1,7 @@
+import type { RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import { useState } from 'react'
 import { useUrlsImagens } from '../dados/hooks.ts'
-import type { RegistroResumo } from '../dados/tipos.ts'
+
 import { VisualizadorFotos } from '../shared/ui/midia/VisualizadorFotos.tsx'
 
 export function SeloRA({ fotos }: { fotos: readonly { origem?: string }[] }) {

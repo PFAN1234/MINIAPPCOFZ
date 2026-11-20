@@ -3,10 +3,12 @@
  * gerados uma única vez em `criarRascunho`, e repetir `enviarRegistro` com o
  * mesmo rascunho nunca duplica nada.
  */
-import type { FotoPreparada } from '../shared/infra/browser/imagem.ts'
-import { ErroEnvio } from './erros.ts'
-import type { Repositorio } from './repositorio.ts'
-import type { TipoRegistro } from './tipos.ts'
+import type { FotoPreparada } from '@shared/infra/browser/imagem.ts'
+import type { RegistrosRepositorio } from '@modules/fiscalizacao/application/ports/RegistrosRepositorio.port.ts'
+import type { TipoRegistro } from '@modules/fiscalizacao/domain/tipos.ts'
+import { ErroEnvio } from '../../../../dados/erros.ts'
+
+type RepoEnvio = Pick<RegistrosRepositorio, 'enviarFoto' | 'concluirRegistro' | 'encerrarPendencia'>
 
 export interface Rascunho {
   id: string
@@ -33,7 +35,7 @@ export function criarRascunho(dados: Omit<Rascunho, 'id'>): Rascunho {
 
 /** Sobe as fotos (até `MAXIMO_SIMULTANEOS` por vez) para `<obra>/<registro>/<foto>.jpg`. */
 async function enviarFotos(
-  repo: Repositorio,
+  repo: Pick<RepoEnvio, 'enviarFoto'>,
   obraId: string,
   registroId: string,
   fotos: FotoPreparada[],
@@ -71,7 +73,7 @@ async function enviarFotos(
 }
 
 export async function enviarRegistro(
-  repo: Repositorio,
+  repo: Pick<RepoEnvio, 'enviarFoto' | 'concluirRegistro'>,
   r: Rascunho,
   aoProgredir?: (p: Progresso) => void,
 ): Promise<void> {
@@ -111,7 +113,7 @@ export function criarRascunhoEncerramento(
 
 /** Fotos em `<obra>/<pendência>/<foto>.jpg` e depois `encerrar_pendencia`; idempotente como `enviarRegistro`. */
 export async function enviarEncerramento(
-  repo: Repositorio,
+  repo: Pick<RepoEnvio, 'enviarFoto' | 'encerrarPendencia'>,
   e: RascunhoEncerramento,
   aoProgredir?: (p: Progresso) => void,
 ): Promise<void> {

@@ -1,9 +1,10 @@
+import type { RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
-import type { RegistroResumo } from '../dados/tipos.ts'
+
 import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 describe('Registros', () => {

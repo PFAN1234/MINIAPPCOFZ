@@ -1,7 +1,9 @@
-import type { CaminhoFoto, NovaObservacao, NovoEncerramento, Observacao, ObservacoesDoDia, PendenciaDetalhe, PublicacaoProblema, NovoRegistro, FiltroRegistros, RegistroLocalizado, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim, RegistroResumo } from './tipos.ts'
+import type { NovaObservacao, Observacao, ObservacoesDoDia, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
 import type { AcessosRepositorio } from '@modules/acessos/application/ports/AcessosRepositorio.port.ts'
 import type { EquipeServicoRepositorio } from '@modules/acessos/application/ports/EquipeServicoRepositorio.port.ts'
 import type { SessaoRepositorio } from '@modules/acessos/application/ports/SessaoRepositorio.port.ts'
+import type { PublicacoesRepositorio } from '@modules/fiscalizacao/application/ports/PublicacoesRepositorio.port.ts'
+import type { RegistrosRepositorio } from '@modules/fiscalizacao/application/ports/RegistrosRepositorio.port.ts'
 import type { EtapasInicioRepositorio } from '@modules/obras/application/ports/EtapasInicioRepositorio.port.ts'
 import type { ObrasRepositorio } from '@modules/obras/application/ports/ObrasRepositorio.port.ts'
 import type { OrganizacaoRepositorio } from '@modules/obras/application/ports/OrganizacaoRepositorio.port.ts'
@@ -16,45 +18,9 @@ export interface Repositorio
     ObrasRepositorio,
     OrganizacaoRepositorio,
     EtapasInicioRepositorio,
+    RegistrosRepositorio,
+    PublicacoesRepositorio,
     Pick<ModelosRepositorio, 'listarModelos' | 'baixarModelo'> {
-  listarRegistros(filtro: FiltroRegistros): Promise<RegistroResumo[]>
-  /** Pessoas que têm registros nas obras visíveis (`autores_registros`), pelo nome mostrado. */
-  autoresRegistros(): Promise<{ id: string; nome: string }[]>
-  /** URL assinada (1 h) ou local na fixture, indexada pelo caminho recebido. */
-  urlsImagens(
-    paths: string[],
-    bucket?: 'plantas' | 'fotos',
-  ): Promise<Record<string, string>>
-  /** Envia o JPEG para `<obraId>/<registroId>/<fotoId>.jpg` (reenvio permitido até vincular). */
-  enviarFoto(caminho: CaminhoFoto, blob: Blob): Promise<void>
-  /** Idempotente pelo `id`. Falhas sobem como `ErroEnvio`. */
-  concluirRegistro(dados: NovoRegistro): Promise<{ id: string }>
-  /**
-   * Só na implementação Supabase: há sessão ativa? Ausente na fixture, que
-   * dispensa login. Sem sessão o app pede para abrir pelo Telegram.
-   */
-  /** Obras do grupo do Telegram do usuário em que ele ainda não tem acesso. */
-  /** Pede acesso à obra (idempotente se já há pedido pendente). Falhas sobem como `ErroEnvio`. */
-  /** Pedidos pendentes da obra, do mais antigo ao mais novo; só o gestor pode ver. */
-  /** Gestor aprova ou recusa um pedido. Falhas sobem como `ErroEnvio`. */
-  /** Lista de pessoas x obras (só gestor de alguma obra). Falhas sobem como `ErroEnvio`. */
-  /** Define o acesso de uma pessoa a uma obra (qualquer gestor, qualquer obra). Falhas sobem como `ErroEnvio`. */
-  /** Pendência com fotos, ambiente, pavimento, papel do usuário e encerramento; null se não houver acesso. */
-  obterPendencia(id: string): Promise<PendenciaDetalhe | null>
-  /** Idempotente pelo `id`. Falhas sobem como `ErroEnvio` (`conflito` se já encerrada). */
-  encerrarPendencia(dados: NovoEncerramento): Promise<{ id: string }>
-  /** Participantes da obra (só gestor), gestores primeiro. */
-  /** Publicações `incerto`/`falhou` (e pendentes com muitas tentativas), mais recentes primeiro. */
-  listarPublicacoesProblema(obraId: string): Promise<PublicacaoProblema[]>
-  /** Volta a publicação para a fila de envio. */
-  republicar(id: number): Promise<void>
-  /** Gestor confirma que a mensagem já está no tópico. */
-  marcarPublicada(id: number): Promise<void>
-  /** Localiza um registro visível ao usuário (para o link `startapp`); null se não houver. */
-  localizarRegistro(id: string): Promise<RegistroLocalizado | null>
-  /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */
-  /** O usuário é admin do Mini App (site de administração)? */
-  /** Link de uso único (2 min) para abrir o site de administração já com a sessão. */
   /** Aba Relatórios: situação de hoje por etapa e boletins emitidos. */
   relatorios(): Promise<Relatorios>
   /** Painel da aba Relatórios: movimento por obra e dia da etapa, até hoje. */
@@ -73,9 +39,6 @@ export interface Repositorio
   salvarObservacao(dados: NovaObservacao): Promise<Observacao>
   /** Só o autor e antes da emissão do boletim; id inexistente não é erro. Falhas sobem como `ErroEnvio`. */
   excluirObservacao(id: string): Promise<void>
-  /** Equipe de serviço da etapa (abertos e encerrados nas últimas 24 h). */
-  /** Check-in (exige estar a até 1 km da etapa). Falhas sobem como `ErroEnvio`. */
-  /** Fecha o serviço aberto do usuário. Devolve a equipe da etapa dele. */
 }
 
 /**

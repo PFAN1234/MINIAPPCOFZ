@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { criarRascunho, criarRascunhoEncerramento } from '../dados/envio.ts'
+import { criarRascunho, criarRascunhoEncerramento } from '@modules/fiscalizacao/application/use-cases/envio.ts'
 import { ErroEnvio, MENSAGEM_REDE } from '../dados/erros.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import {

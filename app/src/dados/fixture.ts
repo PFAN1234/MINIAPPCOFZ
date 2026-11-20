@@ -8,6 +8,8 @@ import plantasJson from '../../../data/hto/plantas.json'
 import { criarAcessosFixture, ID_PATRICIO, ID_USUARIO, NOME_PATRICIO } from '@modules/acessos/infra/AcessosFixtureAdapter.ts'
 import { criarEquipeServicoFixture } from '@modules/acessos/infra/EquipeServicoFixtureAdapter.ts'
 import { criarSessaoFixture } from '@modules/acessos/infra/SessaoFixtureAdapter.ts'
+import { criarPublicacoesFixture } from '@modules/fiscalizacao/infra/PublicacoesFixtureAdapter.ts'
+import { criarRegistrosFixture } from '@modules/fiscalizacao/infra/RegistrosFixtureAdapter.ts'
 import { criarEtapasInicioFixture } from '@modules/obras/infra/EtapasInicioFixtureAdapter.ts'
 import { criarObrasFixture } from '@modules/obras/infra/ObrasFixtureAdapter.ts'
 import { criarOrganizacaoFixture } from '@modules/obras/infra/OrganizacaoFixtureAdapter.ts'
@@ -15,9 +17,9 @@ import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapte
 import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
 import { dataNoFuso, formatarDia } from '../shared/kernel/fuso.ts'
-import { dentroDoPeriodo } from '../util/periodo.ts'
 import type { Repositorio } from './repositorio.ts'
-import type { Encerramento, EstadoPublicacao, FiltroRegistros, FotoRegistro, NovaObservacao, NovoEncerramento, NovoRegistro, Observacao, ObservacoesDoDia, PendenciaDetalhe, PublicacaoProblema, RecortePt, RegistroLocalizado, RegistroResumo, BoletimRelatorio, EtapaRelatorio, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
+import type { NovaObservacao, Observacao, ObservacoesDoDia, RecortePt, BoletimRelatorio, EtapaRelatorio, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
+import type { Encerramento, EstadoPublicacao, FotoRegistro, PublicacaoProblema, RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import type { Ambiente, DetalhePlanta, ImagemPlanta, Etapa, ObraDaLista, Pavimento, Planta } from '@modules/obras/domain/tipos.ts'
 import type { PapelObra } from '@modules/acessos/domain/tipos.ts'
 
@@ -266,10 +268,6 @@ const REGISTROS: RegistroResumo[] = [
   r(6, 'pendencia', 'resolvida', 'terreo-circulacao-sul', NOME_PATRICIO, '2026-11-03T15:45:00Z', 'Rejunte irregular no piso, já refeito.', 'publicado', 1),
 ]
 
-function porRecente(a: RegistroResumo, b: RegistroResumo): number {
-  return b.recebido_em.localeCompare(a.recebido_em)
-}
-
 /** `<obra_id>/<revisao>/<pavimento>/...` vira `/__plantas/<revisao>/<pavimento>/...`. */
 export function urlLocalDaImagem(path: string): string {
   const [, ...resto] = path.split('/')
@@ -277,16 +275,11 @@ export function urlLocalDaImagem(path: string): string {
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const LIMITE_BLOB = 10 * 1024 * 1024
 const AUTOR_FIXTURE = 'Você (teste)'
 const NOME_POR_ID: Record<string, string> = { [ID_USUARIO]: AUTOR_FIXTURE, [ID_PATRICIO]: NOME_PATRICIO }
 
 function falhaValidacao(msg: string): never {
   throw new ErroEnvio('validacao', msg)
-}
-
-function inteiroPositivo(v: unknown): boolean {
-  return typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 999_999_999
 }
 
 const CHAVE_SERVIDOR = 'fixture-servidor'
@@ -358,15 +351,6 @@ interface EstadoSalvo {
   publicacoes: Record<string, EstadoPublicacao>
   /** Observações das obras (as de exemplo entram na primeira carga). */
   observacoes: ObservacaoSalva[]
-}
-
-function blobParaDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const leitor = new FileReader()
-    leitor.onload = () => resolve(String(leitor.result))
-    leitor.onerror = () => reject(leitor.error ?? new Error('Falha ao ler a foto.'))
-    leitor.readAsDataURL(blob)
-  })
 }
 
 function dataUrlParaBlob(url: string): Blob {
@@ -540,30 +524,6 @@ export function criarRepositorioFixture(
       throw new ErroEnvio('rede', MENSAGEM_REDE)
     }
   }
-  const todosEncerramentos = () => [...ENCERRAMENTOS_BASE, ...novosEncerramentos]
-  const encerramentoDe = (registroId: string) =>
-    todosEncerramentos().find((e) => e.registro_id === registroId)
-  /** Registros com a situação e a publicação atuais (encerramentos e republicações aplicados). */
-  const todos = (): RegistroResumo[] =>
-    [...REGISTROS, ...novos].map((x) => {
-      const pub = PUBLICACOES_BASE.find((p) => p.registro_id === x.id)
-      const pavimento = PAVIMENTOS.find(
-        (p) => p.codigo === AMBIENTES_BASE.find((a) => a.id === x.ambiente.id)?.pavimento_codigo,
-      )?.nome
-      return {
-        ...x,
-        ambiente: { ...x.ambiente, pavimento },
-        situacao: x.tipo === 'pendencia' && encerramentoDe(x.id) ? 'resolvida' : x.situacao,
-        publicacao: pub ? (publicacoes[String(pub.id)] ?? x.publicacao) : x.publicacao,
-      }
-    })
-
-  function vinculada(path: string): boolean {
-    return (
-      novos.some((n) => n.fotos.some((f) => f.path === path)) ||
-      novosEncerramentos.some((n) => n.fotos.some((f) => f.path === path))
-    )
-  }
 
   const acessos = criarAcessosFixture({
     admin: opcoes.admin === true,
@@ -580,13 +540,46 @@ export function criarRepositorioFixture(
     exigirRede,
   })
 
+  const registros = criarRegistrosFixture({
+    obras: OBRAS,
+    obraComDados: ID_HTO,
+    pavimentos: PAVIMENTOS,
+    ambientes: AMBIENTES_BASE,
+    registrosBase: REGISTROS,
+    encerramentosBase: ENCERRAMENTOS_BASE,
+    publicacoesBase: PUBLICACOES_BASE,
+    nomesPorId: NOME_POR_ID,
+    autorFixture: AUTOR_FIXTURE,
+    estado: {
+      registros: novos,
+      encerramentos: novosEncerramentos,
+      publicacoes,
+      blobs,
+      dataUrls,
+      urlsDosBlobs,
+    },
+    papelUsuario,
+    exigirRede,
+    persistir,
+    temPersistencia: persistencia !== null,
+    urlLocalDaImagem,
+  })
+  const publicacoesRepo = criarPublicacoesFixture({
+    publicacoesBase: PUBLICACOES_BASE,
+    estado: publicacoes,
+    obraComDados: ID_HTO,
+    exigirGestor,
+    exigirRede,
+    persistir,
+  })
+
   const obras = criarObrasFixture({
     obras: OBRAS,
     obraComDados: ID_HTO,
     pavimentos: PAVIMENTOS,
     ambientes: AMBIENTES_BASE,
     detalhePlanta,
-    registros: todos,
+    registros: registros.todos,
     papelUsuario,
   })
   const organizacao = criarOrganizacaoFixture(opcoes.logo)
@@ -622,13 +615,6 @@ export function criarRepositorioFixture(
     }
   }
 
-  function publicacaoProblema(id: number): PublicacaoProblema {
-    const base = PUBLICACOES_BASE.find((p) => p.id === id)
-    if (!base) throw new ErroEnvio('nao_encontrado', 'Publicação não encontrada.')
-    const estado = publicacoes[String(id)] ?? 'falhou'
-    return { ...base, estado }
-  }
-
   const ra = criarRaFixture()
   const modelos = criarModelosFixture()
 
@@ -657,6 +643,17 @@ export function criarRepositorioFixture(
     listarParticipantes: acessos.listarParticipantes,
     definirPapel: acessos.definirPapel,
     removerParticipante: acessos.removerParticipante,
+    listarRegistros: registros.listarRegistros,
+    autoresRegistros: registros.autoresRegistros,
+    urlsImagens: registros.urlsImagens,
+    enviarFoto: registros.enviarFoto,
+    concluirRegistro: registros.concluirRegistro,
+    obterPendencia: registros.obterPendencia,
+    encerrarPendencia: registros.encerrarPendencia,
+    localizarRegistro: registros.localizarRegistro,
+    listarPublicacoesProblema: publicacoesRepo.listarPublicacoesProblema,
+    republicar: publicacoesRepo.republicar,
+    marcarPublicada: publicacoesRepo.marcarPublicada,
 
     async relatorios(): Promise<Relatorios> {
       const dia = hoje()
@@ -714,184 +711,6 @@ export function criarRepositorioFixture(
       const dia = boletinsRel.filter((b) => b.etapa_slug === alvo.etapa_slug && b.data === alvo.data)
       for (const b of dia) boletinsRel.splice(boletinsRel.indexOf(b), 1)
       return { numero: alvo.numero, data: alvo.data, revisoes: dia.length, mensagens: { apagadas: 1, falhas: 0 }, arquivos_erro: null }
-    },
-
-    async listarRegistros(filtro: FiltroRegistros) {
-      let lista = todos()
-        .filter(
-          (x) =>
-            (!filtro.obraId || x.obra.id === filtro.obraId) &&
-            (!filtro.obraSlug || x.obra.slug === filtro.obraSlug) &&
-            (!filtro.ambienteId || x.ambiente.id === filtro.ambienteId) &&
-            (!filtro.ambienteCodigo || x.ambiente.codigo === filtro.ambienteCodigo) &&
-            (!filtro.tipo || x.tipo === filtro.tipo) &&
-            (!filtro.situacao || x.situacao === filtro.situacao) &&
-            (!filtro.etapaId || OBRAS.find((o) => o.id === x.obra.id)?.etapa.id === filtro.etapaId) &&
-            (!filtro.autorId || x.autor === NOME_POR_ID[filtro.autorId]) &&
-            dentroDoPeriodo(x.capturado_em, filtro.de, filtro.ate),
-        )
-        .sort(porRecente)
-      if (filtro.limite) lista = lista.slice(0, filtro.limite)
-      return lista.map((x) => ({ ...x, fotos: x.fotos.map((f) => ({ ...f })) }))
-    },
-
-    async autoresRegistros() {
-      const nomes = new Set(todos().map((x) => x.autor))
-      return Object.entries(NOME_POR_ID)
-        .filter(([, nome]) => nomes.has(nome))
-        .map(([id, nome]) => ({ id, nome }))
-        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-    },
-
-    async urlsImagens(paths, bucket = 'plantas') {
-      return Object.fromEntries(
-        paths.map((p) => {
-          const blob = bucket === 'fotos' ? blobs.get(p) : undefined
-          if (!blob) return [p, urlLocalDaImagem(p)]
-          let url = urlsDosBlobs.get(p)
-          if (!url) {
-            url = URL.createObjectURL(blob)
-            urlsDosBlobs.set(p, url)
-          }
-          return [p, url]
-        }),
-      )
-    },
-
-    async enviarFoto({ obraId, registroId, fotoId }, blob) {
-      exigirRede()
-      for (const [v, nome] of [[obraId, 'obra'], [registroId, 'registro'], [fotoId, 'foto']] as const) {
-        if (!UUID.test(v)) falhaValidacao(`Identificador inválido (${nome}).`)
-      }
-      if (blob.type !== '' && blob.type !== 'image/jpeg') falhaValidacao('A foto deve ser JPEG.')
-      if (blob.size > LIMITE_BLOB) falhaValidacao('A foto é grande demais para ser enviada.')
-      const path = `${obraId}/${registroId}/${fotoId}.jpg`
-      // Como a política fotos_update: foto já vinculada não pode ser sobrescrita.
-      if (vinculada(path)) {
-        throw new ErroEnvio('permissao', 'Sem permissão para enviar esta foto.')
-      }
-      const url = persistencia ? await blobParaDataUrl(blob) : null
-      blobs.set(path, blob)
-      if (url) {
-        dataUrls.set(path, url)
-        persistir()
-      }
-    },
-
-    async obterPendencia(id): Promise<PendenciaDetalhe | null> {
-      const registro = todos().find((x) => x.id === id && x.tipo === 'pendencia')
-      if (!registro) return null
-      const amb = AMBIENTES_BASE.find((a) => a.id === registro.ambiente.id)!
-      const pav = PAVIMENTOS.find((p) => p.codigo === amb.pavimento_codigo)!
-      const enc = encerramentoDe(id)
-      return {
-        registro: { ...registro, fotos: registro.fotos.map((f) => ({ ...f })) },
-        pavimento: { codigo: pav.codigo, nome: pav.nome },
-        papel: papelUsuario(),
-        encerramento: enc
-          ? {
-              id: enc.id,
-              observacao: enc.observacao,
-              encerrado_em: enc.encerrado_em,
-              gestor: enc.gestor,
-              fotos: enc.fotos.map((f) => ({ ...f })),
-              publicacao: enc.publicacao,
-            }
-          : null,
-      }
-    },
-
-    async encerrarPendencia(d: NovoEncerramento) {
-      exigirRede()
-      if (!UUID.test(d.id) || !UUID.test(d.registroId)) falhaValidacao('Identificadores obrigatórios')
-      const registro = todos().find((x) => x.id === d.registroId && x.tipo === 'pendencia')
-      if (!registro) throw new ErroEnvio('nao_encontrado', 'Pendência não encontrada.')
-      // Qualquer participante da obra (equipe ou gestor) encerra; no fixture só a HTO tem participação.
-      if (registro.obra.id !== ID_HTO) throw new ErroEnvio('permissao', 'Você não participa desta obra.')
-
-      const existente = todosEncerramentos().find((e) => e.id === d.id)
-      if (existente) {
-        if (existente.registro_id === d.registroId) return { id: existente.id }
-        throw new ErroEnvio('conflito', 'encerramento_id em uso')
-      }
-      if (registro.situacao === 'resolvida') {
-        throw new ErroEnvio('conflito', 'Esta pendência já foi encerrada.')
-      }
-      const observacao = (d.observacao ?? '').replace(/^\s+|\s+$/g, '')
-      if (observacao.length > 1000) falhaValidacao('A observação deve ter até 1000 caracteres')
-      if (!Array.isArray(d.fotos) || d.fotos.length < 1 || d.fotos.length > 10) {
-        falhaValidacao('Envie de 1 a 10 fotos')
-      }
-      const vistos = new Set<string>()
-      d.fotos.forEach((f, i) => {
-        if (typeof f.id !== 'string' || !UUID.test(f.id)) {
-          falhaValidacao(`Foto ${i + 1} com identificador inválido`)
-        }
-        const chave = f.id.toLowerCase()
-        if (vistos.has(chave)) falhaValidacao('Identificador de foto repetido')
-        vistos.add(chave)
-        for (const campo of ['largura', 'altura', 'bytes'] as const) {
-          if (!inteiroPositivo(f[campo])) {
-            falhaValidacao(`Foto ${i + 1}: ${campo} deve ser um inteiro positivo`)
-          }
-        }
-      })
-      const fotos: FotoRegistro[] = d.fotos.map((f) => ({
-        id: f.id,
-        path: `${registro.obra.id}/${d.registroId}/${f.id}.jpg`,
-        largura: f.largura,
-        altura: f.altura,
-      }))
-      for (const f of fotos) {
-        if (!blobs.has(f.path)) {
-          falhaValidacao(`Foto ${f.id} ainda não foi enviada ao armazenamento`)
-        }
-      }
-      novosEncerramentos.push({
-        id: d.id,
-        registro_id: d.registroId,
-        observacao: observacao || null,
-        encerrado_em: new Date().toISOString(),
-        gestor: AUTOR_FIXTURE,
-        fotos,
-        publicacao: 'pendente',
-      })
-      persistir()
-      return { id: d.id }
-    },
-
-    async listarPublicacoesProblema(obraId) {
-      exigirGestor(obraId)
-      return PUBLICACOES_BASE.map((p) => publicacaoProblema(p.id))
-        .filter((p) => p.estado === 'incerto' || p.estado === 'falhou')
-        .sort((a, b) => b.atualizado_em.localeCompare(a.atualizado_em))
-    },
-
-    async republicar(id) {
-      exigirRede()
-      const p = publicacaoProblema(id)
-      exigirGestor(ID_HTO)
-      if (p.estado !== 'incerto' && p.estado !== 'falhou') {
-        falhaValidacao('Só publicações incertas ou com falha podem ser reenviadas.')
-      }
-      publicacoes[String(id)] = 'pendente'
-      persistir()
-    },
-
-    async marcarPublicada(id) {
-      exigirRede()
-      const p = publicacaoProblema(id)
-      exigirGestor(ID_HTO)
-      if (p.estado !== 'incerto' && p.estado !== 'falhou') {
-        falhaValidacao('Só publicações incertas ou com falha podem ser marcadas como publicadas.')
-      }
-      publicacoes[String(id)] = 'publicado'
-      persistir()
-    },
-
-    async localizarRegistro(id): Promise<RegistroLocalizado | null> {
-      const reg = todos().find((x) => x.id === id)
-      return reg ? { slug: reg.obra.slug, codigo: reg.ambiente.codigo, tipo: reg.tipo } : null
     },
 
     async observacoesDoDia(obraId): Promise<ObservacoesDoDia> {
@@ -956,76 +775,6 @@ export function criarRepositorioFixture(
       exigirDiaAberto(observacoes[i].data)
       observacoes.splice(i, 1)
       persistir()
-    },
-
-    async concluirRegistro(d: NovoRegistro) {
-      exigirRede()
-      const amb = AMBIENTES_BASE.find((a) => a.id === d.ambienteId)
-      if (!UUID.test(d.id) || !d.ambienteId) falhaValidacao('Identificadores obrigatórios')
-      if (!amb) throw new ErroEnvio('nao_encontrado', 'Ambiente não encontrado')
-
-      const existente = novos.find((n) => n.id === d.id)
-      if (existente) {
-        if (existente.ambiente.id === d.ambienteId) return { id: existente.id }
-        throw new ErroEnvio('conflito', 'registro_id em uso')
-      }
-
-      if (d.tipo !== 'servico' && d.tipo !== 'pendencia') falhaValidacao('Tipo de registro inválido')
-      const legenda = (d.legenda ?? '').replace(/^\s+|\s+$/g, '')
-      if (legenda.length < 1 || legenda.length > 1000) {
-        falhaValidacao('A legenda deve ter de 1 a 1000 caracteres')
-      }
-      const capturado = Date.parse(d.capturadoEm)
-      if (Number.isNaN(capturado) || capturado > Date.now() + 5 * 60_000) {
-        falhaValidacao('Data de captura inválida')
-      }
-
-      if (!Array.isArray(d.fotos) || d.fotos.length < 1 || d.fotos.length > 10) {
-        falhaValidacao('Envie de 1 a 10 fotos')
-      }
-      const vistos = new Set<string>()
-      d.fotos.forEach((f, i) => {
-        if (typeof f.id !== 'string' || !UUID.test(f.id)) {
-          falhaValidacao(`Foto ${i + 1} com identificador inválido`)
-        }
-        const chave = f.id.toLowerCase()
-        if (vistos.has(chave)) falhaValidacao('Identificador de foto repetido')
-        vistos.add(chave)
-        for (const campo of ['largura', 'altura', 'bytes'] as const) {
-          if (!inteiroPositivo(f[campo])) {
-            falhaValidacao(`Foto ${i + 1}: ${campo} deve ser um inteiro positivo`)
-          }
-        }
-      })
-      const fotos: FotoRegistro[] = d.fotos.map((f) => ({
-        id: f.id,
-        path: `${ID_HTO}/${d.id}/${f.id}.jpg`,
-        largura: f.largura,
-        altura: f.altura,
-        ...(f.origem ? { origem: f.origem } : {}),
-      }))
-      for (const f of fotos) {
-        if (!blobs.has(f.path)) {
-          falhaValidacao(`Foto ${f.id} ainda não foi enviada ao armazenamento`)
-        }
-      }
-
-      const agora = new Date().toISOString()
-      novos.push({
-        id: d.id,
-        tipo: d.tipo,
-        situacao: d.tipo === 'pendencia' ? 'aberta' : null,
-        legenda,
-        autor: AUTOR_FIXTURE,
-        capturado_em: new Date(capturado).toISOString(),
-        recebido_em: agora,
-        ambiente: { id: amb.id, codigo: amb.codigo, nome: amb.nome_operacional },
-        obra: { id: ID_HTO, slug: 'hto', nome: 'HTO' },
-        fotos,
-        publicacao: 'pendente',
-      })
-      persistir()
-      return { id: d.id }
     },
   }
 }

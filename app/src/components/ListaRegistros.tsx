@@ -1,6 +1,7 @@
+import type { RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
-import type { RegistroResumo } from '../dados/tipos.ts'
+
 import type { ItemFila } from '../offline/fila.ts'
 import { Horario } from './Horario.tsx'
 import { EstadoVazio } from '../shared/ui/feedback/Estado.tsx'

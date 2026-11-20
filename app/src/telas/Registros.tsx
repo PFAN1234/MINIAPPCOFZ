@@ -1,3 +1,4 @@
+import type { FiltroRegistros } from '@modules/fiscalizacao/domain/tipos.ts'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { Aviso } from '../shared/ui/feedback/Aviso.tsx'
@@ -6,7 +7,7 @@ import { ListaRegistros } from '../components/ListaRegistros.tsx'
 import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import { useAvisoDaRota } from '../components/useAvisoDaRota.ts'
 import { useAutoresRegistros, useObras, useRegistros } from '../dados/hooks.ts'
-import type { FiltroRegistros } from '../dados/tipos.ts'
+
 import { useRegistrosLocais } from '../offline/contexto.tsx'
 import { etapasDasObras } from '@modules/obras/domain/etapas.ts'
 

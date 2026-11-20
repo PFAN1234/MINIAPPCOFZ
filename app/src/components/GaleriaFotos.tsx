@@ -1,6 +1,7 @@
+import type { FotoRegistro } from '@modules/fiscalizacao/domain/tipos.ts'
 import { useState } from 'react'
 import { useUrlsImagens } from '../dados/hooks.ts'
-import type { FotoRegistro } from '../dados/tipos.ts'
+
 import { VisualizadorFotos } from '../shared/ui/midia/VisualizadorFotos.tsx'
 
 /** A primeira foto grande e as demais em miniatura; o toque abre o visualizador nessa foto. */

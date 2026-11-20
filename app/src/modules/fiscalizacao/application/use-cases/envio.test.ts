@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { criarRascunho, enviarRegistro, type Rascunho } from './envio.ts'
-import { ErroEnvio } from './erros.ts'
-import type { Repositorio } from './repositorio.ts'
-import type { CaminhoFoto, NovoRegistro } from './tipos.ts'
+import { ErroEnvio } from '../../../../dados/erros.ts'
+import type { Repositorio } from '../../../../dados/repositorio.ts'
+import type { CaminhoFoto, NovoRegistro } from '@modules/fiscalizacao/domain/tipos.ts'
 
 const OBRA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 const AMB = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e99'

@@ -1,6 +1,7 @@
+import type { RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import { Link } from 'react-router'
 import { useUrlsImagens } from '../dados/hooks.ts'
-import type { RegistroResumo } from '../dados/tipos.ts'
+
 import { formatarDataHora, formatarRelativo } from '../shared/kernel/formato.ts'
 import { IconeChevron } from '../shared/ui/icones/Icones.tsx'
 

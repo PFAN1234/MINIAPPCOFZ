@@ -1,3 +1,4 @@
+import type { RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { Abas } from '../shared/ui/inputs/Abas.tsx'
@@ -9,7 +10,7 @@ import { RegistroLocal } from '../components/RegistroLocal.tsx'
 import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import { useAvisoDaRota } from '../components/useAvisoDaRota.ts'
 import { useObra, useRegistros } from '../dados/hooks.ts'
-import type { RegistroResumo } from '../dados/tipos.ts'
+
 import { useRegistrosLocais } from '../offline/contexto.tsx'
 import { ordenarNatural } from '../shared/kernel/ordenacao.ts'
 
