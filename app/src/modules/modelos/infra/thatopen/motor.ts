@@ -42,12 +42,12 @@ type Mundo = OBC.World & {
 }
 
 const PALETA: Record<TemaCentral, { fundo: string; grade: string }> = {
-  escuro: { fundo: '#16161a', grade: '#2c2c34' },
-  claro: { fundo: '#f4f4f6', grade: '#d2d2da' },
+  escuro: { fundo: '#0B1625', grade: '#263A55' },
+  claro: { fundo: '#ECEFF3', grade: '#CBD3DD' },
 }
 
-const COR_SELECAO = '#7c4dff'
-const COR_HOVER = '#b39dff'
+const COR_SELECAO = '#F5B700'
+const COR_HOVER = '#FFD966'
 const OPACIDADE_FANTASMA = 0.1
 /** Acima disso a classe vem do mapa completo do modelo; abaixo, item a item. */
 const LIMITE_CLASSE_POR_ITEM = 300

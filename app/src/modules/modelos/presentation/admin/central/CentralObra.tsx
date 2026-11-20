@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { Carregando, Erro } from '../../../../../admin/componentes.tsx'
 import BarraSuperior from './barras/BarraSuperior.tsx'
@@ -12,7 +12,28 @@ import Propriedades from './paineis/Propriedades.tsx'
 import { useMotorCentral, type EstadoCentral } from './useMotorCentral.ts'
 import type { Corte, Medida, ModoCor, TipoMedida, NoArvore, RefElemento, Vista3dUi } from '../../../domain/central.ts'
 import { gravarTema, lerTema, type Tema } from './tema.ts'
+import {
+  IconeDocumentos,
+  IconeGestao,
+  IconeInspecionar,
+  IconeIssues,
+  IconeItens,
+  IconeLua,
+  IconeMedir,
+  IconePainel,
+  IconeRealce,
+  IconeSol,
+  IconeVer,
+} from './icones.tsx'
 import './central.css'
+
+const ICONES_PAINEL: Record<string, ReactNode> = {
+  itens: <IconeItens />,
+  documentos: <IconeDocumentos />,
+  issues: <IconeIssues />,
+  medicoes: <IconeMedir />,
+  gestao: <IconeGestao />,
+}
 
 const PAINEIS = [
   { id: 'itens', nome: 'Itens', etapa: 2 },
@@ -233,9 +254,20 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
     })
   }
   // F enquadra (a seleção, se houver); H oculta; I isola; Esc limpa a seleção.
-  const atalhos = useRef({ ocultar, isolar, enquadrar, apagarCorte: () => {}, apagarMedida: () => {}, sairMedicao: () => {} })
+  const atalhos = useRef({
+    ocultar,
+    isolar,
+    enquadrar,
+    apagarCorte: () => {},
+    apagarMedida: () => {},
+    sairMedicao: () => {},
+  })
   useEffect(() => {
-    atalhos.current = { ocultar, isolar, enquadrar, apagarCorte: () => corteSelecionado && apagarCorte(corteSelecionado),
+    atalhos.current = {
+      ocultar,
+      isolar,
+      enquadrar,
+      apagarCorte: () => corteSelecionado && apagarCorte(corteSelecionado),
       apagarMedida: () => medidaSelecionada && apagarMedida(medidaSelecionada),
       sairMedicao: () => medicao && mudarMedicao(null),
     }
@@ -305,34 +337,39 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
               aria-selected={p.id === painel.id}
               aria-controls="painel-central"
               tabIndex={p.id === painel.id ? 0 : -1}
-              className="central-aba"
+              className="central-aba central-item-trilho"
               onClick={() => escolher(p.id)}
               onKeyDown={teclaAba}
             >
-              {p.nome}
+              {ICONES_PAINEL[p.id]}
+              <span>{p.nome}</span>
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          className="central-botao"
-          aria-label={`Configurações: mudar para o tema ${tema === 'escuro' ? 'claro' : 'escuro'}`}
-          title="Configurações"
-          onClick={alternarTema}
-        >
-          ⚙ {tema === 'escuro' ? 'Escuro' : 'Claro'}
-        </button>
-        <button
-          type="button"
-          className="central-botao"
-          aria-label="Realce ao passar"
-          title="Realçar o item sob o cursor"
-          aria-pressed={hover}
-          disabled={!pronto}
-          onClick={alternarHover}
-        >
-          Realce
-        </button>
+        <div className="central-trilho-base">
+          <button
+            type="button"
+            className="central-botao central-item-trilho"
+            aria-label={`Configurações: mudar para o tema ${tema === 'escuro' ? 'claro' : 'escuro'}`}
+            title="Configurações"
+            onClick={alternarTema}
+          >
+            {tema === 'escuro' ? <IconeLua /> : <IconeSol />}
+            <span>{tema === 'escuro' ? 'Escuro' : 'Claro'}</span>
+          </button>
+          <button
+            type="button"
+            className="central-botao central-item-trilho"
+            aria-label="Realce ao passar"
+            title="Realçar o item sob o cursor"
+            aria-pressed={hover}
+            disabled={!pronto}
+            onClick={alternarHover}
+          >
+            <IconeRealce />
+            <span>Realce</span>
+          </button>
+        </div>
       </nav>
 
       {aberto && (
@@ -398,12 +435,12 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
       <div className="central-direita">
         <button
           type="button"
-          className="central-botao central-recolher"
+          className="central-botao central-botao-icone central-recolher"
           aria-label={aberto ? 'Recolher painel' : 'Abrir painel'}
           aria-expanded={aberto}
           onClick={() => setAberto((a) => !a)}
         >
-          {aberto ? '«' : '»'}
+          <IconePainel aberto={aberto} />
         </button>
         <BarraSuperior
           ativo={pronto}
@@ -429,7 +466,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
         <div className="central-canvas" data-testid="canvas-central">
           <div ref={tela} className="central-tela" />
           <Estados estado={estado} />
-          <div className="central-modo" role="group" aria-label="Modo">
+          <div className="central-modo central-segmentado" role="group" aria-label="Modo">
             <button
               type="button"
               className="central-botao"
@@ -437,6 +474,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
               aria-pressed={modo === 'ver'}
               onClick={() => setModo('ver')}
             >
+              <IconeVer />
               Ver
             </button>
             <button
@@ -450,6 +488,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
                 setAberto(true)
               }}
             >
+              <IconeInspecionar />
               Inspecionar
             </button>
           </div>

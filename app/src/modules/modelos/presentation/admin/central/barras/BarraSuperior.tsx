@@ -1,8 +1,60 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  IconeAngulo,
+  IconeArea,
+  IconeCaptura,
+  IconeCor,
+  IconeCortar,
+  IconeDistancia,
+  IconeEnquadrar,
+  IconeGrade,
+  IconeIssues,
+  IconeMedir,
+  IconeMinimapa,
+  IconeModelos,
+  IconeObra,
+  IconePlanta,
+  IconeProjecao,
+  IconeVista3d,
+  IconeVolume,
+} from '../icones.tsx'
 import { NOMES_MEDIDA, type ModoCor, type TipoMedida, type Vista3dUi } from '../../../../domain/central.ts'
 
 /** Botões ainda desabilitados (ganham função nas próximas etapas). */
-const BOTOES_FUTUROS = ['Modelos', 'Issues', 'Captura', 'Obra']
+const BOTOES_FUTUROS: { nome: string; icone: ReactNode }[] = [
+  { nome: 'Modelos', icone: <IconeModelos /> },
+  { nome: 'Issues', icone: <IconeIssues /> },
+  { nome: 'Captura', icone: <IconeCaptura /> },
+  { nome: 'Obra', icone: <IconeObra /> },
+]
+
+const ICONES_MEDIDA: Record<TipoMedida, ReactNode> = {
+  distancia: <IconeDistancia />,
+  area: <IconeArea />,
+  volume: <IconeVolume />,
+  angulo: <IconeAngulo />,
+}
+
+/** Fecha o menu aberto com Esc ou clique fora do contêiner. */
+function useFecharMenu(aberto: boolean, fechar: () => void) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!aberto) return
+    const aoClicar = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) fechar()
+    }
+    const aoTecla = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') fechar()
+    }
+    document.addEventListener('mousedown', aoClicar)
+    document.addEventListener('keydown', aoTecla)
+    return () => {
+      document.removeEventListener('mousedown', aoClicar)
+      document.removeEventListener('keydown', aoTecla)
+    }
+  }, [aberto, fechar])
+  return ref
+}
 
 const LADOS = ['N', 'S', 'L', 'O'] as const
 const NOMES_LADO = { N: 'norte', S: 'sul', L: 'leste', O: 'oeste' }
@@ -64,86 +116,91 @@ export default function BarraSuperior({
   const [menuMedir, setMenuMedir] = useState(false)
   const [menu, setMenu] = useState(false)
   const [escolhido, setEscolhido] = useState('')
+  const refCor = useFecharMenu(menu, () => setMenu(false))
+  const refMedir = useFecharMenu(menuMedir, () => setMenuMedir(false))
   const pavimento = pavimentos.includes(escolhido) ? escolhido : (pavimentos[0] ?? '')
   return (
     <div className="central-barra central-barra-superior" role="toolbar" aria-label="Ferramentas do visualizador">
-      <button
-        type="button"
-        className="central-botao"
-        aria-label="Enquadrar"
-        title="Enquadrar (F)"
-        disabled={!ativo}
-        onClick={onEnquadrar}
-      >
-        Enquadrar
-      </button>
-      <button
-        type="button"
-        className="central-botao"
-        aria-label="Projeção"
-        title={ortografica ? 'Projeção ortográfica' : 'Projeção em perspectiva'}
-        aria-pressed={ortografica}
-        disabled={!ativo}
-        onClick={onProjecao}
-      >
-        Projeção
-      </button>
-      <div className="central-menu">
+      <div className="central-barra-grupo">
         <button
           type="button"
-          className="central-botao"
-          aria-label="Cor"
-          title="Colorir por"
-          aria-haspopup="menu"
-          aria-expanded={menu}
-          aria-pressed={cor !== 'nenhum'}
+          className="central-botao central-botao-icone"
+          aria-label="Enquadrar"
+          title="Enquadrar (F)"
           disabled={!ativo}
-          onClick={() => setMenu((m) => !m)}
+          onClick={onEnquadrar}
         >
-          Cor
+          <IconeEnquadrar />
         </button>
-        {menu && (
-          <div role="menu" aria-label="Colorir por" className="central-menu-lista">
-            {MODOS.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                role="menuitemradio"
-                aria-checked={cor === m.id}
-                className="central-botao"
-                onClick={() => {
-                  onCor(m.id)
-                  setMenu(false)
-                }}
-              >
-                {m.nome}
-              </button>
-            ))}
-          </div>
-        )}
+        <button
+          type="button"
+          className="central-botao central-botao-icone"
+          aria-label="Projeção"
+          title={ortografica ? 'Projeção ortográfica' : 'Projeção em perspectiva'}
+          aria-pressed={ortografica}
+          disabled={!ativo}
+          onClick={onProjecao}
+        >
+          <IconeProjecao />
+        </button>
+        <button
+          type="button"
+          className="central-botao central-botao-icone"
+          aria-label="Grade"
+          title="Mostrar ou ocultar a grade"
+          aria-pressed={grade}
+          disabled={!ativo}
+          onClick={onGrade}
+        >
+          <IconeGrade />
+        </button>
+        <div className="central-menu" ref={refCor}>
+          <button
+            type="button"
+            className="central-botao central-botao-icone"
+            aria-label="Cor"
+            title="Colorir por"
+            aria-haspopup="menu"
+            aria-expanded={menu}
+            aria-pressed={cor !== 'nenhum'}
+            disabled={!ativo}
+            onClick={() => setMenu((m) => !m)}
+          >
+            <IconeCor />
+          </button>
+          {menu && (
+            <div role="menu" aria-label="Colorir por" className="central-menu-lista">
+              {MODOS.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={cor === m.id}
+                  className="central-botao central-botao-texto"
+                  onClick={() => {
+                    onCor(m.id)
+                    setMenu(false)
+                  }}
+                >
+                  <IconeCor />
+                  {m.nome}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-      <button
-        type="button"
-        className="central-botao"
-        aria-label="Grade"
-        title="Mostrar ou ocultar a grade"
-        aria-pressed={grade}
-        disabled={!ativo}
-        onClick={onGrade}
-      >
-        Grade
-      </button>
       <div className="central-barra-grupo" role="group" aria-label="Vista">
         <button
           type="button"
-          className="central-botao"
+          className="central-botao central-botao-icone"
           aria-label="Vista 3D"
           title="Volta ao 3D (perspectiva) e restaura os cortes"
           aria-pressed={vista.tipo === '3d'}
           disabled={!ativo}
           onClick={onVista3d}
         >
-          3D
+          <IconeVista3d />
         </button>
         <select
           aria-label="Pavimento"
@@ -163,20 +220,23 @@ export default function BarraSuperior({
         </select>
         <button
           type="button"
-          className="central-botao"
+          className="central-botao central-botao-icone"
           aria-label="Planta"
           title="Planta do pavimento escolhido"
           aria-pressed={vista.tipo === 'planta'}
           disabled={!ativo || !pavimento}
           onClick={() => onPlanta(pavimento)}
         >
-          Planta
+          <IconePlanta />
         </button>
+        <span className="central-rotulo-grupo" aria-hidden="true">
+          Elevação
+        </span>
         {LADOS.map((l) => (
           <button
             key={l}
             type="button"
-            className="central-botao"
+            className="central-botao central-botao-icone"
             aria-label={`Elevação ${l}`}
             title={`Elevação ${NOMES_LADO[l]}`}
             aria-pressed={vista.tipo === 'elevacao' && vista.lado === l}
@@ -186,63 +246,76 @@ export default function BarraSuperior({
             {l}
           </button>
         ))}
+      </div>
+      <div className="central-barra-grupo">
         <button
           type="button"
-          className="central-botao"
+          className="central-botao central-botao-icone"
           aria-label="Cortar"
           title={cortes > 0 ? `Novo plano de corte (${cortes} ativos)` : 'Novo plano de corte'}
           disabled={!ativo}
           onClick={onCortar}
         >
-          Cortar
+          <IconeCortar />
         </button>
         <button
           type="button"
-          className="central-botao"
+          className="central-botao central-botao-icone"
           aria-label="Minimapa"
           title="Minimapa com a posição da câmera"
           aria-pressed={minimapa}
           disabled={!ativo}
           onClick={onMinimapa}
         >
-          Minimapa
+          <IconeMinimapa />
         </button>
+        <div className="central-menu" ref={refMedir}>
+          <button
+            type="button"
+            className="central-botao central-botao-icone"
+            aria-label="Medir"
+            title="Medir distância, área, volume ou ângulo"
+            aria-expanded={menuMedir}
+            aria-pressed={medicao !== null}
+            disabled={!ativo}
+            onClick={() => setMenuMedir((m) => !m)}
+          >
+            <IconeMedir />
+          </button>
+          {menuMedir && (
+            <div role="group" aria-label="Modo de medição" className="central-menu-lista">
+              {(Object.keys(NOMES_MEDIDA) as TipoMedida[]).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className="central-botao central-botao-texto"
+                  aria-label={NOMES_MEDIDA[t]}
+                  aria-pressed={medicao === t}
+                  onClick={() => onMedir(medicao === t ? null : t)}
+                >
+                  {ICONES_MEDIDA[t]}
+                  {NOMES_MEDIDA[t]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-      <div className="central-menu">
-        <button
-          type="button"
-          className="central-botao"
-          aria-label="Medir"
-          title="Medir distância, área, volume ou ângulo"
-          aria-expanded={menuMedir}
-          aria-pressed={medicao !== null}
-          disabled={!ativo}
-          onClick={() => setMenuMedir((m) => !m)}
-        >
-          Medir
-        </button>
-        {menuMedir && (
-          <div role="group" aria-label="Modo de medição" className="central-menu-lista">
-            {(Object.keys(NOMES_MEDIDA) as TipoMedida[]).map((t) => (
-              <button
-                key={t}
-                type="button"
-                className="central-botao"
-                aria-label={NOMES_MEDIDA[t]}
-                aria-pressed={medicao === t}
-                onClick={() => onMedir(medicao === t ? null : t)}
-              >
-                {NOMES_MEDIDA[t]}
-              </button>
-            ))}
-          </div>
-        )}
+      <div className="central-barra-grupo central-barra-futuros">
+        {BOTOES_FUTUROS.map(({ nome, icone }) => (
+          <button
+            key={nome}
+            type="button"
+            className="central-botao central-botao-icone"
+            aria-label={nome}
+            title={nome}
+            aria-pressed="false"
+            disabled
+          >
+            {icone}
+          </button>
+        ))}
       </div>
-      {BOTOES_FUTUROS.map((nome) => (
-        <button key={nome} type="button" className="central-botao" aria-label={nome} aria-pressed="false" disabled>
-          {nome}
-        </button>
-      ))}
     </div>
   )
 }
