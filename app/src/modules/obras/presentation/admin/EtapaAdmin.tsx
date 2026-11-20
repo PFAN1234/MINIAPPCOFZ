@@ -5,12 +5,13 @@
  */
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { ComDados, mensagemDe } from '../../componentes.tsx'
-import { useDesvincularEtapa, useEtapa, useEtapas, useObrasAdmin } from '../../dados/hooks.ts'
-import { ROTULO_FALTANDO } from '../../dados/tipos.ts'
+import { ComDados, mensagemDe } from '../../../../admin/componentes.tsx'
+
+import { useDesvincularEtapa, useEtapa, useEtapas, useObrasAdmin } from './hooks.ts'
+import { ROTULO_FALTANDO } from '../../../../admin/dados/tipos.ts'
 import type { EtapaDetalhe, EtapaLista } from '@modules/obras/domain/tiposAdmin.ts'
-import { TabelaObras } from '../ObrasAdmin.tsx'
-import { data } from '../obra/ArquivarExcluir.tsx'
+import { TabelaObras } from './ObrasAdmin.tsx'
+import { data } from './ArquivarExcluir.tsx'
 import Aditivos from './Aditivos.tsx'
 import ArquivarExcluirEtapa from './ArquivarExcluirEtapa.tsx'
 import FormularioEtapa, { chaveDoCadastro } from './FormularioEtapa.tsx'

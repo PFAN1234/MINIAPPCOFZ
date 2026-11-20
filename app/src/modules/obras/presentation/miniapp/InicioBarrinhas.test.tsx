@@ -1,10 +1,10 @@
 import { screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { criarRepositorioFixture } from '../dados/fixture.ts'
-import type { Repositorio } from '../dados/repositorio.ts'
+import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
+import type { Repositorio } from '../../../../dados/repositorio.ts'
 import type { ResumoObra } from '@modules/obras/domain/tipos.ts'
-import { renderizarApp } from '../shared/test/renderApp.tsx'
-import { textoPendenciasResolvidas, textoServicos } from '../shared/kernel/formato.ts'
+import { renderizarApp } from '@shared/test/renderApp.tsx'
+import { textoPendenciasResolvidas, textoServicos } from '@shared/kernel/formato.ts'
 
 const ID_HTO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 

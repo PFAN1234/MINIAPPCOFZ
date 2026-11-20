@@ -6,8 +6,9 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { mensagemDe } from '../../componentes.tsx'
-import { useArquivarObra, useExcluirObra, useResumoObra } from '../../dados/hooks.ts'
+import { mensagemDe } from '../../../../admin/componentes.tsx'
+
+import { useArquivarObra, useExcluirObra, useResumoObra } from './hooks.ts'
 import type { ObraAdmin, ResumoObra } from '@modules/obras/domain/tiposAdmin.ts'
 
 export interface AvisoObras {

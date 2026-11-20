@@ -422,4 +422,6 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Parte 2 (lado admin): portas `EtapasAdmin`, `OrganizacaoAdmin`, `ObrasAdmin` + contratos (`ObrasAdminFixture.contract.test.ts`); adaptadores Supabase e Fixture em `modules/obras/infra`; tipos admin em `domain/tiposAdmin.ts`; `RepositorioAdmin` compõe as portas.
 - Estado: typecheck, eslint (0 avisos), build e build:fixture verdes; 913 testes em 109 arquivos (898 + 15 de contrato).
 - Lacunas: constantes e `ErroAdmin` seguem em `admin/dados/tipos.ts` (adaptadores importam de lá); `fixtureBoletim.ts` (helpers de campos da etapa) segue em `admin/dados` até a 5D; boletins da fixture limpos via callback `aoExcluirEtapa`.
-- [ ] Parte 3 (telas e `hooks.ts`) pendente.
+- [x] Parte 3 (telas e `hooks.ts`): telas admin (`ObrasAdmin`, `ObraAdmin`, `Organizacao`, `ArquivarExcluir`, `EtapaAdmin`, `FormularioEtapa`, `MapaEscolha`, `Aditivos`, `Responsaveis`, `ArquivarExcluirEtapa` + testes) e hooks admin movidos para `modules/obras/presentation/admin/`; telas miniapp (`Obras`, `Obra`, `Ambiente` + 5 arquivos de teste) movidas para `modules/obras/presentation/miniapp/`. `Registros.tsx` fica para a 5C (depende de `fiscalizacao`).
+- Estado final da 5B: typecheck, eslint (0 avisos), build e build:fixture verdes; 913 testes em 109 arquivos; e2e `navegacao`, `etapas`, `admin-obra`, `admin-etapas` 16/16; chunks (`MapaEscolha` lazy incluído) e `precache-manifest.json` idênticos aos de antes.
+- Próximo: 5C (`fiscalizacao`).

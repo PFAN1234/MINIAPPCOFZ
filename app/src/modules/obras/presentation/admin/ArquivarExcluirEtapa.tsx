@@ -7,10 +7,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { mensagemDe } from '../../componentes.tsx'
-import { useArquivarEtapa, useExcluirEtapa, useResumoEtapa } from '../../dados/hooks.ts'
+import { mensagemDe } from '../../../../admin/componentes.tsx'
+
+import { useArquivarEtapa, useExcluirEtapa, useResumoEtapa } from './hooks.ts'
 import type { EtapaLista } from '@modules/obras/domain/tiposAdmin.ts'
-import { linhasResumo, type AvisoObras } from '../obra/ArquivarExcluir.tsx'
+import { linhasResumo, type AvisoObras } from './ArquivarExcluir.tsx'
 
 export default function ArquivarExcluirEtapa({ etapa }: { etapa: EtapaLista }) {
   return (

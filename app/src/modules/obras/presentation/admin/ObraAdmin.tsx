@@ -1,18 +1,12 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
-import { ComDados, mensagemDe, Resultado, SelectCategoria } from '../componentes.tsx'
+import { ComDados, mensagemDe, Resultado, SelectCategoria } from '../../../../admin/componentes.tsx'
 import { Historico } from '@modules/plantas/presentation/admin/PlantaObra.tsx'
-import ArquivarExcluir, { AvisoArquivada } from './obra/ArquivarExcluir.tsx'
-import {
-  useEtapas,
-  useExportarObra,
-  useObraAdmin,
-  useSalvarConfig,
-  useSalvarObra,
-  useSalvarPavimentos,
-} from '../dados/hooks.ts'
+import ArquivarExcluir, { AvisoArquivada } from './ArquivarExcluir.tsx'
+
+import { useEtapas, useExportarObra, useObraAdmin, useSalvarConfig, useSalvarObra, useSalvarPavimentos } from './hooks.ts'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
-import { ROTULO_STATUS, type StatusObra } from '../dados/tipos.ts'
+import { ROTULO_STATUS, type StatusObra } from '../../../../admin/dados/tipos.ts'
 import type { EtapaLista, ObraAdmin as DadosObraAdmin, PavimentoAdmin } from '@modules/obras/domain/tiposAdmin.ts'
 
 const SLUG = /^[a-z0-9-]+$/

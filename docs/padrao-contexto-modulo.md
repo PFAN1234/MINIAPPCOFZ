@@ -82,3 +82,8 @@ Todo uso de `three` fica em `modules/ra/infra/three/` (`motor.ts`, `malha.ts`, `
 
 - Fixture que divide estado com outro contexto (etapas, obras, boletins) recebe os arrays mutáveis por parâmetro e dependências cruzadas por callback (`removerObra`, `aoExcluirEtapa`), nunca por global; o contrato descreve a semente que espera.
 - Tipos movidos por script que reescreve imports (aspas simples e duplas) e tipos de memória da fixture exportados do próprio adaptador.
+
+### Lições da Fase 5B parte 3 (`obras` telas)
+
+- Ao mover telas com `vi.mock` global (como `MapaEscolha.tsx` em `shared/test/setup.ts`), atualizar o caminho do mock para o alias `@modules/...` junto com a movimentação; caso contrário o jsdom tenta carregar a dependência real (Leaflet).
+- Separar os hooks do contexto de `admin/dados/hooks.ts` para `modules/<ctx>/presentation/admin/hooks.ts` reduz o acoplamento das telas e mantém as chaves de cache do React Query idênticas.

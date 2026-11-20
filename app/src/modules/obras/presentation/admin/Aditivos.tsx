@@ -1,7 +1,8 @@
 /** Aditivos do contrato da etapa (prazo e valor) e o término e o valor atualizados. */
 import { useState, type FormEvent } from "react";
-import { Campo, Resultado } from "../../componentes.tsx";
-import { useRemoverAditivo, useSalvarAditivo } from "../../dados/hooks.ts";
+import { Campo, Resultado } from "../../../../admin/componentes.tsx";
+
+import { useRemoverAditivo, useSalvarAditivo } from "./hooks.ts"
 import type { Aditivo, EtapaDetalhe } from '@modules/obras/domain/tiposAdmin.ts'
 import {
   dataBr,
@@ -10,7 +11,7 @@ import {
   mascaraMoeda,
   moeda,
   textoMoeda,
-} from "../../formato.ts";
+} from "../../../../admin/formato.ts";
 
 interface Formulario {
   id?: string;

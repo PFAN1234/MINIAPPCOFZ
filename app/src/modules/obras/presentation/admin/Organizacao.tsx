@@ -4,9 +4,10 @@
  * `organizacao` (PNG, JPEG ou WebP, até 1 MB), com nome novo a cada troca.
  */
 import { useId, useState, type ChangeEvent, type FormEvent } from 'react'
-import { ComDados, Resultado } from '../componentes.tsx'
-import { useOrganizacao, useSalvarOrganizacao } from '../dados/hooks.ts'
-import { CABECALHO_LINHA_MAX, CABECALHO_LINHAS_MAX, NOME_OM_MAX, problemaDoLogo, TIPOS_LOGO } from '../dados/tipos.ts'
+import { ComDados, Resultado } from '../../../../admin/componentes.tsx'
+
+import { useOrganizacao, useSalvarOrganizacao } from './hooks.ts'
+import { CABECALHO_LINHA_MAX, CABECALHO_LINHAS_MAX, NOME_OM_MAX, problemaDoLogo, TIPOS_LOGO } from '../../../../admin/dados/tipos.ts'
 import type { Organizacao as DadosOrganizacao } from '@modules/obras/domain/tiposAdmin.ts'
 
 export default function Organizacao() {

@@ -1,19 +1,19 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { criarRepositorioFixture, ETAPA_2, ETAPA_3, ETAPA_4 } from '../dados/fixture.ts'
-import type { Repositorio } from '../dados/repositorio.ts'
-import { criarRepositorioSupabase } from '../dados/supabase.ts'
+import { criarRepositorioFixture, ETAPA_2, ETAPA_3, ETAPA_4 } from '../../../../dados/fixture.ts'
+import type { Repositorio } from '../../../../dados/repositorio.ts'
+import { criarRepositorioSupabase } from '../../../../dados/supabase.ts'
 import type { EquipeServico, Posicao } from '@modules/acessos/domain/tipos.ts'
-import { renderizarApp } from '../shared/test/renderApp.tsx'
+import { renderizarApp } from '@shared/test/renderApp.tsx'
 import { chaveEtapaGuardada } from '@modules/obras/domain/etapas.ts'
-import { ErroLocalizacao } from '../shared/infra/browser/localizacao.ts'
+import { ErroLocalizacao } from '@shared/infra/browser/localizacao.ts'
 
 const POSICAO: Posicao = { latitude: -3.7, longitude: -38.5, precisao: 12 }
 
 const mocks = vi.hoisted(() => ({ obterPosicao: vi.fn() }))
-vi.mock('../shared/infra/browser/localizacao.ts', async (original) => ({
-  ...(await original<typeof import('../shared/infra/browser/localizacao.ts')>()),
+vi.mock('@shared/infra/browser/localizacao.ts', async (original) => ({
+  ...(await original<typeof import('@shared/infra/browser/localizacao.ts')>()),
   obterPosicao: mocks.obterPosicao,
 }))
 

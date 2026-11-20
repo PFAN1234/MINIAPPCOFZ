@@ -5,7 +5,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { ComDados, Resultado } from '../../../../admin/componentes.tsx'
-import { useAmbientesRA, useDefinirQr, useObraAdmin, useRemoverQr } from '../../../../admin/dados/hooks.ts'
+import { useAmbientesRA, useDefinirQr, useRemoverQr } from '../../../../admin/dados/hooks.ts'
+import { useObraAdmin } from '@modules/obras/presentation/admin/hooks.ts'
 import type { AmbienteRA } from '../../../../admin/dados/tipos.ts'
 import type { ObraAdmin } from '@modules/obras/domain/tiposAdmin.ts'
 import {

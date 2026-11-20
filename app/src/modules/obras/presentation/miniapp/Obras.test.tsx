@@ -1,11 +1,11 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { criarRepositorioFixture } from '../dados/fixture.ts'
-import type { Repositorio } from '../dados/repositorio.ts'
-import { criarRepositorioSupabase } from '../dados/supabase.ts'
-import { renderizarApp } from '../shared/test/renderApp.tsx'
-import type { TelegramWebApp } from '../shared/infra/telegram/telegram.ts'
+import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
+import type { Repositorio } from '../../../../dados/repositorio.ts'
+import { criarRepositorioSupabase } from '../../../../dados/supabase.ts'
+import { renderizarApp } from '@shared/test/renderApp.tsx'
+import type { TelegramWebApp } from '@shared/infra/telegram/telegram.ts'
 
 afterEach(() => {
   delete window.Telegram

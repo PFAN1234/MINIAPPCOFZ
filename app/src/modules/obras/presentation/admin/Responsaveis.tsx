@@ -1,8 +1,9 @@
+import { useDefinirResponsaveis } from './hooks.ts'
 /** Responsáveis da etapa (fiscais que assinam o boletim): quem, função e ordem. */
 import { useState } from "react";
 import { Link } from "react-router";
-import { ComDados, Resultado } from "../../componentes.tsx";
-import { useDefinirResponsaveis, usePessoas } from "../../dados/hooks.ts";
+import { ComDados, Resultado } from "../../../../admin/componentes.tsx";
+import { usePessoas } from "../../../../admin/dados/hooks.ts"
 import type { Responsavel } from '@modules/obras/domain/tiposAdmin.ts'
 import type { Pessoa } from "@modules/acessos/domain/tipos.ts";
 

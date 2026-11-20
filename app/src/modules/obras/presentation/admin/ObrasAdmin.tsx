@@ -3,11 +3,12 @@
  * arquivadas (de etapas ativas) e as etapas arquivadas em seções próprias; e as obras excluídas.
  */
 import { Link, useLocation } from 'react-router'
-import { ComDados, mensagemDe } from '../componentes.tsx'
-import { useEtapas, useExclusoes, useLimparExclusao, useObrasAdmin } from '../dados/hooks.ts'
-import { ROTULO_STATUS, type StatusObra } from '../dados/tipos.ts'
+import { ComDados, mensagemDe } from '../../../../admin/componentes.tsx'
+
+import { useEtapas, useExclusoes, useLimparExclusao, useObrasAdmin } from './hooks.ts'
+import { ROTULO_STATUS, type StatusObra } from '../../../../admin/dados/tipos.ts'
 import type { EtapaLista, Exclusao, ObraLista } from '@modules/obras/domain/tiposAdmin.ts'
-import type { AvisoObras } from './obra/ArquivarExcluir.tsx'
+import type { AvisoObras } from './ArquivarExcluir.tsx'
 
 export function rotuloStatus(status: string | null): string {
   if (status === null) return 'Sem configuração'

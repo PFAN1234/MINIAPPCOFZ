@@ -4,7 +4,8 @@
  */
 import { useEffect, useState } from 'react'
 import { ComDados, mensagemDe } from '../../componentes.tsx'
-import { useBoletins, useOrganizacao, usePedirEmissao, usePreviaBoletim } from '../../dados/hooks.ts'
+import { useBoletins, usePedirEmissao, usePreviaBoletim } from '../../dados/hooks.ts'
+import { useOrganizacao } from '@modules/obras/presentation/admin/hooks.ts'
 import type { BoletimEmitido, PedidoEmissao } from '../../dados/tipos.ts'
 import type { EtapaDetalhe } from '@modules/obras/domain/tiposAdmin.ts'
 import { dataBr, hojeNoFuso, numeroBoletim } from '../../formato.ts'
