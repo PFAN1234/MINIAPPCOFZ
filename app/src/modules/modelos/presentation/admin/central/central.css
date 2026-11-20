@@ -335,3 +335,17 @@
 .central-olho {
   padding: 0 6px;
 }
+
+/* Inspeção (etapa 3): propriedades e filtro por atributo */
+.central-propriedades { display: flex; flex-direction: column; gap: 6px; }
+.central-propriedades-topo { display: flex; gap: 6px; }
+.central-propriedades-topo input { flex: 1; min-width: 0; }
+.central-grupo summary { cursor: pointer; font-weight: 600; padding: 2px 0; }
+.central-grupo dl { margin: 2px 0 6px; }
+.central-grupo dl > div { display: flex; gap: 8px; }
+.central-grupo dt { color: var(--c-sec); min-width: 90px; }
+.central-grupo dd { margin: 0; overflow-wrap: anywhere; }
+.central-contagem { list-style: none; margin: 4px 0 0; padding: 0; }
+.central-filtro { display: flex; flex-direction: column; gap: 6px; }
+.central-filtro label { display: flex; flex-direction: column; gap: 2px; }
+.central-filtro-acoes { display: flex; gap: 6px; flex-wrap: wrap; }

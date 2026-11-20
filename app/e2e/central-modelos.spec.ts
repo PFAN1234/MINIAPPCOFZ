@@ -74,6 +74,14 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     }
     await expect(selecionado).toBeVisible({ timeout: 30_000 })
 
+    // Inspeção: grupo Atributos com GlobalId e ao menos um conjunto de propriedades (Pset_…).
+    await page.getByRole('button', { name: 'Inspecionar' }).click()
+    const contexto = page.getByRole('region', { name: 'Contexto' })
+    await expect(contexto.getByText('Atributos', { exact: true })).toBeVisible({ timeout: 30_000 })
+    await expect(contexto.getByText('GlobalId', { exact: true })).toBeVisible()
+    await expect(contexto.locator('summary', { hasText: /^Pset_/ }).first()).toBeVisible()
+    await page.getByRole('button', { name: 'Ver', exact: true }).click()
+
     const isolar = page.getByRole('button', { name: 'Isolar' })
     await isolar.click()
     await expect(isolar).toHaveAttribute('aria-pressed', 'true')

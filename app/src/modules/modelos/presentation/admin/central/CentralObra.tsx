@@ -6,6 +6,7 @@ import BarraVisibilidade from './barras/BarraVisibilidade.tsx'
 import type { ObraCentral } from '../../../domain/tipos.ts'
 import { useObrasCentral } from './CentralModelos.tsx'
 import Itens from './paineis/Itens.tsx'
+import Propriedades from './paineis/Propriedades.tsx'
 import { useMotorCentral, type EstadoCentral } from './useMotorCentral.ts'
 import type { ModoCor, RefElemento } from '../../../domain/central.ts'
 import { gravarTema, lerTema, type Tema } from './tema.ts'
@@ -59,6 +60,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   const [hover, setHover] = useState(true)
   const [isolado, setIsolado] = useState(false)
   const [fantasma, setFantasma] = useState(false)
+  const [modo, setModo] = useState<'ver' | 'inspecionar'>('ver')
   const [categoriasOcultas, setCategoriasOcultas] = useState<ReadonlySet<string>>(new Set())
   const arrasto = useRef<{ x: number; largura: number } | null>(null)
   const tela = useRef<HTMLDivElement>(null)
@@ -247,7 +249,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
           <section className="central-contexto" aria-label="Contexto">
             <h3>{obra.nome}</h3>
             <Link to="/modelos">Todas as obras</Link>
-            <Selecao refs={selecao} />
+            {modo === 'inspecionar' ? <Propriedades motor={motor} selecao={selecao} /> : <Selecao refs={selecao} />}
           </section>
           <div
             role="separator"
@@ -290,10 +292,26 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
           <div ref={tela} className="central-tela" />
           <Estados estado={estado} />
           <div className="central-modo" role="group" aria-label="Modo">
-            <button type="button" className="central-botao" aria-label="Ver" aria-pressed="true" disabled>
+            <button
+              type="button"
+              className="central-botao"
+              aria-label="Ver"
+              aria-pressed={modo === 'ver'}
+              onClick={() => setModo('ver')}
+            >
               Ver
             </button>
-            <button type="button" className="central-botao" aria-label="Inspecionar" aria-pressed="false" disabled>
+            <button
+              type="button"
+              className="central-botao"
+              aria-label="Inspecionar"
+              aria-pressed={modo === 'inspecionar'}
+              disabled={!pronto}
+              onClick={() => {
+                setModo('inspecionar')
+                setAberto(true)
+              }}
+            >
               Inspecionar
             </button>
           </div>

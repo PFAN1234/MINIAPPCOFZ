@@ -209,6 +209,21 @@ describe('CentralObra', () => {
       expect(within(contexto).getByText('EST')).toBeInTheDocument()
     })
 
+    it('Inspecionar troca o contexto para as propriedades e Ver volta', async () => {
+      const usuario = userEvent.setup()
+      renderizar('/modelos/hto')
+      await screen.findByRole('button', { name: 'Enquadrar' })
+      await waitFor(() => expect(motor.chamadasDe('carregar')).toHaveLength(1))
+      act(() => motor.emitir('selecao', [{ sigla: 'ARQ', globalId: 'G1', classe: 'IFCWALL', nome: 'Parede' }]))
+      const contexto = screen.getByRole('region', { name: 'Contexto' })
+      await usuario.click(screen.getByRole('button', { name: 'Inspecionar' }))
+      expect(screen.getByRole('button', { name: 'Inspecionar' })).toHaveAttribute('aria-pressed', 'true')
+      expect(await within(contexto).findByText('Pset_WallCommon')).toBeInTheDocument()
+      await usuario.click(screen.getByRole('button', { name: 'Ver' }))
+      expect(within(contexto).queryByText('Pset_WallCommon')).not.toBeInTheDocument()
+      expect(within(contexto).getByText('G1')).toBeInTheDocument()
+    })
+
     it('categorias vêm do motor, na ordem recebida', async () => {
       const usuario = userEvent.setup()
       motor.categoriasDados = [

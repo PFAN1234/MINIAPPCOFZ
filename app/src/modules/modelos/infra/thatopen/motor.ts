@@ -13,6 +13,7 @@ import * as OBF from '@thatopen/components-front'
 import { RenderedFaces, type FragmentsModel, type ItemsQueryParams } from '@thatopen/fragments'
 import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
+import { gruposDeDados, RELACOES_PROPRIEDADES, type DadosBrutos } from './propriedades.ts'
 import type { EventoMotor, MotorVisualizador, TemaCentral } from '../../application/ports/MotorVisualizador.port.ts'
 import {
   ErroCarregamento,
@@ -568,7 +569,17 @@ export function criarMotorThatOpen(): MotorVisualizador {
       return refsDe(mapa)
     },
     // --- Etapa 3
-    propriedades: () => naoImplementado(3),
+    async propriedades(ref: RefElemento) {
+      const m = modelo(ref.sigla)
+      if (!m) return []
+      const [id] = await m.getLocalIdsByGuids([ref.globalId])
+      if (id === null || id === undefined) return []
+      const [dados] = await m.getItemsData([id], {
+        attributesDefault: true,
+        relations: RELACOES_PROPRIEDADES,
+      })
+      return dados ? gruposDeDados(dados as DadosBrutos) : []
+    },
     // --- Etapa 4
     vistaPlanta: () => naoImplementado(4),
     vistaElevacao: () => naoImplementado(4),

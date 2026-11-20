@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import type { MotorVisualizador } from '../../../../application/ports/MotorVisualizador.port.ts'
 import { filhosVisiveis, type CategoriaTotal, type NoArvore, type RefElemento } from '../../../../domain/central.ts'
+import Filtro from './Filtro.tsx'
 import type { ModeloFrag } from '../../../../domain/modelos.ts'
 
-type SubAba = 'arvore' | 'categorias' | 'modelos'
+type SubAba = 'arvore' | 'categorias' | 'filtro' | 'modelos'
 
 const SUBABAS: { id: SubAba; nome: string }[] = [
   { id: 'arvore', nome: 'Árvore' },
   { id: 'categorias', nome: 'Categorias' },
+  { id: 'filtro', nome: 'Filtro' },
   { id: 'modelos', nome: 'Modelos' },
 ]
 
@@ -67,6 +69,7 @@ export default function Itens({
           onAlternar={onAlternarCategoria}
         />
       )}
+      {aba === 'filtro' && <Filtro motor={motor} versao={versao} onSelecionar={onSelecionar} />}
       {aba === 'modelos' && (
         <Modelos modelos={modelos} ativos={ativos} falhas={falhas} onAlternar={onAlternarModelo} />
       )}

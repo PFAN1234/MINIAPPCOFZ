@@ -3,6 +3,7 @@ import {
   ErroCarregamento,
   type CategoriaTotal,
   type FiltroAtributo,
+  type GrupoPropriedades,
   type NoArvore,
   type RefElemento,
   type Vista,
@@ -18,6 +19,19 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   chamadas: ChamadaMotor[] = []
   arvoreDados: NoArvore[] = []
   categoriasDados: CategoriaTotal[] = []
+  /** Resultado de `propriedades`. */
+  propriedadesDados: GrupoPropriedades[] = [
+    {
+      nome: 'Atributos',
+      itens: [
+        { nome: 'Classe', valor: 'IFCWALL' },
+        { nome: 'GlobalId', valor: '3cUkl32yn9qRSPvBJVyWYp' },
+        { nome: 'Name', valor: 'Parede 1' },
+      ],
+    },
+    { nome: 'Pset_WallCommon', itens: [{ nome: 'IsExternal', valor: 'Sim' }] },
+  ]
+  propriedadesErro = false
   /** Resultado de `buscar`. */
   buscaDados: RefElemento[] = []
   /** Siglas que `carregar` recusa (rejeita com `ErroCarregamento` no fim). */
@@ -65,9 +79,10 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
     this.registrar('categorias')
     return this.categoriasDados
   }
-  async propriedades() {
-    this.registrar('propriedades')
-    return []
+  async propriedades(ref: RefElemento) {
+    this.registrar('propriedades', ref)
+    if (this.propriedadesErro) throw new Error('falha')
+    return this.propriedadesDados
   }
   async buscar(filtro: FiltroAtributo) {
     this.registrar('buscar', filtro)

@@ -459,7 +459,7 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
 - [x] 0 Spike: R1 resolvido (`.frag` traz psets, espacial e GlobalId); minimapa próprio; chunk medido na etapa 2
 - [x] 1 Página, tema e casca (migration `admin_central_obras` ainda não aplicada)
 - [x] 2 Motor 3D e navegação (e2e `central-modelos.spec.ts` verde; `admin-modelo.spec.ts` volta na etapa 5)
-- [ ] 3 Inspeção
+- [x] 3 Inspeção (propriedades por grupos, modo Inspecionar, filtro por atributo direto na sub-aba Filtro; psets no filtro ficam para depois; os .frag da HTO não trazem quantidades)
 - [ ] 4 Cortes, vistas e medições
 - [ ] 5 Gestão de modelos
 - [ ] 6 Documentos

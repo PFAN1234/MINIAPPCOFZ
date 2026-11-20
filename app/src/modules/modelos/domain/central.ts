@@ -47,6 +47,8 @@ export interface NoArvore {
 export interface GrupoPropriedades {
   nome: string
   itens: { nome: string; valor: string }[]
+  /** Grupo vindo de IFCELEMENTQUANTITY (a tela avisa quando nenhum existe). */
+  quantidades?: boolean
 }
 
 export interface FiltroAtributo {
