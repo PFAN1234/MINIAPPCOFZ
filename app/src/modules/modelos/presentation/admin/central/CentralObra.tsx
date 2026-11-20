@@ -1,9 +1,13 @@
-import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { Carregando, Erro } from '../../../../../admin/componentes.tsx'
 import BarraSuperior from './barras/BarraSuperior.tsx'
 import BarraVisibilidade from './barras/BarraVisibilidade.tsx'
+import type { ObraCentral } from '../../../domain/tipos.ts'
 import { useObrasCentral } from './CentralModelos.tsx'
+import Itens from './paineis/Itens.tsx'
+import { useMotorCentral, type EstadoCentral } from './useMotorCentral.ts'
+import type { RefElemento } from '../../../domain/central.ts'
 import { gravarTema, lerTema, type Tema } from './tema.ts'
 import './central.css'
 
@@ -19,18 +23,10 @@ const LARGURA_MIN = 240
 const LARGURA_MAX = 520
 const limitar = (n: number) => Math.min(LARGURA_MAX, Math.max(LARGURA_MIN, n))
 
-/** Visualizador de uma obra: casca com trilho, painéis, canvas (placeholder) e barras. */
+/** Visualizador de uma obra: resolve a obra e abre a central (remontada a cada troca de obra). */
 export default function CentralObra() {
   const { slug = '' } = useParams()
-  const [params, setParams] = useSearchParams()
   const obras = useObrasCentral()
-  const [tema, setTema] = useState<Tema>(lerTema)
-  const [aberto, setAberto] = useState(true)
-  const [largura, setLargura] = useState(320)
-  const arrasto = useRef<{ x: number; largura: number } | null>(null)
-
-  const pedido = params.get('painel')
-  const painel = PAINEIS.find((p) => p.id === pedido) ?? PAINEIS[0]
 
   if (obras.isPending) return <Carregando texto="Carregando a obra…" />
   if (obras.isError) return <Erro erro={obras.error} onTentar={() => void obras.refetch()} />
@@ -43,6 +39,52 @@ export default function CentralObra() {
       </section>
     )
   }
+  return <CentralAberta key={obra.slug} obra={obra} />
+}
+
+function ehCampoDeTexto(alvo: EventTarget | null): boolean {
+  const el = alvo as HTMLElement | null
+  return Boolean(el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)))
+}
+
+/** Casca com trilho, painéis, canvas do motor 3D e barras. O motor é liberado ao desmontar. */
+function CentralAberta({ obra }: { obra: ObraCentral }) {
+  const [params, setParams] = useSearchParams()
+  const [tema, setTema] = useState<Tema>(lerTema)
+  const [aberto, setAberto] = useState(true)
+  const [largura, setLargura] = useState(320)
+  const [ortografica, setOrtografica] = useState(false)
+  const arrasto = useRef<{ x: number; largura: number } | null>(null)
+  const tela = useRef<HTMLDivElement>(null)
+  const estado = useMotorCentral(obra.slug, tema, tela)
+  const { motor, selecao, selecionar } = estado
+  const pronto = estado.fase === 'pronto' && motor !== null
+
+  const pedido = params.get('painel')
+  const painel = PAINEIS.find((p) => p.id === pedido) ?? PAINEIS[0]
+
+  function enquadrar() {
+    motor?.enquadrar(selecao.length > 0 ? selecao : undefined)
+  }
+  function alternarProjecao() {
+    const nova = !ortografica
+    setOrtografica(nova)
+    motor?.projecao(nova ? 'ortografica' : 'perspectiva')
+  }
+  // F enquadra (a seleção, se houver); Esc limpa a seleção.
+  useEffect(() => {
+    if (!pronto) return
+    function tecla(e: globalThis.KeyboardEvent) {
+      if (ehCampoDeTexto(e.target) || e.ctrlKey || e.metaKey || e.altKey) return
+      if (e.key === 'f' || e.key === 'F') {
+        motor?.enquadrar(selecao.length > 0 ? selecao : undefined)
+      } else if (e.key === 'Escape') {
+        selecionar([])
+      }
+    }
+    window.addEventListener('keydown', tecla)
+    return () => window.removeEventListener('keydown', tecla)
+  }, [pronto, motor, selecao, selecionar])
 
   function escolher(id: string) {
     const novo = new URLSearchParams(params)
@@ -112,12 +154,25 @@ export default function CentralObra() {
         <aside className="central-lateral" style={{ width: largura }}>
           <section id="painel-central" role="tabpanel" aria-labelledby={`aba-${painel.id}`} className="central-painel">
             <h2>{painel.nome}</h2>
-            <p className="central-sec">Disponível na etapa {painel.etapa}</p>
+            {painel.id === 'itens' ? (
+              <Itens
+                motor={estado.motor}
+                versao={estado.versao}
+                modelos={estado.modelos}
+                ativos={estado.ativos}
+                falhas={estado.falhas}
+                selecionados={selecao}
+                onSelecionar={selecionar}
+                onAlternarModelo={(sigla, ligado) => void estado.alternarModelo(sigla, ligado)}
+              />
+            ) : (
+              <p className="central-sec">Disponível na etapa {painel.etapa}</p>
+            )}
           </section>
           <section className="central-contexto" aria-label="Contexto">
             <h3>{obra.nome}</h3>
             <Link to="/modelos">Todas as obras</Link>
-            <p className="central-sec">Nenhuma seleção.</p>
+            <Selecao refs={selecao} />
           </section>
           <div
             role="separator"
@@ -146,8 +201,10 @@ export default function CentralObra() {
         >
           {aberto ? '«' : '»'}
         </button>
-        <BarraSuperior />
+        <BarraSuperior ativo={pronto} ortografica={ortografica} onEnquadrar={enquadrar} onProjecao={alternarProjecao} />
         <div className="central-canvas" data-testid="canvas-central">
+          <div ref={tela} className="central-tela" />
+          <Estados estado={estado} />
           <div className="central-modo" role="group" aria-label="Modo">
             <button type="button" className="central-botao" aria-label="Ver" aria-pressed="true" disabled>
               Ver
@@ -160,5 +217,68 @@ export default function CentralObra() {
         </div>
       </div>
     </div>
+  )
+}
+
+/** Seleção atual (último evento `selecao` do motor). */
+function Selecao({ refs }: { refs: RefElemento[] }) {
+  if (refs.length === 0) return <p className="central-sec">Nenhuma seleção.</p>
+  const [r] = refs
+  return (
+    <div className="central-selecao" aria-live="polite">
+      <strong>{refs.length > 1 ? `${refs.length} elementos selecionados` : (r.nome ?? r.classe ?? 'Elemento')}</strong>
+      <dl>
+        <div>
+          <dt>Classe</dt>
+          <dd>{r.classe ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>Nome</dt>
+          <dd>{r.nome ?? '—'}</dd>
+        </div>
+        <div>
+          <dt>Disciplina</dt>
+          <dd>{r.sigla}</dd>
+        </div>
+        <div>
+          <dt>GlobalId</dt>
+          <dd className="central-guid">{r.globalId}</dd>
+        </div>
+      </dl>
+    </div>
+  )
+}
+
+/** Avisos sobre o canvas: sem WebGL, sem modelos, carregando, erro e falhas por disciplina. */
+function Estados({ estado }: { estado: EstadoCentral }) {
+  const { fase, progresso, falhas, erro } = estado
+  return (
+    <>
+      {fase === 'sem-webgl' && (
+        <p className="central-aviso" role="alert">
+          Este navegador não permite exibir o modelo 3D (WebGL indisponível).
+        </p>
+      )}
+      {fase === 'vazio' && (
+        <p className="central-aviso" role="status">
+          Sem modelos publicados — envie pela aba Gestão
+        </p>
+      )}
+      {(fase === 'preparando' || fase === 'carregando') && (
+        <p className="central-aviso central-pilula" role="status">
+          Carregando modelos… {Math.round(progresso * 100)}%
+        </p>
+      )}
+      {fase === 'erro' && (
+        <p className="central-aviso" role="alert">
+          {erro ?? 'Não foi possível abrir os modelos.'}
+        </p>
+      )}
+      {fase === 'pronto' && falhas.length > 0 && (
+        <p className="central-aviso central-pilula" role="alert">
+          Não carregaram: {falhas.join(', ')}
+        </p>
+      )}
+    </>
   )
 }

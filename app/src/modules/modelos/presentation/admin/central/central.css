@@ -202,3 +202,87 @@
     box-shadow: 4px 0 16px rgb(0 0 0 / 35%);
   }
 }
+
+/* Motor 3D: o canvas do That Open ocupa todo o espaço; as barras ficam por cima. */
+.central-tela {
+  position: absolute;
+  inset: 0;
+}
+.central-modo,
+.central-barra-visibilidade {
+  z-index: 2;
+}
+.central-aviso {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 16px;
+  background: var(--c-painel, rgba(0, 0, 0, 0.7));
+  color: var(--c-texto, inherit);
+  border: 1px solid var(--c-borda);
+}
+.central-subabas {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.central-subabas [aria-selected='true'] {
+  border-color: var(--c-acento);
+}
+.central-arvore,
+.central-arvore ul,
+.central-categorias,
+.central-modelos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.central-categorias li {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+.central-no {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.central-no-seta {
+  width: 20px;
+  padding: 0;
+  text-align: center;
+}
+.central-no-nome {
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.central-no-nome[data-selecionado='true'] {
+  background: var(--c-acento);
+  color: #fff;
+}
+.central-selecao dl {
+  margin: 4px 0 0;
+}
+.central-selecao dl > div {
+  display: flex;
+  gap: 8px;
+}
+.central-selecao dt {
+  color: var(--c-sec);
+  min-width: 70px;
+}
+.central-selecao dd {
+  margin: 0;
+}
+.central-guid {
+  word-break: break-all;
+  font-family: monospace;
+}

@@ -8,6 +8,8 @@ import { RepositorioAdminProvider } from '../../admin/dados/contexto.tsx'
 import { criarRepositorioAdminFixture } from '../../admin/dados/fixture.ts'
 import type { RepositorioAdmin } from '../../admin/dados/repositorio.ts'
 import { criarEntrada, tokenDoHash } from '../../admin/entrada.ts'
+import { MotorVisualizadorFalso } from '@modules/modelos/infra/MotorVisualizadorFalso.ts'
+import { FabricaMotorProvider } from '@modules/modelos/presentation/admin/central/motorContexto.tsx'
 import { URL_WIDGET } from '@modules/acessos/presentation/admin/Entrar.tsx'
 
 afterEach(() => {
@@ -24,9 +26,11 @@ function renderizar(
   render(
     <QueryClientProvider client={qc}>
       <RepositorioAdminProvider repositorio={repositorio}>
-        <MemoryRouter initialEntries={[rota]}>
-          <AdminApp entrada={criarEntrada(token)} />
-        </MemoryRouter>
+        <FabricaMotorProvider fabrica={async () => new MotorVisualizadorFalso()}>
+          <MemoryRouter initialEntries={[rota]}>
+            <AdminApp entrada={criarEntrada(token)} />
+          </MemoryRouter>
+        </FabricaMotorProvider>
       </RepositorioAdminProvider>
     </QueryClientProvider>,
   )

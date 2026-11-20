@@ -342,6 +342,8 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     enviarArquivo: plantas.enviarArquivo,
     baixarOriginal: plantas.baixarOriginal,
     publicarRevisao: plantas.publicarRevisao,
+    listarModelos: modelos.listarModelos,
+    baixarModelo: modelos.baixarModelo,
     listarModelosAdmin: modelos.listarModelosAdmin,
     listarObrasCentral: modelos.listarObrasCentral,
     registrarModelo: modelos.registrarModelo,

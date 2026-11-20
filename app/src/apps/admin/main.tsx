@@ -5,6 +5,8 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import './admin.css'
 import AdminApp from './AdminApp.tsx'
+import { fabricaMotor } from './motor.ts'
+import { FabricaMotorProvider } from '@modules/modelos/presentation/admin/central/motorContexto.tsx'
 import ErrorBoundary from '@shared/ui/feedback/ErrorBoundary.tsx'
 import { instalarCapturaGlobal } from '@shared/infra/erros.ts'
 import { Carregando } from '../../admin/componentes.tsx'
@@ -25,9 +27,11 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <RepositorioAdminProvider carregando={<Carregando />}>
-        <BrowserRouter basename="/admin">
-          <AdminApp entrada={entrada} />
-        </BrowserRouter>
+        <FabricaMotorProvider fabrica={fabricaMotor}>
+          <BrowserRouter basename="/admin">
+            <AdminApp entrada={entrada} />
+          </BrowserRouter>
+        </FabricaMotorProvider>
       </RepositorioAdminProvider>
     </QueryClientProvider>
     </ErrorBoundary>
