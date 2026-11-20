@@ -250,6 +250,9 @@ export default defineConfig({
       '@shared': fileURLToPath(new URL('./src/shared', import.meta.url)),
       '@modules': fileURLToPath(new URL('./src/modules', import.meta.url)),
       '@apps': fileURLToPath(new URL('./src/apps', import.meta.url)),
+      // O TTFLoader do three (usado pelo components-front) importa o opentype.js de um CDN em
+      // tempo de execução; sem rede para o CDN o motor da central não carrega. Usa a cópia local.
+      'https://cdn.jsdelivr.net/npm/opentype.js@1.3.4/+esm': 'opentype.js',
     },
   },
   define: { __VERSAO_WEB_IFC__: JSON.stringify(VERSAO_WEB_IFC), __VERSAO_APP__: JSON.stringify(versaoDoBuild()) },
