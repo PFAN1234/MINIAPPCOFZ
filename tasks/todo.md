@@ -463,6 +463,7 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
 - [x] 4 Cortes, vistas e medições
   - [x] 4A vistas (planta por pavimento, elevações N/S/L/O, 3D), cortes horizontais com lista e Del, caminhar, minimapa; e2e verde (4.5 min). Em aberto: orientação das elevações não conferida (supõe norte do projeto), corte sem preenchimento de seção, desenho do minimapa não conferido
   - [x] 4B medições (distância, área, volume, ângulo; components-front), painel Medições com lista, apagar e Del/Esc; e2e verde (6,4 min, timeout 480 s). Em aberto: duplo clique para concluir área pode duplicar o último ponto
+  - [x] 4C visual: 34 ícones SVG (barra, submenu Medir, trilho, visibilidade, modo), paleta Canteiro nos dois temas (azul-escuro + amarelo; seleção 3D amarela), polimento pelas diretrizes do impeccable (estados, foco, campos, flutuantes, scrollbar, tabular-nums), menus fecham com Esc/clique fora (Medir fica aberto com modo ativo), gaveta < 1024 px acima dos flutuantes. e2e verde (5,4 min). Em aberto: menus Cor/Medir podem ser cortados com a barra rolando < 1024 px; cabeçalho do admin quebra em 820 px (fora da central)
 - [ ] 5 Gestão de modelos
 - [ ] 6 Documentos
 - [ ] 7 Issues e BCF

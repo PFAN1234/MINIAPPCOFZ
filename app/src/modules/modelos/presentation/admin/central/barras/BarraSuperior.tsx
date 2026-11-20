@@ -117,7 +117,8 @@ export default function BarraSuperior({
   const [menu, setMenu] = useState(false)
   const [escolhido, setEscolhido] = useState('')
   const refCor = useFecharMenu(menu, () => setMenu(false))
-  const refMedir = useFecharMenu(menuMedir, () => setMenuMedir(false))
+  // Com um modo de medição ativo o submenu fica aberto (paleta): os cliques no canvas não o fecham.
+  const refMedir = useFecharMenu(menuMedir && medicao === null, () => setMenuMedir(false))
   const pavimento = pavimentos.includes(escolhido) ? escolhido : (pavimentos[0] ?? '')
   return (
     <div className="central-barra central-barra-superior" role="toolbar" aria-label="Ferramentas do visualizador">
