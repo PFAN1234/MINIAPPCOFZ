@@ -19,7 +19,7 @@ import { recursos } from '../recursos.ts'
 import type { FotoRA } from '@modules/ra/domain/tipos.ts'
 
 // Three.js, That Open e a tela de RA ficam fora do pacote inicial.
-const TelaRA = lazy(() => import('../ra/TelaRA.tsx'))
+const TelaRA = lazy(() => import('@modules/ra/presentation/miniapp/TelaRA.tsx'))
 
 class LimitrofeRA extends Component<{ onFechar: () => void; children: ReactNode }, { erro: boolean }> {
   state = { erro: false }

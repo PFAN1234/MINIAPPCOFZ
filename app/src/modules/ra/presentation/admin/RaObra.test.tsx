@@ -3,10 +3,10 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import AdminApp from '../../AdminApp.tsx'
-import { RepositorioAdminProvider } from '../../dados/contexto.tsx'
-import { criarRepositorioAdminFixture } from '../../dados/fixture.ts'
-import { criarEntrada } from '../../entrada.ts'
+import AdminApp from '../../../../admin/AdminApp.tsx'
+import { RepositorioAdminProvider } from '../../../../admin/dados/contexto.tsx'
+import { criarRepositorioAdminFixture } from '../../../../admin/dados/fixture.ts'
+import { criarEntrada } from '../../../../admin/entrada.ts'
 
 afterEach(() => {
   vi.unstubAllEnvs()

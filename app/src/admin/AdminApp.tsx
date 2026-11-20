@@ -18,7 +18,7 @@ import Pessoas from './telas/Pessoas.tsx'
 import EditorPlanta from './telas/planta/EditorPlanta.tsx'
 import ModelosObra from './telas/modelo/ModelosObra.tsx'
 import PlantaObra from './telas/planta/PlantaObra.tsx'
-import RaObra from './telas/ra/RaObra.tsx'
+import RaObra from '@modules/ra/presentation/admin/RaObra.tsx'
 
 
 interface Sessao {

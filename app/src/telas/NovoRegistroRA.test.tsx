@@ -8,7 +8,7 @@ import { RepositorioProvider } from '../dados/contexto.tsx'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 
-vi.mock('../ra/TelaRA.tsx', () => ({
+vi.mock('@modules/ra/presentation/miniapp/TelaRA.tsx', () => ({
   default: () => {
     throw new Error('Failed to fetch dynamically imported module')
   },

@@ -1,0 +1,63 @@
+# Padrão de contexto (módulo) validado no `ra`
+
+Modelo da Fase 3 de `docs/plano-arquitetura-organizacao.md`, a replicar nas Fases 4 e 5. Referência viva: `app/src/modules/ra/`.
+
+## Estrutura
+
+```
+app/src/modules/<contexto>/
+  domain/         tipos puros e regras sem I/O (ra: tipos.ts, geometria.ts, planta.ts, qr.ts)
+  application/
+    ports/        portas segregadas + contract test (ra: RaRepositorio.port.ts, Camera.port.ts, LeitorQr.port.ts)
+  infra/          adaptadores: RaSupabaseAdapter.ts, RaFixtureAdapter.ts, browser/, qr/, three/
+  presentation/
+    miniapp/      telas do campo (ra: TelaRA.tsx, DiagnosticoRA.tsx, ra.css)
+    admin/        telas do site admin (ra: RaObra.tsx)
+```
+
+Importar sempre por alias (`@modules/ra/...`, `@shared/...`), sem shims nos caminhos antigos.
+
+## Tipos puros
+
+Ficam em `domain/` (ra: `domain/tipos.ts`). Quem precisa deles (`dados/tipos.ts`, `shared/`) importa de lá; o domínio não importa de volta. Regra duplicada entre miniapp e admin vira uma só em `domain/`.
+
+## Porta segregada e contract test
+
+- A porta tem só o que o contexto usa (`RaRepositorio.port.ts`), não o repositório inteiro.
+- O comportamento é descrito uma vez, em `contratoX(nome, criar)` (ra: `RaRepositorio.contract.ts`, arquivo sem `.test`, sem teste próprio).
+- Cada adaptador tem um arquivo `*.contract.test.ts` curto que chama `contratoX('nome', () => criarAdaptador())` (ra: `RaFixture.contract.test.ts`).
+- Novo adaptador entra no contrato sem copiar casos.
+
+## Adaptadores
+
+`RaSupabaseAdapter.ts` e `RaFixtureAdapter.ts` implementam a mesma porta, cada um com estado próprio (a fixture guarda em memória, sem compartilhar entre instâncias). A criação é feita por `criarRaSupabase(...)` / `criarRaFixture()` e registrada nas fábricas existentes (`dados/supabase.ts`, `dados/fixture.ts`, `admin/dados/*`).
+
+## Composição nas fachadas
+
+`Repositorio` e `RepositorioAdmin` estendem `Pick<Porta, ...>` só com os métodos que cada app usa:
+`Repositorio extends Pick<RaRepositorio, 'obterGeometria'>`, `RepositorioAdmin extends Pick<RaRepositorio, 'listarRA' | 'definirQr' | 'removerQr'>`. Os hooks e telas continuam usando a fachada.
+
+## Fronteiras ESLint (`app/eslint.config.js`, `--max-warnings 0`)
+
+| Camada | Não pode importar |
+|---|---|
+| `domain` | react, router, supabase, idb, three, pdfjs, application, infra, presentation |
+| `application` | react, router, supabase, infra, presentation |
+| `presentation` | adaptadores concretos de outros módulos (usa domain, application, infra do próprio módulo, `shared/` e a fachada de dados) |
+| `shared/kernel` | react, supabase, idb, three, pdfjs |
+
+Detalhes e lista completa: `CAMADAS_PROIBIDAS` no arquivo de configuração.
+
+## `three` isolado
+
+Todo uso de `three` fica em `modules/ra/infra/three/` (`motor.ts`, `malha.ts`, `pose.ts`, `geometria3d.ts`). As telas carregam o motor por `import()` dinâmico, mantendo o chunk `motor-3d` fora do bundle inicial. Ao mover telas, comparar os nomes em `dist/assets` antes e depois do build (devem ser os mesmos: `TelaRA`, `DiagnosticoRA`, `motor-3d`).
+
+## Checklist para a Fase 4 e 5
+
+1. Mover tipos e regras puras para `domain/`; testes junto (TDD: teste antes).
+2. Escrever a porta segregada em `application/ports/` e o `contratoX`.
+3. Fatiar o adaptador Supabase e a fixture em `infra/`, cada um com estado próprio e seu `*.contract.test.ts`.
+4. Trocar as fachadas por `Pick<Porta, ...>` e ajustar fábricas e hooks.
+5. Mover telas para `presentation/miniapp/` e `presentation/admin/` (`git mv`, imports por alias, sem shims); apagar pastas antigas vazias.
+6. Procurar caminhos antigos em `vite.config.ts`, `e2e/`, `scripts/` e `docs/`.
+7. Conferir: `npm run typecheck`, `npx eslint src --max-warnings 0`, suíte completa, `npm run build`, `npm run build:fixture`, e2e do contexto e chunks de `dist/assets`.

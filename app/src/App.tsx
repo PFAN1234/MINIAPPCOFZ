@@ -20,7 +20,7 @@ import Registros from './telas/Registros.tsx'
 import Relatorios from './telas/Relatorios.tsx'
 
 // Tela de teste da realidade aumentada (RA0): fora do pacote inicial.
-const DiagnosticoRA = lazy(() => import('./ra/DiagnosticoRA.tsx'))
+const DiagnosticoRA = lazy(() => import('@modules/ra/presentation/miniapp/DiagnosticoRA.tsx'))
 
 /** Rotas do app. O roteador (BrowserRouter) e os provedores ficam em `main.tsx`. */
 export default function App() {

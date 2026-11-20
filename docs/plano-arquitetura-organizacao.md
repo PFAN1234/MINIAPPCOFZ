@@ -505,7 +505,7 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 ---
 
-### Fase 3 — Alavanca / Piloto Ponta a Ponta: Contexto `ra` (*Build the Lever*)
+### Fase 3 — Alavanca / Piloto Ponta a Ponta: Contexto `ra` (*Build the Lever*) — **concluída** (2026-11-19; telas em `presentation/`, padrão em `docs/padrao-contexto-modulo.md`)
 
 **Objetivo:** Provar todo o padrão arquitetural (porta segregada + *Contract Test* + fatiamento do adaptador Supabase/Fixture + composição na fachada `Repositorio`/`RepositorioAdmin` + unificação de duplicação entre Mini App e Admin) no menor contexto autocontido antes de replicar nos demais.
 

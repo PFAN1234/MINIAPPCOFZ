@@ -391,3 +391,8 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Fase 0 de `docs/plano-arquitetura-organizacao.md` concluída: aliases `@shared`/`@modules`/`@apps` (tsconfig.app, herdado por tsconfig.testes-node; vite/vitest), pastas `src/shared/{kernel,infra,ui,test}`, `src/modules`, `src/apps/{miniapp,admin}`, fronteiras de lint em `warn` (validadas com arquivo violador temporário, removido) e smoke de alias.
 - Baseline: typecheck, lint (0 warnings), build e build:fixture verdes; 856 testes em 101 arquivos (855 anteriores + 1 smoke).
 - `precache-manifest.json`: 18 arquivos; `VisualizadorModelo`, `motor-3d`, `jsQR` e `conversor.worker` existem em `dist/assets` (4 chunks) e ficam fora do manifesto, como esperado.
+
+## Arquitetura — Fase 3 (contexto `ra`)
+
+- [x] Fase 3 concluída: `modules/ra/{domain,application,infra,presentation}`; porta + contract test (fixture e Supabase), telas em `presentation/{miniapp,admin}`. Padrão registrado em `docs/padrao-contexto-modulo.md`.
+- Estado final: typecheck, eslint (0 avisos), build e build:fixture verdes; 862 testes em 103 arquivos; e2e `ra.spec.ts` 3/3; chunks lazy (`TelaRA`, `DiagnosticoRA`, `motor-3d`) inalterados.

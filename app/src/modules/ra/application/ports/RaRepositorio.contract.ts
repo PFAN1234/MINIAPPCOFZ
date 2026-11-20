@@ -72,6 +72,3 @@ export function contratoRaRepositorio(nome: string, criar: () => RaRepositorio) 
     })
   })
 }
-
-// O vitest exige ao menos um teste em todo *.test.ts; as implementações chamam a função acima.
-it('exporta o contrato reutilizável', () => expect(typeof contratoRaRepositorio).toBe('function'))
