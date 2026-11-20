@@ -9,6 +9,7 @@ import Itens from './paineis/Itens.tsx'
 import Cortes from './paineis/Cortes.tsx'
 import Medicoes from './paineis/Medicoes.tsx'
 import Propriedades from './paineis/Propriedades.tsx'
+import Dicas from './Dica.tsx'
 import { useMotorCentral, type EstadoCentral } from './useMotorCentral.ts'
 import type { Corte, Medida, ModoCor, TipoMedida, NoArvore, RefElemento, Vista3dUi } from '../../../domain/central.ts'
 import { gravarTema, lerTema, type Tema } from './tema.ts'
@@ -118,6 +119,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   const [categoriasOcultas, setCategoriasOcultas] = useState<ReadonlySet<string>>(new Set())
   const arrasto = useRef<{ x: number; largura: number } | null>(null)
   const tela = useRef<HTMLDivElement>(null)
+  const raiz = useRef<HTMLDivElement>(null)
   const estado = useMotorCentral(obra.slug, tema, tela)
   const { motor, selecao, selecionar } = estado
   const pronto = estado.fase === 'pronto' && motor !== null
@@ -325,7 +327,8 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   }
 
   return (
-    <div className="central" data-tema={tema} data-painel-aberto={aberto}>
+    <div className="central" data-tema={tema} data-painel-aberto={aberto} ref={raiz}>
+      <Dicas raiz={raiz} />
       <nav className="central-trilho" aria-label="Painéis da central">
         <div role="tablist" aria-orientation="vertical" className="central-abas">
           {PAINEIS.map((p) => (
@@ -338,11 +341,13 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
               aria-controls="painel-central"
               tabIndex={p.id === painel.id ? 0 : -1}
               className="central-aba central-item-trilho"
+              aria-label={p.nome}
+              data-dica={p.nome}
+              data-dica-lado="direita"
               onClick={() => escolher(p.id)}
               onKeyDown={teclaAba}
             >
               {ICONES_PAINEL[p.id]}
-              <span>{p.nome}</span>
             </button>
           ))}
         </div>
@@ -351,23 +356,23 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
             type="button"
             className="central-botao central-item-trilho"
             aria-label={`Configurações: mudar para o tema ${tema === 'escuro' ? 'claro' : 'escuro'}`}
-            title="Configurações"
+            data-dica={`Tema ${tema === 'escuro' ? 'escuro' : 'claro'}: mudar para o ${tema === 'escuro' ? 'claro' : 'escuro'}`}
+            data-dica-lado="direita"
             onClick={alternarTema}
           >
             {tema === 'escuro' ? <IconeLua /> : <IconeSol />}
-            <span>{tema === 'escuro' ? 'Escuro' : 'Claro'}</span>
           </button>
           <button
             type="button"
             className="central-botao central-item-trilho"
             aria-label="Realce ao passar"
-            title="Realçar o item sob o cursor"
+            data-dica="Realçar o item sob o cursor"
+            data-dica-lado="direita"
             aria-pressed={hover}
             disabled={!pronto}
             onClick={alternarHover}
           >
             <IconeRealce />
-            <span>Realce</span>
           </button>
         </div>
       </nav>
@@ -469,18 +474,19 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
           <div className="central-modo central-segmentado" role="group" aria-label="Modo">
             <button
               type="button"
-              className="central-botao"
+              className="central-botao central-botao-icone"
               aria-label="Ver"
+              data-dica="Ver: navegar e selecionar"
               aria-pressed={modo === 'ver'}
               onClick={() => setModo('ver')}
             >
               <IconeVer />
-              Ver
             </button>
             <button
               type="button"
-              className="central-botao"
+              className="central-botao central-botao-icone"
               aria-label="Inspecionar"
+              data-dica="Inspecionar: propriedades do item clicado"
               aria-pressed={modo === 'inspecionar'}
               disabled={!pronto}
               onClick={() => {
@@ -489,7 +495,6 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
               }}
             >
               <IconeInspecionar />
-              Inspecionar
             </button>
           </div>
           <BarraVisibilidade

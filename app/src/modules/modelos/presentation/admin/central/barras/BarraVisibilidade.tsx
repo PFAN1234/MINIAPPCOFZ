@@ -38,71 +38,72 @@ export default function BarraVisibilidade({
       </span>
       <button
         type="button"
-        className="central-botao central-botao-texto"
+        className="central-botao central-botao-icone"
         aria-label="Ocultar"
-        title="Ocultar a seleção (H)"
+        data-dica-lado="cima"
+        data-dica="Ocultar a seleção (H)"
         disabled={!ativo || semSelecao}
         onClick={onOcultar}
       >
         <IconeOcultar />
-        Ocultar
       </button>
       <button
         type="button"
-        className="central-botao central-botao-texto"
+        className="central-botao central-botao-icone"
         aria-label="Isolar"
-        title="Isolar a seleção (I)"
+        data-dica-lado="cima"
+        data-dica="Isolar a seleção (I)"
         aria-pressed={isolado}
         disabled={!ativo || (semSelecao && !isolado)}
         onClick={onIsolar}
       >
         <IconeIsolar />
-        Isolar
       </button>
       <button
         type="button"
-        className="central-botao central-botao-texto"
+        className="central-botao central-botao-icone"
         aria-label="Fantasma"
-        title="Demais itens translúcidos"
+        data-dica-lado="cima"
+        data-dica="Demais itens translúcidos"
         aria-pressed={fantasma}
         disabled={!ativo || (semSelecao && !fantasma)}
         onClick={onFantasma}
       >
         <IconeFantasma />
-        Fantasma
       </button>
       <button
         type="button"
-        className="central-botao central-botao-texto"
+        className="central-botao central-botao-icone"
         aria-label="Caminhar"
-        title="Caminhar pelo modelo (primeira pessoa, em perspectiva)"
+        data-dica-lado="cima"
+        data-dica="Caminhar pelo modelo (primeira pessoa, em perspectiva)"
         aria-pressed={caminhando}
         disabled={!ativo}
         onClick={onCaminhar}
       >
         <IconeCaminhar />
-        Caminhar
       </button>
       <button
         type="button"
-        className="central-botao central-botao-texto"
+        className="central-botao central-botao-icone"
         aria-label="Mostrar tudo"
+        data-dica-lado="cima"
+        data-dica="Mostrar tudo"
         disabled={!ativo}
         onClick={onMostrarTudo}
       >
         <IconeOlho />
-        Mostrar tudo
       </button>
       <button
         type="button"
-        className="central-botao central-botao-texto"
+        className="central-botao central-botao-icone"
         aria-label="Limpar seleção"
-        title="Limpar seleção (Esc)"
+        data-dica-lado="cima"
+        data-dica="Limpar seleção (Esc)"
         disabled={!ativo || semSelecao}
         onClick={onLimpar}
       >
         <IconeLimpar />
-        Limpar seleção
       </button>
     </div>
   )

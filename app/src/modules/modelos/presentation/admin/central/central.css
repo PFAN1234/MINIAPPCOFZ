@@ -96,7 +96,7 @@
   flex-direction: column;
   justify-content: space-between;
   gap: 8px;
-  width: 80px;
+  width: 56px;
   flex: none;
   min-height: 0;
   overflow-y: auto;
@@ -154,17 +154,56 @@
   padding: 0;
 }
 .central-item-trilho {
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
-  padding: 6px 2px;
-  font-size: 0.7rem;
-  line-height: 1.1;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  align-self: center;
 }
-.central-item-trilho span {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Nome da ferramenta: só como dica, ao passar o mouse ou focar pelo teclado (Dica.tsx). */
+.central-dica {
+  position: fixed;
+  z-index: 50;
+  max-width: 260px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--c-texto);
+  background: var(--c-elevado);
+  border: 1px solid var(--c-borda);
+  border-radius: 6px;
+  box-shadow: var(--c-sombra);
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translate(-50%, 0);
+  animation: central-dica-entra 120ms ease-out;
+}
+.central-dica[data-lado='cima'] {
+  transform: translate(-50%, -100%);
+}
+.central-dica[data-alinha='inicio'] {
+  transform: translate(0, 0);
+}
+.central-dica[data-alinha='fim'] {
+  transform: translate(-100%, 0);
+}
+.central-dica[data-lado='cima'][data-alinha='inicio'] {
+  transform: translate(0, -100%);
+}
+.central-dica[data-lado='cima'][data-alinha='fim'] {
+  transform: translate(-100%, -100%);
+}
+.central-dica[data-lado='direita'] {
+  transform: translate(0, -50%);
+}
+@keyframes central-dica-entra {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .central-dica {
+    animation: none;
+  }
 }
 .central-lateral {
   position: relative;
@@ -341,11 +380,11 @@
 @media (max-width: 1023px) {
   .central-lateral {
     position: absolute;
-    left: 80px;
+    left: 56px;
     z-index: 5;
     top: 0;
     bottom: 0;
-    max-width: calc(100% - 80px);
+    max-width: calc(100% - 56px);
     box-shadow: var(--c-sombra);
   }
 }

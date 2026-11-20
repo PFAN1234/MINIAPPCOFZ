@@ -127,7 +127,7 @@ export default function BarraSuperior({
           type="button"
           className="central-botao central-botao-icone"
           aria-label="Enquadrar"
-          title="Enquadrar (F)"
+          data-dica="Enquadrar (F)"
           disabled={!ativo}
           onClick={onEnquadrar}
         >
@@ -137,7 +137,7 @@ export default function BarraSuperior({
           type="button"
           className="central-botao central-botao-icone"
           aria-label="Projeção"
-          title={ortografica ? 'Projeção ortográfica' : 'Projeção em perspectiva'}
+          data-dica={ortografica ? 'Projeção ortográfica' : 'Projeção em perspectiva'}
           aria-pressed={ortografica}
           disabled={!ativo}
           onClick={onProjecao}
@@ -148,7 +148,7 @@ export default function BarraSuperior({
           type="button"
           className="central-botao central-botao-icone"
           aria-label="Grade"
-          title="Mostrar ou ocultar a grade"
+          data-dica="Mostrar ou ocultar a grade"
           aria-pressed={grade}
           disabled={!ativo}
           onClick={onGrade}
@@ -160,7 +160,7 @@ export default function BarraSuperior({
             type="button"
             className="central-botao central-botao-icone"
             aria-label="Cor"
-            title="Colorir por"
+            data-dica="Colorir por"
             aria-haspopup="menu"
             aria-expanded={menu}
             aria-pressed={cor !== 'nenhum'}
@@ -196,7 +196,7 @@ export default function BarraSuperior({
           type="button"
           className="central-botao central-botao-icone"
           aria-label="Vista 3D"
-          title="Volta ao 3D (perspectiva) e restaura os cortes"
+          data-dica="Volta ao 3D (perspectiva) e restaura os cortes"
           aria-pressed={vista.tipo === '3d'}
           disabled={!ativo}
           onClick={onVista3d}
@@ -223,7 +223,7 @@ export default function BarraSuperior({
           type="button"
           className="central-botao central-botao-icone"
           aria-label="Planta"
-          title="Planta do pavimento escolhido"
+          data-dica="Planta do pavimento escolhido"
           aria-pressed={vista.tipo === 'planta'}
           disabled={!ativo || !pavimento}
           onClick={() => onPlanta(pavimento)}
@@ -239,7 +239,7 @@ export default function BarraSuperior({
             type="button"
             className="central-botao central-botao-icone"
             aria-label={`Elevação ${l}`}
-            title={`Elevação ${NOMES_LADO[l]}`}
+            data-dica={`Elevação ${NOMES_LADO[l]}`}
             aria-pressed={vista.tipo === 'elevacao' && vista.lado === l}
             disabled={!ativo}
             onClick={() => onElevacao(l)}
@@ -253,7 +253,7 @@ export default function BarraSuperior({
           type="button"
           className="central-botao central-botao-icone"
           aria-label="Cortar"
-          title={cortes > 0 ? `Novo plano de corte (${cortes} ativos)` : 'Novo plano de corte'}
+          data-dica={cortes > 0 ? `Novo plano de corte (${cortes} ativos)` : 'Novo plano de corte'}
           disabled={!ativo}
           onClick={onCortar}
         >
@@ -263,7 +263,7 @@ export default function BarraSuperior({
           type="button"
           className="central-botao central-botao-icone"
           aria-label="Minimapa"
-          title="Minimapa com a posição da câmera"
+          data-dica="Minimapa com a posição da câmera"
           aria-pressed={minimapa}
           disabled={!ativo}
           onClick={onMinimapa}
@@ -275,7 +275,7 @@ export default function BarraSuperior({
             type="button"
             className="central-botao central-botao-icone"
             aria-label="Medir"
-            title="Medir distância, área, volume ou ângulo"
+            data-dica="Medir distância, área, volume ou ângulo"
             aria-expanded={menuMedir}
             aria-pressed={medicao !== null}
             disabled={!ativo}
@@ -309,7 +309,7 @@ export default function BarraSuperior({
             type="button"
             className="central-botao central-botao-icone"
             aria-label={nome}
-            title={nome}
+            data-dica={nome}
             aria-pressed="false"
             disabled
           >
