@@ -46,7 +46,7 @@ O código passa a ser organizado em torno de **Contextos Delimitados (Bounded Co
 | **`obras`** | **Core** — Estrutura física e contratual | `Obra`, `Etapa`, `Pavimento`, `Ambiente`, `Aditivo`, `Responsavel`, `Organizacao` | `telas/Obra*`, `admin/telas/etapa/*`, `admin/telas/obra/*`, `admin/telas/Organizacao*`, `util/etapas.ts` |
 | **`fiscalizacao`** | **Core** — Execução de campo e acompanhamento | `Registro` (Serviço/Pendência), `Encerramento`, `ObservacaoDoDia`, `Foto`, `PublicacaoOutbox` | `telas/NovoRegistro*`, `telas/Registros*`, `telas/Pendencia*`, `telas/Publicacoes*`, `components/CartaoObservacoes*`, `dados/envio.ts` |
 | **`acessos`** | **Supporting** — Identidade, autorização e presença | `Sessao`, `Usuario`, `PapelObra`, `SolicitacaoAcesso`, `MatrizAcessos`, `EquipeServico` (Check-in/out) | `telas/Acessos*`, `admin/telas/Pessoas*`, `admin/telas/Admins*`, `admin/telas/Entrar*`, `dados/login.ts`, `dados/nome.ts`, `components/EquipeServico*` |
-| **`plantas`** | **Supporting** — Engenharia 2D e revisão de PDFs | `Planta`, `RevisaoPlanta`, `Recorte`, `SpanTexto`, `AmbienteExtraido` | `admin/planta/*`, `admin/telas/planta/*`, `components/AbaPlanta*`, `components/PlantaViewer*`, `components/OndeFica*` |
+| **`plantas`** | **Supporting** — Engenharia 2D e revisão de PDFs | `Planta`, `RevisaoPlanta`, `Recorte`, `SpanTexto`, `AmbienteExtraido` | `modules/plantas/*`, `modules/plantas/presentation/admin/*`, `modules/plantas/presentation/miniapp/*` |
 | **`modelos`** | **Supporting** — BIM / Modelo Federado 3D | `ModeloFrag`, `Disciplina`, `PlanoCorte`, `CacheModelo` | `modelo/*`, `admin/modelo/*`, `admin/telas/modelo/*`, `telas/Modelo.tsx`, `telas/AmbienteModelo.tsx` |
 | **`ra`** | **Supporting** — Realidade Aumentada em campo | `GeometriaAmbiente`, `MarcadorQr`, `Pose`, `Orientacao`, `Malha` | `ra/*`, `admin/ra/*`, `admin/telas/ra/*` |
 | **`relatorios`** | **Core** — Boletim Diário, Pendências e Painel | `Boletim`, `EdicaoBoletim`, `PedidoEmissao`, `Clima`, `RelatorioPendencias`, `PainelRelatorios` | `telas/Relatorios*`, `admin/telas/boletins/*`, `util/painel.ts`, `util/periodo.ts`, `servidor/boletim/*`, `servidor/relatorio/*` |
@@ -519,7 +519,7 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 ---
 
-### Fase 4 — Migração por Contexto Delimitado — Onda 1 (Baixo Acoplamento)
+### Fase 4 — Migração por Contexto Delimitado — Onda 1 (Baixo Acoplamento) — concluída (4A e 4B)
 
 **Objetivo:** Replicar o padrão validado na Fase 3 nos outros dois contextos técnicos de baixo acoplamento. Um PR por subfase:
 
@@ -530,7 +530,7 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 - `presentation/`: `miniapp/` (`VisualizadorModelo`, `PreviaModelo`, `Modelo`, `AmbienteModelo`) e `admin/` (`ModelosObra`).
 - **Critério de pronto:** `conversor.worker` e `VisualizadorModelo` continuam fora do `precache-manifest.json`; `modelos.node.test.ts`, `npm test -- modelo` e `npm run test:e2e -- e2e/modelo.spec.ts e2e/admin-modelo.spec.ts` verdes.
 
-#### Fase 4B — Contexto `plantas` (PDF, Extração e Revisões 2D)
+#### Fase 4B — Contexto `plantas` (PDF, Extração e Revisões 2D) — concluída (partes 1 e 2)
 - `domain/`: `tipos.ts`, `extrair.ts`, `spans.ts`, `editor.ts`, `sinteticos.ts`, `metricasFonte.ts`.
 - `application/`: portas `PlantasRepositorio`, `ServicoPdfPort` + `use-cases/` (`extrairPlanta`, `publicarRevisaoPlanta`).
 - `infrastructure/`: `carregarPdfJs.ts`, `pdf.ts`, `render.ts`, `servicoNavegador.ts`, `servicoFalso.ts`, adaptadores Supabase/Fixture.

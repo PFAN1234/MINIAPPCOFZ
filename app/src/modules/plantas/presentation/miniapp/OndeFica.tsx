@@ -1,7 +1,7 @@
-import { useUrlsImagens } from '../dados/hooks.ts'
-import type { AmbienteDetalhe } from '../dados/tipos.ts'
-import { marcadorParaPixel } from '../shared/kernel/coordenadas.ts'
-import { Pino } from './Pino.tsx'
+import { useUrlsImagens } from '../../../../dados/hooks.ts'
+import type { AmbienteDetalhe } from '../../../../dados/tipos.ts'
+import { marcadorParaPixel } from '@shared/kernel/coordenadas.ts'
+import { Pino } from '../../../../components/Pino.tsx'
 
 interface Props {
   detalhe: AmbienteDetalhe

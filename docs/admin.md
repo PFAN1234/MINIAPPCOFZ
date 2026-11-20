@@ -120,10 +120,10 @@ O admin envia o PDF de arquitetura de um pavimento e publica a planta pelo naveg
 | Peça | Onde |
 | --- | --- |
 | Migration | `supabase/migrations/20261112090000_admin_planta.sql` |
-| Port do Python (módulos puros) | `app/src/admin/planta/`: `pdf.ts` e `spans.ts` (texto como o PyMuPDF), `metricasFonte.ts` (Ascent/Descent do FontDescriptor), `extrair.ts` (`extrair_ambientes.py`), `plantas.ts` (contas do `gerar_plantas.py`), `render.ts` (imagens, prova, WebP), `editor.ts` (edições → configuração), `publicar.ts` (envio + RPC) |
+| Port do Python (módulos puros) | `app/src/modules/plantas/{domain,infra/pdf}/`: `pdf.ts` e `spans.ts` (texto como o PyMuPDF), `metricasFonte.ts` (Ascent/Descent do FontDescriptor), `extrair.ts` (`extrair_ambientes.py`), `plantas.ts` (contas do `gerar_plantas.py`), `render.ts` (imagens, prova, WebP), `editor.ts` (edições → configuração), `publicar.ts` (envio + RPC) |
 | pdf.js no navegador | `planta/carregarPdfJs.ts` (worker, fontes padrão e WASM servidos pelo Vite) e `planta/servicoNavegador.ts`, carregados sob demanda só pelo editor |
-| Telas | `app/src/admin/telas/planta/` (`EditorPlanta.tsx`, `Recorte.tsx`, `Ambientes.tsx`, `NovaRevisao.tsx`, `PlantaObra.tsx`) |
-| Testes | `app/src/admin/planta/*.test.ts` (paridade em `paridade.node.test.ts`), `app/src/admin/telas/planta/EditorPlanta.test.tsx`, `app/e2e/planta.spec.ts`, `tests/db/test_admin_planta.py` |
+| Telas | `app/src/modules/plantas/presentation/admin/` (`EditorPlanta.tsx`, `Recorte.tsx`, `Ambientes.tsx`, `NovaRevisao.tsx`, `PlantaObra.tsx`) |
+| Testes | `app/src/modules/plantas/{domain,infra/pdf}/*.test.ts` (paridade em `paridade.node.test.ts`), `app/src/modules/plantas/presentation/admin/EditorPlanta.test.tsx`, `app/e2e/planta.spec.ts`, `tests/db/test_admin_planta.py` |
 
 ### Fluxo no site
 
@@ -166,7 +166,7 @@ Tudo continua no formato do `obra.json`, em `obra_config.config`:
 
 ### Paridade com o Python
 
-`app/src/admin/planta/paridade.node.test.ts` (Vitest em Node, pdf.js `legacy` e `@napi-rs/canvas`) lê os três PDFs com a configuração de `data/<slug>/obra.json` e confere contra os JSON gerados pelo PyMuPDF:
+`app/src/modules/plantas/infra/pdf/paridade.node.test.ts` (Vitest em Node, pdf.js `legacy` e `@napi-rs/canvas`) lê os três PDFs com a configuração de `data/<slug>/obra.json` e confere contra os JSON gerados pelo PyMuPDF:
 
 | | HTO (2 PDFs) | COFZ (1 PDF) | Tolerância |
 | --- | --- | --- | --- |

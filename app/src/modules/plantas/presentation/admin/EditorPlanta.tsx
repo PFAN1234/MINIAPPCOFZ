@@ -8,9 +8,9 @@
 import { useMutation } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { ComDados, mensagemDe } from '../../componentes.tsx'
-import { useRepositorioAdmin } from '../../dados/contexto.tsx'
-import { useEditorPlanta, useInvalidarPlanta } from '../../dados/hooks.ts'
+import { ComDados, mensagemDe } from '../../../../admin/componentes.tsx'
+import { useRepositorioAdmin } from '../../../../admin/dados/contexto.tsx'
+import { useEditorPlanta, useInvalidarPlanta } from '../../../../admin/dados/hooks.ts'
 import type { DadosEditorPlanta, PavimentoEditor } from '@modules/plantas/domain/tipos.ts'
 import {
   adicionarPino,

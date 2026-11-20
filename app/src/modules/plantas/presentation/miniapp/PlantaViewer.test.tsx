@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { criarRepositorioFixture } from '../dados/fixture.ts'
-import { marcadorParaPixel } from '../shared/kernel/coordenadas.ts'
+import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
+import { marcadorParaPixel } from '@shared/kernel/coordenadas.ts'
 import { PlantaViewer } from './PlantaViewer.tsx'
 
 const repo = criarRepositorioFixture()

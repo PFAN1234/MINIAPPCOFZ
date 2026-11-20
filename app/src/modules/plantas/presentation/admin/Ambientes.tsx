@@ -4,7 +4,7 @@
  * na planta. Os casos de "revisar" do extrator ficam destacados.
  */
 import { useMemo, useState, type PointerEvent as EventoPonteiro } from "react";
-import { SelectCategoria } from "../../componentes.tsx";
+import { SelectCategoria } from "../../../../admin/componentes.tsx";
 import { ehManual } from '@modules/plantas/domain/editor.ts';
 import type { ImagemCalculada } from '@modules/plantas/domain/plantas.ts';
 import type { PaginaAberta } from '@modules/plantas/application/ports/ServicoPdfPort.port.ts';

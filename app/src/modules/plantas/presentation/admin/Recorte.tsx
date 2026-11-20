@@ -13,7 +13,7 @@ export function svgDoEvento(e: { currentTarget: Element }): SVGSVGElement {
 }
 import type { PaginaAberta, ImagemGerada } from '@modules/plantas/application/ports/ServicoPdfPort.port.ts'
 import type { Prancha, Retangulo } from '@modules/plantas/domain/tipos.ts'
-import { mensagemDe } from '../../componentes.tsx'
+import { mensagemDe } from '../../../../admin/componentes.tsx'
 
 type Alvo = { tipo: 'recorte' } | { tipo: 'mascara'; indice: number }
 type Ferramenta = 'recorte' | 'mascara'

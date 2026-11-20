@@ -1,7 +1,7 @@
 /** Pavimentos da obra com a planta publicada (`/admin/obras/<slug>/planta`) e o histórico de publicações. */
 import { Link, useParams } from 'react-router'
-import { ComDados } from '../../componentes.tsx'
-import { useEditorPlanta, usePublicacoes } from '../../dados/hooks.ts'
+import { ComDados } from '../../../../admin/componentes.tsx'
+import { useEditorPlanta, usePublicacoes } from '../../../../admin/dados/hooks.ts'
 import type { Publicacao } from '@modules/plantas/domain/tipos.ts'
 
 export default function PlantaObra() {

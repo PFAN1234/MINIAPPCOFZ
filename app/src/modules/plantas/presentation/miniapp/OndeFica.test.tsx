@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { RepositorioProvider } from '../dados/contexto.tsx'
-import { criarRepositorioFixture } from '../dados/fixture.ts'
+import { RepositorioProvider } from '../../../../dados/contexto.tsx'
+import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
 import { OndeFica } from './OndeFica.tsx'
 
 const repo = criarRepositorioFixture()

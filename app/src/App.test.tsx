@@ -9,14 +9,14 @@ import { criarRepositorioFixture, ETAPA_2 } from './dados/fixture.ts'
 import type { Repositorio } from './dados/repositorio.ts'
 import { recursos } from './recursos.ts'
 
-vi.mock('./components/AbaPlanta.tsx', () => ({
+vi.mock('@modules/plantas/presentation/miniapp/AbaPlanta.tsx', () => ({
   AbaPlanta: (props: { pavimentoCodigo: string; focoCodigo: string | null }) => (
     <div data-testid="aba-planta">
       planta {props.pavimentoCodigo} foco {props.focoCodigo ?? '-'}
     </div>
   ),
 }))
-vi.mock('./components/OndeFica.tsx', () => ({
+vi.mock('@modules/plantas/presentation/miniapp/OndeFica.tsx', () => ({
   OndeFica: (props: { onAbrirPlanta: () => void }) => (
     <button type="button" onClick={props.onAbrirPlanta}>
       Abrir na planta

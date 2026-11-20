@@ -10,7 +10,7 @@ export const ROTULO_STATUS: Record<StatusObra, string> = {
   revisado: 'Revisado',
 }
 
-/** Categorias usadas pelo extrator (scripts/extrair_ambientes.py e app/src/admin/planta/extrair.ts). */
+/** Categorias usadas pelo extrator (scripts/extrair_ambientes.py e app/src/modules/plantas/domain/extrair.ts). */
 export const CATEGORIAS = [
   'apartamento',
   'banheiro',

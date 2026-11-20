@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { Abas } from '../shared/ui/inputs/Abas.tsx'
-import { AbaPlanta } from '../components/AbaPlanta.tsx'
+import { AbaPlanta } from '@modules/plantas/presentation/miniapp/AbaPlanta.tsx'
 import { CartaoObservacoes } from '../components/CartaoObservacoes.tsx'
 import { CampoBusca } from '../shared/ui/inputs/CampoBusca.tsx'
 import { EstadoConsulta, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'

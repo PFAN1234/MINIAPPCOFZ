@@ -1,7 +1,7 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { ComDados, mensagemDe, Resultado, SelectCategoria } from '../componentes.tsx'
-import { Historico } from './planta/PlantaObra.tsx'
+import { Historico } from '@modules/plantas/presentation/admin/PlantaObra.tsx'
 import ArquivarExcluir, { AvisoArquivada } from './obra/ArquivarExcluir.tsx'
 import {
   useEtapas,

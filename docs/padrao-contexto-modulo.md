@@ -67,3 +67,9 @@ Todo uso de `three` fica em `modules/ra/infra/three/` (`motor.ts`, `malha.ts`, `
 - Use-case só quando há lógica real: `publicarModelo` recebe o `hash` injetado (o SHA-256 vem do navegador/teste), por isso é testável sem I/O; um repasse sem regra não ganha use-case.
 - O contrato da porta, `contratoX`, recebe um `criar()` que devolve o adaptador e os helpers de teste (por exemplo, semear dados); fixture e Supabase rodam o mesmo contrato.
 - O chunk herda o nome do arquivo-fonte, não da pasta: mover `VisualizadorModelo.tsx` não mudou o nome, então a regex do precache em `vite.config.ts` continuou valendo. Confira `dist/assets` e `precache-manifest.json` antes e depois de mover.
+
+### Lições da Fase 4B (`plantas`)
+
+- Teste de integração que cruza camadas (domínio + porta + adaptador) fica em `application/use-cases/`, não em `domain/`, que deve testar só regra pura.
+- Constante compartilhada entre contextos vai para `shared/kernel` (como `REVISAO_VALIDA`), nunca importada de outro módulo.
+- Use-case recebe as dependências injetadas (repositório, serviço de PDF), por isso roda com fixture/serviço falso, sem I/O.
