@@ -10,6 +10,7 @@ import { temWebGL } from '../../../infra/modelosLocais.ts'
 import type { ModeloFrag } from '../../../domain/modelos.ts'
 import type { NoArvore } from '../../../domain/central.ts'
 import CentralObra from './CentralObra.tsx'
+import { PreviaPdfProvider } from '../../../../documentos/presentation/admin/previaPdf.tsx'
 import { FabricaMotorProvider } from './motorContexto.tsx'
 import { OBRAS } from './obrasDeTeste.ts'
 
@@ -60,12 +61,23 @@ function renderizar2(rota: string) {
     <QueryClientProvider client={qc}>
       <RepositorioAdminProvider repositorio={repo}>
         <FabricaMotorProvider fabrica={async () => motor}>
-          <MemoryRouter initialEntries={[rota]}>
-            <Routes>
-              <Route path="/modelos/:slug" element={<CentralObra />} />
-            </Routes>
-            <Url />
-          </MemoryRouter>
+          <PreviaPdfProvider
+            previa={{
+              abrirPdf: async () => ({
+                paginas: 1,
+                tamanho: async () => ({ largura: 600, altura: 800 }),
+                desenhar: async () => {},
+                fechar: () => {},
+              }),
+            }}
+          >
+            <MemoryRouter initialEntries={[rota]}>
+              <Routes>
+                <Route path="/modelos/:slug" element={<CentralObra />} />
+              </Routes>
+              <Url />
+            </MemoryRouter>
+          </PreviaPdfProvider>
         </FabricaMotorProvider>
       </RepositorioAdminProvider>
     </QueryClientProvider>,
@@ -92,6 +104,20 @@ describe('CentralObra', () => {
     expect(screen.getByTestId('url')).toHaveTextContent('/modelos/hto?painel=issues')
     expect(screen.getByRole('tab', { name: 'Issues', selected: true })).toBeInTheDocument()
     expect(screen.getByText('Disponível na etapa 7')).toBeInTheDocument()
+  })
+
+  it('Ver um documento abre a prévia em ?doc= sobre o visualizador; Esc fecha e preserva o painel', async () => {
+    const usuario = userEvent.setup()
+    renderizar('/modelos/hto?painel=documentos')
+    const titulo = await screen.findByText('Planta baixa do pavimento tipo')
+    await usuario.click(within(titulo.closest('li')!).getByRole('button', { name: 'Ver' }))
+    expect(await screen.findByRole('dialog', { name: 'Planta baixa do pavimento tipo' })).toBeInTheDocument()
+    expect(screen.getByTestId('url')).toHaveTextContent(/painel=documentos&doc=/)
+    expect(screen.getByTestId('canvas-central')).toBeInTheDocument()
+    await usuario.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByTestId('url')).toHaveTextContent('/modelos/hto?painel=documentos')
+    expect(screen.getByTestId('url')).not.toHaveTextContent('doc=')
   })
 
   it('alternar o tema persiste a preferência', async () => {

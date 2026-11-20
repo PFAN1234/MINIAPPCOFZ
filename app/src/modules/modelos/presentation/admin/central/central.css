@@ -702,3 +702,70 @@
     transition: none;
   }
 }
+
+/* Documentos: lista agrupada e formulário no painel estreito */
+.central-docs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.central-docs-grupo {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+}
+.central-docs-form {
+  padding: 8px;
+  background: var(--c-elevado);
+  border: 1px solid var(--c-borda);
+  border-radius: 6px;
+}
+.central-docs-historico {
+  padding-top: 4px;
+}
+
+/* Prévia do documento: ocupa a área do visualizador, com o motor 3D montado por baixo */
+.central-previa {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-fundo);
+  color: var(--c-texto);
+}
+.central-previa-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 52px;
+  background: var(--c-painel);
+  border-bottom: 1px solid var(--c-borda);
+}
+.central-previa-titulo {
+  max-width: 28ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.central-previa-area {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  text-align: center;
+}
+.central-previa-canvas {
+  display: inline-block;
+  max-width: none;
+  border: 1px solid var(--c-borda);
+  box-shadow: var(--c-sombra);
+}
+.central-previa-meta {
+  text-align: left;
+  font-size: 0.85rem;
+}
+.central-previa-meta dl,
+.central-previa-meta dd {
+  margin: 0;
+}

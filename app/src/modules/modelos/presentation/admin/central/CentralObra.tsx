@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { Carregando, Erro } from '../../../../../admin/componentes.tsx'
 import BarraSuperior from './barras/BarraSuperior.tsx'
@@ -11,6 +11,10 @@ import Cortes from './paineis/Cortes.tsx'
 import Medicoes from './paineis/Medicoes.tsx'
 import Propriedades from './paineis/Propriedades.tsx'
 import Dicas from './Dica.tsx'
+import PainelDocumentos from '../../../../documentos/presentation/admin/PainelDocumentos.tsx'
+import PreviaDocumento from '../../../../documentos/presentation/admin/PreviaDocumento.tsx'
+import { useDocumentos } from '../../../../../admin/dados/hooks.ts'
+import type { Documento } from '../../../../documentos/domain/documentos.ts'
 import { useMotorCentral, type EstadoCentral } from './useMotorCentral.ts'
 import type { Corte, Medida, ModoCor, TipoMedida, NoArvore, RefElemento, Vista3dUi } from '../../../domain/central.ts'
 import { gravarTema, lerTema, type Tema } from './tema.ts'
@@ -39,7 +43,7 @@ const ICONES_PAINEL: Record<string, ReactNode> = {
 
 const PAINEIS = [
   { id: 'itens', nome: 'Itens', etapa: 2 },
-  { id: 'documentos', nome: 'Documentos', etapa: 6 },
+  { id: 'documentos', nome: 'Documentos' },
   { id: 'issues', nome: 'Issues', etapa: 7 },
   { id: 'medicoes', nome: 'Medições', etapa: 4 },
   { id: 'gestao', nome: 'Gestão' },
@@ -152,6 +156,25 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
 
   const pedido = params.get('painel')
   const painel = PAINEIS.find((p) => p.id === pedido) ?? PAINEIS[0]
+
+  const docAberto = params.get('doc')
+  const documentos = useDocumentos(obra.slug)
+  const documentoPrevia = docAberto ? documentos.data?.find((d) => d.id === docAberto) : undefined
+  function abrirDoc(id: string) {
+    const novo = new URLSearchParams(params)
+    novo.set('doc', id)
+    setParams(novo, { replace: true })
+  }
+  const fecharDoc = useCallback(() => {
+    setParams(
+      (atual) => {
+        const novo = new URLSearchParams(atual)
+        novo.delete('doc')
+        return novo
+      },
+      { replace: true },
+    )
+  }, [setParams])
 
   function enquadrar() {
     motor?.enquadrar(selecao.length > 0 ? selecao : undefined)
@@ -405,6 +428,12 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
                 onApagar={apagarMedida}
                 onApagarTodas={() => apagarMedida()}
               />
+            ) : painel.id === 'documentos' ? (
+              <PainelDocumentos
+                obra={obra}
+                siglas={estado.modelos.map((m) => m.sigla)}
+                aoAbrir={(d: Documento) => abrirDoc(d.id)}
+              />
             ) : painel.id === 'gestao' ? (
               <Gestao obra={obra} aoMudar={(s) => void estado.recarregarModelo(s)} />
             ) : (
@@ -514,6 +543,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
             onLimpar={() => selecionar([])}
           />
         </div>
+        {documentoPrevia && <PreviaDocumento key={documentoPrevia.id} doc={documentoPrevia} aoFechar={fecharDoc} />}
       </div>
     </div>
   )
