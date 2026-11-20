@@ -4,11 +4,13 @@
  * RPCs `admin_*` para os dados.
  */
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
+import { criarPlantasSupabase } from '@modules/plantas/infra/PlantasSupabaseAdapter.ts'
 import { criarRaSupabase } from '@modules/ra/infra/RaSupabaseAdapter.ts'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { criarClienteSupabase } from '../../dados/supabase.ts'
 import { configurarEnvioErros } from '../../shared/infra/erros.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
+import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
 import {
   ErroAdmin,
   CAMINHO_LOGO,
@@ -18,7 +20,6 @@ import {
   type ErroCliente,
   type ResumoOrfaos,
   type BucketObra,
-  type ConfigObra,
   type Aditivo,
   type BoletimDaLista,
   type BoletimDetalhe,
@@ -38,12 +39,9 @@ import {
   type Organizacao,
   type ResultadoExclusaoEtapa,
   type ResumoEtapa,
-  type DadosEditorPlanta,
   type Exclusao,
-  type Publicacao,
   type ResultadoExclusao,
   type ResumoObra,
-  type ResultadoPublicacao,
   type DadosWidget,
   type EstadoSessao,
   type ObraAdmin,
@@ -396,6 +394,7 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
 
   const ra = criarRaSupabase(cliente, rpc)
   const modelos = criarModelosSupabase(cliente, rpc)
+  const plantas = criarPlantasSupabase(cliente, rpc)
 
   return {
     listarRA: ra.listarRA,
@@ -779,47 +778,6 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       return rpc<unknown>('admin_exportar_obra', { p_slug: slug })
     },
 
-    obterEditorPlanta(slug) {
-      return rpc<DadosEditorPlanta>('admin_editor_planta', { p_slug: slug })
-    },
-
-    async listarPublicacoes(slug) {
-      return ((await rpc<Publicacao[]>('admin_listar_publicacoes', { p_slug: slug })) ?? []).map((l) => ({
-        ...l,
-        resumo: (l.resumo ?? {}) as Record<string, unknown>,
-      }))
-    },
-
-    async enviarArquivo(bucket, caminho, arquivo, tipo) {
-      let erro: unknown
-      try {
-        const { error } = await cliente.storage.from(bucket).upload(caminho, arquivo, { upsert: true, contentType: tipo })
-        erro = error
-      } catch (e) {
-        throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
-      }
-      if (erro) {
-        const msg = (erro as { message?: string }).message ?? ''
-        if (/row-level security|unauthorized|403/i.test(msg)) {
-          throw new ErroAdmin(`Sem permissão para gravar ${caminho} no Storage (${bucket}).`, { cause: erro })
-        }
-        if (/payload too large|413|exceeded/i.test(msg)) {
-          throw new ErroAdmin(`Arquivo grande demais para o bucket ${bucket}: ${caminho}.`, { cause: erro })
-        }
-        throw new ErroAdmin(`Falha ao enviar ${caminho}: ${msg || 'erro do Storage'}`, { cause: erro })
-      }
-    },
-
-    async baixarOriginal(caminho) {
-      const { data, error } = await cliente.storage.from('originais').download(caminho)
-      if (error || !data) throw new ErroAdmin('Não foi possível baixar o PDF guardado.', { cause: error })
-      return new Uint8Array(await data.arrayBuffer())
-    },
-
-    publicarRevisao(slug, payload) {
-      return rpc<ResultadoPublicacao>('admin_publicar_revisao', { p_slug: slug, p: payload })
-    },
-
     async arquivarObra(slug, arquivada) {
       const r = await rpc<{ arquivada_em: string | null } | null>('admin_arquivar_obra', {
         p_slug: slug,
@@ -847,6 +805,11 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       return excluirUma({ acao: 'limpar', exclusao_id: id })
     },
 
+    obterEditorPlanta: plantas.obterEditorPlanta,
+    listarPublicacoes: plantas.listarPublicacoes,
+    enviarArquivo: plantas.enviarArquivo,
+    baixarOriginal: plantas.baixarOriginal,
+    publicarRevisao: plantas.publicarRevisao,
     listarModelosAdmin: modelos.listarModelosAdmin,
     registrarModelo: modelos.registrarModelo,
     retirarModelo: modelos.retirarModelo,

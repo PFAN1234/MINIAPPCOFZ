@@ -1,8 +1,8 @@
 import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
+import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
 import type {
-  ConfigObra,
   DadosAditivo,
   DadosEtapa,
   DadosObra,

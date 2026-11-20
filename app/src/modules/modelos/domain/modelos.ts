@@ -3,7 +3,7 @@
  * e as regras do envio pelo admin (sigla e revisão pelo nome do arquivo, limites e conferência
  * do `.frag`). O `.frag` vem da conversão do IFC no navegador ou pronto, do script `npm run modelos`.
  */
-import { REVISAO_VALIDA } from '../../../admin/planta/editor.ts'
+import { REVISAO_VALIDA } from '@shared/kernel'
 
 /**
  * Um `.frag` de uma disciplina. `arquivo` é onde o repositório o encontra: nome do arquivo em

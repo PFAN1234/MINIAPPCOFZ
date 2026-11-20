@@ -3,11 +3,11 @@
  * demanda (pdf.js e encoder WebP num chunk só do editor); os testes passam um serviço falso.
  */
 import { createContext, useContext, type ReactNode } from 'react'
-import type { ServicoPdf } from '../../planta/servico.ts'
+import type { ServicoPdf } from '@modules/plantas/application/ports/ServicoPdfPort.port.ts'
 
 type Carregar = () => Promise<ServicoPdf>
 
-const carregarPadrao: Carregar = () => import('../../planta/servicoNavegador.ts').then((m) => m.servicoNavegador)
+const carregarPadrao: Carregar = () => import('@modules/plantas/infra/pdf/servicoNavegador.ts').then((m) => m.servicoNavegador)
 
 const Contexto = createContext<Carregar>(carregarPadrao)
 

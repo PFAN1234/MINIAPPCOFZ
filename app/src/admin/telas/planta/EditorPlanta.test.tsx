@@ -8,7 +8,7 @@ import AdminApp from '../../AdminApp.tsx'
 import { RepositorioAdminProvider } from '../../dados/contexto.tsx'
 import { criarRepositorioAdminFixture } from '../../dados/fixture.ts'
 import { criarEntrada } from '../../entrada.ts'
-import { criarServicoFalso, spansDosAmbientes } from './servicoFalso.ts'
+import { criarServicoFalso, spansDosAmbientes } from '@modules/plantas/infra/pdf/servicoFalso.ts'
 import { ServicoPdfProvider } from './servicoPdf.tsx'
 
 const W = 2908.320068359375

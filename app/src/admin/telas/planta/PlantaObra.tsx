@@ -2,7 +2,7 @@
 import { Link, useParams } from 'react-router'
 import { ComDados } from '../../componentes.tsx'
 import { useEditorPlanta, usePublicacoes } from '../../dados/hooks.ts'
-import type { Publicacao } from '../../dados/tipos.ts'
+import type { Publicacao } from '@modules/plantas/domain/tipos.ts'
 
 export default function PlantaObra() {
   const { slug = '' } = useParams()

@@ -12,13 +12,13 @@ import { fileURLToPath } from 'node:url'
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs'
 import { createCanvas } from '@napi-rs/canvas'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { extrair, validarObra } from './extrair.ts'
+import { extrair, validarObra } from '../../domain/extrair.ts'
 import { abrirPdf, lerPagina, type ModuloPdfJs, type PaginaPdf } from './pdf.ts'
-import { calcularPlanta } from './plantas.ts'
+import { calcularPlanta } from '../../domain/plantas.ts'
 import { desenharProva, renderizarRecorte, type CanvasPlanta } from './render.ts'
-import type { BaseExtracao, ObraConfig, ResultadoExtracao } from './tipos.ts'
+import type { BaseExtracao, ObraConfig, ResultadoExtracao } from '../../domain/tipos.ts'
 
-const RAIZ = fileURLToPath(new URL('../../../../', import.meta.url))
+const RAIZ = fileURLToPath(new URL('../../../../../../', import.meta.url))
 const ler = <T>(rel: string): T => JSON.parse(readFileSync(RAIZ + rel, 'utf8')) as T
 
 interface PlantasJson {

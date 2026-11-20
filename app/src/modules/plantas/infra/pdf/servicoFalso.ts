@@ -2,8 +2,8 @@
  * `ServicoPdf` de teste: uma página sintética (spans montados a partir de um ambientes.json),
  * sem pdf.js nem canvas. Imagens são data URLs mínimas; WebP são bytes "RIFF....WEBP".
  */
-import type { DocumentoPdf, PaginaAberta, ServicoPdf } from '../../planta/servico.ts'
-import type { Span } from '../../planta/tipos.ts'
+import type { DocumentoPdf, PaginaAberta, ServicoPdf } from '../../application/ports/ServicoPdfPort.port.ts'
+import type { Span } from '../../domain/tipos.ts'
 
 const PNG_1PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII='
 

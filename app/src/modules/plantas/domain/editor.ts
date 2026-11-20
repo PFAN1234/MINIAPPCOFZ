@@ -11,6 +11,7 @@
  *   (só na revisão em que foi feito); num ambiente sem rótulo, na entrada de `ambientes_manuais`;
  * - "é o mesmo ambiente" na nova revisão → `manter_codigo`.
  */
+import { REVISAO_VALIDA } from '@shared/kernel'
 import { extrair, REVISAO_DO_PDF, slug } from './extrair.ts'
 import {
   ErroPlanta,
@@ -18,16 +19,16 @@ import {
   type Ambiente,
   type AmbienteManual,
   type BaseExtracao,
+  type ConfigObra,
+  type DadosEditorPlanta,
   type ObraConfig,
   type PaginaLida,
   type Prancha,
   type Renomear,
   type ResultadoExtracao,
 } from './tipos.ts'
-import type { ConfigObra, DadosEditorPlanta } from '../dados/tipos.ts'
 
 export const PRANCHA_PADRAO: Prancha = { recorte_edificio: [0.02, 0.02, 0.98, 0.98], mascaras: [] }
-export const REVISAO_VALIDA = /^[A-Za-z0-9][A-Za-z0-9._-]{0,19}$/
 
 interface PavimentoNaConfig {
   codigo: string

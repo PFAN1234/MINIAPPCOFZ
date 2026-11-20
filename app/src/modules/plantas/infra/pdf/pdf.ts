@@ -4,9 +4,9 @@
  * servido pelo Vite (`carregarPdfJs.ts`); nos testes (Node), o build `legacy`.
  */
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
-import { lerMetricasFontes, metricaDaFonte, type MetricaFonte, type MetricasFontes } from './metricasFonte.ts'
-import { montarSpans, type ItemPdf } from './spans.ts'
-import { ErroPlanta, type PaginaLida } from './tipos.ts'
+import { lerMetricasFontes, metricaDaFonte, type MetricaFonte, type MetricasFontes } from '../../domain/metricasFonte.ts'
+import { montarSpans, type ItemPdf } from '../../domain/spans.ts'
+import { ErroPlanta, type PaginaLida } from '../../domain/tipos.ts'
 
 /** O que usamos do módulo `pdfjs-dist` (o normal e o legacy têm a mesma interface). */
 export interface ModuloPdfJs {

@@ -5,10 +5,10 @@
  */
 import { useMemo, useState, type PointerEvent as EventoPonteiro } from "react";
 import { SelectCategoria } from "../../componentes.tsx";
-import { ehManual } from "../../planta/editor.ts";
-import type { ImagemCalculada } from "../../planta/plantas.ts";
-import type { PaginaAberta } from "../../planta/servico.ts";
-import type { Ambiente, ItemRevisar, Retangulo } from "../../planta/tipos.ts";
+import { ehManual } from '@modules/plantas/domain/editor.ts';
+import type { ImagemCalculada } from '@modules/plantas/domain/plantas.ts';
+import type { PaginaAberta } from '@modules/plantas/application/ports/ServicoPdfPort.port.ts';
+import type { Ambiente, ItemRevisar, Retangulo } from '@modules/plantas/domain/tipos.ts';
 import { pontoNormalizado, svgDoEvento, usePrevia } from "./Recorte.tsx";
 
 export interface AcoesAmbientes {

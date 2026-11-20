@@ -2,7 +2,7 @@
 import { OPCOES_PDFJS, pdfjs } from './carregarPdfJs.ts'
 import { abrirPdf, lerPagina, type ModuloPdfJs } from './pdf.ts'
 import { codificarPng, codificarWebp, desenharProva, renderizarRecorte, type CanvasPlanta } from './render.ts'
-import type { DocumentoPdf, ImagemGerada, PaginaAberta, ServicoPdf } from './servico.ts'
+import type { DocumentoPdf, ImagemGerada, PaginaAberta, ServicoPdf } from '../../application/ports/ServicoPdfPort.port.ts'
 
 function criarCanvas(largura: number, altura: number): CanvasPlanta {
   const c = document.createElement('canvas')

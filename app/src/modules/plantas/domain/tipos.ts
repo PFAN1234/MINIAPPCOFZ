@@ -194,6 +194,89 @@ export interface BaseExtracao {
 }
 
 /** Erro de configuração ou de dados (no Python, `SystemExit` com a mesma mensagem). */
+/** Equivalente do `data/<slug>/obra.json`, sem slug e nome. Campos desconhecidos são preservados. */
+export interface ConfigObra {
+  status?: StatusConfig
+  revisao?: string
+  nomes_fixos?: Record<string, string>
+  categorias?: Record<string, string>
+  [chave: string]: unknown
+}
+
+// --- Planta (fase 2): RPCs em supabase/migrations/20261112090000_admin_planta.sql ----------------
+
+export interface MarcadorBanco {
+  x: number
+  y: number
+  rotulo_bbox?: [number, number, number, number]
+}
+
+export interface AmbienteBanco {
+  codigo: string
+  pavimento: string
+  nome_operacional: string
+  nome_planta: string | null
+  categoria: string
+  area_m2: number | null
+  revisao_planta: string | null
+  marcadores: MarcadorBanco[]
+  ordem: number
+  ativo: boolean
+}
+
+export interface PlantaAtiva {
+  revisao: string
+  pdf_sha256: string | null
+  pagina_pt: [number, number]
+  recorte_pt: [number, number, number, number]
+  criado_em: string
+}
+
+export interface PdfGuardado {
+  path: string
+  sha256: string
+  nome: string | null
+  pagina: number
+  revisao: string
+  publicado_em: string
+}
+
+export interface PavimentoEditor {
+  codigo: string
+  nome: string
+  ordem: number
+  planta: PlantaAtiva | null
+  ultimo_pdf: PdfGuardado | null
+}
+
+export interface DadosEditorPlanta {
+  obra: { id: string; slug: string; nome: string }
+  config: ConfigObra | null
+  config_atualizada_em: string | null
+  pavimentos: PavimentoEditor[]
+  ambientes: AmbienteBanco[]
+}
+
+export interface Publicacao {
+  id: string
+  pavimento: string
+  pavimento_nome: string
+  revisao: string
+  publicado_em: string
+  publicado_por_nome: string | null
+  pdf_path: string
+  pdf_sha256: string
+  pdf_nome: string | null
+  pagina: number
+  resumo: Record<string, unknown>
+}
+
+export interface ResultadoPublicacao {
+  publicacoes: { id: string; pavimento: string; revisao: string }[]
+  ambientes_ativos: number
+  inativados: number
+}
+
 export class ErroPlanta extends Error {
   constructor(message: string) {
     super(message)

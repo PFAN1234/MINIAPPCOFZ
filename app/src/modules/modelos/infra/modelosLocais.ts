@@ -1,4 +1,4 @@
-import { sha256Hex } from '../../../admin/planta/servico.ts'
+import { sha256Hex } from '@shared/infra/sha256.ts'
 import type { ModeloFrag } from '../domain/modelos.ts'
 
 export function temWebGL(): boolean {

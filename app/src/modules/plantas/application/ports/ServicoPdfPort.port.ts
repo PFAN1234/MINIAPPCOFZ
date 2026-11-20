@@ -3,8 +3,8 @@
  * (`servicoNavegador.ts`, carregada sob demanda com o pdf.js) fica fora das telas, para os
  * testes das telas usarem uma página sintética sem pdf.js nem canvas.
  */
-import type { ImagemCalculada } from './plantas.ts'
-import type { PaginaLida, Retangulo } from './tipos.ts'
+import type { ImagemCalculada } from '../../domain/plantas.ts'
+import type { PaginaLida, Retangulo } from '../../domain/tipos.ts'
 
 export interface ImagemGerada {
   /** Object URL (ou data URL) para exibir. */
@@ -33,10 +33,4 @@ export interface DocumentoPdf {
 
 export interface ServicoPdf {
   abrir(bytes: Uint8Array): Promise<DocumentoPdf>
-}
-
-/** SHA-256 em hexadecimal (Web Crypto). */
-export async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const d = await crypto.subtle.digest('SHA-256', bytes as BufferSource)
-  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }

@@ -11,7 +11,7 @@ import { Link, useParams, useSearchParams } from 'react-router'
 import { ComDados, mensagemDe } from '../../componentes.tsx'
 import { useRepositorioAdmin } from '../../dados/contexto.tsx'
 import { useEditorPlanta, useInvalidarPlanta } from '../../dados/hooks.ts'
-import type { DadosEditorPlanta, PavimentoEditor } from '../../dados/tipos.ts'
+import type { DadosEditorPlanta, PavimentoEditor } from '@modules/plantas/domain/tipos.ts'
 import {
   adicionarPino,
   confirmarMesmo,
@@ -29,11 +29,13 @@ import {
   revisaoDoNome,
   type EstadoEdicao,
   type Extracao,
-} from '../../planta/editor.ts'
-import { calcularPlanta, prancha as validarPrancha } from '../../planta/plantas.ts'
-import { publicarPavimento, type ArquivoPdf, type Progresso } from '../../planta/publicar.ts'
-import { sha256Hex, type DocumentoPdf, type PaginaAberta } from '../../planta/servico.ts'
-import type { Ambiente } from '../../planta/tipos.ts'
+} from '@modules/plantas/domain/editor.ts'
+import { calcularPlanta, prancha as validarPrancha } from '@modules/plantas/domain/plantas.ts'
+import { publicarRevisaoPlanta, type Progresso } from '@modules/plantas/application/use-cases/publicarRevisaoPlanta.ts'
+import type { ArquivoPdf } from '@modules/plantas/domain/publicacao.ts'
+import type { DocumentoPdf, PaginaAberta } from '@modules/plantas/application/ports/ServicoPdfPort.port.ts'
+import { sha256Hex } from '@shared/infra/sha256.ts'
+import type { Ambiente } from '@modules/plantas/domain/tipos.ts'
 import Ambientes, { type AcoesAmbientes } from './Ambientes.tsx'
 import NovaRevisao from './NovaRevisao.tsx'
 import Recorte, { usePrevia } from './Recorte.tsx'
@@ -519,7 +521,7 @@ function EtapaPublicar({
 
   const publicar = useMutation({
     mutationFn: () =>
-      publicarPavimento({
+      publicarRevisaoPlanta({
         deps: repo,
         dados,
         pav: pav.codigo,

@@ -5,17 +5,16 @@
  * ambientes, último admin, etapas). Nunca entra no build de produção.
  */
 import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
+import { criarPlantasFixture, type AmbientesJson } from '@modules/plantas/infra/PlantasFixtureAdapter.ts'
 import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
 import ambientesCofz from '../../../../data/cofz/ambientes.json'
 import obraCofz from '../../../../data/cofz/obra.json'
-import plantasCofz from '../../../../data/cofz/plantas.json'
 import ambientesHto from '../../../../data/hto/ambientes.json'
 import obraHto from '../../../../data/hto/obra.json'
-import plantasHto from '../../../../data/hto/plantas.json'
-import { ehWebp } from '../planta/render.ts'
 import { dataBr, hojeNoFuso, numeroBoletim } from '../formato.ts'
 import { aplicarCampos, calcularFaltando, calcularPrazo, CAMPOS_VAZIOS, camposDe, dataValida, somarDias } from './fixtureBoletim.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
+import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
 import {
   CABECALHO_LINHA_MAX,
   CABECALHO_LINHAS_MAX,
@@ -27,8 +26,6 @@ import {
   type Admin,
   type ErroCliente,
   type ResumoOrfaos,
-  type AmbienteBanco,
-  type ConfigObra,
   type EstadoSessao,
   type BucketObra,
   type Aditivo,
@@ -51,9 +48,7 @@ import {
   type ObraLista,
   type PavimentoAdmin,
   type PavimentoResumo,
-  type PlantaAtiva,
   type ResumoObra,
-  type Publicacao,
   type UsuarioApp,
 } from './tipos.ts'
 
@@ -65,75 +60,6 @@ interface ObraJson {
   nome: string
   pavimentos: { codigo: string; nome: string; ordem: number; pdf?: string; pagina?: number }[]
   [chave: string]: unknown
-}
-
-interface AmbientesJson {
-  ambientes: {
-    id: string
-    pavimento: string
-    nome_operacional: string
-    nome_planta: string | null
-    categoria: string
-    area_m2: number | null
-    revisao: string
-    marcadores: { x: number; y: number; rotulo_bbox?: [number, number, number, number] }[]
-  }[]
-  ambientes_removidos?: { id: string; pavimento: string; nome_operacional: string; revisao_ultima?: string | null }[]
-}
-
-interface PlantasJson {
-  pavimentos: { id: string; revisao: string; sha256: string; pagina_pt: [number, number]; recorte_pt: number[] }[]
-}
-
-/** Estado da planta de uma obra na fixture (o que as RPCs da fase 2 leem e gravam). */
-interface PlantaMemoria {
-  ambientes: AmbienteBanco[]
-  /** pavimento → planta ativa */
-  plantas: Map<string, PlantaAtiva>
-}
-
-function plantaDoJson(ambientes: AmbientesJson, plantas: PlantasJson): PlantaMemoria {
-  const lista: AmbienteBanco[] = ambientes.ambientes.map((a, i) => ({
-    codigo: a.id,
-    pavimento: a.pavimento,
-    nome_operacional: a.nome_operacional,
-    nome_planta: a.nome_planta,
-    categoria: a.categoria,
-    area_m2: a.area_m2,
-    revisao_planta: a.revisao,
-    marcadores: a.marcadores,
-    ordem: i + 1,
-    ativo: true,
-  }))
-  for (const r of ambientes.ambientes_removidos ?? []) {
-    lista.push({
-      codigo: r.id,
-      pavimento: r.pavimento,
-      nome_operacional: r.nome_operacional,
-      nome_planta: null,
-      categoria: 'area_comum',
-      area_m2: null,
-      revisao_planta: r.revisao_ultima ?? null,
-      marcadores: [],
-      ordem: lista.length + 1,
-      ativo: false,
-    })
-  }
-  return {
-    ambientes: lista,
-    plantas: new Map(
-      plantas.pavimentos.map((p) => [
-        p.id,
-        {
-          revisao: p.revisao,
-          pdf_sha256: p.sha256,
-          pagina_pt: p.pagina_pt,
-          recorte_pt: p.recorte_pt as [number, number, number, number],
-          criado_em: '2026-11-11T12:00:00Z',
-        },
-      ]),
-    ),
-  }
 }
 
 interface ObraMemoria {
@@ -521,41 +447,20 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
   ])
   if (!ehAdmin) admins.delete(VOCE.id)
   let sequencia = 0
-  const plantaPorObra = new Map<string, PlantaMemoria>([
-    ['obra-hto', plantaDoJson(ambientesHto as unknown as AmbientesJson, plantasHto as unknown as PlantasJson)],
-    ['obra-cofz', plantaDoJson(ambientesCofz as unknown as AmbientesJson, plantasCofz as unknown as PlantasJson)],
-  ])
-  const publicacoes: (Publicacao & { obra_id: string })[] = []
-  const arquivos = new Map<string, Blob>()
   const exclusoes: Exclusao[] = []
-  /** Arquivos da obra por bucket (o id da obra é a 1ª pasta em todos). */
-  const arquivosDaObra = (obraId: string) =>
-    [...arquivos.keys()].filter((k) => k.split('/')[1] === obraId).map((k) => k.split('/')[0] as BucketObra)
   function resumoDe(o: ObraMemoria): ResumoObra {
-    const contagem: Record<BucketObra, number> = { fotos: 0, plantas: 0, originais: 0, modelos: 0 }
-    for (const b of arquivosDaObra(o.id)) contagem[b] = (contagem[b] ?? 0) + 1
-    const planta = plantaPorObra.get(o.id)
     return {
       registros: 0,
       fotos: 0,
-      ambientes: planta?.ambientes.length ?? 0,
+      ambientes: plantas.quantidadeAmbientes(o.id),
       pavimentos: o.pavimentos.length,
-      plantas: planta?.plantas.size ?? 0,
+      plantas: plantas.quantidadePlantas(o.id),
       modelos: modelos.quantidade(o.id),
       participantes: 0,
       publicacoes_telegram: 0,
-      arquivos: contagem,
+      arquivos: plantas.contarArquivos(o.id),
     }
   }
-  const plantaDe = (o: ObraMemoria): PlantaMemoria => {
-    let p = plantaPorObra.get(o.id)
-    if (!p) {
-      p = { ambientes: [], plantas: new Map() }
-      plantaPorObra.set(o.id, p)
-    }
-    return p
-  }
-
   function exigirAdmin(): void {
     if (!sessao) throw new ErroAdmin('Sua sessão expirou. Entre de novo.')
     if (!admins.has(VOCE.id)) throw new ErroAdmin('Acesso negado: apenas admins do Mini App.')
@@ -605,16 +510,8 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
   function removerObra(o: ObraMemoria, etapaNome: string | null): Exclusao {
     const resumo = resumoDe(o)
     obras.splice(obras.indexOf(o), 1)
-    plantaPorObra.delete(o.id)
     modelos.removerObra(o.id)
-    const removidos: Record<BucketObra, number> = { fotos: 0, plantas: 0, originais: 0, modelos: 0 }
-    for (const k of [...arquivos.keys()]) {
-      const [bucket, obraId] = k.split('/')
-      if (obraId !== o.id) continue
-      arquivos.delete(k)
-      removidos[bucket as BucketObra]++
-    }
-    for (let i = publicacoes.length - 1; i >= 0; i--) if (publicacoes[i].obra_id === o.id) publicacoes.splice(i, 1)
+    const removidos = plantas.removerObra(o.id)
     const agora = new Date().toISOString()
     const exclusao: Exclusao = {
       id: `exclusao-${++sequencia}`,
@@ -638,10 +535,17 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     [...o.pavimentos].sort((a, b) => a.ordem - b.ordem || a.codigo.localeCompare(b.codigo))
 
   const ra = criarRaFixture({ exigirAdmin })
+  const plantas = criarPlantasFixture({
+    exigirAdmin,
+    obraPorSlug,
+    obraExiste: (id) => obras.some((o) => o.id === id),
+    proximoId: () => ++sequencia,
+    nomeUsuario: VOCE.nome,
+  })
   const modelos = criarModelosFixture({
     exigirAdmin,
     obraPorSlug,
-    tamanhoArquivo: (caminho) => arquivos.get(`modelos/${caminho}`)?.size,
+    tamanhoArquivo: (caminho) => plantas.tamanhoArquivo(`modelos/${caminho}`),
     proximoId: () => ++sequencia,
     nomeUsuario: VOCE.nome,
   })
@@ -1338,62 +1242,6 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       }
     },
 
-    async obterEditorPlanta(slug) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      const planta = plantaDe(o)
-      const ordemPav = new Map(o.pavimentos.map((p) => [p.codigo, p.ordem]))
-      return copia({
-        obra: { id: o.id, slug: o.slug, nome: o.nome },
-        config: o.config,
-        config_atualizada_em: o.config_atualizada_em,
-        pavimentos: ordenarPavs(o).map((p) => {
-          const ultimo = publicacoes.find((x) => x.obra_id === o.id && x.pavimento === p.codigo)
-          return {
-            codigo: p.codigo,
-            nome: p.nome,
-            ordem: p.ordem,
-            planta: planta.plantas.get(p.codigo) ?? null,
-            ultimo_pdf: ultimo
-              ? {
-                  path: ultimo.pdf_path,
-                  sha256: ultimo.pdf_sha256,
-                  nome: ultimo.pdf_nome,
-                  pagina: ultimo.pagina,
-                  revisao: ultimo.revisao,
-                  publicado_em: ultimo.publicado_em,
-                }
-              : null,
-          }
-        }),
-        ambientes: [...planta.ambientes].sort(
-          (a, b) => (ordemPav.get(a.pavimento) ?? 0) - (ordemPav.get(b.pavimento) ?? 0) || a.ordem - b.ordem,
-        ),
-      })
-    },
-
-    async listarPublicacoes(slug) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      return copia(publicacoes.filter((p) => p.obra_id === o.id).map((p) => ({ ...p, obra_id: undefined })))
-    },
-
-    async enviarArquivo(bucket, caminho, arquivo) {
-      exigirAdmin()
-      const obraId = caminho.split('/')[0]
-      if (!obras.some((o) => o.id === obraId)) throw new ErroAdmin(`Sem permissão para gravar ${caminho} no Storage (${bucket}).`)
-      if (bucket === 'originais' && !/\.pdf$/.test(caminho)) throw new ErroAdmin('O bucket originais só aceita PDF.')
-      // Como as políticas `modelos_admin_*`: <obra_id>/<SIGLA>/<hash16>.frag.
-      if (bucket === 'modelos' && !/^[^/]+\/[A-Z]{2,4}\/[0-9a-f]{16}\.frag$/.test(caminho)) {
-        throw new ErroAdmin(`Sem permissão para gravar ${caminho} no Storage (${bucket}).`)
-      }
-      // Como o Storage (allowed_mime_types): o bucket plantas só aceita WebP, e aqui conferimos os bytes.
-      if (bucket === 'plantas' && !ehWebp(new Uint8Array(await arquivo.slice(0, 12).arrayBuffer()))) {
-        throw new ErroAdmin(`O arquivo ${caminho} não é WebP.`)
-      }
-      arquivos.set(`${bucket}/${caminho}`, arquivo)
-    },
-
     async arquivarObra(slug, arquivada) {
       exigirAdmin()
       const o = obraPorSlug(slug)
@@ -1430,112 +1278,14 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       return { exclusao_id: e.id, obra_id: e.obra_id, arquivos_removidos: e.arquivos_removidos ?? {}, pendente: false }
     },
 
+    obterEditorPlanta: plantas.obterEditorPlanta,
+    listarPublicacoes: plantas.listarPublicacoes,
+    enviarArquivo: plantas.enviarArquivo,
+    baixarOriginal: plantas.baixarOriginal,
+    publicarRevisao: plantas.publicarRevisao,
     listarModelosAdmin: modelos.listarModelosAdmin,
     registrarModelo: modelos.registrarModelo,
     retirarModelo: modelos.retirarModelo,
-
-    async baixarOriginal(caminho) {
-      exigirAdmin()
-      const b = arquivos.get(`originais/${caminho}`)
-      if (!b) throw new ErroAdmin('Não foi possível baixar o PDF guardado.')
-      return new Uint8Array(await b.arrayBuffer())
-    },
-
-    async publicarRevisao(slug, payload) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      const p = payload as {
-        pavimentos: {
-          codigo: string
-          revisao: string
-          pdf: { path: string; sha256: string; nome: string; pagina: number }
-          pagina_pt: [number, number]
-          recorte_pt: [number, number, number, number]
-          detalhes: Record<string, unknown>
-          resumo?: Record<string, unknown>
-        }[]
-        ambientes: Omit<AmbienteBanco, 'ordem' | 'ativo' | 'revisao_planta'>[]
-        ambientes_removidos?: string[]
-        config?: ConfigObra
-        config_atualizada_em?: string | null
-      }
-      if (p.config && (p.config_atualizada_em ?? null) !== o.config_atualizada_em) {
-        throw new ErroAdmin('A configuração da obra foi alterada por outra pessoa. Recarregue a página e confira antes de publicar.')
-      }
-      for (const pav of p.pavimentos) {
-        if (!o.pavimentos.some((x) => x.codigo === pav.codigo)) throw new ErroAdmin(`Pavimento não encontrado na obra: ${pav.codigo}`)
-        if (!arquivos.has(`originais/${pav.pdf.path}`)) {
-          throw new ErroAdmin(`PDF não encontrado no Storage (originais/${pav.pdf.path}): envie o arquivo antes de publicar`)
-        }
-        const base = `plantas/${o.id}/${pav.revisao}/${pav.codigo}/`
-        const faltando = ['planta.webp', 'planta-hd.webp', ...Object.keys(pav.detalhes).map((c) => `ambientes/${c}.webp`)]
-          .filter((n) => !arquivos.has(base + n))
-        if (faltando.length) throw new ErroAdmin(`Imagens não encontradas no Storage (plantas): ${faltando.join(', ')}`)
-      }
-      const codigos = new Set(p.ambientes.map((a) => a.codigo))
-      for (const a of p.ambientes) {
-        if (!p.pavimentos.some((x) => x.codigo === a.pavimento && a.codigo in x.detalhes)) {
-          throw new ErroAdmin(`Falta o detalhe (recorte) do ambiente ${a.codigo}`)
-        }
-      }
-      const planta = plantaDe(o)
-      const revisaoDe = new Map(p.pavimentos.map((x) => [x.codigo, x.revisao]))
-      p.ambientes.forEach((a, i) => {
-        const novo: AmbienteBanco = { ...copia(a), revisao_planta: revisaoDe.get(a.pavimento) ?? null, ordem: i + 1, ativo: true }
-        const k = planta.ambientes.findIndex((x) => x.codigo === a.codigo)
-        if (k >= 0) planta.ambientes[k] = novo
-        else planta.ambientes.push(novo)
-      })
-      let inativados = 0
-      const removidos = new Set(p.ambientes_removidos ?? [])
-      for (const a of planta.ambientes) {
-        if (a.ativo && (removidos.has(a.codigo) || (revisaoDe.has(a.pavimento) && !codigos.has(a.codigo)))) {
-          a.ativo = false
-          inativados++
-        }
-      }
-      const ordemPav = new Map(o.pavimentos.map((x) => [x.codigo, x.ordem]))
-      planta.ambientes
-        .filter((a) => a.ativo)
-        .sort((a, b) => (ordemPav.get(a.pavimento) ?? 0) - (ordemPav.get(b.pavimento) ?? 0) || a.ordem - b.ordem)
-        .forEach((a, i) => {
-          a.ordem = i + 1
-        })
-      const agora = new Date().toISOString()
-      const feitas = p.pavimentos.map((pav) => {
-        planta.plantas.set(pav.codigo, {
-          revisao: pav.revisao,
-          pdf_sha256: pav.pdf.sha256,
-          pagina_pt: pav.pagina_pt,
-          recorte_pt: pav.recorte_pt,
-          criado_em: agora,
-        })
-        const pv = o.pavimentos.find((x) => x.codigo === pav.codigo)!
-        pv.ambientes = planta.ambientes.filter((a) => a.ativo && a.pavimento === pav.codigo).length
-        const id = `publicacao-${++sequencia}`
-        publicacoes.unshift({
-          id,
-          obra_id: o.id,
-          pavimento: pav.codigo,
-          pavimento_nome: pv.nome,
-          revisao: pav.revisao,
-          publicado_em: agora,
-          publicado_por_nome: VOCE.nome,
-          pdf_path: pav.pdf.path,
-          pdf_sha256: pav.pdf.sha256,
-          pdf_nome: pav.pdf.nome,
-          pagina: pav.pdf.pagina,
-          resumo: { ...(pav.resumo ?? {}), ambientes: p.ambientes.filter((a) => a.pavimento === pav.codigo).length },
-        })
-        return { id, pavimento: pav.codigo, revisao: pav.revisao }
-      })
-      if (p.config) {
-        o.config = { ...copia(p.config), status: 'aguardando_revisao_humana' }
-        o.config_atualizada_em = agora
-        o.config_atualizada_por = VOCE.nome
-      }
-      return { publicacoes: feitas, ambientes_ativos: planta.ambientes.filter((a) => a.ativo).length, inativados }
-    },
 
     async listarErrosCliente(limite = 200): Promise<ErroCliente[]> {
       exigirAdmin()

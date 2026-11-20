@@ -11,8 +11,8 @@ export function svgDoEvento(e: { currentTarget: Element }): SVGSVGElement {
   const el = e.currentTarget as SVGElement
   return (el instanceof SVGSVGElement ? el : el.ownerSVGElement) as SVGSVGElement
 }
-import type { PaginaAberta, ImagemGerada } from '../../planta/servico.ts'
-import type { Prancha, Retangulo } from '../../planta/tipos.ts'
+import type { PaginaAberta, ImagemGerada } from '@modules/plantas/application/ports/ServicoPdfPort.port.ts'
+import type { Prancha, Retangulo } from '@modules/plantas/domain/tipos.ts'
 import { mensagemDe } from '../../componentes.tsx'
 
 type Alvo = { tipo: 'recorte' } | { tipo: 'mascara'; indice: number }

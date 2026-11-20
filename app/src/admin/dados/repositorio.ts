@@ -1,12 +1,11 @@
 import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
+import type { PlantasRepositorio } from '@modules/plantas/application/ports/PlantasRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
+import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
 import type {
   Admin,
   ErroCliente,
   ResumoOrfaos,
-  Bucket,
-  ConfigObra,
-  DadosEditorPlanta,
   DadosAditivo,
   DadosEtapa,
   Aditivo,
@@ -32,11 +31,9 @@ import type {
   ObraLista,
   ObraSalva,
   PavimentoResumo,
-  Publicacao,
   ResultadoExclusao,
   ResultadoExclusaoBoletim,
   ResultadoExclusaoEtapa,
-  ResultadoPublicacao,
   ResumoEtapa,
   ResumoObra,
   UsuarioApp,
@@ -44,7 +41,8 @@ import type {
 
 export interface RepositorioAdmin
   extends Pick<RaRepositorio, 'listarRA' | 'definirQr' | 'removerQr'>,
-    Pick<ModelosRepositorio, 'listarModelosAdmin' | 'registrarModelo' | 'retirarModelo'> {
+    Pick<ModelosRepositorio, 'listarModelosAdmin' | 'registrarModelo' | 'retirarModelo'>,
+    Pick<PlantasRepositorio, 'obterEditorPlanta' | 'listarPublicacoes' | 'enviarArquivo' | 'baixarOriginal' | 'publicarRevisao'> {
   /** Há sessão? É de um admin? */
   estadoSessao(): Promise<EstadoSessao>
   /** Troca o token do link `#entrar=` (uso único) por sessão. */
@@ -143,16 +141,6 @@ export interface RepositorioAdmin
   listarExclusoes(): Promise<Exclusao[]>
   /** Tenta de novo remover os arquivos de uma exclusão que ficou pendente. */
   limparExclusao(id: string): Promise<ResultadoExclusao>
-
-  /** Planta (fase 2): ambientes, planta ativa e último PDF guardado de cada pavimento. */
-  obterEditorPlanta(slug: string): Promise<DadosEditorPlanta>
-  listarPublicacoes(slug: string): Promise<Publicacao[]>
-  /** Envia um arquivo ao Storage (upsert). */
-  enviarArquivo(bucket: Bucket, caminho: string, arquivo: Blob, tipo: string): Promise<void>
-  /** Baixa um PDF guardado no bucket `originais`. */
-  baixarOriginal(caminho: string): Promise<Uint8Array>
-  /** RPC `admin_publicar_revisao` (payload montado em planta/publicar.ts). */
-  publicarRevisao(slug: string, payload: unknown): Promise<ResultadoPublicacao>
 
   listarAdmins(): Promise<Admin[]>
   incluirAdmin(usuarioId: string): Promise<void>

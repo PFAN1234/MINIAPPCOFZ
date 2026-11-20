@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import ambientesHto from '../../../../data/hto/ambientes.json'
-import { criarRepositorioAdminFixture } from '../dados/fixture.ts'
-import { criarServicoFalso, spansDosAmbientes } from '../telas/planta/servicoFalso.ts'
+import ambientesHto from '../../../../../../data/hto/ambientes.json'
+import { criarRepositorioAdminFixture } from '../../../../admin/dados/fixture.ts'
+import { criarServicoFalso, spansDosAmbientes } from '../../infra/pdf/servicoFalso.ts'
 import {
   adicionarPino,
   baseDoBanco,
@@ -13,9 +13,10 @@ import {
   problemaRevisao,
   removerPino,
   renomearAmbiente,
-} from './editor.ts'
-import { montarPayload, publicarPavimento } from './publicar.ts'
-import { calcularPlanta } from './plantas.ts'
+} from '../../domain/editor.ts'
+import { montarPayload } from '../../domain/publicacao.ts'
+import { publicarRevisaoPlanta } from './publicarRevisaoPlanta.ts'
+import { calcularPlanta } from '../../domain/plantas.ts'
 
 const W = 2383.919921875
 const H = 1683.719970703125
@@ -161,7 +162,7 @@ describe('publicação', () => {
     const doc = await criarServicoFalso(pagina.spans, W, H).abrir(new Uint8Array())
     const chamadas: string[] = []
     const progresso: number[] = []
-    await publicarPavimento({
+    await publicarRevisaoPlanta({
       deps: {
         enviarArquivo: async (b, c, _a, tipo) => {
           chamadas.push(`${b}:${c.split('/').slice(3).join('/') || c.split('/').pop()}:${tipo}`)

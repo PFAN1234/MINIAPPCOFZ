@@ -4,8 +4,8 @@
  * ambiente" grava `manter_codigo`: o novo herda o código e os registros do antigo.
  */
 import { useState } from 'react'
-import { decimal, LIMIAR_DESLOCAMENTO, temDiferencas } from '../../planta/extrair.ts'
-import type { Diferencas } from '../../planta/tipos.ts'
+import { decimal, LIMIAR_DESLOCAMENTO, temDiferencas } from '@modules/plantas/domain/extrair.ts'
+import type { Diferencas } from '@modules/plantas/domain/tipos.ts'
 
 function area(v: number | null): string {
   return v === null ? 'sem área' : `${v.toLocaleString('pt-BR')} m²`

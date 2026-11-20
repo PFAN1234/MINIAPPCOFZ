@@ -7,8 +7,8 @@
  * (`areaPixmap`), para as imagens ficarem alinhadas com as do Python.
  */
 import type { PDFPageProxy } from 'pdfjs-dist'
-import { mascarasNaImagem, pontoNaImagem, QUALIDADE_WEBP, type ImagemCalculada } from './plantas.ts'
-import { ErroPlanta, type Retangulo } from './tipos.ts'
+import { mascarasNaImagem, pontoNaImagem, QUALIDADE_WEBP, type ImagemCalculada } from '../../domain/plantas.ts'
+import { ErroPlanta, type Retangulo } from '../../domain/tipos.ts'
 
 /** O mínimo de canvas que usamos (HTMLCanvasElement, OffscreenCanvas ou o do Node). */
 export interface CanvasPlanta {
