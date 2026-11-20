@@ -5,7 +5,8 @@
 import { Link, useLocation } from 'react-router'
 import { ComDados, mensagemDe } from '../componentes.tsx'
 import { useEtapas, useExclusoes, useLimparExclusao, useObrasAdmin } from '../dados/hooks.ts'
-import { ROTULO_STATUS, type EtapaLista, type Exclusao, type ObraLista, type StatusObra } from '../dados/tipos.ts'
+import { ROTULO_STATUS, type StatusObra } from '../dados/tipos.ts'
+import type { EtapaLista, Exclusao, ObraLista } from '@modules/obras/domain/tiposAdmin.ts'
 import type { AvisoObras } from './obra/ArquivarExcluir.tsx'
 
 export function rotuloStatus(status: string | null): string {

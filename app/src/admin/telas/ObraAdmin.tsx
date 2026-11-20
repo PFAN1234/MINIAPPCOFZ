@@ -12,7 +12,8 @@ import {
   useSalvarPavimentos,
 } from '../dados/hooks.ts'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
-import { ROTULO_STATUS, type EtapaLista, type ObraAdmin as DadosObraAdmin, type PavimentoAdmin, type StatusObra } from '../dados/tipos.ts'
+import { ROTULO_STATUS, type StatusObra } from '../dados/tipos.ts'
+import type { EtapaLista, ObraAdmin as DadosObraAdmin, PavimentoAdmin } from '@modules/obras/domain/tiposAdmin.ts'
 
 const SLUG = /^[a-z0-9-]+$/
 

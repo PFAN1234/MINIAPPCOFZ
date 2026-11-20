@@ -1,35 +1,28 @@
 import type { AcessosAdminRepositorio } from '@modules/acessos/application/ports/AcessosAdminRepositorio.port.ts'
 import type { AcessosRepositorio } from '@modules/acessos/application/ports/AcessosRepositorio.port.ts'
 import type { SessaoAdminRepositorio } from '@modules/acessos/application/ports/SessaoAdminRepositorio.port.ts'
+import type { EtapasAdminRepositorio } from '@modules/obras/application/ports/EtapasAdminRepositorio.port.ts'
+import type { ObrasAdminRepositorio } from '@modules/obras/application/ports/ObrasAdminRepositorio.port.ts'
+import type { OrganizacaoAdminRepositorio } from '@modules/obras/application/ports/OrganizacaoAdminRepositorio.port.ts'
 import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
 import type { PlantasRepositorio } from '@modules/plantas/application/ports/PlantasRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
-import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
-import type { ErroCliente, ResumoOrfaos, DadosAditivo, DadosEtapa, Aditivo, BoletimDetalhe, EdicaoBoletim, FiltroBoletins, ListaBoletins, ListaTodosBoletins, PedidoEmissao, EtapaDetalhe, Responsavel, DadosObra, Exclusao, EtapaLista, EtapaSalva, ObraAdmin, Organizacao, ObraLista, ObraSalva, PavimentoResumo, ResultadoExclusao, ResultadoExclusaoBoletim, ResultadoExclusaoEtapa, ResumoEtapa, ResumoObra } from './tipos.ts'
+import type { ErroCliente, ResumoOrfaos, BoletimDetalhe, EdicaoBoletim, FiltroBoletins, ListaBoletins, ListaTodosBoletins, PedidoEmissao, ResultadoExclusaoBoletim } from './tipos.ts'
 
 export interface RepositorioAdmin
   extends SessaoAdminRepositorio,
     AcessosAdminRepositorio,
     Pick<AcessosRepositorio, 'definirAcesso'>,
     Pick<RaRepositorio, 'listarRA' | 'definirQr' | 'removerQr'>,
+    EtapasAdminRepositorio,
+    OrganizacaoAdminRepositorio,
+    ObrasAdminRepositorio,
     Pick<ModelosRepositorio, 'listarModelosAdmin' | 'registrarModelo' | 'retirarModelo'>,
     Pick<PlantasRepositorio, 'obterEditorPlanta' | 'listarPublicacoes' | 'enviarArquivo' | 'baixarOriginal' | 'publicarRevisao'> {
   /** Há sessão? É de um admin? */
   /** Troca o token do link `#entrar=` (uso único) por sessão. */
   /** Troca os dados do Telegram Login Widget por sessão (só admins). */
   /** Só na fixture: entra sem Telegram (desenvolvimento e e2e). */
-
-  /** Etapas (ativas e arquivadas) por `ordem, nome`, com as contagens de obras. */
-  listarEtapas(): Promise<EtapaLista[]>
-  /** Cria (sem `id`; slug ou sigla repetidos são recusados) ou edita (com `id`; chave ausente mantém, `null` apaga). */
-  salvarEtapa(dados: DadosEtapa): Promise<EtapaSalva>
-  /** `admin_obter_etapa`: cadastro completo, aditivos, responsáveis, prazo e o que falta para o boletim. */
-  obterEtapa(slug: string): Promise<EtapaDetalhe>
-  /** Cria ou edita (com `id`) um aditivo; número repetido na etapa é recusado. */
-  salvarAditivo(dados: DadosAditivo): Promise<Aditivo>
-  removerAditivo(id: string): Promise<void>
-  /** Substitui os responsáveis da etapa, na ordem da lista (vazia = nenhum). */
-  definirResponsaveis(etapaId: string, lista: { usuario_id: string; funcao: string }[]): Promise<Responsavel[]>
 
   /** `admin_listar_boletins`: emitidos e pedidos ainda não emitidos (pendentes, gerando, com falha). */
   listarBoletins(slug: string): Promise<ListaBoletins>
@@ -70,39 +63,6 @@ export interface RepositorioAdmin
   /** RPC `matriz_acessos`: obras, pessoas, acessos por obra e pedidos pendentes. */
   /** RPC `definir_acesso`: `nenhum` tira o acesso (e recusa o pedido pendente); liberar aprova o pedido. */
   /** Id do usuário da sessão atual (para confirmar a alteração do próprio acesso). */
-  /** Arquiva (true) ou desarquiva (false) a etapa; devolve `arquivada_em`. Não mexe no arquivamento das obras. */
-  arquivarEtapa(slug: string, arquivada: boolean): Promise<string | null>
-  /** Desliga o grupo do Telegram da etapa e os tópicos das obras dela. */
-  desvincularEtapa(slug: string): Promise<void>
-  /** Obras e contagens do que a exclusão da etapa apaga. */
-  resumoEtapa(slug: string): Promise<ResumoEtapa>
-  /** Edge Function `admin-excluir-obra` (ação `excluir_etapa`): apaga a etapa e todas as obras dela. Irreversível. */
-  excluirEtapa(slug: string, confirmacao: string): Promise<ResultadoExclusaoEtapa>
-
-  /** Nome e logo da organização militar (RPC `organizacao()`, também sem sessão). */
-  obterOrganizacao(): Promise<Organizacao>
-  /** `logo_path` null tira o logo; se vier, precisa já estar no bucket `organizacao`. `cabecalho` ausente mantém; `[]` limpa. */
-  salvarOrganizacao(dados: { nome: string; logo_path: string | null; cabecalho?: string[] }): Promise<Organizacao>
-  /** Envia o logo ao bucket `organizacao` (PNG, JPEG ou WebP, até 1 MB) e devolve o caminho. */
-  enviarLogo(arquivo: Blob): Promise<string>
-
-  listarObras(): Promise<ObraLista[]>
-  obterObra(slug: string): Promise<ObraAdmin>
-  salvarObra(dados: DadosObra): Promise<ObraSalva>
-  /** Lista completa: inclui, edita e apaga (só pavimento sem ambientes nem plantas). */
-  salvarPavimentos(slug: string, lista: PavimentoResumo[]): Promise<PavimentoResumo[]>
-  salvarConfig(slug: string, config: ConfigObra): Promise<void>
-  exportarObra(slug: string): Promise<unknown>
-  /** Arquiva (true) ou desarquiva (false); devolve `arquivada_em`. */
-  arquivarObra(slug: string, arquivada: boolean): Promise<string | null>
-  /** Contagens do que a exclusão apaga. */
-  resumoObra(slug: string): Promise<ResumoObra>
-  /** Edge Function `admin-excluir-obra`: apaga a obra, tudo dela e os arquivos. Irreversível. */
-  excluirObra(slug: string, confirmacao: string): Promise<ResultadoExclusao>
-  listarExclusoes(): Promise<Exclusao[]>
-  /** Tenta de novo remover os arquivos de uma exclusão que ficou pendente. */
-  limparExclusao(id: string): Promise<ResultadoExclusao>
-
   /** RPC `admin_listar_erros_cliente`: erros do Mini App e do site, do mais recente ao mais antigo. */
   listarErrosCliente(limite?: number): Promise<ErroCliente[]>
   /** RPC `admin_resumo_orfaos`: arquivos órfãos por bucket e os 100 maiores (nada é apagado). */

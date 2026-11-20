@@ -5,6 +5,10 @@
  */
 import { criarAcessosAdminSupabase } from '@modules/acessos/infra/AcessosAdminSupabaseAdapter.ts'
 import { criarSessaoAdminSupabase } from '@modules/acessos/infra/SessaoAdminSupabaseAdapter.ts'
+import { criarEtapasAdminSupabase } from '@modules/obras/infra/EtapasAdminSupabaseAdapter.ts'
+import { criarObrasAdminSupabase } from '@modules/obras/infra/ObrasAdminSupabaseAdapter.ts'
+import { criarOrganizacaoAdminSupabase } from '@modules/obras/infra/OrganizacaoAdminSupabaseAdapter.ts'
+import { codigoDe, ehMensagemBruta, MENSAGEM_REDE, textoOuNulo, type Linha } from '@modules/obras/infra/validacao.ts'
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
 import { criarPlantasSupabase } from '@modules/plantas/infra/PlantasSupabaseAdapter.ts'
 import { criarRaSupabase } from '@modules/ra/infra/RaSupabaseAdapter.ts'
@@ -12,8 +16,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { criarClienteSupabase } from '../../dados/supabase.ts'
 import { configurarEnvioErros } from '../../shared/infra/erros.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
-import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
-import { ErroAdmin, CAMINHO_LOGO, novoCaminhoLogo, problemaDoLogo, type ErroCliente, type ResumoOrfaos, type BucketObra, type Aditivo, type BoletimDaLista, type BoletimDetalhe, type BoletimEmitido, type EdicaoBoletim, type ListaTodosBoletins, type PedidoDaLista, type SnapshotBoletim, type EstadoEmissao, type ListaBoletins, type PedidoEmissao, type EtapaDetalhe, type EtapaLista, type Responsavel, type Organizacao, type ResultadoExclusaoEtapa, type ResumoEtapa, type Exclusao, type ResultadoExclusao, type ResumoObra, type ObraAdmin, type ObraLista, type ObraSalva, type PavimentoResumo } from './tipos.ts'
+import { ErroAdmin, type ErroCliente, type ResumoOrfaos, type BoletimDaLista, type BoletimDetalhe, type BoletimEmitido, type EdicaoBoletim, type ListaTodosBoletins, type PedidoDaLista, type SnapshotBoletim, type EstadoEmissao, type ListaBoletins, type PedidoEmissao } from './tipos.ts'
 
 export const CHAVE_SESSAO_ADMIN = 'miniappcofz-admin-auth'
 
@@ -134,8 +137,6 @@ export function boletimDetalheDe(l: LinhaBoletim): BoletimDetalhe {
   }
 }
 
-const MENSAGEM_REDE = 'Sem conexão com o servidor. Verifique a internet e tente de novo.'
-
 export function criarClienteAdmin(): SupabaseClient {
   return criarClienteSupabase({
     auth: {
@@ -166,8 +167,6 @@ function erroDaRpc(e: unknown): ErroAdmin {
   if (/failed to fetch|networkerror|load failed/i.test(msg)) return new ErroAdmin(MENSAGEM_REDE, { cause: e })
   return new ErroAdmin(msg || 'Não foi possível concluir a operação.', { cause: e })
 }
-
-type Linha = Record<string, unknown>
 
 export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarClienteAdmin()): RepositorioAdmin {
   configurarEnvioErros(cliente, 'admin')
@@ -212,98 +211,6 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     return json
   }
 
-  /** Ações `excluir` e `limpar` (uma obra). */
-  async function excluirUma(corpo: Record<string, unknown>): Promise<ResultadoExclusao> {
-    const json = await funcaoExcluir(corpo, 'Obra não encontrada')
-    return {
-      exclusao_id: String(json.exclusao_id),
-      obra_id: String(json.obra_id),
-      arquivos_removidos: (json.arquivos_removidos as ResultadoExclusao['arquivos_removidos'] | undefined) ?? {},
-      pendente: Boolean(json.pendente),
-      ...(typeof json.erro === 'string' ? { erro: json.erro } : {}),
-    }
-  }
-
-  const textoOuNulo = (v: unknown) => (v == null ? null : String(v))
-  /** `obras` pode vir como contagem ou como lista. */
-  const contagem = (v: unknown) => (Array.isArray(v) ? v.length : Number(v ?? 0))
-
-  function organizacaoDe(l: Linha | null): Organizacao {
-    const logo = typeof l?.logo_path === 'string' && l.logo_path ? l.logo_path : null
-    return {
-      nome: typeof l?.nome === 'string' && l.nome ? l.nome : 'CO-FZ',
-      logo_path: logo,
-      logo_url: logo ? `${base}/storage/v1/object/public/organizacao/${logo}` : null,
-      cabecalho: Array.isArray(l?.cabecalho) ? l.cabecalho.map(String) : [],
-    }
-  }
-
-  const numeroOuNulo = (v: unknown) => (v == null ? null : Number(v))
-  const aditivoDe = (l: Linha): Aditivo => ({
-    id: String(l.id),
-    etapa_id: String(l.etapa_id ?? ''),
-    numero: String(l.numero),
-    data: String(l.data),
-    prazo_dias: Number(l.prazo_dias ?? 0),
-    valor: Number(l.valor ?? 0),
-    descricao: textoOuNulo(l.descricao),
-  })
-  const responsavelDe = (l: Linha): Responsavel => ({
-    usuario_id: String(l.usuario_id),
-    nome: String(l.nome ?? ''),
-    nome_exibicao: textoOuNulo(l.nome_exibicao),
-    funcao: String(l.funcao ?? 'Fiscal'),
-    ordem: Number(l.ordem ?? 0),
-  })
-  function etapaDetalheDe(l: Linha): EtapaDetalhe {
-    const prazo = l.prazo as Linha | null | undefined
-    return {
-      id: String(l.id),
-      slug: String(l.slug),
-      nome: String(l.nome),
-      ordem: Number(l.ordem ?? 0),
-      arquivada_em: textoOuNulo(l.arquivada_em),
-      telegram_vinculado: l.telegram_vinculado === true,
-      telegram_chat_titulo: textoOuNulo(l.telegram_chat_titulo),
-      sigla: textoOuNulo(l.sigla),
-      endereco: textoOuNulo(l.endereco),
-      latitude: numeroOuNulo(l.latitude),
-      longitude: numeroOuNulo(l.longitude),
-      fuso: textoOuNulo(l.fuso) ?? 'America/Sao_Paulo',
-      estacao: textoOuNulo(l.estacao),
-      estacao_reserva: textoOuNulo(l.estacao_reserva),
-      boletim_horario: (textoOuNulo(l.boletim_horario) ?? '23:30').slice(0, 5),
-      objeto: textoOuNulo(l.objeto),
-      local: textoOuNulo(l.local),
-      contratante: textoOuNulo(l.contratante),
-      contrato: textoOuNulo(l.contrato),
-      contratada: textoOuNulo(l.contratada),
-      contratada_cnpj: textoOuNulo(l.contratada_cnpj),
-      os_numero: textoOuNulo(l.os_numero),
-      os_data: textoOuNulo(l.os_data),
-      vigencia_meses: numeroOuNulo(l.vigencia_meses),
-      valor_original: numeroOuNulo(l.valor_original),
-      area_construida_m2: numeroOuNulo(l.area_construida_m2),
-      aditivos: Array.isArray(l.aditivos) ? (l.aditivos as Linha[]).map(aditivoDe) : [],
-      responsaveis: Array.isArray(l.responsaveis) ? (l.responsaveis as Linha[]).map(responsavelDe) : [],
-      prazo: prazo
-        ? {
-            termino_original: String(prazo.termino_original),
-            prazo_aditivos_dias: Number(prazo.prazo_aditivos_dias ?? 0),
-            termino_atual: String(prazo.termino_atual),
-            valor_atual: numeroOuNulo(prazo.valor_atual),
-          }
-        : null,
-      faltando: Array.isArray(l.faltando) ? l.faltando.map(String) : [],
-    }
-  }
-  /** Mensagem crua do Postgres para violação de unicidade (as das RPCs já vêm em português). */
-  const ehMensagemBruta = (msg: string) => /duplicate key|violates unique|unique constraint/i.test(msg)
-  const codigoDe = (e: unknown) => {
-    const causa = (e as ErroAdmin).cause
-    return causa && typeof causa === 'object' ? ((causa as ErroBruto).code as unknown) : undefined
-  }
-
   /** Chama o gerador (`/api/previa-boletim`) com o JWT do admin e devolve o PDF. */
   async function buscarPrevia(url: string, init: RequestInit, naoEncontrado: string): Promise<Blob> {
     const { data: sessao } = await cliente.auth.getSession()
@@ -334,6 +241,9 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
   const plantas = criarPlantasSupabase(cliente, rpc)
   const sessao = criarSessaoAdminSupabase(cliente, erroDaRpc)
   const acessos = criarAcessosAdminSupabase(rpc)
+  const etapas = criarEtapasAdminSupabase(rpc, funcaoExcluir)
+  const organizacao = criarOrganizacaoAdminSupabase(cliente, rpc, base)
+  const obras = criarObrasAdminSupabase(rpc, funcaoExcluir)
 
   return {
     listarRA: ra.listarRA,
@@ -352,65 +262,6 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     incluirAdmin: acessos.incluirAdmin,
     removerAdmin: acessos.removerAdmin,
     listarUsuarios: acessos.listarUsuarios,
-
-    async listarEtapas() {
-      const linhas = await rpc<Linha[] | null>('admin_listar_etapas')
-      return (linhas ?? []).map(
-        (l): EtapaLista => ({
-          id: String(l.id),
-          slug: String(l.slug),
-          nome: String(l.nome),
-          ordem: Number(l.ordem ?? 0),
-          arquivada_em: textoOuNulo(l.arquivada_em),
-          telegram_vinculado: l.telegram_vinculado === true,
-          telegram_chat_titulo: textoOuNulo(l.telegram_chat_titulo),
-          obras: contagem(l.obras),
-          obras_arquivadas: contagem(l.obras_arquivadas),
-          sigla: textoOuNulo(l.sigla),
-          faltando: contagem(l.faltando),
-        }),
-      )
-    },
-
-    async salvarEtapa(dados) {
-      try {
-        return etapaDetalheDe(await rpc<Linha>('admin_salvar_etapa', { p: dados }))
-      } catch (e) {
-        if (codigoDe(e) === '23505' && ehMensagemBruta((e as ErroAdmin).message)) {
-          const texto = /sigla/i.test((e as ErroAdmin).message)
-            ? `Já existe uma etapa com a sigla ${dados.sigla ?? ''}`
-            : `Já existe uma etapa com o slug ${dados.slug ?? ''}`
-          throw new ErroAdmin(texto, { cause: e })
-        }
-        throw e
-      }
-    },
-
-    async obterEtapa(slug) {
-      const r = await rpc<Linha | null>('admin_obter_etapa', { p_slug: slug })
-      if (!r) throw new ErroAdmin('Etapa não encontrada')
-      return etapaDetalheDe(r)
-    },
-
-    async salvarAditivo(dados) {
-      try {
-        return aditivoDe(await rpc<Linha>('admin_salvar_aditivo', { p: dados }))
-      } catch (e) {
-        if (codigoDe(e) === '23505' && ehMensagemBruta((e as ErroAdmin).message)) {
-          throw new ErroAdmin(`Já existe o aditivo ${dados.numero} nesta etapa`, { cause: e })
-        }
-        throw e
-      }
-    },
-
-    async removerAditivo(id) {
-      await rpc('admin_remover_aditivo', { p_id: id })
-    },
-
-    async definirResponsaveis(etapaId, lista) {
-      const r = await rpc<Linha[] | null>('admin_definir_responsaveis', { p_etapa: etapaId, p: lista })
-      return (r ?? []).map(responsavelDe)
-    },
 
     async listarBoletins(slug) {
       const r = await rpc<unknown>('admin_listar_boletins', { p_slug: slug })
@@ -510,157 +361,30 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       }
     },
 
-    async arquivarEtapa(slug, arquivada) {
-      const r = await rpc<{ arquivada_em: string | null } | null>('admin_arquivar_etapa', {
-        p_slug: slug,
-        p_arquivada: arquivada,
-      })
-      return r?.arquivada_em ?? null
-    },
-
-    async desvincularEtapa(slug) {
-      await rpc('admin_desvincular_etapa', { p_slug: slug })
-    },
-
-    async resumoEtapa(slug) {
-      const r = await rpc<ResumoEtapa | null>('admin_resumo_etapa', { p_slug: slug })
-      if (!r) throw new ErroAdmin('Etapa não encontrada')
-      return { obras: r.obras ?? [], total: r.total }
-    },
-
-    async excluirEtapa(slug, confirmacao) {
-      const json = await funcaoExcluir({ acao: 'excluir_etapa', slug, confirmacao }, 'Etapa não encontrada')
-      const lista = Array.isArray(json.exclusoes) ? (json.exclusoes as Linha[]) : []
-      const r: ResultadoExclusaoEtapa = {
-        exclusoes: lista.map((x) => ({
-          exclusao_id: String(x.exclusao_id),
-          removidos: (x.removidos as Partial<Record<BucketObra, number>> | null) ?? {},
-          pendente: Boolean(x.pendente),
-          erro: textoOuNulo(x.erro),
-        })),
-        pendente: Boolean(json.pendente),
-        erro: textoOuNulo(json.erro),
-      }
-      return r
-    },
-
-    async obterOrganizacao() {
-      const d = await rpc<Linha | Linha[] | null>('organizacao')
-      return organizacaoDe(Array.isArray(d) ? (d[0] ?? null) : d)
-    },
-
-    async salvarOrganizacao(dados) {
-      return organizacaoDe(await rpc<Linha | null>('admin_salvar_organizacao', { p: dados }))
-    },
-
-    async enviarLogo(arquivo) {
-      const problema = problemaDoLogo(arquivo)
-      if (problema) throw new ErroAdmin(problema)
-      const caminho = novoCaminhoLogo(arquivo.type)
-      if (!CAMINHO_LOGO.test(caminho)) throw new ErroAdmin('Caminho do logo inválido.')
-      let erro: unknown
-      try {
-        const { error } = await cliente.storage
-          .from('organizacao')
-          .upload(caminho, arquivo, { upsert: false, contentType: arquivo.type, cacheControl: '31536000' })
-        erro = error
-      } catch (e) {
-        throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
-      }
-      if (erro) {
-        const msg = (erro as { message?: string }).message ?? ''
-        if (/row-level security|unauthorized|403/i.test(msg)) {
-          throw new ErroAdmin('Sem permissão para enviar o logo (bucket organizacao).', { cause: erro })
-        }
-        if (/payload too large|413|exceeded/i.test(msg)) throw new ErroAdmin('O logo pode ter no máximo 1 MB.', { cause: erro })
-        throw new ErroAdmin(`Falha ao enviar o logo: ${msg || 'erro do Storage'}`, { cause: erro })
-      }
-      return caminho
-    },
-
-    async listarObras() {
-      const linhas = await rpc<Linha[]>('admin_listar_obras')
-      return (linhas ?? []).map(
-        (l): ObraLista => ({
-          id: String(l.id),
-          slug: String(l.slug),
-          nome: String(l.nome),
-          ordem: Number(l.ordem),
-          pavimentos: (l.pavimentos as PavimentoResumo[] | null) ?? [],
-          ambientes_ativos: Number(l.ambientes_ativos ?? 0),
-          status: l.status == null ? null : String(l.status),
-          config_atualizada_em: l.config_atualizada_em == null ? null : String(l.config_atualizada_em),
-          arquivada_em: l.arquivada_em == null ? null : String(l.arquivada_em),
-          etapa_id: String(l.etapa_id ?? ''),
-          etapa_slug: String(l.etapa_slug ?? ''),
-          etapa_nome: String(l.etapa_nome ?? ''),
-          etapa_arquivada_em: textoOuNulo(l.etapa_arquivada_em),
-        }),
-      )
-    },
-
-    async obterObra(slug) {
-      const d = await rpc<ObraAdmin>('admin_obter_obra', { p_slug: slug })
-      const e = d.obra.etapa as (ObraAdmin['obra']['etapa'] & Linha) | null | undefined
-      return {
-        ...d,
-        obra: {
-          ...d.obra,
-          etapa: e
-            ? {
-                id: String(e.id),
-                slug: String(e.slug),
-                nome: String(e.nome),
-                arquivada_em: textoOuNulo(e.arquivada_em),
-                telegram_vinculado: e.telegram_vinculado === true,
-              }
-            : null,
-        },
-      }
-    },
-
-    salvarObra(dados) {
-      return rpc<ObraSalva>('admin_salvar_obra', { p: dados })
-    },
-
-    salvarPavimentos(slug, lista) {
-      return rpc<PavimentoResumo[]>('admin_salvar_pavimentos', { p_slug: slug, p: lista })
-    },
-
-    async salvarConfig(slug, config: ConfigObra) {
-      await rpc('admin_salvar_config', { p_slug: slug, p_config: config })
-    },
-
-    exportarObra(slug) {
-      return rpc<unknown>('admin_exportar_obra', { p_slug: slug })
-    },
-
-    async arquivarObra(slug, arquivada) {
-      const r = await rpc<{ arquivada_em: string | null } | null>('admin_arquivar_obra', {
-        p_slug: slug,
-        p_arquivada: arquivada,
-      })
-      return r?.arquivada_em ?? null
-    },
-
-    resumoObra(slug) {
-      return rpc<ResumoObra>('admin_resumo_obra', { p_slug: slug })
-    },
-
-    excluirObra(slug, confirmacao) {
-      return excluirUma({ acao: 'excluir', slug, confirmacao })
-    },
-
-    async listarExclusoes() {
-      return ((await rpc<Exclusao[] | null>('admin_listar_exclusoes')) ?? []).map((e) => ({
-        ...e,
-        etapa_nome: e.etapa_nome ?? null,
-      }))
-    },
-
-    limparExclusao(id) {
-      return excluirUma({ acao: 'limpar', exclusao_id: id })
-    },
+    listarEtapas: etapas.listarEtapas,
+    salvarEtapa: etapas.salvarEtapa,
+    obterEtapa: etapas.obterEtapa,
+    salvarAditivo: etapas.salvarAditivo,
+    removerAditivo: etapas.removerAditivo,
+    definirResponsaveis: etapas.definirResponsaveis,
+    arquivarEtapa: etapas.arquivarEtapa,
+    desvincularEtapa: etapas.desvincularEtapa,
+    resumoEtapa: etapas.resumoEtapa,
+    excluirEtapa: etapas.excluirEtapa,
+    obterOrganizacao: organizacao.obterOrganizacao,
+    salvarOrganizacao: organizacao.salvarOrganizacao,
+    enviarLogo: organizacao.enviarLogo,
+    listarObras: obras.listarObras,
+    obterObra: obras.obterObra,
+    salvarObra: obras.salvarObra,
+    salvarPavimentos: obras.salvarPavimentos,
+    salvarConfig: obras.salvarConfig,
+    exportarObra: obras.exportarObra,
+    arquivarObra: obras.arquivarObra,
+    resumoObra: obras.resumoObra,
+    excluirObra: obras.excluirObra,
+    listarExclusoes: obras.listarExclusoes,
+    limparExclusao: obras.limparExclusao,
 
     obterEditorPlanta: plantas.obterEditorPlanta,
     listarPublicacoes: plantas.listarPublicacoes,

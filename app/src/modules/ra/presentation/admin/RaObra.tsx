@@ -6,7 +6,8 @@ import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { ComDados, Resultado } from '../../../../admin/componentes.tsx'
 import { useAmbientesRA, useDefinirQr, useObraAdmin, useRemoverQr } from '../../../../admin/dados/hooks.ts'
-import type { AmbienteRA, ObraAdmin } from '../../../../admin/dados/tipos.ts'
+import type { AmbienteRA } from '../../../../admin/dados/tipos.ts'
+import type { ObraAdmin } from '@modules/obras/domain/tiposAdmin.ts'
 import {
   ALTURA_PADRAO_M,
   LADO_MAX_A4_CM,

@@ -17,7 +17,8 @@ import { dataBr, hojeNoFuso, numeroBoletim } from '../formato.ts'
 import { aplicarCampos, calcularFaltando, calcularPrazo, CAMPOS_VAZIOS, camposDe, dataValida, somarDias } from './fixtureBoletim.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
-import { CABECALHO_LINHA_MAX, CABECALHO_LINHAS_MAX, CAMINHO_LOGO, ErroAdmin, NOME_OM_MAX, novoCaminhoLogo, problemaDoLogo, type ErroCliente, type ResumoOrfaos, type BucketObra, type Aditivo, type CamposEtapa, type BoletimDaLista, type BoletimDetalhe, type BoletimEmitido, type EdicaoBoletim, type SnapshotBoletim, type PedidoEmissao, type EtapaDetalhe, type EtapaLista, type Responsavel, type Organizacao, type Exclusao, type ObraAdmin, type ObraLista, type PavimentoAdmin, type PavimentoResumo, type ResumoObra } from './tipos.ts'
+import { CABECALHO_LINHA_MAX, CABECALHO_LINHAS_MAX, CAMINHO_LOGO, ErroAdmin, NOME_OM_MAX, novoCaminhoLogo, problemaDoLogo, type ErroCliente, type ResumoOrfaos, type BoletimDaLista, type BoletimDetalhe, type BoletimEmitido, type EdicaoBoletim, type SnapshotBoletim, type PedidoEmissao } from './tipos.ts'
+import type { BucketObra, Aditivo, CamposEtapa, EtapaDetalhe, EtapaLista, Responsavel, Organizacao, Exclusao, ObraAdmin, ObraLista, PavimentoAdmin, PavimentoResumo, ResumoObra } from '@modules/obras/domain/tiposAdmin.ts'
 import type { UsuarioApp } from '@modules/acessos/domain/tipos.ts'
 
 const SLUG = /^[a-z0-9-]+$/

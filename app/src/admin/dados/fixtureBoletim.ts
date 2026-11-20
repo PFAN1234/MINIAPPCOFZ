@@ -4,7 +4,8 @@
  * no build de produção (só é importado por `fixture.ts`).
  */
 import { CNPJ } from '../formato.ts'
-import { ErroAdmin, ESTACAO_PADRAO, ESTACAO_RESERVA_PADRAO, FUSOS, type Aditivo, type CamposEtapa, type DadosEtapa, type PrazoEtapa } from './tipos.ts'
+import { ErroAdmin, ESTACAO_PADRAO, ESTACAO_RESERVA_PADRAO, FUSOS } from './tipos.ts'
+import type { Aditivo, CamposEtapa, DadosEtapa, PrazoEtapa } from '@modules/obras/domain/tiposAdmin.ts'
 
 export const CAMPOS_VAZIOS: CamposEtapa = {
   sigla: null,

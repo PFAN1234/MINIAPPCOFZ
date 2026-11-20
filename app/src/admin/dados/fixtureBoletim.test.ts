@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { criarRepositorioAdminFixture } from './fixture.ts'
 import { somarMeses } from './fixtureBoletim.ts'
-import type { DadosEtapa } from './tipos.ts'
+import type { DadosEtapa } from '@modules/obras/domain/tiposAdmin.ts'
 
 const nova = (extra: Partial<DadosEtapa> = {}): DadosEtapa => ({
   slug: 'teste',

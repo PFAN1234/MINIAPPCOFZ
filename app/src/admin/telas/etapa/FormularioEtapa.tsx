@@ -6,16 +6,8 @@
 import { lazy, Suspense, useCallback, useMemo, useState, type FormEvent } from 'react'
 import { Campo, Resultado } from '../../componentes.tsx'
 import { useOrganizacao, useSalvarEtapa } from '../../dados/hooks.ts'
-import {
-  ESTACAO_PADRAO,
-  ESTACAO_RESERVA_PADRAO,
-  ESTACOES_OBSERVATORIO,
-  FUSOS,
-  type CamposEtapa,
-  type DadosEtapa,
-  type EtapaDetalhe,
-  type EtapaSalva,
-} from '../../dados/tipos.ts'
+import { ESTACAO_PADRAO, ESTACAO_RESERVA_PADRAO, ESTACOES_OBSERVATORIO, FUSOS } from '../../dados/tipos.ts'
+import type { CamposEtapa, DadosEtapa, EtapaDetalhe, EtapaSalva } from '@modules/obras/domain/tiposAdmin.ts'
 import {
   CNPJ,
   coordenada,

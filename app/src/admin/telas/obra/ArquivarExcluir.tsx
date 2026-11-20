@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { mensagemDe } from '../../componentes.tsx'
 import { useArquivarObra, useExcluirObra, useResumoObra } from '../../dados/hooks.ts'
-import type { ObraAdmin, ResumoObra } from '../../dados/tipos.ts'
+import type { ObraAdmin, ResumoObra } from '@modules/obras/domain/tiposAdmin.ts'
 
 export interface AvisoObras {
   aviso: string

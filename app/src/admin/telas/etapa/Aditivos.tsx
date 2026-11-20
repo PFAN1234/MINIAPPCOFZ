@@ -2,7 +2,7 @@
 import { useState, type FormEvent } from "react";
 import { Campo, Resultado } from "../../componentes.tsx";
 import { useRemoverAditivo, useSalvarAditivo } from "../../dados/hooks.ts";
-import type { Aditivo, EtapaDetalhe } from "../../dados/tipos.ts";
+import type { Aditivo, EtapaDetalhe } from '@modules/obras/domain/tiposAdmin.ts'
 import {
   dataBr,
   diasComSinal,

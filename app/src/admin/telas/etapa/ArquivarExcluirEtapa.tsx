@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { mensagemDe } from '../../componentes.tsx'
 import { useArquivarEtapa, useExcluirEtapa, useResumoEtapa } from '../../dados/hooks.ts'
-import type { EtapaLista } from '../../dados/tipos.ts'
+import type { EtapaLista } from '@modules/obras/domain/tiposAdmin.ts'
 import { linhasResumo, type AvisoObras } from '../obra/ArquivarExcluir.tsx'
 
 export default function ArquivarExcluirEtapa({ etapa }: { etapa: EtapaLista }) {

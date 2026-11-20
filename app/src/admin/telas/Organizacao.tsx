@@ -6,7 +6,8 @@
 import { useId, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ComDados, Resultado } from '../componentes.tsx'
 import { useOrganizacao, useSalvarOrganizacao } from '../dados/hooks.ts'
-import { CABECALHO_LINHA_MAX, CABECALHO_LINHAS_MAX, NOME_OM_MAX, problemaDoLogo, TIPOS_LOGO, type Organizacao as DadosOrganizacao } from '../dados/tipos.ts'
+import { CABECALHO_LINHA_MAX, CABECALHO_LINHAS_MAX, NOME_OM_MAX, problemaDoLogo, TIPOS_LOGO } from '../dados/tipos.ts'
+import type { Organizacao as DadosOrganizacao } from '@modules/obras/domain/tiposAdmin.ts'
 
 export default function Organizacao() {
   const org = useOrganizacao()

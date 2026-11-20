@@ -1,4 +1,5 @@
-import { ErroAdmin, type BucketObra } from '../../../admin/dados/tipos.ts'
+import { ErroAdmin } from '../../../admin/dados/tipos.ts'
+import type { BucketObra } from '@modules/obras/domain/tiposAdmin.ts'
 import ambientesCofz from '../../../../../data/cofz/ambientes.json'
 import plantasCofz from '../../../../../data/cofz/plantas.json'
 import ambientesHto from '../../../../../data/hto/ambientes.json'
