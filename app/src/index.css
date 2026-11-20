@@ -1,5 +1,5 @@
-@import './estilo/tokens.css';
-@import './estilo/fontes.css';
+@import './shared/ui/estilo/tokens.css';
+@import './shared/ui/estilo/fontes.css';
 
 /*
  * Apelidos dos nomes antigos durante a migração para estilo/tokens.css (saem na V5):

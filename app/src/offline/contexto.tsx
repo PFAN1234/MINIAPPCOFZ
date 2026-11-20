@@ -14,8 +14,8 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
-import { EstadoCarregando, EstadoErro } from '../components/Estado.tsx'
-import { TelaDeEntrada } from '../components/FaixaIdentidade.tsx'
+import { EstadoCarregando, EstadoErro } from '../shared/ui/feedback/Estado.tsx'
+import { TelaDeEntrada } from '../shared/ui/layout/FaixaIdentidade.tsx'
 import { useRepositorio } from '../dados/contexto.tsx'
 import type { SituacaoRegistro, TipoRegistro } from '../dados/tipos.ts'
 import { dentroDoPeriodo } from '../util/periodo.ts'

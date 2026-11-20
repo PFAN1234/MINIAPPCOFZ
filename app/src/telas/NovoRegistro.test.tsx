@@ -10,8 +10,8 @@ import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import { MENSAGEM_COTA } from '../offline/armazenamento.ts'
 
-vi.mock('../util/imagem.ts', async (original) => ({
-  ...(await original<typeof import('../util/imagem.ts')>()),
+vi.mock('../shared/infra/browser/imagem.ts', async (original) => ({
+  ...(await original<typeof import('../shared/infra/browser/imagem.ts')>()),
   prepararFoto: vi.fn(async () => ({
     id: crypto.randomUUID(),
     blob: new Blob(['jpeg'], { type: 'image/jpeg' }),

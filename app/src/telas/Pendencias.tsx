@@ -1,17 +1,17 @@
 import { useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { Abas } from '../components/Abas.tsx'
-import { Aviso } from '../components/Aviso.tsx'
+import { Abas } from '../shared/ui/inputs/Abas.tsx'
+import { Aviso } from '../shared/ui/feedback/Aviso.tsx'
 import { CartaoPendencia } from '../components/CartaoPendencia.tsx'
-import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
-import { IconeFiltro } from '../components/Icones.tsx'
+import { EstadoConsulta, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
+import { IconeFiltro } from '../shared/ui/icones/Icones.tsx'
 import { RegistroLocal } from '../components/RegistroLocal.tsx'
-import { TopoTela } from '../components/TopoTela.tsx'
+import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import { useAvisoDaRota } from '../components/useAvisoDaRota.ts'
 import { useObra, useRegistros } from '../dados/hooks.ts'
 import type { RegistroResumo } from '../dados/tipos.ts'
 import { useRegistrosLocais } from '../offline/contexto.tsx'
-import { ordenarNatural } from '../util/ordenacao.ts'
+import { ordenarNatural } from '../shared/kernel/ordenacao.ts'
 
 /** Na rota da obra, o subtítulo do topo leva de volta à obra. */
 function LinkDaObra({ slug }: { slug: string }) {

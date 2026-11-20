@@ -58,7 +58,7 @@ function carregarSw(fetchMock: ReturnType<typeof vi.fn<FetchFn>>, iniciais: Reco
     clients: { claim: async () => {} },
   }
 
-  const codigo = readFileSync(fileURLToPath(new URL('../public/sw.js', import.meta.url)), 'utf8')
+  const codigo = readFileSync(fileURLToPath(new URL('../../../../public/sw.js', import.meta.url)), 'utf8')
   const resolver = (input: RequestInfo | URL) =>
     typeof input === 'string' && input.startsWith('/') ? `https://app.exemplo${input}` : input
   const RequestSW = class extends Request {

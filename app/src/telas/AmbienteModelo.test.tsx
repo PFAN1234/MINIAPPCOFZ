@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
-import { renderizarApp } from '../test/renderApp.tsx'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 // jsdom não tem WebGL: o visualizador real é testado no navegador (e2e).
 vi.mock('../modelo/VisualizadorModelo.tsx', () => ({

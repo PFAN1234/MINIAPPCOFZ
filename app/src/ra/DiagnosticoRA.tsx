@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Vector3 } from 'three'
-import { TopoTela } from '../components/TopoTela.tsx'
+import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import { abrirCamera, fecharCamera } from './camera.ts'
 import { criarLeitorQr } from './leitorQr.ts'
 import { iniciarOrientacao, type Orientacao } from './orientacao.ts'

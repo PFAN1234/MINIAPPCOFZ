@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { ErroEnvio, MENSAGEM_REDE } from '../dados/erros.ts'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
-import { renderizarApp } from '../test/renderApp.tsx'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
 
-vi.mock('../util/imagem.ts', async (original) => ({
-  ...(await original<typeof import('../util/imagem.ts')>()),
+vi.mock('../shared/infra/browser/imagem.ts', async (original) => ({
+  ...(await original<typeof import('../shared/infra/browser/imagem.ts')>()),
   prepararFoto: vi.fn(async () => ({
     id: crypto.randomUUID(),
     blob: new Blob(['jpeg'], { type: 'image/jpeg' }),

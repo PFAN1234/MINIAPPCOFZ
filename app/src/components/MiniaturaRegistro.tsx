@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useUrlsImagens } from '../dados/hooks.ts'
 import type { RegistroResumo } from '../dados/tipos.ts'
-import { VisualizadorFotos } from './VisualizadorFotos.tsx'
+import { VisualizadorFotos } from '../shared/ui/midia/VisualizadorFotos.tsx'
 
 export function SeloRA({ fotos }: { fotos: readonly { origem?: string }[] }) {
   if (!fotos.some((f) => f.origem === 'ra_modelo')) return null

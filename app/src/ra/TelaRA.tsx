@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPonteiro } from 'react'
 import { Link } from 'react-router'
 import type { ModeloFrag } from '../modelo/modelos.ts'
-import { marcadorParaPixel } from '../util/coordenadas.ts'
+import { marcadorParaPixel } from '../shared/kernel/coordenadas.ts'
 import { abrirCamera, capturarPar, fecharCamera } from './camera.ts'
 import { cantoNoMundo, qrEDoAmbiente, qrNoMundo, type GeometriaAmbiente, type Plano } from './geometria.ts'
 import { criarLeitorQr } from './leitorQr.ts'

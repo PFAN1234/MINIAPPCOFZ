@@ -1,9 +1,9 @@
 import { useId, useMemo, useState } from 'react'
 import { useUrlsImagens } from '../dados/hooks.ts'
 import type { ObraDetalhe } from '../dados/tipos.ts'
-import { filtrarAmbientes } from '../util/busca.ts'
-import { ordenarNatural } from '../util/ordenacao.ts'
-import { EstadoVazio } from './Estado.tsx'
+import { filtrarAmbientes } from '../shared/kernel/busca.ts'
+import { ordenarNatural } from '../shared/kernel/ordenacao.ts'
+import { EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
 import { PlantaViewer, type MarcadorPlanta } from './PlantaViewer.tsx'
 
 interface Props {

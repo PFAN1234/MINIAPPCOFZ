@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { TelegramLocationManager, TelegramWebApp } from '../telegram.ts'
+import type { TelegramLocationManager, TelegramWebApp } from '../telegram/telegram.ts'
 import { ErroLocalizacao, MSG_SEM_PERMISSAO, obterPosicao } from './localizacao.ts'
 
 afterEach(() => {

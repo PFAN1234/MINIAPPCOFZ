@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import ambientesJson from '../../../data/hto/ambientes.json'
 import plantasJson from '../../../data/hto/plantas.json'
 import type { Marcador, RecortePt } from '../dados/tipos.ts'
-import { filtrarAmbientes } from './busca.ts'
-import { marcadorParaPixel } from './coordenadas.ts'
-import { ordenarNatural } from './ordenacao.ts'
+import { filtrarAmbientes } from '../shared/kernel/busca.ts'
+import { marcadorParaPixel } from '../shared/kernel/coordenadas.ts'
+import { ordenarNatural } from '../shared/kernel/ordenacao.ts'
 
 interface PavJson {
   id: string

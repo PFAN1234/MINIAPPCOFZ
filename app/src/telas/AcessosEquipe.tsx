@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { CampoBusca } from '../components/CampoBusca.tsx'
-import { EstadoCarregando, EstadoErro, EstadoVazio } from '../components/Estado.tsx'
-import { TopoTela } from '../components/TopoTela.tsx'
+import { CampoBusca } from '../shared/ui/inputs/CampoBusca.tsx'
+import { EstadoCarregando, EstadoErro, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
+import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import { ErroEnvio } from '../dados/erros.ts'
 import { useDefinirAcesso, useMatrizAcessos } from '../dados/hooks.ts'
 import type { MatrizAcessos, PapelAcesso, PessoaAcesso } from '../dados/tipos.ts'
 import { useUsuarioId } from '../offline/contexto.tsx'
-import { normalizarTexto } from '../util/busca.ts'
-import { useOnline } from '../util/online.ts'
+import { normalizarTexto } from '../shared/kernel/busca.ts'
+import { useOnline } from '../shared/infra/browser/online.ts'
 
 const MINIMO_PARA_BUSCA = 6
 const DICA_ADMIN = 'Administradores do grupo são gestores de todas as obras.'

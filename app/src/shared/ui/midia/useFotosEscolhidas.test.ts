@@ -1,9 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import type { FotoRA } from '../ra/tipos.ts'
+import type { FotoRA } from '../../../ra/tipos.ts'
 import { useFotosEscolhidas } from './useFotosEscolhidas.ts'
 
-vi.mock('../util/imagem.ts', () => ({
+vi.mock('../../infra/browser/imagem.ts', () => ({
   prepararFoto: vi.fn(async (_arquivo: File, opcoes?: { id?: string }) => ({
     id: opcoes?.id ?? crypto.randomUUID(),
     blob: new Blob(['jpeg'], { type: 'image/jpeg' }),

@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import { criarRepositorioSupabase } from '../dados/supabase.ts'
-import { renderizarApp } from '../test/renderApp.tsx'
-import type { TelegramWebApp } from '../telegram.ts'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
+import type { TelegramWebApp } from '../shared/infra/telegram/telegram.ts'
 
 afterEach(() => {
   delete window.Telegram

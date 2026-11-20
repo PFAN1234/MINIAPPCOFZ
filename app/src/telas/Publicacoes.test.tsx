@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
-import { renderizarApp } from '../test/renderApp.tsx'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 afterEach(() => vi.restoreAllMocks())
 

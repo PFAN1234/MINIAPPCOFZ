@@ -4,12 +4,12 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import './index.css'
 import App from './App.tsx'
-import ErrorBoundary from './components/ErrorBoundary.tsx'
-import { EstadoCarregando } from './components/Estado.tsx'
+import ErrorBoundary from './shared/ui/feedback/ErrorBoundary.tsx'
+import { EstadoCarregando } from './shared/ui/feedback/Estado.tsx'
 import { RepositorioProvider } from './dados/contexto.tsx'
-import { registrarSw } from './registrarSw.ts'
-import { aplicarCoresTelegram, expand, ready, telaCheia } from './telegram.ts'
-import { instalarCapturaGlobal } from './util/erros.ts'
+import { registrarSw } from './shared/infra/sw/registrarSw.ts'
+import { aplicarCoresTelegram, expand, ready, telaCheia } from './shared/infra/telegram/telegram.ts'
+import { instalarCapturaGlobal } from './shared/infra/erros.ts'
 
 ready()
 expand()

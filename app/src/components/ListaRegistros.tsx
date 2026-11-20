@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import type { RegistroResumo } from '../dados/tipos.ts'
 import type { ItemFila } from '../offline/fila.ts'
 import { Horario } from './Horario.tsx'
-import { EstadoVazio } from './Estado.tsx'
+import { EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
 import { MiniaturaRegistro } from './MiniaturaRegistro.tsx'
 import { RegistroLocal } from './RegistroLocal.tsx'
 

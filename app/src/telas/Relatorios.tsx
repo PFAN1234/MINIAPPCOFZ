@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
-import { Abas } from "../components/Abas.tsx";
-import { AbasEtapa } from "../components/AbasEtapa.tsx";
-import { EstadoConsulta } from "../components/Estado.tsx";
+import { Abas } from "../shared/ui/inputs/Abas.tsx";
+import { AbasEtapa } from "../shared/ui/inputs/AbasEtapa.tsx";
+import { EstadoConsulta } from "../shared/ui/feedback/Estado.tsx";
 import { PainelRelatorios } from "../components/PainelRelatorios.tsx";
-import { TopoTela } from "../components/TopoTela.tsx";
+import { TopoTela } from "../shared/ui/layout/TopoTela.tsx";
 import { useRepositorio } from "../dados/contexto.tsx";
 import {
   useEmitirBoletim,
@@ -18,8 +18,8 @@ import type {
   EtapaRelatorio,
   ResultadoExclusaoBoletim,
 } from "../dados/tipos.ts";
-import { abrirLink } from "../telegram.ts";
-import { FUSO_PADRAO, formatarDia, horaNoFuso } from "../util/fuso.ts";
+import { abrirLink } from "../shared/infra/telegram/telegram.ts";
+import { FUSO_PADRAO, formatarDia, horaNoFuso } from "../shared/kernel/fuso.ts";
 
 function mensagemDe(e: unknown, padrao: string): string {
   return e instanceof Error && e.message ? e.message : padrao;

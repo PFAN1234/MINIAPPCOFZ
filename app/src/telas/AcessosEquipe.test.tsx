@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ErroEnvio } from '../dados/erros.ts'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
-import { renderizarApp } from '../test/renderApp.tsx'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 afterEach(() => vi.restoreAllMocks())
 

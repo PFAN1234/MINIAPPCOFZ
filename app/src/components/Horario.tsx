@@ -1,4 +1,4 @@
-import { formatarDataHora, formatarRelativo } from '../util/formato.ts'
+import { formatarDataHora, formatarRelativo } from '../shared/kernel/formato.ts'
 
 export function Horario({ iso }: { iso: string }) {
   const relativo = formatarRelativo(iso)

@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cameraNoApp } from '../telegram.ts'
+import { cameraNoApp } from '../../infra/telegram/telegram.ts'
 import { CameraFotos } from './CameraFotos.tsx'
-import { SeletorFotos } from './SeletorFotos.tsx'
+import { SeletorFotos } from '../inputs/SeletorFotos.tsx'
 
 const parar = vi.fn()
 const getUserMedia = vi.fn()

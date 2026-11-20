@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { Link } from 'react-router'
 import { useFila } from '../offline/contexto.tsx'
-import { IconeAlerta, IconeCelular, IconeSemSinal } from './Icones.tsx'
+import { IconeAlerta, IconeCelular, IconeSemSinal } from '../shared/ui/icones/Icones.tsx'
 
 function assinarConexao(fn: () => void): () => void {
   window.addEventListener('online', fn)

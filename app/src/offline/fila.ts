@@ -11,7 +11,7 @@ import {
   type RascunhoEncerramento,
 } from '../dados/envio.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
-import type { FotoPreparada } from '../util/imagem.ts'
+import type { FotoPreparada } from '../shared/infra/browser/imagem.ts'
 import type {
   Armazenamento,
   EncerramentoLocal,

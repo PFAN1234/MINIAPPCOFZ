@@ -8,8 +8,8 @@ import { useAlterarObservacao, useObservacoesDoDia } from '../dados/hooks.ts'
 import type { Observacao, ObraResumo } from '../dados/tipos.ts'
 import { useFila, useObservacoesLocais } from '../offline/contexto.tsx'
 import type { ItemObservacao } from '../offline/fila.ts'
-import { FUSO_PADRAO, dataNoFuso, formatarDia, horaNoFuso } from '../util/fuso.ts'
-import { useOnline } from '../util/online.ts'
+import { FUSO_PADRAO, dataNoFuso, formatarDia, horaNoFuso } from '../shared/kernel/fuso.ts'
+import { useOnline } from '../shared/infra/browser/online.ts'
 
 export const MAX_OBSERVACAO = 1000
 /** O contador aparece quando faltam até 100 caracteres. */

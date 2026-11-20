@@ -1,8 +1,8 @@
 import { Link } from 'react-router'
 import { useUrlsImagens } from '../dados/hooks.ts'
 import type { RegistroResumo } from '../dados/tipos.ts'
-import { formatarDataHora, formatarRelativo } from '../util/formato.ts'
-import { IconeChevron } from './Icones.tsx'
+import { formatarDataHora, formatarRelativo } from '../shared/kernel/formato.ts'
+import { IconeChevron } from '../shared/ui/icones/Icones.tsx'
 
 export function SeloSituacao({ situacao }: { situacao: RegistroResumo['situacao'] }) {
   return situacao === 'resolvida' ? (

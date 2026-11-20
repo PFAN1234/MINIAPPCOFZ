@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { CampoBusca } from '../components/CampoBusca.tsx'
-import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
-import { AbasEtapa } from '../components/AbasEtapa.tsx'
+import { CampoBusca } from '../shared/ui/inputs/CampoBusca.tsx'
+import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
+import { AbasEtapa } from '../shared/ui/inputs/AbasEtapa.tsx'
 import { EquipeServico } from '../components/EquipeServico.tsx'
-import { TopoTela } from '../components/TopoTela.tsx'
+import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import type { ObraDaLista, ObraDisponivel, ResumoObra } from '../dados/tipos.ts'
 import {
   useCriarLinkAdmin,
@@ -18,12 +18,12 @@ import {
   useSolicitarAcesso,
   useSouAdmin,
 } from '../dados/hooks.ts'
-import { abrirLink } from '../telegram.ts'
+import { abrirLink } from '../shared/infra/telegram/telegram.ts'
 import { useUsuarioId } from '../offline/contexto.tsx'
 import { etapasDasAbas, useEtapaEscolhida } from '../util/etapas.ts'
-import { useOnline } from '../util/online.ts'
-import { normalizarTexto } from '../util/busca.ts'
-import { textoPendencias, textoPendenciasResolvidas, textoServicos } from '../util/formato.ts'
+import { useOnline } from '../shared/infra/browser/online.ts'
+import { normalizarTexto } from '../shared/kernel/busca.ts'
+import { textoPendencias, textoPendenciasResolvidas, textoServicos } from '../shared/kernel/formato.ts'
 
 const MINIMO_PARA_BUSCA = 5
 

@@ -1,13 +1,13 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import { entrarComTelegram } from './login.ts'
-import { configurarEnvioErros } from '../util/erros.ts'
+import { configurarEnvioErros } from '../shared/infra/erros.ts'
 import { limitesPeriodo } from '../util/periodo.ts'
 import { nomeMostrado } from './nome.ts'
-import { FUSO_PADRAO, dataNoFuso } from '../util/fuso.ts'
+import { FUSO_PADRAO, dataNoFuso } from '../shared/kernel/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
 import type { ModeloFrag } from '../modelo/modelos.ts'
-import { dentroDoTelegram, idUsuarioTelegram, initData } from '../telegram.ts'
+import { dentroDoTelegram, idUsuarioTelegram, initData } from '../shared/infra/telegram/telegram.ts'
 import type {
   Ambiente,
   AmbienteDetalhe,

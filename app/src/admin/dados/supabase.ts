@@ -5,7 +5,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { criarClienteSupabase } from '../../dados/supabase.ts'
-import { configurarEnvioErros } from '../../util/erros.ts'
+import { configurarEnvioErros } from '../../shared/infra/erros.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import type { PlantaAdmin } from '../ra/planta.ts'
 import {

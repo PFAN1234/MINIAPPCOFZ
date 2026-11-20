@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router'
-import { EstadoConsulta, EstadoVazio } from '../components/Estado.tsx'
+import { EstadoConsulta, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
 import { PedidosAcesso } from '../components/PedidosAcesso.tsx'
-import { TopoTela } from '../components/TopoTela.tsx'
+import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import { useObra } from '../dados/hooks.ts'
 import type { ObraDetalhe } from '../dados/tipos.ts'
 

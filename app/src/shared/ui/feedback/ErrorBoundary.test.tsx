@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import * as erros from '../util/erros.ts'
+import * as erros from '../../infra/erros.ts'
 import ErrorBoundary from './ErrorBoundary.tsx'
 
 function Quebrado(): never {

@@ -5,7 +5,7 @@ import type { Progresso } from '../dados/envio.ts'
 import type { ItemEncerramento, ItemFila } from '../offline/fila.ts'
 import { Horario } from './Horario.tsx'
 import { SeloRA } from './MiniaturaRegistro.tsx'
-import { VisualizadorFotos } from './VisualizadorFotos.tsx'
+import { VisualizadorFotos } from '../shared/ui/midia/VisualizadorFotos.tsx'
 
 function textoProgresso(progresso: Progresso | null): string {
   if (!progresso) return 'Enviando…'

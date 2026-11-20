@@ -275,7 +275,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: ['./src/shared/test/setup.ts'],
     css: false,
     // Testes ponta a ponta ficam em e2e/ (Playwright), não no Vitest.
     exclude: [...configDefaults.exclude, 'e2e/**'],

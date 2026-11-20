@@ -3,7 +3,7 @@
  * gerados uma única vez em `criarRascunho`, e repetir `enviarRegistro` com o
  * mesmo rascunho nunca duplica nada.
  */
-import type { FotoPreparada } from '../util/imagem.ts'
+import type { FotoPreparada } from '../shared/infra/browser/imagem.ts'
 import { ErroEnvio } from './erros.ts'
 import type { Repositorio } from './repositorio.ts'
 import type { TipoRegistro } from './tipos.ts'

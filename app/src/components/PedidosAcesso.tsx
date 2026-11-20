@@ -1,4 +1,4 @@
-import { EstadoConsulta, EstadoErro, EstadoVazio } from './Estado.tsx'
+import { EstadoConsulta, EstadoErro, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
 import { Horario } from './Horario.tsx'
 import { useDecidirSolicitacao, useSolicitacoes } from '../dados/hooks.ts'
 import type { SolicitacaoAcesso } from '../dados/tipos.ts'

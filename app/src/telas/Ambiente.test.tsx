@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import type { Ambiente } from '../dados/tipos.ts'
-import { renderizarApp } from '../test/renderApp.tsx'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 const AVISO = 'Este ambiente não existe na planta atual; registros mantidos como histórico.'
 

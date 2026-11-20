@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useRepositorio } from '../dados/contexto.tsx'
-import { parametroInicial } from '../telegram.ts'
-import { Aviso } from './Aviso.tsx'
+import { parametroInicial } from '../shared/infra/telegram/telegram.ts'
+import { Aviso } from '../shared/ui/feedback/Aviso.tsx'
 
 const CHAVE_CONSUMIDO = 'startapp-consumido'
 const REGISTRO = /^registro_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i

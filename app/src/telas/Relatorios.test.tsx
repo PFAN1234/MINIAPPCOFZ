@@ -4,8 +4,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import type { EtapaRelatorio, Relatorios as DadosRelatorios } from '../dados/tipos.ts'
-import * as telegram from '../telegram.ts'
-import { renderizarApp } from '../test/renderApp.tsx'
+import * as telegram from '../shared/infra/telegram/telegram.ts'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 afterEach(() => vi.restoreAllMocks())
 

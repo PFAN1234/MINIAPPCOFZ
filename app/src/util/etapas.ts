@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Etapa, EtapaInicio, ObraDaLista, ObraDisponivel } from '../dados/tipos.ts'
-import { compararNatural } from './ordenacao.ts'
+import { compararNatural } from '../shared/kernel/ordenacao.ts'
 
 /**
  * Etapas da tela inicial: as das obras do usuário e as das "Outras obras" que ele pode pedir,

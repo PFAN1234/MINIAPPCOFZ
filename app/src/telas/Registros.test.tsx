@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { criarRepositorioFixture } from '../dados/fixture.ts'
 import type { Repositorio } from '../dados/repositorio.ts'
 import type { RegistroResumo } from '../dados/tipos.ts'
-import { renderizarApp } from '../test/renderApp.tsx'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
 
 describe('Registros', () => {
   it('filtros de obra e tipo (segmentado) e itens de pendência levam ao detalhe', async () => {

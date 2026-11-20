@@ -5,15 +5,15 @@ import { criarRepositorioFixture, ETAPA_2, ETAPA_3, ETAPA_4 } from '../dados/fix
 import type { Repositorio } from '../dados/repositorio.ts'
 import { criarRepositorioSupabase } from '../dados/supabase.ts'
 import type { EquipeServico, Posicao } from '../dados/tipos.ts'
-import { renderizarApp } from '../test/renderApp.tsx'
+import { renderizarApp } from '../shared/test/renderApp.tsx'
 import { chaveEtapaGuardada } from '../util/etapas.ts'
-import { ErroLocalizacao } from '../util/localizacao.ts'
+import { ErroLocalizacao } from '../shared/infra/browser/localizacao.ts'
 
 const POSICAO: Posicao = { latitude: -3.7, longitude: -38.5, precisao: 12 }
 
 const mocks = vi.hoisted(() => ({ obterPosicao: vi.fn() }))
-vi.mock('../util/localizacao.ts', async (original) => ({
-  ...(await original<typeof import('../util/localizacao.ts')>()),
+vi.mock('../shared/infra/browser/localizacao.ts', async (original) => ({
+  ...(await original<typeof import('../shared/infra/browser/localizacao.ts')>()),
   obterPosicao: mocks.obterPosicao,
 }))
 
