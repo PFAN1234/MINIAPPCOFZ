@@ -74,7 +74,7 @@ describe('Filtro', () => {
     motor.categoriasDados = [{ classe: 'IFCWALL', total: 5 }]
     motor.buscaDados = [parede, laje]
     const aoSelecionar = vi.fn()
-    render(<Filtro motor={motor} versao={1} onSelecionar={aoSelecionar} />)
+    render(<Filtro motor={motor} versao={1} onSelecionar={aoSelecionar} onIsolar={(r) => motor.isolar(r)} />)
     await waitFor(() => expect(screen.getByRole('option', { name: 'IFCWALL (5)' })).toBeInTheDocument())
     await usuario.selectOptions(screen.getByLabelText('Classe'), 'IFCWALL')
     await usuario.selectOptions(screen.getByLabelText('Atributo'), 'Tag')
@@ -98,7 +98,7 @@ describe('Filtro', () => {
 
   it('operador "existe" esconde o valor e avisa quando não há resultados', async () => {
     const usuario = userEvent.setup()
-    render(<Filtro motor={new MotorVisualizadorFalso()} versao={1} onSelecionar={() => {}} />)
+    render(<Filtro motor={new MotorVisualizadorFalso()} versao={1} onSelecionar={() => {}} onIsolar={() => {}} />)
     await usuario.selectOptions(screen.getByLabelText('Operador'), 'existe')
     expect(screen.queryByLabelText('Valor')).not.toBeInTheDocument()
     await usuario.click(screen.getByRole('button', { name: 'Buscar' }))

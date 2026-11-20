@@ -5,9 +5,11 @@ interface Props {
   ativo: boolean
   isolado: boolean
   fantasma: boolean
+  caminhando: boolean
   onOcultar(): void
   onIsolar(): void
   onFantasma(): void
+  onCaminhar(): void
   onMostrarTudo(): void
   onLimpar(): void
 }
@@ -18,9 +20,11 @@ export default function BarraVisibilidade({
   ativo,
   isolado,
   fantasma,
+  caminhando,
   onOcultar,
   onIsolar,
   onFantasma,
+  onCaminhar,
   onMostrarTudo,
   onLimpar,
 }: Props) {
@@ -61,6 +65,17 @@ export default function BarraVisibilidade({
         onClick={onFantasma}
       >
         Fantasma
+      </button>
+      <button
+        type="button"
+        className="central-botao"
+        aria-label="Caminhar"
+        title="Caminhar pelo modelo (primeira pessoa, em perspectiva)"
+        aria-pressed={caminhando}
+        disabled={!ativo}
+        onClick={onCaminhar}
+      >
+        Caminhar
       </button>
       <button type="button" className="central-botao" aria-label="Mostrar tudo" disabled={!ativo} onClick={onMostrarTudo}>
         Mostrar tudo

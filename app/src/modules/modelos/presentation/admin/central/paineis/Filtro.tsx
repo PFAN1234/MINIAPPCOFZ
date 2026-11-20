@@ -18,10 +18,12 @@ interface Props {
   /** Muda a cada carga/descarga de modelo: refaz a lista de classes. */
   versao: number
   onSelecionar(refs: RefElemento[]): void
+  /** Isola pelo mesmo caminho da barra de visibilidade (mantém o estado "isolado" da barra). */
+  onIsolar(refs: RefElemento[]): void
 }
 
 /** Busca por atributo direto (classe, atributo, operador e valor). Psets ficam para uma etapa futura. */
-export default function Filtro({ motor, versao, onSelecionar }: Props) {
+export default function Filtro({ motor, versao, onSelecionar, onIsolar }: Props) {
   const [categorias, setCategorias] = useState<CategoriaTotal[]>([])
   const [classe, setClasse] = useState('')
   const [atributo, setAtributo] = useState('Name')
@@ -132,7 +134,7 @@ export default function Filtro({ motor, versao, onSelecionar }: Props) {
               <button type="button" className="central-botao" onClick={() => onSelecionar(refs)}>
                 Selecionar
               </button>
-              <button type="button" className="central-botao" onClick={() => motor?.isolar(refs)}>
+              <button type="button" className="central-botao" onClick={() => onIsolar(refs)}>
                 Isolar resultados
               </button>
               <button type="button" className="central-botao" onClick={() => motor?.enquadrar(refs)}>

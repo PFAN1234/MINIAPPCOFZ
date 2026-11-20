@@ -13,7 +13,7 @@ import type {
 } from '../../domain/central.ts'
 
 export type TemaCentral = 'escuro' | 'claro'
-export type EventoMotor = 'selecao' | 'medicao' | 'marcador'
+export type EventoMotor = 'selecao' | 'medicao' | 'marcador' | 'cortes'
 
 /**
  * Porta do motor 3D da Central de modelos. O adaptador (That Open + three) fica em
@@ -50,6 +50,9 @@ export interface MotorVisualizador {
   vistaElevacao(lado: 'N' | 'S' | 'L' | 'O'): void
   vista3d(): void
   caminhar(ligado: boolean): void
+  /** Liga ou desliga o minimapa (canvas no canto com a posição da câmera). Opcional. */
+  minimapa?(ligado: boolean): void
+  /** `cortes.criar` é assíncrono por dentro: o evento `cortes` (entrega `Corte[]`) avisa quando a lista muda. */
   cortes: { criar(): void; apagar(id?: string): void; listar(): Corte[] }
   medir: {
     modo(m: 'distancia' | 'area' | 'volume' | 'angulo' | null): void

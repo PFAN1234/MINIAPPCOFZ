@@ -6,9 +6,10 @@ import BarraVisibilidade from './barras/BarraVisibilidade.tsx'
 import type { ObraCentral } from '../../../domain/tipos.ts'
 import { useObrasCentral } from './CentralModelos.tsx'
 import Itens from './paineis/Itens.tsx'
+import Cortes from './paineis/Cortes.tsx'
 import Propriedades from './paineis/Propriedades.tsx'
 import { useMotorCentral, type EstadoCentral } from './useMotorCentral.ts'
-import type { ModoCor, RefElemento } from '../../../domain/central.ts'
+import type { Corte, ModoCor, NoArvore, RefElemento, Vista3dUi } from '../../../domain/central.ts'
 import { gravarTema, lerTema, type Tema } from './tema.ts'
 import './central.css'
 
@@ -19,6 +20,28 @@ const PAINEIS = [
   { id: 'medicoes', nome: 'Medições', etapa: 4 },
   { id: 'gestao', nome: 'Gestão', etapa: 5 },
 ] as const
+
+/**
+ * Nomes dos pavimentos (sem repetir) da árvore espacial. O motor real devolve um nó agrupador
+ * `IFCBUILDINGSTOREY` (sem id) e, abaixo dele, um nó por pavimento já com o nome; nos dublês o
+ * próprio nó `pavimento` traz o nome.
+ */
+function pavimentosDe(nos: NoArvore[]): string[] {
+  const nomes = new Set<string>()
+  const visitar = (n: NoArvore) => {
+    if (n.nivel === 'pavimento') {
+      nomes.add(n.rotulo)
+      return
+    }
+    if (n.classe?.toUpperCase() === 'IFCBUILDINGSTOREY') {
+      for (const f of n.filhos) if (f.nivel === 'elemento') nomes.add(f.rotulo)
+      return
+    }
+    n.filhos.forEach(visitar)
+  }
+  nos.forEach(visitar)
+  return [...nomes]
+}
 
 const LARGURA_MIN = 240
 const LARGURA_MAX = 520
@@ -60,6 +83,12 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   const [hover, setHover] = useState(true)
   const [isolado, setIsolado] = useState(false)
   const [fantasma, setFantasma] = useState(false)
+  const [vista, setVista] = useState<Vista3dUi>({ tipo: '3d' })
+  const [caminhando, setCaminhando] = useState(false)
+  const [minimapa, setMinimapa] = useState(false)
+  const [pavimentos, setPavimentos] = useState<string[]>([])
+  const [cortes, setCortes] = useState<Corte[]>([])
+  const [corteMarcado, setCorteMarcado] = useState<string | null>(null)
   const [modo, setModo] = useState<'ver' | 'inspecionar'>('ver')
   const [categoriasOcultas, setCategoriasOcultas] = useState<ReadonlySet<string>>(new Set())
   const arrasto = useRef<{ x: number; largura: number } | null>(null)
@@ -67,6 +96,25 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   const estado = useMotorCentral(obra.slug, tema, tela)
   const { motor, selecao, selecionar } = estado
   const pronto = estado.fase === 'pronto' && motor !== null
+
+  // Pavimentos para o seletor de planta: refeitos a cada carga/descarga de modelo.
+  useEffect(() => {
+    if (!motor || !pronto) return
+    let ativo = true
+    motor.arvore().then(
+      (nos) => ativo && setPavimentos(pavimentosDe(nos)),
+      () => ativo && setPavimentos([]),
+    )
+    return () => {
+      ativo = false
+    }
+  }, [motor, pronto, estado.versao])
+  // Lista de cortes: o motor avisa quando muda (a criação é assíncrona).
+  useEffect(() => {
+    if (!motor) return
+    return motor.ao('cortes', (dados) => setCortes(dados as Corte[]))
+  }, [motor])
+  const corteSelecionado = cortes.some((c) => c.id === corteMarcado) ? corteMarcado : null
 
   const pedido = params.get('painel')
   const painel = PAINEIS.find((p) => p.id === pedido) ?? PAINEIS[0]
@@ -84,6 +132,12 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
     motor.ocultar(selecao)
     selecionar([])
   }
+  /** Isola refs pelo mesmo caminho da barra (o filtro também usa), marcando o estado "isolado". */
+  function isolarRefs(refs: RefElemento[]) {
+    if (!motor || refs.length === 0) return
+    motor.isolar(refs)
+    setIsolado(true)
+  }
   function isolar() {
     if (!motor) return
     if (isolado) {
@@ -93,6 +147,36 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
       motor.isolar(selecao)
       setIsolado(true)
     }
+  }
+  function irParaVista3d() {
+    motor?.vista3d()
+    setVista({ tipo: '3d' })
+  }
+  function irParaPlanta(pavimento: string) {
+    if (!motor || !pavimento) return
+    motor.vistaPlanta(pavimento)
+    setCaminhando(false)
+    setVista({ tipo: 'planta', pavimento })
+  }
+  function irParaElevacao(lado: 'N' | 'S' | 'L' | 'O') {
+    if (!motor) return
+    motor.vistaElevacao(lado)
+    setCaminhando(false)
+    setVista({ tipo: 'elevacao', lado })
+  }
+  function alternarCaminhar() {
+    const novo = !caminhando
+    setCaminhando(novo)
+    if (novo) setVista({ tipo: '3d' })
+    motor?.caminhar(novo)
+  }
+  function alternarMinimapa() {
+    const novo = !minimapa
+    setMinimapa(novo)
+    motor?.minimapa?.(novo)
+  }
+  function apagarCorte(id?: string) {
+    motor?.cortes.apagar(id)
   }
   function alternarFantasma() {
     const novo = !fantasma
@@ -132,9 +216,9 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
     })
   }
   // F enquadra (a seleção, se houver); H oculta; I isola; Esc limpa a seleção.
-  const atalhos = useRef({ ocultar, isolar, enquadrar })
+  const atalhos = useRef({ ocultar, isolar, enquadrar, apagarCorte: () => {} })
   useEffect(() => {
-    atalhos.current = { ocultar, isolar, enquadrar }
+    atalhos.current = { ocultar, isolar, enquadrar, apagarCorte: () => corteSelecionado && apagarCorte(corteSelecionado) }
   })
   useEffect(() => {
     if (!pronto) return
@@ -144,6 +228,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
       if (k === 'f') atalhos.current.enquadrar()
       else if (k === 'h') atalhos.current.ocultar()
       else if (k === 'i') atalhos.current.isolar()
+      else if (e.key === 'Delete') atalhos.current.apagarCorte()
       else if (e.key === 'Escape') selecionar([])
     }
     window.addEventListener('keydown', tecla)
@@ -238,6 +323,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
                 falhas={estado.falhas}
                 selecionados={selecao}
                 onSelecionar={selecionar}
+                onIsolar={isolarRefs}
                 categoriasOcultas={categoriasOcultas}
                 onAlternarCategoria={(classe) => void alternarCategoria(classe)}
                 onAlternarModelo={(sigla, ligado) => void estado.alternarModelo(sigla, ligado)}
@@ -249,6 +335,13 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
           <section className="central-contexto" aria-label="Contexto">
             <h3>{obra.nome}</h3>
             <Link to="/modelos">Todas as obras</Link>
+            <Cortes
+              cortes={cortes}
+              selecionado={corteSelecionado}
+              onSelecionar={setCorteMarcado}
+              onApagar={apagarCorte}
+              onApagarTodos={() => apagarCorte()}
+            />
             {modo === 'inspecionar' ? <Propriedades motor={motor} selecao={selecao} /> : <Selecao refs={selecao} />}
           </section>
           <div
@@ -287,6 +380,15 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
           onProjecao={alternarProjecao}
           onCor={trocarCor}
           onGrade={alternarGrade}
+          pavimentos={pavimentos}
+          vista={vista}
+          onVista3d={irParaVista3d}
+          onPlanta={irParaPlanta}
+          onElevacao={irParaElevacao}
+          onCortar={() => motor?.cortes.criar()}
+          cortes={cortes.length}
+          minimapa={minimapa}
+          onMinimapa={alternarMinimapa}
         />
         <div className="central-canvas" data-testid="canvas-central">
           <div ref={tela} className="central-tela" />
@@ -320,9 +422,11 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
             ativo={pronto}
             isolado={isolado}
             fantasma={fantasma}
+            caminhando={caminhando}
             onOcultar={ocultar}
             onIsolar={isolar}
             onFantasma={alternarFantasma}
+            onCaminhar={alternarCaminhar}
             onMostrarTudo={mostrarTudo}
             onLimpar={() => selecionar([])}
           />

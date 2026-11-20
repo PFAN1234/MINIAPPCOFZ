@@ -59,6 +59,9 @@ export interface FiltroAtributo {
   valor?: string
 }
 
+/** Vista atual da tela: 3D, planta de um pavimento ou elevação de um lado. */
+export type Vista3dUi = { tipo: '3d' } | { tipo: 'planta'; pavimento: string } | { tipo: 'elevacao'; lado: 'N' | 'S' | 'L' | 'O' }
+
 export interface Corte {
   id: string
   origem: Ponto3

@@ -2,6 +2,7 @@ import type { EventoMotor, MotorVisualizador, TemaCentral } from '../application
 import {
   ErroCarregamento,
   type CategoriaTotal,
+  type Corte,
   type FiltroAtributo,
   type GrupoPropriedades,
   type NoArvore,
@@ -38,6 +39,16 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   siglasComFalha = new Set<string>()
   carregadas: string[] = []
   liberado = false
+  /** Última vista pedida (`3d` até alguém pedir outra). */
+  vista: { tipo: '3d' } | { tipo: 'planta'; pavimento: string } | { tipo: 'elevacao'; lado: 'N' | 'S' | 'L' | 'O' } = {
+    tipo: '3d',
+  }
+  caminhando = false
+  /** Quantas vezes o minimapa foi ligado, e se está ligado agora. */
+  minimapaLigacoes = 0
+  minimapaLigado = false
+  cortesLista: Corte[] = []
+  private contadorCortes = 0
   private ouvintes = new Map<EventoMotor, Set<(d: unknown) => void>>()
 
   private registrar(metodo: string, ...args: unknown[]) {
@@ -123,20 +134,40 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   }
   vistaPlanta(pavimento: string) {
     this.registrar('vistaPlanta', pavimento)
+    this.vista = { tipo: 'planta', pavimento }
   }
   vistaElevacao(lado: 'N' | 'S' | 'L' | 'O') {
     this.registrar('vistaElevacao', lado)
+    this.vista = { tipo: 'elevacao', lado }
   }
   vista3d() {
     this.registrar('vista3d')
+    this.vista = { tipo: '3d' }
   }
   caminhar(ligado: boolean) {
     this.registrar('caminhar', ligado)
+    this.caminhando = ligado
+  }
+  minimapa(ligado: boolean) {
+    this.registrar('minimapa', ligado)
+    if (ligado && !this.minimapaLigado) this.minimapaLigacoes++
+    this.minimapaLigado = ligado
   }
   cortes = {
-    criar: () => this.registrar('cortes.criar'),
-    apagar: (id?: string) => this.registrar('cortes.apagar', id),
-    listar: () => [],
+    criar: () => {
+      this.registrar('cortes.criar')
+      this.cortesLista = [
+        ...this.cortesLista,
+        { id: `corte-${++this.contadorCortes}`, origem: [0, 0, 0], normal: [0, -1, 0] },
+      ]
+      this.emitir('cortes', this.cortesLista)
+    },
+    apagar: (id?: string) => {
+      this.registrar('cortes.apagar', id)
+      this.cortesLista = id ? this.cortesLista.filter((c) => c.id !== id) : []
+      this.emitir('cortes', this.cortesLista)
+    },
+    listar: () => this.cortesLista,
   }
   medir = {
     modo: (m: 'distancia' | 'area' | 'volume' | 'angulo' | null) => this.registrar('medir.modo', m),

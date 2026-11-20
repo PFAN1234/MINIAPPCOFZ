@@ -22,6 +22,8 @@ interface Props {
   falhas: string[]
   selecionados: RefElemento[]
   onSelecionar(refs: RefElemento[]): void
+  /** Isola os itens pelo caminho de estado da barra de visibilidade. */
+  onIsolar(refs: RefElemento[]): void
   /** Classes IFC ocultas pelo olho da lista de categorias. */
   categoriasOcultas: ReadonlySet<string>
   onAlternarCategoria(classe: string): void
@@ -37,6 +39,7 @@ export default function Itens({
   falhas,
   selecionados,
   onSelecionar,
+  onIsolar,
   categoriasOcultas,
   onAlternarCategoria,
   onAlternarModelo,
@@ -69,7 +72,7 @@ export default function Itens({
           onAlternar={onAlternarCategoria}
         />
       )}
-      {aba === 'filtro' && <Filtro motor={motor} versao={versao} onSelecionar={onSelecionar} />}
+      {aba === 'filtro' && <Filtro motor={motor} versao={versao} onSelecionar={onSelecionar} onIsolar={onIsolar} />}
       {aba === 'modelos' && (
         <Modelos modelos={modelos} ativos={ativos} falhas={falhas} onAlternar={onAlternarModelo} />
       )}

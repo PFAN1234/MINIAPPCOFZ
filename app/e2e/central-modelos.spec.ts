@@ -24,7 +24,7 @@ test.describe('com o ARQ.frag gerado localmente', () => {
   test.skip(!existsSync(FRAG_LOCAL), 'ARQ.frag ausente: rode `npm run modelos -- --obra hto`')
 
   test('abre a obra, seleciona, isola, mostra tudo e troca o tema sem erros', async ({ page }) => {
-    test.setTimeout(180_000)
+    test.setTimeout(360_000)
     const erros: string[] = []
     page.on('pageerror', (e) => erros.push(e.message))
     await page.route('**/modelos/hto/manifesto.json', (rota) =>
@@ -88,6 +88,28 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     await page.screenshot({ path: 'test-results/central-2b.png' })
     await page.getByRole('button', { name: 'Mostrar tudo' }).click()
     await expect(isolar).toHaveAttribute('aria-pressed', 'false')
+
+    // Etapa 4A: planta do primeiro pavimento, volta ao 3D, corte (criar e apagar) e minimapa.
+    const vista3d = page.getByRole('button', { name: 'Vista 3D' })
+    const seletor = page.getByRole('combobox', { name: 'Pavimento' })
+    await expect(seletor.locator('option').first()).not.toHaveText('Sem pavimentos', { timeout: 30_000 })
+    await page.getByRole('button', { name: 'Planta' }).click()
+    await expect(page.getByRole('button', { name: 'Planta' })).toHaveAttribute('aria-pressed', 'true')
+    await page.waitForTimeout(2000)
+    await page.screenshot({ path: 'test-results/central-4a-planta.png' })
+    await vista3d.click()
+    await expect(vista3d).toHaveAttribute('aria-pressed', 'true')
+
+    await page.getByRole('button', { name: 'Cortar' }).click()
+    const listaCortes = page.getByRole('list', { name: 'Lista de cortes' })
+    await expect(listaCortes.getByRole('listitem')).toHaveCount(1, { timeout: 30_000 })
+    await page.waitForTimeout(1000)
+    await page.screenshot({ path: 'test-results/central-4a-corte.png' })
+    await page.getByRole('button', { name: 'Apagar corte 1' }).click()
+    await expect(listaCortes).toBeHidden()
+
+    await page.getByRole('button', { name: 'Minimapa' }).click()
+    await expect(page.getByTestId('minimapa')).toBeVisible()
 
     // Grade e cor.
     const grade = page.getByRole('button', { name: 'Grade' })

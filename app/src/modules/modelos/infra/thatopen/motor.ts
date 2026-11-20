@@ -6,6 +6,7 @@
  * Etapas 2a e 2b: montar, tema, grade, carregar/descarregar, árvore, categorias (só elementos com
  * geometria), seleção (+ evento), enquadrar, projeção, contorno de arestas, eixos no canto,
  * ocultar/isolar/fantasma, cores por categoria/disciplina, busca, hover e contorno da seleção.
+ * Etapa 4A: vistas de planta/elevação (Views), cortes (Clipper), caminhar (FirstPerson) e minimapa.
  * O resto lança "não implementado (etapa N)" até a etapa do contrato.
  */
 import * as OBC from '@thatopen/components'
@@ -13,6 +14,7 @@ import * as OBF from '@thatopen/components-front'
 import { RenderedFaces, type FragmentsModel, type ItemsQueryParams } from '@thatopen/fragments'
 import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
+import { criarMinimapa, type Minimapa } from './minimapa.ts'
 import { gruposDeDados, RELACOES_PROPRIEDADES, type DadosBrutos } from './propriedades.ts'
 import type { EventoMotor, MotorVisualizador, TemaCentral } from '../../application/ports/MotorVisualizador.port.ts'
 import {
@@ -25,6 +27,7 @@ import {
   type FiltroAtributo,
   type ModoCor,
   type CategoriaTotal,
+  type Corte,
   type NoArvore,
   type NoEstrutura,
   type RefElemento,
@@ -244,6 +247,108 @@ export function criarMotorThatOpen(): MotorVisualizador {
     r.autoClear = autoClear
   }
 
+  // --- Etapa 4A: vistas, cortes, caminhar e minimapa
+  const ID_ELEVACAO = { S: 'elev-S', N: 'elev-N', L: 'elev-L', O: 'elev-O' } as const
+  let vistaAberta: string | null = null
+  let caminhando = false
+  let minimapa: Minimapa | null = null
+  /** Ids de vistas criadas por nós (zeradas quando os modelos mudam). */
+  const vistasCriadas = new Set<string>()
+
+  const escaparRegex = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+  function listarCortes(): Corte[] {
+    if (!components || liberado) return []
+    return [...components.get(OBC.Clipper).list].map(([id, p]) => ({
+      id,
+      origem: [p.origin.x, p.origin.y, p.origin.z],
+      normal: [p.normal.x, p.normal.y, p.normal.z],
+    }))
+  }
+  const emitirCortes = () => emitir('cortes', listarCortes())
+  function habilitarCortes(ligado: boolean) {
+    if (!components) return
+    for (const [, p] of components.get(OBC.Clipper).list) p.enabled = ligado
+  }
+
+  function caixaDosModelos(): THREE.Box3 {
+    const caixa = new THREE.Box3()
+    for (const [, m] of fragments?.list ?? []) caixa.union(m.box)
+    return caixa
+  }
+
+  function descartarVistas() {
+    if (!components) return
+    const views = components.get(OBC.Views)
+    views.close()
+    vistaAberta = null
+    habilitarCortes(true)
+    for (const id of vistasCriadas) views.list.delete(id)
+    vistasCriadas.clear()
+  }
+
+  function abrirVista(id: string) {
+    const { components: c, mundo: w } = pronto()
+    if (caminhando) void alternarCaminhar(false)
+    habilitarCortes(false)
+    c.get(OBC.Views).open(id)
+    vistaAberta = id
+    w.renderer.needsUpdate = true
+  }
+
+  function fecharVista() {
+    const { components: c, mundo: w } = pronto()
+    c.get(OBC.Views).close()
+    vistaAberta = null
+    habilitarCortes(true)
+    w.renderer.needsUpdate = true
+  }
+
+  async function alternarCaminhar(ligado: boolean) {
+    const { mundo: w } = pronto()
+    if (ligado) {
+      if (vistaAberta) fecharVista()
+      // O modo FirstPerson só existe em perspectiva.
+      await w.camera.projection.set('Perspective')
+      if (liberado) return
+      w.camera.set('FirstPerson')
+      caminhando = true
+    } else {
+      caminhando = false
+      w.camera.set('Orbit')
+    }
+  }
+
+  async function criarCorte() {
+    const { components: c, mundo: w } = pronto()
+    let ponto: THREE.Vector3 | null = null
+    const temSelecao = Object.values(selecaoAtual).some((s) => s.size > 0)
+    try {
+      if (temSelecao) {
+        for (const [sigla, ids] of Object.entries(selecaoAtual)) {
+          const m = modelo(sigla)
+          if (!m || ids.size === 0) continue
+          ponto = (await m.getMergedBox([...ids])).getCenter(new THREE.Vector3())
+          break
+        }
+      } else {
+        const acerto = await c.get(OBC.Raycasters).get(w).castRay()
+        if (acerto) ponto = acerto.point.clone()
+      }
+    } catch {
+      ponto = null
+    }
+    if (liberado) return
+    if (!ponto) {
+      const caixa = caixaDosModelos()
+      ponto = caixa.isEmpty() ? new THREE.Vector3() : caixa.getCenter(new THREE.Vector3())
+    }
+    c.get(OBC.Clipper).createFromNormalAndCoplanarPoint(w, new THREE.Vector3(0, -1, 0), ponto)
+    // Em planta/elevação os cortes do usuário ficam suspensos até voltar ao 3D.
+    if (vistaAberta) habilitarCortes(false)
+    emitirCortes()
+  }
+
   return {
     async montar(el, tema) {
       if (components) throw new Error('motor já montado')
@@ -305,6 +410,10 @@ export function criarMotorThatOpen(): MotorVisualizador {
         void f.core.update(true)
       }
       w.camera.projection.onChanged.add(usarCamera)
+      // Vistas de planta/elevação trocam a câmera do mundo: os modelos passam a usar a nova.
+      const aoTrocarCamera = (cam: OBC.BaseCamera) => usarCamera(cam.three as THREE.PerspectiveCamera | THREE.OrthographicCamera)
+      w.onCameraChanged.add(aoTrocarCamera)
+      limpezas.push(() => w.onCameraChanged.remove(aoTrocarCamera))
       limpezas.push(() => w.camera.projection.onChanged.remove(usarCamera))
       const aoAdicionar = ({ value: m }: { value: FragmentsModel }) => {
         m.useCamera(w.camera.three)
@@ -404,6 +513,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
       for (const [i, m] of modelos.entries()) {
         try {
           if (f.list.has(m.sigla)) this.descarregar(m.sigla)
+          descartarVistas()
           // O worker transfere o buffer: cópia para não esvaziar o que veio do cache.
           await f.core.load(m.dados.slice().buffer, { modelId: m.sigla, camera: w.camera.three })
         } catch (e) {
@@ -422,6 +532,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
       const { mundo: w, fragments: f } = pronto()
       const m = modelo(sigla)
       if (!m) return
+      descartarVistas()
       w.scene.three.remove(m.object)
       classes.delete(sigla)
       contagens.delete(sigla)
@@ -494,6 +605,8 @@ export function criarMotorThatOpen(): MotorVisualizador {
       if (liberado) return
       liberado = true
       ouvintes.clear()
+      minimapa?.dispose()
+      minimapa = null
       for (const l of limpezas.splice(0)) l()
       // `dispose` do Components encerra o worker, o renderer e os componentes.
       components?.dispose()
@@ -581,14 +694,99 @@ export function criarMotorThatOpen(): MotorVisualizador {
       return dados ? gruposDeDados(dados as DadosBrutos) : []
     },
     // --- Etapa 4
-    vistaPlanta: () => naoImplementado(4),
-    vistaElevacao: () => naoImplementado(4),
-    vista3d: () => naoImplementado(4),
-    caminhar: () => naoImplementado(4),
+    vistaPlanta(pavimento) {
+      const { components: c, mundo: w } = pronto()
+      void (async () => {
+        const views = c.get(OBC.Views)
+        views.world = w
+        if (!views.list.has(pavimento)) {
+          const novas = await views.createFromIfcStoreys({
+            world: w,
+            storeyNames: [new RegExp(`^${escaparRegex(pavimento)}$`)],
+          })
+          for (const v of novas) vistasCriadas.add(v.id)
+        }
+        if (!liberado && views.list.has(pavimento)) abrirVista(pavimento)
+      })()
+    },
+    vistaElevacao(lado) {
+      const { components: c, mundo: w } = pronto()
+      const views = c.get(OBC.Views)
+      views.world = w
+      const id = ID_ELEVACAO[lado]
+      if (!views.list.has(id)) {
+        const novas = views.createElevations({
+          combine: true,
+          world: w,
+          // Sem rotação de norte verdadeiro: a frente (+Z) olha o sul e a esquerda (+X) olha o leste.
+          namingCallback: () => ({
+            front: ID_ELEVACAO.S,
+            back: ID_ELEVACAO.N,
+            left: ID_ELEVACAO.L,
+            right: ID_ELEVACAO.O,
+          }),
+        })
+        for (const v of novas) vistasCriadas.add(v.id)
+      }
+      if (views.list.has(id)) abrirVista(id)
+    },
+    vista3d() {
+      pronto()
+      fecharVista()
+    },
+    caminhar(ligado) {
+      pronto()
+      void alternarCaminhar(ligado)
+    },
+    minimapa(ligado) {
+      const { mundo: w } = pronto()
+      if (!ligado) {
+        minimapa?.dispose()
+        minimapa = null
+        return
+      }
+      if (minimapa) return
+      const container = w.renderer.three.domElement.parentElement
+      if (!container) return
+      const mm = criarMinimapa({
+        container,
+        renderer: w.renderer.three,
+        cena: w.scene.three,
+        cameraPrincipal: () => w.camera.three,
+        caixa: caixaDosModelos,
+      })
+      minimapa = mm
+      // Redesenho no máximo a cada 80 ms, depois de cada quadro da vista principal.
+      let ultimo = 0
+      const aoQuadro = () => {
+        const agora = performance.now()
+        if (agora - ultimo < 80) return
+        ultimo = agora
+        mm.desenhar()
+      }
+      w.renderer.onAfterUpdate.add(aoQuadro)
+      const dispose = mm.dispose
+      mm.dispose = () => {
+        w.renderer.onAfterUpdate.remove(aoQuadro)
+        dispose()
+      }
+      mm.desenhar()
+    },
     cortes: {
-      criar: () => naoImplementado(4),
-      apagar: () => naoImplementado(4),
-      listar: () => naoImplementado(4),
+      criar() {
+        pronto()
+        void criarCorte()
+      },
+      apagar(id) {
+        const { components: c, mundo: w } = pronto()
+        const clipper = c.get(OBC.Clipper)
+        if (id) void clipper.delete(w, id).then(emitirCortes)
+        else {
+          clipper.deleteAll()
+          emitirCortes()
+        }
+      },
+      listar: listarCortes,
     },
     medir: {
       modo: () => naoImplementado(4),

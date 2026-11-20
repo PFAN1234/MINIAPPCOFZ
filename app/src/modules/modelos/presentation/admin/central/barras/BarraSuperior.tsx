@@ -1,8 +1,11 @@
 import { useState } from 'react'
-import type { ModoCor } from '../../../../domain/central.ts'
+import type { ModoCor, Vista3dUi } from '../../../../domain/central.ts'
 
 /** Botões ainda desabilitados (ganham função nas próximas etapas). */
-const BOTOES_FUTUROS = ['Modelos', 'Issues', 'Medir', 'Cortar', 'Captura', 'Obra']
+const BOTOES_FUTUROS = ['Modelos', 'Issues', 'Medir', 'Captura', 'Obra']
+
+const LADOS = ['N', 'S', 'L', 'O'] as const
+const NOMES_LADO = { N: 'norte', S: 'sul', L: 'leste', O: 'oeste' }
 
 const MODOS: { id: ModoCor; nome: string }[] = [
   { id: 'nenhum', nome: 'Nenhuma' },
@@ -20,11 +23,42 @@ interface Props {
   onProjecao(): void
   onCor(modo: ModoCor): void
   onGrade(): void
+  /** Nomes dos pavimentos (nós IfcBuildingStorey da árvore). */
+  pavimentos: string[]
+  vista: Vista3dUi
+  onVista3d(): void
+  onPlanta(pavimento: string): void
+  onElevacao(lado: 'N' | 'S' | 'L' | 'O'): void
+  /** Cria um plano de corte. */
+  onCortar(): void
+  cortes: number
+  minimapa: boolean
+  onMinimapa(): void
 }
 
 /** Barra superior do visualizador: enquadrar (F), projeção, cor por categoria/disciplina e grade. */
-export default function BarraSuperior({ ativo, ortografica, cor, grade, onEnquadrar, onProjecao, onCor, onGrade }: Props) {
+export default function BarraSuperior({
+  ativo,
+  ortografica,
+  cor,
+  grade,
+  onEnquadrar,
+  onProjecao,
+  onCor,
+  onGrade,
+  pavimentos,
+  vista,
+  onVista3d,
+  onPlanta,
+  onElevacao,
+  onCortar,
+  cortes,
+  minimapa,
+  onMinimapa,
+}: Props) {
   const [menu, setMenu] = useState(false)
+  const [escolhido, setEscolhido] = useState('')
+  const pavimento = pavimentos.includes(escolhido) ? escolhido : (pavimentos[0] ?? '')
   return (
     <div className="central-barra central-barra-superior" role="toolbar" aria-label="Ferramentas do visualizador">
       <button
@@ -93,6 +127,81 @@ export default function BarraSuperior({ ativo, ortografica, cor, grade, onEnquad
       >
         Grade
       </button>
+      <div className="central-grupo" role="group" aria-label="Vista">
+        <button
+          type="button"
+          className="central-botao"
+          aria-label="Vista 3D"
+          title="Volta ao 3D (perspectiva) e restaura os cortes"
+          aria-pressed={vista.tipo === '3d'}
+          disabled={!ativo}
+          onClick={onVista3d}
+        >
+          3D
+        </button>
+        <select
+          aria-label="Pavimento"
+          value={pavimento}
+          disabled={!ativo || pavimentos.length === 0}
+          onChange={(e) => {
+            setEscolhido(e.target.value)
+            if (vista.tipo === 'planta') onPlanta(e.target.value)
+          }}
+        >
+          {pavimentos.length === 0 && <option value="">Sem pavimentos</option>}
+          {pavimentos.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="central-botao"
+          aria-label="Planta"
+          title="Planta do pavimento escolhido"
+          aria-pressed={vista.tipo === 'planta'}
+          disabled={!ativo || !pavimento}
+          onClick={() => onPlanta(pavimento)}
+        >
+          Planta
+        </button>
+        {LADOS.map((l) => (
+          <button
+            key={l}
+            type="button"
+            className="central-botao"
+            aria-label={`Elevação ${l}`}
+            title={`Elevação ${NOMES_LADO[l]}`}
+            aria-pressed={vista.tipo === 'elevacao' && vista.lado === l}
+            disabled={!ativo}
+            onClick={() => onElevacao(l)}
+          >
+            {l}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="central-botao"
+          aria-label="Cortar"
+          title={cortes > 0 ? `Novo plano de corte (${cortes} ativos)` : 'Novo plano de corte'}
+          disabled={!ativo}
+          onClick={onCortar}
+        >
+          Cortar
+        </button>
+        <button
+          type="button"
+          className="central-botao"
+          aria-label="Minimapa"
+          title="Minimapa com a posição da câmera"
+          aria-pressed={minimapa}
+          disabled={!ativo}
+          onClick={onMinimapa}
+        >
+          Minimapa
+        </button>
+      </div>
       {BOTOES_FUTUROS.map((nome) => (
         <button key={nome} type="button" className="central-botao" aria-label={nome} aria-pressed="false" disabled>
           {nome}
