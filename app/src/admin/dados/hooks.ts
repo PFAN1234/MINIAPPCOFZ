@@ -1,3 +1,4 @@
+import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
 import type {
@@ -9,7 +10,6 @@ import type {
   FiltroBoletins,
   PapelAcesso,
   PavimentoResumo,
-  QrAmbiente,
 } from './tipos.ts'
 
 export function useObrasAdmin() {

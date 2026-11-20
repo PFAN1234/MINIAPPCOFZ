@@ -15,8 +15,8 @@ vi.mock('./camera.ts', async (orig) => ({
   fecharCamera: mocks.fecharCamera,
 }))
 
-vi.mock('./orientacao.ts', async (orig) => ({
-  ...(await orig<typeof import('./orientacao.ts')>()),
+vi.mock('@modules/ra/infra/three/orientacao.ts', async (orig) => ({
+  ...(await orig<typeof import('@modules/ra/infra/three/orientacao.ts')>()),
   iniciarOrientacao: mocks.iniciarOrientacao,
 }))
 
@@ -37,9 +37,9 @@ vi.mock('./motor.ts', () => ({
 }))
 
 import { Quaternion } from 'three'
-import { quaternionDoAparelho } from './orientacao.ts'
+import { quaternionDoAparelho } from '@modules/ra/infra/three/orientacao.ts'
 import TelaRA from './TelaRA.tsx'
-import type { GeometriaAmbiente } from './geometria.ts'
+import type { GeometriaAmbiente } from '@modules/ra/domain/tipos.ts'
 
 function geometriaBase(qr: GeometriaAmbiente['qr'] = null): GeometriaAmbiente {
   return {

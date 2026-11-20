@@ -1,5 +1,5 @@
 /** Preparo das fotos no cliente: orientação, redução e recodificação em JPEG. */
-import type { DadosRA, OrigemFoto } from '../../../ra/tipos.ts'
+import type { DadosRA, OrigemFoto } from '@modules/ra/domain/tipos.ts'
 
 export interface FotoPreparada {
   id: string

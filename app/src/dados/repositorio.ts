@@ -30,7 +30,7 @@ import type {
   PapelAcesso,
 } from './tipos.ts'
 import type { ModeloFrag } from '../modelo/modelos.ts'
-import type { GeometriaAmbiente } from '../ra/geometria.ts'
+import type { GeometriaAmbiente } from '@modules/ra/domain/tipos.ts'
 
 export interface Repositorio {
   /** Obras em que o usuário participa, cada uma com a sua etapa. */

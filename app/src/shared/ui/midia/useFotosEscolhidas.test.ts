@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import type { FotoRA } from '../../../ra/tipos.ts'
+import type { FotoRA } from '@modules/ra/domain/tipos.ts'
 import { useFotosEscolhidas } from './useFotosEscolhidas.ts'
 
 vi.mock('../../infra/browser/imagem.ts', () => ({

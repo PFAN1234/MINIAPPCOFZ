@@ -3,7 +3,7 @@ import { Vector3 } from 'three'
 import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
 import { abrirCamera, fecharCamera } from './camera.ts'
 import { criarLeitorQr } from './leitorQr.ts'
-import { iniciarOrientacao, type Orientacao } from './orientacao.ts'
+import { iniciarOrientacao, type Orientacao } from '@modules/ra/infra/three/orientacao.ts'
 import './ra.css'
 
 interface Medidas {

@@ -1,7 +1,12 @@
 /** Geometria do contorno do ambiente e validação do QR (as mesmas regras do banco). */
-import type { QrAmbiente } from '../dados/tipos.ts'
+import type { Ponto2, QrAmbiente } from './tipos.ts'
 
-export type Ponto = [number, number]
+export type Ponto = Ponto2
+
+/** Margem em volta do ambiente para mostrar o que está embutido em parede, piso e forro. */
+export const MARGEM_HORIZONTAL = 0.3
+export const MARGEM_ABAIXO = 0.3
+export const MARGEM_ACIMA = 0.8
 
 export const ALTURA_PADRAO_M = 1.5
 export const LADO_PADRAO_CM = 15
@@ -100,4 +105,15 @@ export function validarQr(contorno: Ponto[], campos: CamposQr): ResultadoValidac
     },
     erros,
   }
+}
+
+/** Conteúdo do QR do ambiente (parâmetro `startapp`). */
+export function parametroDoAmbiente(slug: string, codigo: string): string {
+  return `amb_${slug}_${codigo}`
+}
+
+/** O texto lido no QR é o deste ambiente? Aceita o link inteiro ou só o parâmetro. */
+export function qrEDoAmbiente(texto: string, slug: string, codigo: string): boolean {
+  const p = parametroDoAmbiente(slug, codigo)
+  return texto === p || texto.endsWith(`startapp=${p}`)
 }

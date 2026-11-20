@@ -1,5 +1,5 @@
 /** Tipos do domínio usados pelo app (independentes da origem dos dados). */
-import type { DadosRA, OrigemFoto } from '../ra/tipos.ts'
+import type { DadosRA, OrigemFoto } from '@modules/ra/domain/tipos.ts'
 
 /** Marcador normalizado na página do PDF (0 a 1, origem no canto superior esquerdo). */
 export interface Marcador {

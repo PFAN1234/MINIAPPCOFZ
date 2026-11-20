@@ -1,13 +1,8 @@
 import { Matrix4, Quaternion, Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
-import {
-  cantoNoMundo,
-  qrEDoAmbiente,
-  qrNoMundo,
-  caixaDeCorte,
-  comprimentoDaParede,
-  type GeometriaAmbiente,
-} from './geometria.ts'
+import { comprimentoParede, qrEDoAmbiente } from '../../domain/geometria.ts'
+import type { GeometriaAmbiente, Ponto2 } from '../../domain/tipos.ts'
+import { cantoNoMundo, qrNoMundo, caixaDeCorte } from './geometria3d.ts'
 import { orientacaoFixa, quaternionDoAparelho } from './orientacao.ts'
 import {
   distanciaEntrePoses,
@@ -18,7 +13,6 @@ import {
   resolverPorQr,
   suavizarPose,
   type LeituraQr,
-  type Ponto2,
   type Pose,
   type Toque,
 } from './pose.ts'
@@ -144,8 +138,8 @@ describe('geometria', () => {
   const g = ambiente()
 
   it('mede as paredes e monta a caixa de corte com margem', () => {
-    expect(comprimentoDaParede(g.contorno, 0)).toBeCloseTo(6.03, 6)
-    expect(comprimentoDaParede(g.contorno, 3)).toBeCloseTo(3.96, 6)
+    expect(comprimentoParede(g.contorno, 0)).toBeCloseTo(6.03, 6)
+    expect(comprimentoParede(g.contorno, 3)).toBeCloseTo(3.96, 6)
     const caixa = caixaDeCorte(g)
     expect(caixa[1]).toBeCloseTo(g.yPiso - 0.3, 6)
     expect(caixa[4]).toBeCloseTo(g.yTeto + 0.8, 6)

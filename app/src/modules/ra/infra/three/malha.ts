@@ -3,7 +3,7 @@
  * acha que estão piso, paredes e teto; ela não vem de leitura da câmera.
  */
 import { ShapeUtils, Vector2 } from 'three'
-import type { GeometriaAmbiente } from './geometria.ts'
+import type { GeometriaAmbiente } from '../../domain/tipos.ts'
 
 export interface MalhaDoAmbiente {
   piso: number[]

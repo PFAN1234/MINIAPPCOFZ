@@ -8,8 +8,8 @@
  * - mundo = RotY(rumo) · sensor + posição. Alinhar é achar `rumo` e `posicao`.
  */
 import { Quaternion, Vector3 } from 'three'
+import type { Ponto2 } from '../../domain/tipos.ts'
 
-export type Ponto2 = [number, number]
 
 export interface Pose {
   /** Posição da câmera no mundo. */

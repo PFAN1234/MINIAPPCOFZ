@@ -3,11 +3,12 @@
  * navegador, chave separada da do Mini App), Edge Function `admin-sessao` para entrar e
  * RPCs `admin_*` para os dados.
  */
+import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { criarClienteSupabase } from '../../dados/supabase.ts'
 import { configurarEnvioErros } from '../../shared/infra/erros.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
-import type { PlantaAdmin } from '../ra/planta.ts'
+import type { PlantaAdmin } from '@modules/ra/domain/planta.ts'
 import {
   ErroAdmin,
   CAMINHO_LOGO,
@@ -40,7 +41,6 @@ import {
   type DadosEditorPlanta,
   type AmbienteRA,
   type DadosModelos,
-  type QrAmbiente,
   type Exclusao,
   type ModeloAdmin,
   type Publicacao,

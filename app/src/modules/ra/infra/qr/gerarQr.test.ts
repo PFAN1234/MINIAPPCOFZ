@@ -1,18 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { LADO_MAX_A4_CM, LADO_PADRAO_CM } from './geometria.ts'
-import { gerarQr, textoQr } from './qr.ts'
-
-describe('textoQr', () => {
-  it('monta o link do Mini App com bot, app, obra e ambiente', () => {
-    expect(textoQr('bot_teste', 'fiscalcofz', 'hto', 'terreo-administracao')).toBe(
-      'https://t.me/bot_teste/fiscalcofz?startapp=amb_hto_terreo-administracao',
-    )
-  })
-
-  it('tira o @ do bot e usa o app padrão quando vazio', () => {
-    expect(textoQr('@bot_teste', '', 'hto', 'a')).toBe('https://t.me/bot_teste/fiscalcofz?startapp=amb_hto_a')
-  })
-})
+import { LADO_MAX_A4_CM, LADO_PADRAO_CM } from '../../domain/geometria.ts'
+import { textoQr } from '../../domain/qr.ts'
+import { gerarQr } from './gerarQr.ts'
 
 describe('gerarQr', () => {
   const texto = textoQr('bot_teste', 'fiscalcofz', 'hto', 'terreo-administracao')

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { prepararFoto, type FotoPreparada } from '../../infra/browser/imagem.ts'
-import type { FotoRA } from '../../../ra/tipos.ts'
+import type { FotoRA } from '@modules/ra/domain/tipos.ts'
 import { MAX_FOTOS, type ItemFoto } from '../inputs/SeletorFotos.tsx'
 
 export interface FotoEscolhida extends ItemFoto {

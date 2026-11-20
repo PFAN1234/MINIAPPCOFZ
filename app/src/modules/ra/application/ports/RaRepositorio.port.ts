@@ -1,5 +1,6 @@
-import type { AmbienteRA, QrAmbiente } from '../../../../admin/dados/tipos.ts'
-import type { GeometriaAmbiente } from '../../../../ra/geometria.ts'
+import type { AmbienteRA } from '../../../../admin/dados/tipos.ts'
+import type { QrAmbiente } from '../../domain/tipos.ts'
+import type { GeometriaAmbiente } from '../../domain/tipos.ts'
 
 /** Porta de dados da realidade aumentada (geometria dos ambientes e QR). */
 export interface RaRepositorio {

@@ -1,4 +1,5 @@
-import type { PlantaAdmin } from '../ra/planta.ts'
+import type { PlantaAdmin } from '@modules/ra/domain/planta.ts'
+import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
 /** Tipos do site de administração (/admin/). RPCs em supabase/migrations/20261111170000_admin.sql. */
 
 export type StatusObra = 'aguardando_revisao_humana' | 'revisado'
@@ -799,15 +800,6 @@ export interface RegistroModelo {
   origem: 'ifc' | 'frag'
   arquivo_nome?: string | null
   ifc_bytes?: number | null
-}
-
-/** Posição do QR de um ambiente (tabela `ambiente_qr`; ver docs/contrato-ra.md). */
-export interface QrAmbiente {
-  /** Aresta i do contorno: de `contorno[i]` a `contorno[(i+1) % n]` (a partir de 0). */
-  parede: number
-  distancia_m: number
-  altura_m: number
-  lado_m: number
 }
 
 /** Ambiente com geometria (`admin_listar_ra`). */

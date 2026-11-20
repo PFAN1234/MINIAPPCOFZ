@@ -19,9 +19,10 @@ import {
   validarQr,
   type CamposQr,
   type Ponto,
-} from '../../ra/geometria.ts'
-import { enquadrarPlanta, marcaNaPlanta } from '../../ra/planta.ts'
-import { APP_PADRAO, gerarQr, textoQr } from '../../ra/qr.ts'
+} from '@modules/ra/domain/geometria.ts'
+import { enquadrarPlanta, marcaNaPlanta } from '@modules/ra/domain/planta.ts'
+import { APP_PADRAO, textoQr } from '@modules/ra/domain/qr.ts'
+import { gerarQr } from '@modules/ra/infra/qr/gerarQr.ts'
 
 const SEM_GEOMETRIA = 'Esta obra ainda não tem a geometria dos ambientes. Rode scripts/gerar_geometria.py e aplique o seed.'
 

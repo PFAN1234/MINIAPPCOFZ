@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { GeometriaAmbiente } from '../ra/geometria.ts'
+import type { GeometriaAmbiente } from '@modules/ra/domain/tipos.ts'
 
 /** Seis planos de corte (mesma ordem/sinais do motor RA) para a caixa [xmin,ymin,zmin,xmax,ymax,zmax]. */
 export function planosDeCorte(caixa: readonly number[]): THREE.Plane[] {

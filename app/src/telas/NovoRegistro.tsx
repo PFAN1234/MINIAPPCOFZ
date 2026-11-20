@@ -16,7 +16,7 @@ import { capturadoEm } from '../shared/infra/browser/imagem.ts'
 import { modeloComCache } from '../modelo/cacheModelo.ts'
 import type { ModeloFrag } from '../modelo/modelos.ts'
 import { recursos } from '../recursos.ts'
-import type { FotoRA } from '../ra/tipos.ts'
+import type { FotoRA } from '@modules/ra/domain/tipos.ts'
 
 // Three.js, That Open e a tela de RA ficam fora do pacote inicial.
 const TelaRA = lazy(() => import('../ra/TelaRA.tsx'))

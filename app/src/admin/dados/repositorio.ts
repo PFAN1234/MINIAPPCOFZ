@@ -1,3 +1,4 @@
+import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
 import type {
   Admin,
   ErroCliente,
@@ -31,7 +32,6 @@ import type {
   ObraLista,
   ModeloAdmin,
   AmbienteRA,
-  QrAmbiente,
   ObraSalva,
   PavimentoResumo,
   Publicacao,

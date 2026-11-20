@@ -3,10 +3,12 @@ import { Link } from 'react-router'
 import type { ModeloFrag } from '../modelo/modelos.ts'
 import { marcadorParaPixel } from '../shared/kernel/coordenadas.ts'
 import { abrirCamera, capturarPar, fecharCamera } from './camera.ts'
-import { cantoNoMundo, qrEDoAmbiente, qrNoMundo, type GeometriaAmbiente, type Plano } from './geometria.ts'
+import { type GeometriaAmbiente } from '@modules/ra/domain/tipos.ts'
+import { qrEDoAmbiente } from '@modules/ra/domain/geometria.ts'
+import { cantoNoMundo, qrNoMundo, type Plano } from '@modules/ra/infra/three/geometria3d.ts'
 import { criarLeitorQr } from './leitorQr.ts'
 import { MotorRA } from './motor.ts'
-import { iniciarOrientacao, type Orientacao } from './orientacao.ts'
+import { iniciarOrientacao, type Orientacao } from '@modules/ra/infra/three/orientacao.ts'
 import {
   distanciaEntrePoses,
   erroDoToque,
@@ -14,11 +16,10 @@ import {
   resolverPorQr,
   suavizarPose,
   type LeituraQr,
-  type Ponto2,
   type Pose,
   type Toque,
-} from './pose.ts'
-import type { FotoRA } from './tipos.ts'
+} from '@modules/ra/infra/three/pose.ts'
+import type { FotoRA, Ponto2 } from '@modules/ra/domain/tipos.ts'
 import './ra.css'
 
 const CHAVE_FOV = 'ra-fov'

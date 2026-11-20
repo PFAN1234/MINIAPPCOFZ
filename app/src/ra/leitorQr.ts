@@ -3,7 +3,7 @@
  * senão, o `jsQR` (carregado sob demanda).
  */
 import { recorteVisivel } from './camera.ts'
-import type { Ponto2 } from './pose.ts'
+import type { Ponto2 } from '@modules/ra/domain/tipos.ts'
 
 export interface QrLido {
   texto: string

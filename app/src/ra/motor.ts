@@ -4,9 +4,10 @@ import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
 import { planosDeCorte } from '../modelo/corte.ts'
 import { ordenarPorReferencia, temWebGL, type ModeloFrag } from '../modelo/modelos.ts'
-import { arestasDoAmbiente, caixaDeCorte, type GeometriaAmbiente } from './geometria.ts'
-import { gradeDeProcura, malhaDoAmbiente } from './malha.ts'
-import { orientacaoNoMundo, type Pose } from './pose.ts'
+import { type GeometriaAmbiente } from '@modules/ra/domain/tipos.ts'
+import { arestasDoAmbiente, caixaDeCorte } from '@modules/ra/infra/three/geometria3d.ts'
+import { gradeDeProcura, malhaDoAmbiente } from '@modules/ra/infra/three/malha.ts'
+import { orientacaoNoMundo, type Pose } from '@modules/ra/infra/three/pose.ts'
 
 /** Altura da câmera acima do piso na grade de procura (a do celular na mão). */
 const ALTURA_PROCURA = 1.4

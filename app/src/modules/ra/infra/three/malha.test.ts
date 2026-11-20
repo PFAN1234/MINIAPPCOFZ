@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { GeometriaAmbiente } from './geometria.ts'
+import type { GeometriaAmbiente } from '../../domain/tipos.ts'
 import { gradeDeProcura, malhaDoAmbiente } from './malha.ts'
 
 const base = {

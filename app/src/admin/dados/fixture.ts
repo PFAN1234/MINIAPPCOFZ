@@ -4,6 +4,7 @@
  * organização "CO-FZ" sem logo, tudo em memória. Reproduz as regras das RPCs (slug, pavimento com
  * ambientes, último admin, etapas). Nunca entra no build de produção.
  */
+import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
 import ambientesCofz from '../../../../data/cofz/ambientes.json'
 import obraCofz from '../../../../data/cofz/obra.json'
 import plantasCofz from '../../../../data/cofz/plantas.json'
@@ -46,7 +47,6 @@ import {
   type Organizacao,
   type AmbienteRA,
   type EventoModelo,
-  type QrAmbiente,
   type Exclusao,
   type ModeloAdmin,
   type ObraAdmin,
