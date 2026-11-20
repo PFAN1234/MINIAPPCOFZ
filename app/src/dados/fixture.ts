@@ -749,51 +749,9 @@ export function criarRepositorioFixture(
     listarModelos: modelos.listarModelos,
     baixarModelo: modelos.baixarModelo,
     obterGeometria: ra.obterGeometria,
-    async idUsuario() {
-      return 'usuario-teste'
-    },
-
-    async souAdmin() {
-      return opcoes.admin === true
-    },
 
     async etapasInicio(): Promise<EtapaInicio[]> {
       return etapasServico.map((e) => ({ ...e, participa: e.id !== ETAPA_4.id }))
-    },
-
-    async equipeServico(etapaId) {
-      return equipeDaEtapa(etapaId)
-    },
-
-    async fazerCheckin(etapaId) {
-      exigirRede()
-      const atual = equipeDaEtapa(etapaId)
-      if (!atual.participa) throw new ErroEnvio('permissao', 'Você não participa desta etapa')
-      if (atual.meu_servico) {
-        throw new ErroEnvio('conflito', `Você já está de serviço na ${atual.meu_servico.etapa_nome}`)
-      }
-      servicos = [
-        ...servicos,
-        {
-          id: `servico-${proximoServico++}`,
-          etapa_id: etapaId,
-          usuario_id: 'usuario-teste',
-          nome: 'CP TESTE',
-          entrada_em: new Date().toISOString(),
-          saida_em: null,
-          saida_automatica: false,
-          eu: true,
-        },
-      ]
-      return equipeDaEtapa(etapaId)
-    },
-
-    async fazerCheckout() {
-      exigirRede()
-      const aberto = servicos.find((s) => s.eu && s.saida_em === null)
-      if (!aberto) throw new ErroEnvio('nao_encontrado', 'Você não está de serviço')
-      servicos = servicos.map((s) => (s === aberto ? { ...s, saida_em: new Date().toISOString() } : s))
-      return equipeDaEtapa(aberto.etapa_id)
     },
 
     async relatorios(): Promise<Relatorios> {
@@ -852,18 +810,6 @@ export function criarRepositorioFixture(
       const dia = boletinsRel.filter((b) => b.etapa_slug === alvo.etapa_slug && b.data === alvo.data)
       for (const b of dia) boletinsRel.splice(boletinsRel.indexOf(b), 1)
       return { numero: alvo.numero, data: alvo.data, revisoes: dia.length, mensagens: { apagadas: 1, falhas: 0 }, arquivos_erro: null }
-    },
-
-    async criarLinkAdmin(): Promise<LinkAdmin> {
-      exigirRede()
-      if (opcoes.admin !== true) {
-        throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem abrir a administração.')
-      }
-      const base = typeof location === 'undefined' ? 'http://localhost' : location.origin
-      return {
-        url: `${base}/admin/#entrar=fixture`,
-        expira_em: new Date(Date.now() + 120_000).toISOString(),
-      }
     },
 
     async resumoObras(): Promise<ResumoObra[]> {
@@ -971,116 +917,6 @@ export function criarRepositorioFixture(
       }
     },
 
-    async obrasDisponiveis(): Promise<ObraDisponivel[]> {
-      return [
-        {
-          ...OBRA_DEMONSTRACAO,
-          solicitacao: pedidos[ID_DEMONSTRACAO] ?? null,
-          etapa_id: ETAPA_2.id,
-          etapa_nome: ETAPA_2.nome,
-          etapa_ordem: ETAPA_2.ordem,
-        },
-      ]
-    },
-
-    async solicitarAcesso(obraId) {
-      exigirRede()
-      if (obraId !== ID_DEMONSTRACAO) {
-        throw new ErroEnvio('permissao', 'Entre no grupo da obra no Telegram para pedir acesso.')
-      }
-      pedidos[obraId] = 'pendente'
-      persistir()
-    },
-
-    async listarSolicitacoes(obraId) {
-      if (obraId !== ID_HTO) {
-        throw new ErroEnvio('permissao', 'Só gestores da obra veem os pedidos de acesso.')
-      }
-      return decisoes[ID_PEDIDO_MARIA] ? [] : [{ ...PEDIDO_MARIA }]
-    },
-
-    async decidirSolicitacao(id, aprovar) {
-      exigirRede()
-      if (id !== ID_PEDIDO_MARIA) throw new ErroEnvio('nao_encontrado', 'Pedido não encontrado.')
-      const nova = aprovar ? 'aprovada' : 'recusada'
-      const atual = decisoes[id]
-      if (atual && atual !== nova) throw new ErroEnvio('conflito', 'Pedido já decidido.')
-      decisoes[id] = nova
-      if (aprovar) (acessosFora[ID_HTO] ??= {})[PEDIDO_MARIA.usuario_id] ??= 'equipe'
-      persistir()
-    },
-
-    async matrizAcessos(): Promise<MatrizAcessos> {
-      if (papelUsuario() !== 'gestor' && opcoes.admin !== true) {
-        throw new ErroEnvio('permissao', 'Só gestores veem a lista de acessos.')
-      }
-      const nomes: Record<string, { nome: string; username: string | null }> = {
-        ...outrasPessoas,
-        ...Object.fromEntries(PARTICIPANTES_BASE.map((p) => [p.usuario_id, { nome: p.nome, username: p.username }])),
-      }
-      const pedidoMaria = decisoes[ID_PEDIDO_MARIA] ? [] : [ID_HTO]
-      const pessoas = Object.entries(nomes).map(([id, n]) => {
-        const acessos: Record<string, 'equipe' | 'gestor'> = {}
-        for (const o of OBRAS) {
-          const papel = papelNaObra(o.id, id)
-          if (papel !== 'nenhum') acessos[o.id] = papel
-        }
-        return {
-          id,
-          nome: n.nome,
-          username: n.username,
-          admin: adminsDoGrupo.includes(id),
-          vistoEm: '2026-11-15T14:00:00Z',
-          acessos,
-          pedidos: id === PEDIDO_MARIA.usuario_id ? pedidoMaria : [],
-        }
-      })
-      pessoas.sort(
-        (a, b) =>
-          Number(b.pedidos.length > 0) - Number(a.pedidos.length > 0) ||
-          a.nome.localeCompare(b.nome, 'pt-BR') ||
-          a.id.localeCompare(b.id),
-      )
-      return { obras: OBRAS.map((o) => ({ id: o.id, slug: o.slug, nome: o.nome })), pessoas }
-    },
-
-    async definirAcesso(obraId, usuarioId, papel: PapelAcesso) {
-      exigirRede()
-      if (papelUsuario() !== 'gestor' && opcoes.admin !== true) {
-        throw new ErroEnvio('permissao', 'Só gestores alteram acessos.')
-      }
-      if (papel !== 'nenhum' && papel !== 'equipe' && papel !== 'gestor') falhaValidacao('Acesso inválido.')
-      if (!OBRAS.some((o) => o.id === obraId)) throw new ErroEnvio('nao_encontrado', 'Obra não encontrada.')
-      if (adminsDoGrupo.includes(usuarioId) && papel !== 'gestor') {
-        falhaValidacao('Administradores do grupo são gestores de todas as obras.')
-      }
-      const atual = papelNaObra(obraId, usuarioId)
-      if (atual === 'gestor' && papel !== 'gestor') {
-        const gestores = [...PARTICIPANTES_BASE.map((p) => p.usuario_id), ...Object.keys(outrasPessoas)].filter(
-          (id) => id !== usuarioId && papelNaObra(obraId, id) === 'gestor',
-        )
-        if (gestores.length === 0) falhaValidacao('A obra precisa de pelo menos um gestor.')
-      }
-      const base = obraId === ID_HTO && PARTICIPANTES_BASE.some((p) => p.usuario_id === usuarioId)
-      if (base) {
-        const i = removidos.indexOf(usuarioId)
-        if (papel === 'nenhum') {
-          if (i < 0) removidos.push(usuarioId)
-        } else {
-          if (i >= 0) removidos.splice(i, 1)
-          papeis[usuarioId] = papel
-        }
-      } else {
-        const tabela = (acessosFora[obraId] ??= {})
-        if (papel === 'nenhum') delete tabela[usuarioId]
-        else tabela[usuarioId] = papel
-      }
-      if (obraId === ID_HTO && usuarioId === PEDIDO_MARIA.usuario_id) {
-        decisoes[ID_PEDIDO_MARIA] ??= papel === 'nenhum' ? 'recusada' : 'aprovada'
-      }
-      persistir()
-    },
-
     async obterPendencia(id): Promise<PendenciaDetalhe | null> {
       const registro = todos().find((x) => x.id === id && x.tipo === 'pendencia')
       if (!registro) return null
@@ -1161,36 +997,6 @@ export function criarRepositorioFixture(
       })
       persistir()
       return { id: d.id }
-    },
-
-    async listarParticipantes(obraId) {
-      exigirGestor(obraId)
-      return participantesAtuais().sort(
-        (a, b) =>
-          Number(b.papel === 'gestor') - Number(a.papel === 'gestor') ||
-          a.nome.localeCompare(b.nome, 'pt-BR'),
-      )
-    },
-
-    async definirPapel(obraId, usuarioId, papel) {
-      exigirRede()
-      exigirGestor(obraId)
-      if (papel !== 'equipe' && papel !== 'gestor') falhaValidacao('Papel inválido')
-      const atual = participantesAtuais().find((p) => p.usuario_id === usuarioId)
-      if (!atual) throw new ErroEnvio('nao_encontrado', 'Participante não encontrado.')
-      if (atual.papel === 'gestor' && papel === 'equipe') exigirOutroGestor(usuarioId)
-      papeis[usuarioId] = papel
-      persistir()
-    },
-
-    async removerParticipante(obraId, usuarioId) {
-      exigirRede()
-      exigirGestor(obraId)
-      const atual = participantesAtuais().find((p) => p.usuario_id === usuarioId)
-      if (!atual) throw new ErroEnvio('nao_encontrado', 'Participante não encontrado.')
-      if (atual.papel === 'gestor') exigirOutroGestor(usuarioId)
-      removidos.push(usuarioId)
-      persistir()
     },
 
     async listarPublicacoesProblema(obraId) {

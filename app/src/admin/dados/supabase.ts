@@ -3,6 +3,8 @@
  * navegador, chave separada da do Mini App), Edge Function `admin-sessao` para entrar e
  * RPCs `admin_*` para os dados.
  */
+import { criarAcessosAdminSupabase } from '@modules/acessos/infra/AcessosAdminSupabaseAdapter.ts'
+import { criarSessaoAdminSupabase } from '@modules/acessos/infra/SessaoAdminSupabaseAdapter.ts'
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
 import { criarPlantasSupabase } from '@modules/plantas/infra/PlantasSupabaseAdapter.ts'
 import { criarRaSupabase } from '@modules/ra/infra/RaSupabaseAdapter.ts'
@@ -12,7 +14,6 @@ import { configurarEnvioErros } from '../../shared/infra/erros.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
 import { ErroAdmin, CAMINHO_LOGO, novoCaminhoLogo, problemaDoLogo, type ErroCliente, type ResumoOrfaos, type BucketObra, type Aditivo, type BoletimDaLista, type BoletimDetalhe, type BoletimEmitido, type EdicaoBoletim, type ListaTodosBoletins, type PedidoDaLista, type SnapshotBoletim, type EstadoEmissao, type ListaBoletins, type PedidoEmissao, type EtapaDetalhe, type EtapaLista, type Responsavel, type Organizacao, type ResultadoExclusaoEtapa, type ResumoEtapa, type Exclusao, type ResultadoExclusao, type ResumoObra, type ObraAdmin, type ObraLista, type ObraSalva, type PavimentoResumo } from './tipos.ts'
-import type { Admin, Pessoa, MatrizAcessosAdmin, DadosWidget, EstadoSessao, UsuarioApp } from '@modules/acessos/domain/tipos.ts'
 
 export const CHAVE_SESSAO_ADMIN = 'miniappcofz-admin-auth'
 
@@ -183,33 +184,6 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     }
   }
 
-  /** Chama a `admin-sessao` e grava a sessão devolvida. */
-  async function entrar(corpo: Record<string, unknown>, mensagens: Record<number, string>): Promise<void> {
-    let resposta: Response
-    try {
-      resposta = await fetch(`${base}/functions/v1/admin-sessao`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', apikey: chave },
-        body: JSON.stringify(corpo),
-      })
-    } catch (e) {
-      throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
-    }
-    if (resposta.status !== 200) {
-      throw new ErroAdmin(mensagens[resposta.status] ?? 'Não foi possível entrar. Tente de novo.')
-    }
-    const s = (await resposta.json().catch(() => null)) as {
-      access_token?: string
-      refresh_token?: string
-    } | null
-    if (!s?.access_token || !s.refresh_token) throw new ErroAdmin('Não foi possível entrar. Tente de novo.')
-    const { error } = await cliente.auth.setSession({
-      access_token: s.access_token,
-      refresh_token: s.refresh_token,
-    })
-    if (error) throw new ErroAdmin('Não foi possível guardar a sessão. Tente de novo.', { cause: error })
-  }
-
   /** Chama a Edge Function `admin-excluir-obra` com a sessão do admin; devolve o JSON da resposta. */
   async function funcaoExcluir(corpo: Record<string, unknown>, naoEncontrado: string): Promise<Record<string, unknown>> {
     const { data } = await cliente.auth.getSession()
@@ -358,46 +332,26 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
   const ra = criarRaSupabase(cliente, rpc)
   const modelos = criarModelosSupabase(cliente, rpc)
   const plantas = criarPlantasSupabase(cliente, rpc)
+  const sessao = criarSessaoAdminSupabase(cliente, erroDaRpc)
+  const acessos = criarAcessosAdminSupabase(rpc)
 
   return {
     listarRA: ra.listarRA,
     definirQr: ra.definirQr,
     removerQr: ra.removerQr,
-    async estadoSessao(): Promise<EstadoSessao> {
-      const { data } = await cliente.auth.getSession()
-      const usuario = data.session?.user
-      if (!usuario) return { tipo: 'sem_sessao' }
-      const nome = String((usuario.user_metadata as { nome?: unknown } | undefined)?.nome ?? '')
-      const { data: admin, error } = await cliente.rpc('sou_admin')
-      if (error) {
-        const e = erroDaRpc(error)
-        // Sessão guardada que não vale mais: volta para a tela de entrada.
-        if (/sessão expirou/.test(e.message)) return { tipo: 'sem_sessao' }
-        throw e
-      }
-      return { tipo: admin === true ? 'admin' : 'negado', usuario: { id: usuario.id, nome } }
-    },
-
-    entrarComToken(token) {
-      return entrar(
-        { acao: 'trocar', token },
-        { 401: 'Link inválido, expirado ou já usado. Peça outro pelo botão Administração no Mini App.' },
-      )
-    },
-
-    entrarComWidget(dados: DadosWidget) {
-      return entrar(
-        { acao: 'widget', dados },
-        {
-          401: 'Não foi possível confirmar o login do Telegram. Tente de novo.',
-          403: 'Esta conta do Telegram não é admin do Mini App.',
-        },
-      )
-    },
-
-    async sair() {
-      await cliente.auth.signOut({ scope: 'local' })
-    },
+    estadoSessao: sessao.estadoSessao,
+    entrarComToken: sessao.entrarComToken,
+    entrarComWidget: sessao.entrarComWidget,
+    sair: sessao.sair,
+    meuId: sessao.meuId,
+    listarPessoas: acessos.listarPessoas,
+    definirNomeExibicao: acessos.definirNomeExibicao,
+    matrizAcessos: acessos.matrizAcessos,
+    definirAcesso: acessos.definirAcesso,
+    listarAdmins: acessos.listarAdmins,
+    incluirAdmin: acessos.incluirAdmin,
+    removerAdmin: acessos.removerAdmin,
+    listarUsuarios: acessos.listarUsuarios,
 
     async listarEtapas() {
       const linhas = await rpc<Linha[] | null>('admin_listar_etapas')
@@ -554,66 +508,6 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
       } catch (e) {
         throw erroDaRpc(e)
       }
-    },
-
-    async listarPessoas() {
-      return ((await rpc<Linha[] | null>('admin_listar_pessoas')) ?? []).map(
-        (l): Pessoa => ({
-          id: String(l.id),
-          nome: String(l.nome ?? ''),
-          nome_exibicao: textoOuNulo(l.nome_exibicao),
-          username: textoOuNulo(l.username),
-          telegram_id: Number(l.telegram_id),
-          eh_admin: l.eh_admin === true,
-          participacoes: Array.isArray(l.participacoes)
-            ? (l.participacoes as Linha[]).map((p) => ({
-                obra_slug: String(p.obra_slug ?? ''),
-                obra_nome: String(p.obra_nome ?? ''),
-                etapa_nome: String(p.etapa_nome ?? ''),
-                papel: String(p.papel ?? ''),
-              }))
-            : [],
-        }),
-      )
-    },
-
-    async matrizAcessos(): Promise<MatrizAcessosAdmin> {
-      const dados = ((await rpc<Linha | null>('matriz_acessos')) ?? {}) as Linha
-      return {
-        obras: ((dados.obras ?? []) as Linha[]).map((o) => ({
-          id: String(o.id),
-          slug: String(o.slug),
-          nome: String(o.nome),
-        })),
-        pessoas: ((dados.pessoas ?? []) as Linha[]).map((l) => ({
-          id: String(l.id),
-          nome: String(l.nome),
-          username: textoOuNulo(l.username),
-          admin: l.admin === true,
-          vistoEm: textoOuNulo(l.visto_em),
-          acessos: Object.fromEntries(
-            Object.entries((l.acessos ?? {}) as Record<string, unknown>).map(([k, v]) => [
-              k,
-              v === 'gestor' ? 'gestor' : 'equipe',
-            ]),
-          ),
-          pedidos: ((l.pedidos ?? []) as unknown[]).map(String),
-        })),
-      }
-    },
-
-    async definirAcesso(obraId, usuarioId, papel) {
-      await rpc('definir_acesso', { p_obra: obraId, p_usuario: usuarioId, p_papel: papel })
-    },
-
-    async meuId() {
-      const { data } = await cliente.auth.getSession()
-      return data.session?.user.id ?? null
-    },
-
-    async definirNomeExibicao(usuarioId, nome) {
-      const r = await rpc<Linha>('admin_definir_nome_exibicao', { p_usuario: usuarioId, p_nome: nome })
-      return { id: String(r.id), nome: String(r.nome ?? ''), nome_exibicao: textoOuNulo(r.nome_exibicao) }
     },
 
     async arquivarEtapa(slug, arquivada) {
@@ -777,19 +671,6 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     registrarModelo: modelos.registrarModelo,
     retirarModelo: modelos.retirarModelo,
 
-    async listarAdmins() {
-      return ((await rpc<Linha[]>('admin_listar_admins')) ?? []).map(
-        (l): Admin => ({
-          usuario_id: String(l.usuario_id),
-          nome: String(l.nome),
-          username: l.username == null ? null : String(l.username),
-          telegram_id: Number(l.telegram_id),
-          criado_em: String(l.criado_em),
-          criado_por_nome: l.criado_por_nome == null ? null : String(l.criado_por_nome),
-        }),
-      )
-    },
-
     async listarErrosCliente(limite = 200) {
       return ((await rpc<Linha[]>('admin_listar_erros_cliente', { p_limite: limite })) ?? []).map(
         (l): ErroCliente => ({
@@ -826,26 +707,6 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
           detectado_em: String(m.detectado_em),
         })),
       } satisfies ResumoOrfaos
-    },
-
-    async incluirAdmin(usuarioId) {
-      await rpc('admin_incluir_admin', { p_usuario: usuarioId })
-    },
-
-    async removerAdmin(usuarioId) {
-      await rpc('admin_remover_admin', { p_usuario: usuarioId })
-    },
-
-    async listarUsuarios() {
-      return ((await rpc<Linha[]>('admin_listar_usuarios')) ?? []).map(
-        (l): UsuarioApp => ({
-          id: String(l.id),
-          nome: String(l.nome),
-          username: l.username == null ? null : String(l.username),
-          telegram_id: Number(l.telegram_id),
-          eh_admin: l.eh_admin === true,
-        }),
-      )
     },
   }
 }

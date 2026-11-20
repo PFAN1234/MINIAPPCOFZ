@@ -1,10 +1,15 @@
 import type { AmbienteDetalhe, CaminhoFoto, EtapaInicio, NovaObservacao, NovoEncerramento, Observacao, ObservacoesDoDia, PendenciaDetalhe, PublicacaoProblema, NovoRegistro, FiltroRegistros, ObraDetalhe, ObraDaLista, Organizacao, RegistroLocalizado, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim, RegistroResumo, ResumoObra } from './tipos.ts'
-import type { EquipeServico, Posicao, Participante, PapelObra, LinkAdmin, ObraDisponivel, SolicitacaoAcesso, MatrizAcessos, PapelAcesso } from '@modules/acessos/domain/tipos.ts'
+import type { AcessosRepositorio } from '@modules/acessos/application/ports/AcessosRepositorio.port.ts'
+import type { EquipeServicoRepositorio } from '@modules/acessos/application/ports/EquipeServicoRepositorio.port.ts'
+import type { SessaoRepositorio } from '@modules/acessos/application/ports/SessaoRepositorio.port.ts'
 import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 
 export interface Repositorio
   extends Pick<RaRepositorio, 'obterGeometria'>,
+    SessaoRepositorio,
+    EquipeServicoRepositorio,
+    AcessosRepositorio,
     Pick<ModelosRepositorio, 'listarModelos' | 'baixarModelo'> {
   /** Obras em que o usuário participa, cada uma com a sua etapa. */
   listarObras(): Promise<ObraDaLista[]>
@@ -29,27 +34,17 @@ export interface Repositorio
    * Só na implementação Supabase: há sessão ativa? Ausente na fixture, que
    * dispensa login. Sem sessão o app pede para abrir pelo Telegram.
    */
-  temSessao?(): Promise<boolean>
   /** Obras do grupo do Telegram do usuário em que ele ainda não tem acesso. */
-  obrasDisponiveis(): Promise<ObraDisponivel[]>
   /** Pede acesso à obra (idempotente se já há pedido pendente). Falhas sobem como `ErroEnvio`. */
-  solicitarAcesso(obraId: string): Promise<void>
   /** Pedidos pendentes da obra, do mais antigo ao mais novo; só o gestor pode ver. */
-  listarSolicitacoes(obraId: string): Promise<SolicitacaoAcesso[]>
   /** Gestor aprova ou recusa um pedido. Falhas sobem como `ErroEnvio`. */
-  decidirSolicitacao(id: string, aprovar: boolean): Promise<void>
   /** Lista de pessoas x obras (só gestor de alguma obra). Falhas sobem como `ErroEnvio`. */
-  matrizAcessos(): Promise<MatrizAcessos>
   /** Define o acesso de uma pessoa a uma obra (qualquer gestor, qualquer obra). Falhas sobem como `ErroEnvio`. */
-  definirAcesso(obraId: string, usuarioId: string, papel: PapelAcesso): Promise<void>
   /** Pendência com fotos, ambiente, pavimento, papel do usuário e encerramento; null se não houver acesso. */
   obterPendencia(id: string): Promise<PendenciaDetalhe | null>
   /** Idempotente pelo `id`. Falhas sobem como `ErroEnvio` (`conflito` se já encerrada). */
   encerrarPendencia(dados: NovoEncerramento): Promise<{ id: string }>
   /** Participantes da obra (só gestor), gestores primeiro. */
-  listarParticipantes(obraId: string): Promise<Participante[]>
-  definirPapel(obraId: string, usuarioId: string, papel: PapelObra): Promise<void>
-  removerParticipante(obraId: string, usuarioId: string): Promise<void>
   /** Publicações `incerto`/`falhou` (e pendentes com muitas tentativas), mais recentes primeiro. */
   listarPublicacoesProblema(obraId: string): Promise<PublicacaoProblema[]>
   /** Volta a publicação para a fila de envio. */
@@ -59,11 +54,8 @@ export interface Repositorio
   /** Localiza um registro visível ao usuário (para o link `startapp`); null se não houver. */
   localizarRegistro(id: string): Promise<RegistroLocalizado | null>
   /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */
-  idUsuario(): Promise<string | null>
   /** O usuário é admin do Mini App (site de administração)? */
-  souAdmin(): Promise<boolean>
   /** Link de uso único (2 min) para abrir o site de administração já com a sessão. */
-  criarLinkAdmin(): Promise<LinkAdmin>
   /** Aba Relatórios: situação de hoje por etapa e boletins emitidos. */
   relatorios(): Promise<Relatorios>
   /** Painel da aba Relatórios: movimento por obra e dia da etapa, até hoje. */
@@ -87,11 +79,8 @@ export interface Repositorio
   /** Etapas ativas, com a participação do usuário. */
   etapasInicio(): Promise<EtapaInicio[]>
   /** Equipe de serviço da etapa (abertos e encerrados nas últimas 24 h). */
-  equipeServico(etapaId: string): Promise<EquipeServico>
   /** Check-in (exige estar a até 1 km da etapa). Falhas sobem como `ErroEnvio`. */
-  fazerCheckin(etapaId: string, posicao: Posicao): Promise<EquipeServico>
   /** Fecha o serviço aberto do usuário. Devolve a equipe da etapa dele. */
-  fazerCheckout(): Promise<EquipeServico>
 }
 
 /**

@@ -1,23 +1,23 @@
+import type { AcessosAdminRepositorio } from '@modules/acessos/application/ports/AcessosAdminRepositorio.port.ts'
+import type { AcessosRepositorio } from '@modules/acessos/application/ports/AcessosRepositorio.port.ts'
+import type { SessaoAdminRepositorio } from '@modules/acessos/application/ports/SessaoAdminRepositorio.port.ts'
 import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
 import type { PlantasRepositorio } from '@modules/plantas/application/ports/PlantasRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
 import type { ErroCliente, ResumoOrfaos, DadosAditivo, DadosEtapa, Aditivo, BoletimDetalhe, EdicaoBoletim, FiltroBoletins, ListaBoletins, ListaTodosBoletins, PedidoEmissao, EtapaDetalhe, Responsavel, DadosObra, Exclusao, EtapaLista, EtapaSalva, ObraAdmin, Organizacao, ObraLista, ObraSalva, PavimentoResumo, ResultadoExclusao, ResultadoExclusaoBoletim, ResultadoExclusaoEtapa, ResumoEtapa, ResumoObra } from './tipos.ts'
-import type { Admin, Pessoa, MatrizAcessosAdmin, PapelAcesso, DadosWidget, EstadoSessao, UsuarioApp } from '@modules/acessos/domain/tipos.ts'
 
 export interface RepositorioAdmin
-  extends Pick<RaRepositorio, 'listarRA' | 'definirQr' | 'removerQr'>,
+  extends SessaoAdminRepositorio,
+    AcessosAdminRepositorio,
+    Pick<AcessosRepositorio, 'definirAcesso'>,
+    Pick<RaRepositorio, 'listarRA' | 'definirQr' | 'removerQr'>,
     Pick<ModelosRepositorio, 'listarModelosAdmin' | 'registrarModelo' | 'retirarModelo'>,
     Pick<PlantasRepositorio, 'obterEditorPlanta' | 'listarPublicacoes' | 'enviarArquivo' | 'baixarOriginal' | 'publicarRevisao'> {
   /** Há sessão? É de um admin? */
-  estadoSessao(): Promise<EstadoSessao>
   /** Troca o token do link `#entrar=` (uso único) por sessão. */
-  entrarComToken(token: string): Promise<void>
   /** Troca os dados do Telegram Login Widget por sessão (só admins). */
-  entrarComWidget(dados: DadosWidget): Promise<void>
-  sair(): Promise<void>
   /** Só na fixture: entra sem Telegram (desenvolvimento e e2e). */
-  entrarModoTeste?(): Promise<void>
 
   /** Etapas (ativas e arquivadas) por `ordem, nome`, com as contagens de obras. */
   listarEtapas(): Promise<EtapaLista[]>
@@ -66,15 +66,10 @@ export interface RepositorioAdmin
   urlsFotos(paths: string[]): Promise<Record<string, string>>
 
   /** Pessoas que já abriram o Mini App, com nome de exibição e participações nas obras. */
-  listarPessoas(): Promise<Pessoa[]>
   /** Normaliza (maiúsculas, espaços); texto vazio ou null tira o nome de exibição. */
-  definirNomeExibicao(usuarioId: string, nome: string | null): Promise<{ id: string; nome: string; nome_exibicao: string | null }>
   /** RPC `matriz_acessos`: obras, pessoas, acessos por obra e pedidos pendentes. */
-  matrizAcessos(): Promise<MatrizAcessosAdmin>
   /** RPC `definir_acesso`: `nenhum` tira o acesso (e recusa o pedido pendente); liberar aprova o pedido. */
-  definirAcesso(obraId: string, usuarioId: string, papel: PapelAcesso): Promise<void>
   /** Id do usuário da sessão atual (para confirmar a alteração do próprio acesso). */
-  meuId(): Promise<string | null>
   /** Arquiva (true) ou desarquiva (false) a etapa; devolve `arquivada_em`. Não mexe no arquivamento das obras. */
   arquivarEtapa(slug: string, arquivada: boolean): Promise<string | null>
   /** Desliga o grupo do Telegram da etapa e os tópicos das obras dela. */
@@ -108,10 +103,6 @@ export interface RepositorioAdmin
   /** Tenta de novo remover os arquivos de uma exclusão que ficou pendente. */
   limparExclusao(id: string): Promise<ResultadoExclusao>
 
-  listarAdmins(): Promise<Admin[]>
-  incluirAdmin(usuarioId: string): Promise<void>
-  removerAdmin(usuarioId: string): Promise<void>
-  listarUsuarios(): Promise<UsuarioApp[]>
   /** RPC `admin_listar_erros_cliente`: erros do Mini App e do site, do mais recente ao mais antigo. */
   listarErrosCliente(limite?: number): Promise<ErroCliente[]>
   /** RPC `admin_resumo_orfaos`: arquivos órfãos por bucket e os 100 maiores (nada é apagado). */

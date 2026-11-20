@@ -1,16 +1,16 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
+import { criarAcessosSupabase } from '@modules/acessos/infra/AcessosSupabaseAdapter.ts'
+import { criarEquipeServicoSupabase } from '@modules/acessos/infra/EquipeServicoSupabaseAdapter.ts'
+import { criarSessaoSupabase } from '@modules/acessos/infra/SessaoSupabaseAdapter.ts'
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
 import { criarRaSupabase } from '@modules/ra/infra/RaSupabaseAdapter.ts'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
-import { entrarComTelegram } from './login.ts'
 import { configurarEnvioErros } from '../shared/infra/erros.ts'
 import { limitesPeriodo } from '../util/periodo.ts'
 import { nomeMostrado } from './nome.ts'
 import { FUSO_PADRAO, dataNoFuso } from '../shared/kernel/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
-import { dentroDoTelegram, idUsuarioTelegram, initData } from '../shared/infra/telegram/telegram.ts'
 import type { Ambiente, AmbienteDetalhe, DetalhePlanta, EstadoPublicacao, EtapaInicio, FiltroRegistros, FotoRegistro, ImagemPlanta, Marcador, NovaObservacao, NovoEncerramento, NovoRegistro, Etapa, Observacao, ObservacoesDoDia, ObraDaLista, ObraDetalhe, ObraResumo, Organizacao, ResumoObra, Pavimento, PendenciaDetalhe, Planta, PublicacaoProblema, RecortePt, RegistroLocalizado, RegistroResumo, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
-import type { EquipeServico, MembroServico, LinkAdmin, ObraDisponivel, PapelObra, Participante, SolicitacaoAcesso, MatrizAcessos } from '@modules/acessos/domain/tipos.ts'
 
 const SEGUNDOS_URL_ASSINADA = 3600
 const LOTE_IN = 100
@@ -55,35 +55,6 @@ function checar<T>(resposta: { data: T | null; error: { message: string } | null
 }
 
 type Linha = Record<string, unknown>
-
-function lerEquipeServico(dado: unknown): EquipeServico {
-  const d = (dado ?? {}) as Linha
-  const meu = d.meu_servico as Linha | null | undefined
-  return {
-    etapa_id: String(d.etapa_id ?? ''),
-    participa: d.participa === true,
-    tem_localizacao: d.tem_localizacao === true,
-    meu_servico: meu
-      ? {
-          id: String(meu.id),
-          etapa_id: String(meu.etapa_id),
-          etapa_nome: String(meu.etapa_nome ?? ''),
-          entrada_em: String(meu.entrada_em),
-        }
-      : null,
-    equipe: ((d.equipe ?? []) as Linha[]).map(
-      (m): MembroServico => ({
-        id: String(m.id),
-        usuario_id: String(m.usuario_id),
-        nome: String(m.nome ?? ''),
-        entrada_em: String(m.entrada_em),
-        saida_em: m.saida_em ? String(m.saida_em) : null,
-        saida_automatica: m.saida_automatica === true,
-        eu: m.eu === true,
-      }),
-    ),
-  }
-}
 
 function lotes<T>(itens: T[]): T[][] {
   const saida: T[][] = []
@@ -173,6 +144,9 @@ export function criarRepositorioSupabase(
   configurarEnvioErros(cliente, 'miniapp')
   const ra = criarRaSupabase(cliente)
   const modelos = criarModelosSupabase(cliente)
+  const acessos = criarAcessosSupabase(cliente)
+  const sessao = criarSessaoSupabase(cliente)
+  const equipe = criarEquipeServicoSupabase(cliente)
   async function obraPorSlug(slug: string): Promise<ObraResumo> {
     const linha = checar(
       await cliente.from('obra').select('id, slug, nome').eq('slug', slug).maybeSingle(),
@@ -293,22 +267,22 @@ export function criarRepositorioSupabase(
 
   return {
     obterGeometria: ra.obterGeometria,
-    async temSessao() {
-      return entrarComTelegram({
-        cliente,
-        urlSupabase: String(import.meta.env.VITE_SUPABASE_URL).replace(/\/+$/, ''),
-        chave: String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY),
-        initData: dentroDoTelegram() ? initData() : '',
-        idTelegram: idUsuarioTelegram(),
-        online: navigator.onLine,
-        fetch: (...args) => fetch(...args),
-      })
-    },
-
-    async idUsuario() {
-      const { data } = await cliente.auth.getSession()
-      return data.session?.user.id ?? null
-    },
+    temSessao: sessao.temSessao,
+    idUsuario: sessao.idUsuario,
+    souAdmin: sessao.souAdmin,
+    criarLinkAdmin: sessao.criarLinkAdmin,
+    equipeServico: equipe.equipeServico,
+    fazerCheckin: equipe.fazerCheckin,
+    fazerCheckout: equipe.fazerCheckout,
+    obrasDisponiveis: acessos.obrasDisponiveis,
+    solicitarAcesso: acessos.solicitarAcesso,
+    listarSolicitacoes: acessos.listarSolicitacoes,
+    decidirSolicitacao: acessos.decidirSolicitacao,
+    matrizAcessos: acessos.matrizAcessos,
+    definirAcesso: acessos.definirAcesso,
+    listarParticipantes: acessos.listarParticipantes,
+    definirPapel: acessos.definirPapel,
+    removerParticipante: acessos.removerParticipante,
 
     async resumoObras() {
       try {
@@ -344,80 +318,6 @@ export function criarRepositorioSupabase(
       } catch (e) {
         throw erroDoSupabase(e)
       }
-    },
-
-    async equipeServico(etapaId) {
-      try {
-        const { data, error } = await cliente.rpc('equipe_servico', { p_etapa: exigirUuid(etapaId, 'etapa') })
-        if (error) throw error
-        return lerEquipeServico(data)
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async fazerCheckin(etapaId, posicao) {
-      try {
-        const { data, error } = await cliente.rpc('fazer_checkin', {
-          p_etapa: exigirUuid(etapaId, 'etapa'),
-          p_latitude: posicao.latitude,
-          p_longitude: posicao.longitude,
-          p_precisao: posicao.precisao,
-        })
-        if (error) throw error
-        return lerEquipeServico(data)
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async fazerCheckout() {
-      try {
-        const { data, error } = await cliente.rpc('fazer_checkout')
-        if (error) throw error
-        return lerEquipeServico(data)
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async souAdmin() {
-      try {
-        const { data, error } = await cliente.rpc('sou_admin')
-        if (error) throw error
-        return data === true
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async criarLinkAdmin(): Promise<LinkAdmin> {
-      const { data } = await cliente.auth.getSession()
-      const jwt = data.session?.access_token
-      if (!jwt) throw new ErroEnvio('sessao', 'Sua sessão expirou. Abra o app novamente pelo Telegram.')
-      const base = String(import.meta.env.VITE_SUPABASE_URL).replace(/\/+$/, '')
-      let resposta: Response
-      try {
-        resposta = await fetch(`${base}/functions/v1/admin-sessao`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY),
-            Authorization: `Bearer ${jwt}`,
-          },
-          body: JSON.stringify({ acao: 'criar' }),
-        })
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-      if (resposta.status === 403) {
-        throw new ErroEnvio('permissao', 'Apenas admins do Mini App podem abrir a administração.')
-      }
-      const corpo = (await resposta.json().catch(() => null)) as Partial<LinkAdmin> | null
-      if (!resposta.ok || typeof corpo?.url !== 'string' || !/^https?:\/\//.test(corpo.url)) {
-        throw new ErroEnvio('desconhecido', 'Não foi possível abrir a administração. Tente de novo.')
-      }
-      return { url: corpo.url, expira_em: String(corpo.expira_em ?? '') }
     },
 
     async relatorios(): Promise<Relatorios> {
@@ -799,34 +699,6 @@ export function criarRepositorioSupabase(
       }
     },
 
-    async listarParticipantes(obraId) {
-      const dados = await chamar('listar_participantes', { p_obra: exigirUuid(obraId, 'obra') })
-      return ((dados ?? []) as Linha[]).map(
-        (l): Participante => ({
-          usuario_id: String(l.usuario_id),
-          nome: String(l.nome),
-          username: l.username ? String(l.username) : null,
-          papel: l.papel === 'gestor' ? 'gestor' : 'equipe',
-          desde: String(l.desde),
-        }),
-      )
-    },
-
-    async definirPapel(obraId, usuarioId, papel: PapelObra) {
-      await chamar('definir_papel', {
-        p_obra: exigirUuid(obraId, 'obra'),
-        p_usuario: exigirUuid(usuarioId, 'usuário'),
-        p_papel: papel,
-      })
-    },
-
-    async removerParticipante(obraId, usuarioId) {
-      await chamar('remover_participante', {
-        p_obra: exigirUuid(obraId, 'obra'),
-        p_usuario: exigirUuid(usuarioId, 'usuário'),
-      })
-    },
-
     async listarPublicacoesProblema(obraId) {
       const dados = await chamar('listar_publicacoes_problema', {
         p_obra: exigirUuid(obraId, 'obra'),
@@ -881,100 +753,6 @@ export function criarRepositorioSupabase(
       } catch (e) {
         throw erroDoSupabase(e)
       }
-    },
-
-    async obrasDisponiveis() {
-      try {
-        const { data, error } = await cliente.rpc('obras_disponiveis')
-        if (error) throw error
-        return ((data ?? []) as Linha[]).map(
-          (l): ObraDisponivel => ({
-            id: String(l.id),
-            slug: String(l.slug),
-            nome: String(l.nome),
-            solicitacao: l.solicitacao === 'pendente' || l.solicitacao === 'recusada' ? l.solicitacao : null,
-            etapa_id: String(l.etapa_id ?? ''),
-            etapa_nome: String(l.etapa_nome ?? ''),
-            etapa_ordem: Number(l.etapa_ordem ?? 0),
-          }),
-        )
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async solicitarAcesso(obraId) {
-      try {
-        const { error } = await cliente.rpc('solicitar_acesso', { p_obra: exigirUuid(obraId, 'obra') })
-        if (error) throw error
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async listarSolicitacoes(obraId) {
-      try {
-        const { data, error } = await cliente.rpc('listar_solicitacoes', {
-          p_obra: exigirUuid(obraId, 'obra'),
-        })
-        if (error) throw error
-        return ((data ?? []) as Linha[]).map(
-          (l): SolicitacaoAcesso => ({
-            id: String(l.id),
-            usuario_id: String(l.usuario_id),
-            nome: String(l.nome),
-            username: l.username ? String(l.username) : null,
-            criado_em: String(l.criado_em),
-          }),
-        )
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async decidirSolicitacao(id, aprovar) {
-      try {
-        const { error } = await cliente.rpc('decidir_solicitacao', {
-          p_id: exigirUuid(id, 'solicitação'),
-          p_aprovar: aprovar,
-        })
-        if (error) throw error
-      } catch (e) {
-        throw erroDoSupabase(e)
-      }
-    },
-
-    async matrizAcessos(): Promise<MatrizAcessos> {
-      const dados = ((await chamar('matriz_acessos', {})) ?? {}) as Linha
-      return {
-        obras: ((dados.obras ?? []) as Linha[]).map((o) => ({
-          id: String(o.id),
-          slug: String(o.slug),
-          nome: String(o.nome),
-        })),
-        pessoas: ((dados.pessoas ?? []) as Linha[]).map((l) => ({
-          id: String(l.id),
-          nome: String(l.nome),
-          username: l.username ? String(l.username) : null,
-          admin: l.admin === true,
-          vistoEm: l.visto_em ? String(l.visto_em) : null,
-          acessos: Object.fromEntries(
-            Object.entries((l.acessos ?? {}) as Record<string, unknown>).map(([k, v]) => [
-              k,
-              v === 'gestor' ? 'gestor' : 'equipe',
-            ]),
-          ),
-          pedidos: ((l.pedidos ?? []) as unknown[]).map(String),
-        })),
-      }
-    },
-
-    async definirAcesso(obraId, usuarioId, papel) {
-      await chamar('definir_acesso', {
-        p_obra: exigirUuid(obraId, 'obra'),
-        p_usuario: exigirUuid(usuarioId, 'usuário'),
-        p_papel: papel,
-      })
     },
 
     async localizarRegistro(id): Promise<RegistroLocalizado | null> {
