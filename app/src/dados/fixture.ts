@@ -8,6 +8,9 @@ import plantasJson from '../../../data/hto/plantas.json'
 import { criarAcessosFixture, ID_PATRICIO, ID_USUARIO, NOME_PATRICIO } from '@modules/acessos/infra/AcessosFixtureAdapter.ts'
 import { criarEquipeServicoFixture } from '@modules/acessos/infra/EquipeServicoFixtureAdapter.ts'
 import { criarSessaoFixture } from '@modules/acessos/infra/SessaoFixtureAdapter.ts'
+import { criarEtapasInicioFixture } from '@modules/obras/infra/EtapasInicioFixtureAdapter.ts'
+import { criarObrasFixture } from '@modules/obras/infra/ObrasFixtureAdapter.ts'
+import { criarOrganizacaoFixture } from '@modules/obras/infra/OrganizacaoFixtureAdapter.ts'
 import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
 import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
@@ -15,7 +18,7 @@ import { dataNoFuso, formatarDia } from '../shared/kernel/fuso.ts'
 import { dentroDoPeriodo } from '../util/periodo.ts'
 import type { Repositorio } from './repositorio.ts'
 import type { Encerramento, EstadoPublicacao, FiltroRegistros, FotoRegistro, NovaObservacao, NovoEncerramento, NovoRegistro, Observacao, ObservacoesDoDia, PendenciaDetalhe, PublicacaoProblema, RecortePt, RegistroLocalizado, RegistroResumo, BoletimRelatorio, EtapaRelatorio, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
-import type { Ambiente, AmbienteDetalhe, DetalhePlanta, EtapaInicio, ImagemPlanta, Etapa, ObraDaLista, ObraDetalhe, ObraResumo, Organizacao, Pavimento, Planta, ResumoObra } from '@modules/obras/domain/tipos.ts'
+import type { Ambiente, DetalhePlanta, ImagemPlanta, Etapa, ObraDaLista, Pavimento, Planta } from '@modules/obras/domain/tipos.ts'
 import type { PapelObra } from '@modules/acessos/domain/tipos.ts'
 
 const ID_HTO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
@@ -44,9 +47,6 @@ export const ETAPA_4: Etapa = {
   nome: '4ª ETAPA',
   ordem: 4,
 }
-
-/** Como a linha padrão de `organizacao` no banco: "CO-FZ", sem logo. */
-const NOME_ORGANIZACAO = 'CO-FZ'
 
 
 const OBRAS: ObraDaLista[] = [
@@ -268,27 +268,6 @@ const REGISTROS: RegistroResumo[] = [
 
 function porRecente(a: RegistroResumo, b: RegistroResumo): number {
   return b.recebido_em.localeCompare(a.recebido_em)
-}
-
-function contarAbertas(registros: RegistroResumo[]): Map<string, number> {
-  const m = new Map<string, number>()
-  for (const x of registros) {
-    if (x.tipo === 'pendencia' && x.situacao === 'aberta') {
-      m.set(x.ambiente.id, (m.get(x.ambiente.id) ?? 0) + 1)
-    }
-  }
-  return m
-}
-
-function ambientesComContagem(registros: RegistroResumo[]): Ambiente[] {
-  const abertas = contarAbertas(registros)
-  return AMBIENTES_BASE.map((a) => ({ ...a, pendencias_abertas: abertas.get(a.id) ?? 0 }))
-}
-
-function obraPorSlug(slug: string): ObraResumo {
-  const obra = OBRAS.find((o) => o.slug === slug)
-  if (!obra) throw new Error('Obra não encontrada.')
-  return { id: obra.id, slug: obra.slug, nome: obra.nome }
 }
 
 /** `<obra_id>/<revisao>/<pavimento>/...` vira `/__plantas/<revisao>/<pavimento>/...`. */
@@ -601,6 +580,18 @@ export function criarRepositorioFixture(
     exigirRede,
   })
 
+  const obras = criarObrasFixture({
+    obras: OBRAS,
+    obraComDados: ID_HTO,
+    pavimentos: PAVIMENTOS,
+    ambientes: AMBIENTES_BASE,
+    detalhePlanta,
+    registros: todos,
+    papelUsuario,
+  })
+  const organizacao = criarOrganizacaoFixture(opcoes.logo)
+  const etapasInicio = criarEtapasInicioFixture([ETAPA_2, ETAPA_3, ETAPA_4], ETAPA_4.id)
+
   const hoje = () => dataNoFuso(new Date(), FUSO_FIXTURE)
   const boletinsRel: BoletimRelatorio[] = boletinsIniciais(hoje())
   /** Como `privado.boletim_emitido`: só o dia de hoje pode estar emitido na fixture. */
@@ -651,6 +642,12 @@ export function criarRepositorioFixture(
     equipeServico: equipe.equipeServico,
     fazerCheckin: equipe.fazerCheckin,
     fazerCheckout: equipe.fazerCheckout,
+    listarObras: obras.listarObras,
+    resumoObras: obras.resumoObras,
+    obterObra: obras.obterObra,
+    obterAmbiente: obras.obterAmbiente,
+    organizacao: organizacao.organizacao,
+    etapasInicio: etapasInicio.etapasInicio,
     obrasDisponiveis: acessos.obrasDisponiveis,
     solicitarAcesso: acessos.solicitarAcesso,
     listarSolicitacoes: acessos.listarSolicitacoes,
@@ -660,10 +657,6 @@ export function criarRepositorioFixture(
     listarParticipantes: acessos.listarParticipantes,
     definirPapel: acessos.definirPapel,
     removerParticipante: acessos.removerParticipante,
-
-    async etapasInicio(): Promise<EtapaInicio[]> {
-      return [ETAPA_2, ETAPA_3, ETAPA_4].map((e) => ({ ...e, participa: e.id !== ETAPA_4.id }))
-    },
 
     async relatorios(): Promise<Relatorios> {
       const dia = hoje()
@@ -721,49 +714,6 @@ export function criarRepositorioFixture(
       const dia = boletinsRel.filter((b) => b.etapa_slug === alvo.etapa_slug && b.data === alvo.data)
       for (const b of dia) boletinsRel.splice(boletinsRel.indexOf(b), 1)
       return { numero: alvo.numero, data: alvo.data, revisoes: dia.length, mensagens: { apagadas: 1, falhas: 0 }, arquivos_erro: null }
-    },
-
-    async resumoObras(): Promise<ResumoObra[]> {
-      const registros = todos()
-      return OBRAS.map((o) => {
-        const dela = registros.filter((x) => x.obra.id === o.id)
-        return {
-          obra_id: o.id,
-          // No fixture só a HTO tem participação; nas outras o usuário só vê a obra.
-          papel: o.id === ID_HTO ? papelUsuario() : null,
-          servicos: dela.filter((x) => x.tipo === 'servico').length,
-          abertas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'aberta').length,
-          resolvidas: dela.filter((x) => x.tipo === 'pendencia' && x.situacao === 'resolvida').length,
-        }
-      })
-    },
-
-    async listarObras() {
-      return OBRAS.map((o) => ({ ...o, etapa: { ...o.etapa } }))
-    },
-
-    async organizacao(): Promise<Organizacao> {
-      return { nome: NOME_ORGANIZACAO, logo_url: opcoes.logo || null }
-    },
-
-    async obterObra(slug): Promise<ObraDetalhe> {
-      const obra = obraPorSlug(slug)
-      if (obra.id !== ID_HTO) return { obra, papel: 'equipe', pavimentos: [], ambientes: [] }
-      return { obra, papel: papelUsuario(), pavimentos: PAVIMENTOS, ambientes: ambientesComContagem(todos()) }
-    },
-
-    async obterAmbiente(slug, codigo): Promise<AmbienteDetalhe> {
-      const obra = obraPorSlug(slug)
-      const ambiente = ambientesComContagem(todos()).find((a) => a.codigo === codigo)
-      if (obra.id !== ID_HTO || !ambiente) throw new Error('Ambiente não encontrado.')
-      const pavimento = PAVIMENTOS.find((p) => p.codigo === ambiente.pavimento_codigo)!
-      return {
-        obra,
-        ambiente,
-        pavimento,
-        planta: pavimento.planta,
-        detalhe: detalhePlanta(pavimento.codigo, ambiente.codigo),
-      }
     },
 
     async listarRegistros(filtro: FiltroRegistros) {
