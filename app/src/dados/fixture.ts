@@ -20,7 +20,7 @@ import { criarRelatoriosFixture } from '@modules/relatorios/infra/RelatoriosFixt
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
 import { dataNoFuso } from '../shared/kernel/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
-import type { RecortePt } from './tipos.ts'
+import type { RecortePt } from '@shared/kernel/tipos.ts'
 import type { Encerramento, EstadoPublicacao, FotoRegistro, PublicacaoProblema, RegistroResumo } from '@modules/fiscalizacao/domain/tipos.ts'
 import type { Ambiente, DetalhePlanta, ImagemPlanta, Etapa, ObraDaLista, Pavimento, Planta } from '@modules/obras/domain/tipos.ts'
 import type { PapelObra } from '@modules/acessos/domain/tipos.ts'

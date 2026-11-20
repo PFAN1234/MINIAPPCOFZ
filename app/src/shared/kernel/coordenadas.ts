@@ -1,4 +1,4 @@
-import type { Marcador, RecortePt } from '../../dados/tipos.ts'
+import type { Marcador, RecortePt } from './tipos.ts'
 
 export interface ReferenciaImagem {
   /** `[largura, altura]` da página do PDF, em pontos. */

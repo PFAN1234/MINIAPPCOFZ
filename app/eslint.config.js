@@ -15,7 +15,7 @@ function fronteira(arquivos, camada, patterns) {
     files: [arquivos],
     rules: {
       'no-restricted-imports': [
-        'warn',
+        'error',
         {
           patterns: [
             {

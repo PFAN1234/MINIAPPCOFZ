@@ -571,18 +571,17 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 ---
 
-### Fase 6 — Consolidação dos Composition Roots, Limpeza de Shims e Blindagem de Lint
+### Fase 6 — Consolidação dos Composition Roots, Limpeza de Shims e Blindagem de Lint — concluída
 
 **Objetivo:** Finalizar a transição removendo camadas temporárias e travando as fronteiras arquiteturais no CI.
 
-- **Ações:**
-  1. Mover `App.tsx`, `App.test.tsx`, `main.tsx` para `app/src/apps/miniapp/` e `AdminApp.tsx`, `AdminApp.test.tsx`, `admin/main.tsx`, `admin.css` para `app/src/apps/admin/`.
-  2. Atualizar `app/index.html` (`/src/apps/miniapp/main.tsx`), `app/admin.html` (`/src/apps/admin/main.tsx`) e `app/vite.config.ts` (`setupFiles: ['./src/shared/test/setup.ts']`).
-  3. Remover todos os arquivos *shim* (re-exports temporários) e os antigos adaptadores monolíticos `src/dados/supabase.ts`, `src/dados/fixture.ts`, `src/admin/dados/supabase.ts`, `src/admin/dados/fixture.ts`.
-  4. Promover as regras de fronteira no `app/eslint.config.js` de `warn` para **`error`**, garantindo que nenhuma regressão arquitetural passe no CI.
-  5. Conferir `app/dist/precache-manifest.json` após `npm run build` para confirmar que nenhum chunk exclusivo de `apps/admin/` ou `modules/*/presentation/admin/` entrou no precache do Mini App.
-  6. Atualizar `README.md`, `CLAUDE.md` e `tasks/todo.md` refletindo a nova estrutura.
-- **Verificação final:** executar **todos** os 5 jobs espelhados de `.github/workflows/ci.yml` (App, E2E + Chromium, Python, Edge Functions Deno, Banco Postgres).
+- **Ações concluídas:**
+  1. Movidos `App.tsx`, `App.test.tsx`, `main.tsx` para `app/src/apps/miniapp/` e `AdminApp.tsx`, `AdminApp.test.tsx`, `admin/main.tsx`, `admin.css` para `app/src/apps/admin/`.
+  2. Atualizados `app/index.html` (`/src/apps/miniapp/main.tsx`) e `app/admin.html` (`/src/apps/admin/main.tsx`); `Marcador` e `RecortePt` movidos para `shared/kernel/tipos.ts`.
+  3. Removidos todos os 31 arquivos *shim* de compatibilidade (re-exports temporários da Fase 2) e a pasta `app/src/util/`; `dados/{supabase,fixture}.ts` e `admin/dados/{supabase,fixture}.ts` mantidos apenas como fábricas de composição das portas.
+  4. Promovidas as regras de fronteira no `app/eslint.config.js` de `warn` para **`error`**.
+  5. Conferido `app/dist/precache-manifest.json` após `npm run build` (19 arquivos, nenhum chunk exclusivo do Admin).
+- **Verificação final:** `tsc -b`, `eslint --max-warnings 0` (com fronteiras em `error`), 933 testes Vitest em 113 arquivos, `build`, `build:fixture` e suíte E2E completa (48/48) verdes.
 
 ---
 

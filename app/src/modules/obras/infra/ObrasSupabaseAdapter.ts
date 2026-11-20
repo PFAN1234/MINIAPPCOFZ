@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { erroDoSupabase } from '../../../dados/erros.ts'
-import type { RecortePt, Marcador } from '../../../dados/tipos.ts'
+import type { RecortePt, Marcador } from '@shared/kernel/tipos.ts'
 import type { Ambiente, AmbienteDetalhe, DetalhePlanta, Etapa, ImagemPlanta, ObraDaLista, ObraDetalhe, ObraResumo, Pavimento, Planta, ResumoObra } from '../domain/tipos.ts'
 import type { ObrasRepositorio } from '../application/ports/ObrasRepositorio.port.ts'
 import type { Linha } from './validacao.ts'

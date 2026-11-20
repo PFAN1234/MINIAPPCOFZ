@@ -4,10 +4,10 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App.tsx'
-import { RepositorioProvider } from './dados/contexto.tsx'
-import { criarRepositorioFixture, ETAPA_2 } from './dados/fixture.ts'
-import type { Repositorio } from './dados/repositorio.ts'
-import { recursos } from './recursos.ts'
+import { RepositorioProvider } from '../../dados/contexto.tsx'
+import { criarRepositorioFixture, ETAPA_2 } from '../../dados/fixture.ts'
+import type { Repositorio } from '../../dados/repositorio.ts'
+import { recursos } from '../../recursos.ts'
 
 vi.mock('@modules/plantas/presentation/miniapp/AbaPlanta.tsx', () => ({
   AbaPlanta: (props: { pavimentoCodigo: string; focoCodigo: string | null }) => (

@@ -5,11 +5,11 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import './admin.css'
 import AdminApp from './AdminApp.tsx'
-import ErrorBoundary from '../shared/ui/feedback/ErrorBoundary.tsx'
-import { instalarCapturaGlobal } from '../shared/infra/erros.ts'
-import { Carregando } from './componentes.tsx'
-import { RepositorioAdminProvider } from './dados/contexto.tsx'
-import { consumirTokenDaUrl, criarEntrada } from './entrada.ts'
+import ErrorBoundary from '@shared/ui/feedback/ErrorBoundary.tsx'
+import { instalarCapturaGlobal } from '@shared/infra/erros.ts'
+import { Carregando } from '../../admin/componentes.tsx'
+import { RepositorioAdminProvider } from '../../admin/dados/contexto.tsx'
+import { consumirTokenDaUrl, criarEntrada } from '../../admin/entrada.ts'
 
 instalarCapturaGlobal('admin')
 

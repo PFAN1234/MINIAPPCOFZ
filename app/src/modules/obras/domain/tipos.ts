@@ -1,6 +1,6 @@
 /** Tipos puros do contexto obras (lado Mini App): obras, etapas, pavimentos, ambientes e organização. */
 import type { PapelObra } from '@modules/acessos/domain/tipos.ts'
-import type { Marcador, RecortePt } from '../../../dados/tipos.ts'
+import type { Marcador, RecortePt } from '@shared/kernel/tipos.ts'
 
 export interface ObraResumo {
   id: string

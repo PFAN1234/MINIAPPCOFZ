@@ -442,4 +442,11 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Telemetria e manutenção: `modules/operacao/{domain/tipos.ts, application/ports/TelemetriaRepositorio.{port,contract}.ts, infra/Telemetria{Supabase,Fixture}Adapter.ts, presentation/admin/{Erros.tsx,hooks.ts}}`; `OperacaoFixture.contract.test.ts` (+2 testes).
 - [x] Offline: `offline/{armazenamento,cacheConsultas}` → `modules/operacao/infra/indexeddb/`; `offline/fila` → `modules/operacao/application/use-cases/`; `offline/contexto` e `components/{BarraSincronizacao,RegistroLocal}` → `modules/operacao/presentation/miniapp/`.
 - Estado final da 5E: typecheck, eslint (0 avisos), build e build:fixture verdes; 933 testes em 113 arquivos; e2e `offline`, `sw` e `admin` 8/8; fachadas `Repositorio` e `RepositorioAdmin` 100% compostas por portas.
-- Próximo: Fase 6 (fechamento).
+
+## Arquitetura — Fase 6 (fechamento)
+
+- [x] Composition Roots movidos para `apps/miniapp/{App,App.test,main}` e `apps/admin/{AdminApp,AdminApp.test,main,admin.css}`; `index.html` e `admin.html` atualizados.
+- [x] `Marcador` e `RecortePt` movidos de `dados/tipos.ts` para `shared/kernel/tipos.ts`; `util/util.test.ts` movido para `shared/kernel/util.test.ts`.
+- [x] Todos os 31 shims de re-export da Fase 2 removidos (`components/*`, `util/*`, `telegram*.ts`, `registrarSw.ts`); pasta `util/` removida.
+- [x] Regras de fronteira `no-restricted-imports` promovidas de `warn` para `error` em `app/eslint.config.js`.
+- Estado final da Fase 6: typecheck, eslint (0 erros/avisos com fronteiras em `error`), build e build:fixture verdes; 933 testes em 113 arquivos; suíte E2E completa 48/48; `precache-manifest.json` inalterado (19 arquivos, nenhum chunk do Admin).

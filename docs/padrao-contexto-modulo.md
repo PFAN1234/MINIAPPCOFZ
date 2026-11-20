@@ -97,3 +97,8 @@ Todo uso de `three` fica em `modules/ra/infra/three/` (`motor.ts`, `malha.ts`, `
 
 - Helpers de calendário puros usados em múltiplos contextos (`dataValida`, `somarDias`, `limitesPeriodo`, `dentroDoPeriodo`) pertencem a `shared/kernel/periodo.ts`; regras puras do cadastro de etapa (`fixtureBoletim.ts`) pertencem a `modules/obras/infra/camposEtapa.ts`, eliminando dependência invertida entre `obras` e `relatorios`.
 - Testes de fixture determinística (`painelFixture`) ficam nos arquivos de contrato/infra, mantendo `domain/*.test.ts` 100% puro.
+
+### Lições da Fase 6 (fechamento)
+
+- Ao mover `admin.css` para `apps/admin/`, atualizar também os `@import` CSS relativos (`../../shared/ui/estilo/...`).
+- Subir `no-restricted-imports` de `warn` para `error` só depois de remover todos os shims e mover os Composition Roots garante que as fronteiras de camada e o isolamento `apps/miniapp` vs `apps/admin` sejam travados no CI sem falsos positivos.

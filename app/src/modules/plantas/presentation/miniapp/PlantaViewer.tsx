@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from 'react'
 import { TransformComponent, TransformWrapper, type ReactZoomPanPinchRef } from 'react-zoom-pan-pinch'
-import type { Marcador, RecortePt } from '../../../../dados/tipos.ts'
+import type { Marcador, RecortePt } from '@shared/kernel/tipos.ts'
 import { marcadorParaPixel } from '@shared/kernel/coordenadas.ts'
 import { Pino } from '../../../../components/Pino.tsx'
 

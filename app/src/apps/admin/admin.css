@@ -1,6 +1,6 @@
 /* Site de administração: layout para computador, sempre claro (cores de estilo/tokens.css). */
-@import '../shared/ui/estilo/tokens.css';
-@import '../shared/ui/estilo/fontes.css';
+@import '../../shared/ui/estilo/tokens.css';
+@import '../../shared/ui/estilo/fontes.css';
 
 /* Apelidos dos nomes antigos durante a migração para estilo/tokens.css (saem na V5). */
 :root {
