@@ -592,6 +592,89 @@
   white-space: normal;
 }
 
+/* Painel Gestão: modelos publicados, envio e histórico, empilhados para o painel estreito. */
+.central-gestao {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.central-gestao section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.central-gestao h3 {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.central-gestao-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.central-gestao-lista > li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: var(--c-elevado);
+  border: 1px solid var(--c-borda);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.central-gestao-sigla {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.central-gestao-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.central-gestao-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.central-gestao-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.8rem;
+}
+.central-gestao-form progress {
+  width: 100%;
+  accent-color: var(--c-acento);
+}
+.central-botao-principal {
+  background: var(--c-acento);
+  color: var(--c-acento-texto);
+  font-weight: 600;
+}
+.central-botao-principal:hover:not(:disabled) {
+  background: var(--c-acento);
+  filter: brightness(1.08);
+}
+.central-botao-perigo {
+  color: var(--c-alerta);
+  border: 1px solid var(--c-alerta);
+}
+.central-gestao-alerta {
+  margin: 0;
+  padding: 6px 8px;
+  border-left: 3px solid var(--c-alerta);
+  background: var(--c-elevado);
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+.central-gestao-ok {
+  border-left-color: var(--c-link);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .central-aba,
   .central-botao {

@@ -6,6 +6,7 @@ import BarraVisibilidade from './barras/BarraVisibilidade.tsx'
 import type { ObraCentral } from '../../../domain/tipos.ts'
 import { useObrasCentral } from './CentralModelos.tsx'
 import Itens from './paineis/Itens.tsx'
+import Gestao from './paineis/Gestao.tsx'
 import Cortes from './paineis/Cortes.tsx'
 import Medicoes from './paineis/Medicoes.tsx'
 import Propriedades from './paineis/Propriedades.tsx'
@@ -41,7 +42,7 @@ const PAINEIS = [
   { id: 'documentos', nome: 'Documentos', etapa: 6 },
   { id: 'issues', nome: 'Issues', etapa: 7 },
   { id: 'medicoes', nome: 'Medições', etapa: 4 },
-  { id: 'gestao', nome: 'Gestão', etapa: 5 },
+  { id: 'gestao', nome: 'Gestão' },
 ] as const
 
 /**
@@ -404,8 +405,10 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
                 onApagar={apagarMedida}
                 onApagarTodas={() => apagarMedida()}
               />
+            ) : painel.id === 'gestao' ? (
+              <Gestao obra={obra} aoMudar={(s) => void estado.recarregarModelo(s)} />
             ) : (
-              <p className="central-sec">Disponível na etapa {painel.etapa}</p>
+              <p className="central-sec">Disponível na etapa {'etapa' in painel ? painel.etapa : ''}</p>
             )}
           </section>
           <section className="central-contexto" aria-label="Contexto">

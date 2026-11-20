@@ -25,6 +25,8 @@ export interface EstadoCentral {
   selecao: RefElemento[]
   motor: MotorVisualizador | null
   alternarModelo(sigla: string, ligado: boolean): Promise<void>
+  /** Depois de publicar ou retirar: relê a lista e troca a disciplina na cena (ou remonta, se não há motor). */
+  recarregarModelo(sigla: string): Promise<void>
   selecionar(refs: RefElemento[]): void
 }
 
@@ -46,7 +48,12 @@ export function useMotorCentral(slug: string, tema: TemaCentral, tela: RefObject
   const [selecao, setSelecao] = useState<RefElemento[]>([])
   const [motor, setMotor] = useState<MotorVisualizador | null>(null)
   const temaRef = useRef(tema)
+  const [rodada, setRodada] = useState(0)
   const motorRef = useRef<MotorVisualizador | null>(null)
+  const ativosRef = useRef<string[]>([])
+  useEffect(() => {
+    ativosRef.current = ativos
+  }, [ativos])
 
   const baixar = useCallback(
     async (m: ModeloFrag) => new Uint8Array(await modeloComCache(`${slug}/${m.sigla}@${m.hash}`, () => repo.baixarModelo(slug, m))),
@@ -65,6 +72,9 @@ export function useMotorCentral(slug: string, tema: TemaCentral, tela: RefObject
         const lista = ordenarPorReferencia(await repo.listarModelos(slug))
         if (cancelado) return
         setModelos(lista)
+        setFalhas([])
+        setAtivos([])
+        setErro(null)
         if (lista.length === 0) {
           setFase('vazio')
           return
@@ -124,7 +134,7 @@ export function useMotorCentral(slug: string, tema: TemaCentral, tela: RefObject
       setMotor(null)
     }
     // O tema entra por ref: trocá-lo não remonta o motor.
-  }, [slug, repo, fabrica, baixar, tela])
+  }, [slug, repo, fabrica, baixar, tela, rodada])
 
   useEffect(() => {
     temaRef.current = tema
@@ -156,10 +166,44 @@ export function useMotorCentral(slug: string, tema: TemaCentral, tela: RefObject
     [baixar, modelos],
   )
 
+  const recarregarModelo = useCallback(
+    async (sigla: string) => {
+      const lista = ordenarPorReferencia(await repo.listarModelos(slug))
+      setModelos(lista)
+      const m = motorRef.current
+      if (!m || lista.length === 0) {
+        // Sem motor (vazio ou erro) ou sem nada publicado: refaz a montagem inteira.
+        setFase(temWebGL() ? 'preparando' : 'sem-webgl')
+        setProgresso(0)
+        setRodada((r) => r + 1)
+        return
+      }
+      if (ativosRef.current.includes(sigla)) {
+        m.descarregar(sigla)
+        setAtivos((a) => a.filter((s) => s !== sigla))
+      }
+      const mod = lista.find((x) => x.sigla === sigla)
+      if (mod) {
+        try {
+          await m.carregar([{ sigla, dados: await baixar(mod) }], () => undefined)
+          setFalhas((f) => f.filter((s) => s !== sigla))
+          setAtivos((a) => (a.includes(sigla) ? a : [...a, sigla]))
+        } catch (e) {
+          setFalhas((f) => (f.includes(sigla) ? f : [...f, sigla]))
+          if (!(e instanceof ErroCarregamento)) setErro(texto(e, `Falha ao carregar ${sigla}.`))
+        }
+      } else {
+        setFalhas((f) => f.filter((s) => s !== sigla))
+      }
+      setVersao((v) => v + 1)
+    },
+    [repo, slug, baixar],
+  )
+
   const selecionar = useCallback((refs: RefElemento[]) => {
     motorRef.current?.selecionar(refs)
     setSelecao(refs)
   }, [])
 
-  return { fase, progresso, falhas, erro, modelos, ativos, versao, selecao, motor, alternarModelo, selecionar }
+  return { fase, progresso, falhas, erro, modelos, ativos, versao, selecao, motor, alternarModelo, recarregarModelo, selecionar }
 }

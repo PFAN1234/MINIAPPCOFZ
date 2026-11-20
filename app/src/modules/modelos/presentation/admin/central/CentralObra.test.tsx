@@ -41,9 +41,14 @@ function renderizar(rota: string) {
 }
 
 function renderizar2(rota: string) {
+  const base = criarRepositorioAdminFixture()
   const repo = {
-    ...criarRepositorioAdminFixture(),
-    listarObrasCentral: async () => OBRAS,
+    ...base,
+    // O Storage falso confere a pasta com o id da obra da fixture (usado ao publicar pela Gestão).
+    listarObrasCentral: async () => {
+      const id = (await base.obterObra('hto')).obra.id
+      return OBRAS.map((o) => (o.slug === 'hto' ? { ...o, obra_id: id } : o))
+    },
     listarModelos: async () => modelos,
     baixarModelo: async () => {
       await portao
@@ -82,7 +87,7 @@ describe('CentralObra', () => {
     const usuario = userEvent.setup()
     renderizar('/modelos/hto?painel=gestao')
     expect(await screen.findByRole('tab', { name: 'Gestão', selected: true })).toBeInTheDocument()
-    expect(screen.getByText('Disponível na etapa 5')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Enviar modelo' })).toBeInTheDocument()
     await usuario.click(screen.getByRole('tab', { name: 'Issues' }))
     expect(screen.getByTestId('url')).toHaveTextContent('/modelos/hto?painel=issues')
     expect(screen.getByRole('tab', { name: 'Issues', selected: true })).toBeInTheDocument()
@@ -399,6 +404,26 @@ describe('CentralObra', () => {
         await waitFor(() => expect(motor.chamadasDe('mostrar')).toEqual([[[parede]]]))
         expect(await screen.findByRole('button', { name: 'Ocultar IFCWALL' })).toBeInTheDocument()
       })
+    })
+
+    it('Gestão: publicar e retirar trocam a disciplina na cena', async () => {
+      const usuario = userEvent.setup()
+      renderizar('/modelos/hto?painel=gestao')
+      await waitFor(() => expect(motor.carregadas).toEqual(['ARQ', 'EST']))
+      const arquivo = new File([new Uint8Array([0x78, 0x9c, 1, 2, 3, 4])], 'CE01-14PE01-EST-R02.frag')
+      await usuario.upload(await screen.findByLabelText(/Arquivo do modelo/), arquivo)
+      expect(screen.getByLabelText('Sigla da disciplina')).toHaveValue('EST')
+      modelos = [frag('ARQ'), { ...frag('EST'), hash: 'novo' }]
+      await usuario.click(screen.getByRole('button', { name: 'Publicar EST' }))
+      expect(await screen.findByText(/Publicado: EST/)).toBeInTheDocument()
+      await waitFor(() => expect(motor.chamadasDe('descarregar')).toEqual([['EST']]))
+      await waitFor(() => expect(motor.chamadasDe('carregar').at(-1)).toEqual([['EST']]))
+
+      modelos = [frag('ARQ')]
+      await usuario.click(await screen.findByRole('button', { name: 'Retirar EST' }))
+      await usuario.click(screen.getByRole('button', { name: 'Confirmar: retirar EST' }))
+      await waitFor(() => expect(motor.chamadasDe('descarregar')).toEqual([['EST'], ['EST']]))
+      expect(motor.carregadas).toEqual(['ARQ'])
     })
 
     it('trocar o tema repassa ao motor sem remontar', async () => {
