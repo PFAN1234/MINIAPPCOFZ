@@ -450,3 +450,18 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Todos os 31 shims de re-export da Fase 2 removidos (`components/*`, `util/*`, `telegram*.ts`, `registrarSw.ts`); pasta `util/` removida.
 - [x] Regras de fronteira `no-restricted-imports` promovidas de `warn` para `error` em `app/eslint.config.js`.
 - Estado final da Fase 6: typecheck, eslint (0 erros/avisos com fronteiras em `error`), build e build:fixture verdes; 933 testes em 113 arquivos; suíte E2E completa 48/48; `precache-manifest.json` inalterado (19 arquivos, nenhum chunk do Admin).
+
+## Central de modelos (admin › Modelos)
+
+Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelos.md`. Branch `feature/admin-central-modelos`, PR único ao fim.
+
+- [x] Decisões fechadas com o usuário (2026-11-20).
+- [ ] 0 Spike (API v3, propriedades no `.frag`, tamanho do chunk)
+- [ ] 1 Página, tema e casca
+- [ ] 2 Motor 3D e navegação
+- [ ] 3 Inspeção
+- [ ] 4 Cortes, vistas e medições
+- [ ] 5 Gestão de modelos
+- [ ] 6 Documentos
+- [ ] 7 Issues e BCF
+- [ ] 8 Fechamento (e2e, docs, produção, PR)
