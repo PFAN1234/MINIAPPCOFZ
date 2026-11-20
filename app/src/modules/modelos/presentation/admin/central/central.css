@@ -603,6 +603,25 @@
   flex-direction: column;
   gap: 8px;
 }
+.central-gestao p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+.central-gestao input[type='file'] {
+  font-size: 0.8rem;
+  padding: 4px;
+}
+.central-gestao input[type='file']::file-selector-button {
+  margin-right: 8px;
+  padding: 4px 10px;
+  font: inherit;
+  color: var(--c-texto);
+  background: var(--c-elevado);
+  border: 1px solid var(--c-borda);
+  border-radius: 4px;
+  cursor: pointer;
+}
 .central-gestao h3 {
   margin: 0;
   font-size: 0.85rem;
@@ -666,13 +685,15 @@
 .central-gestao-alerta {
   margin: 0;
   padding: 6px 8px;
-  border-left: 3px solid var(--c-alerta);
-  background: var(--c-elevado);
-  border-radius: 4px;
+  color: var(--c-alerta);
+  border: 1px solid currentColor;
+  border-radius: 6px;
   font-size: 0.8rem;
 }
 .central-gestao-ok {
-  border-left-color: var(--c-link);
+  color: var(--c-texto);
+  border-color: var(--c-borda);
+  background: var(--c-elevado);
 }
 
 @media (prefers-reduced-motion: reduce) {
