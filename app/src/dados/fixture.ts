@@ -5,22 +5,22 @@
  */
 import ambientesJson from '../../../data/hto/ambientes.json'
 import plantasJson from '../../../data/hto/plantas.json'
+import { criarAcessosFixture, ID_PATRICIO, ID_USUARIO, NOME_PATRICIO } from '@modules/acessos/infra/AcessosFixtureAdapter.ts'
+import { criarEquipeServicoFixture } from '@modules/acessos/infra/EquipeServicoFixtureAdapter.ts'
+import { criarSessaoFixture } from '@modules/acessos/infra/SessaoFixtureAdapter.ts'
 import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
 import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
-import { nomeMostrado } from './nome.ts'
 import { dataNoFuso, formatarDia } from '../shared/kernel/fuso.ts'
 import { dentroDoPeriodo } from '../util/periodo.ts'
 import type { Repositorio } from './repositorio.ts'
 import type { Ambiente, AmbienteDetalhe, Encerramento, DetalhePlanta, EstadoPublicacao, EtapaInicio, FiltroRegistros, FotoRegistro, ImagemPlanta, NovaObservacao, NovoEncerramento, NovoRegistro, Etapa, Observacao, ObservacoesDoDia, ObraDaLista, ObraDetalhe, ObraResumo, Organizacao, Pavimento, PendenciaDetalhe, Planta, PublicacaoProblema, RecortePt, RegistroLocalizado, RegistroResumo, ResumoObra, BoletimRelatorio, EtapaRelatorio, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
-import type { EquipeServico, MembroServico, LinkAdmin, ObraDisponivel, PapelObra, Participante, SolicitacaoAcesso, MatrizAcessos, PapelAcesso } from '@modules/acessos/domain/tipos.ts'
+import type { PapelObra } from '@modules/acessos/domain/tipos.ts'
 
 const ID_HTO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 const ID_AURORA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e02'
 
-const ID_DEMONSTRACAO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e03'
 const ID_ALOJAMENTOS = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e04'
-const ID_PEDIDO_MARIA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4f01'
 
 /** Etapas da fixture: as obras atuais na 2ª, uma obra simples na 3ª (testes do seletor). */
 export const ETAPA_2: Etapa = {
@@ -47,41 +47,6 @@ export const ETAPA_4: Etapa = {
 /** Como a linha padrão de `organizacao` no banco: "CO-FZ", sem logo. */
 const NOME_ORGANIZACAO = 'CO-FZ'
 
-/** Obra em que o usuário de teste está no grupo do Telegram, mas sem acesso. */
-const OBRA_DEMONSTRACAO: ObraResumo = {
-  id: ID_DEMONSTRACAO,
-  slug: 'demonstracao',
-  nome: 'Obra Demonstração',
-}
-
-const PEDIDO_MARIA: SolicitacaoAcesso = {
-  id: ID_PEDIDO_MARIA,
-  usuario_id: '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a01',
-  nome: 'Maria Souza',
-  username: 'maria',
-  criado_em: '2026-11-09T18:30:00Z',
-}
-
-const ID_USUARIO = 'usuario-teste'
-const ID_MARCOS = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a02'
-const ID_JOAO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a03'
-const ID_PATRICIO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a04'
-
-/**
- * Pessoa com nome de exibição (definido pelo admin no site): o app mostra `CP PATRICIO`, e não o
- * nome do Telegram. As demais pessoas da fixture não têm nome de exibição e aparecem pelo do Telegram.
- */
-const PATRICIO = { nome: 'Patricio Ferreira', nome_exibicao: 'CP PATRICIO' }
-const NOME_PATRICIO = nomeMostrado(PATRICIO)!
-
-const PARTICIPANTES_BASE: (Participante & { papel_inicial: PapelObra })[] = [
-  { usuario_id: ID_USUARIO, nome: 'Você (teste)', username: 'voce', papel: 'gestor', papel_inicial: 'gestor', desde: '2026-10-20T12:00:00Z' },
-  { usuario_id: ID_MARCOS, nome: 'Marcos Teixeira', username: 'marcos', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-22T14:30:00Z' },
-  { usuario_id: ID_JOAO, nome: 'João Lima', username: 'joao', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-25T09:10:00Z' },
-  { usuario_id: ID_PATRICIO, nome: NOME_PATRICIO, username: 'patricio', papel: 'equipe', papel_inicial: 'equipe', desde: '2026-10-26T11:00:00Z' },
-]
-
-const ID_ANA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4a05'
 
 const OBRAS: ObraDaLista[] = [
   { id: ID_HTO, slug: 'hto', nome: 'HTO', etapa: ETAPA_2 },
@@ -570,49 +535,6 @@ export function criarRepositorioFixture(
   const removidos = salvo.removidos
   const publicacoes = salvo.publicacoes
   const observacoes = salvo.observacoes
-  // Equipe de serviço: só em memória. A 4ª etapa já tem um colega de serviço (usuário não participa dela).
-  const etapasServico = [ETAPA_2, ETAPA_3, ETAPA_4]
-  let servicos: (MembroServico & { etapa_id: string })[] = [
-    {
-      id: 'servico-colega',
-      etapa_id: ETAPA_4.id,
-      usuario_id: 'usuario-colega',
-      nome: 'SD COLEGA',
-      entrada_em: new Date(Date.now() - 2 * 3_600_000).toISOString(),
-      saida_em: null,
-      saida_automatica: false,
-      eu: false,
-    },
-  ]
-  let proximoServico = 1
-  function equipeDaEtapa(etapaId: string): EquipeServico {
-    const etapa = etapasServico.find((e) => e.id === etapaId)
-    if (!etapa) throw new ErroEnvio('nao_encontrado', 'Etapa não encontrada')
-    const aberto = servicos.find((s) => s.eu && s.saida_em === null)
-    const etapaAberto = aberto && etapasServico.find((e) => e.id === aberto.etapa_id)
-    return {
-      etapa_id: etapa.id,
-      participa: etapa.id !== ETAPA_4.id,
-      tem_localizacao: true,
-      meu_servico:
-        aberto && etapaAberto
-          ? { id: aberto.id, etapa_id: aberto.etapa_id, etapa_nome: etapaAberto.nome, entrada_em: aberto.entrada_em }
-          : null,
-      equipe: servicos
-        .filter((s) => s.etapa_id === etapa.id)
-        .sort((a, b) => Number(b.saida_em === null) - Number(a.saida_em === null) || b.entrada_em.localeCompare(a.entrada_em))
-        .map((s) => ({
-          id: s.id,
-          usuario_id: s.usuario_id,
-          nome: s.nome,
-          entrada_em: s.entrada_em,
-          saida_em: s.saida_em,
-          saida_automatica: s.saida_automatica,
-          eu: s.eu,
-        })),
-    }
-  }
-
   function persistir(): void {
     if (!persistencia) return
     try {
@@ -663,47 +585,20 @@ export function criarRepositorioFixture(
     )
   }
 
-  function papelUsuario(): PapelObra {
-    return papeis[ID_USUARIO] ?? 'gestor'
-  }
-
-  function exigirGestor(obraId: string): void {
-    if (obraId !== ID_HTO || papelUsuario() !== 'gestor') {
-      throw new ErroEnvio('permissao', 'Só gestores da obra podem fazer isto.')
-    }
-  }
-
-  function participantesAtuais(): Participante[] {
-    return PARTICIPANTES_BASE.filter((p) => !removidos.includes(p.usuario_id)).map(
-      ({ papel_inicial, ...p }) => ({ ...p, papel: papeis[p.usuario_id] ?? papel_inicial }),
-    )
-  }
-
-  // Lista de acessos: só em memória. A HTO segue os participantes; as outras obras, esta tabela.
-  const acessosFora: Record<string, Record<string, 'equipe' | 'gestor'>> = {
-    [ID_AURORA]: { [ID_MARCOS]: 'equipe' },
-    [ID_ALOJAMENTOS]: {},
-  }
-  const adminsDoGrupo = [ID_ANA]
-  const outrasPessoas = { [ID_ANA]: { nome: 'Ana Prado', username: 'anaprado' }, [PEDIDO_MARIA.usuario_id]: { nome: PEDIDO_MARIA.nome, username: PEDIDO_MARIA.username } }
-
-  function papelNaObra(obraId: string, usuarioId: string): 'nenhum' | 'equipe' | 'gestor' {
-    if (adminsDoGrupo.includes(usuarioId)) return 'gestor'
-    if (obraId === ID_HTO) {
-      const p = participantesAtuais().find((x) => x.usuario_id === usuarioId)
-      return p ? p.papel : (acessosFora[ID_HTO]?.[usuarioId] ?? 'nenhum')
-    }
-    return acessosFora[obraId]?.[usuarioId] ?? 'nenhum'
-  }
-
-  function exigirOutroGestor(usuarioId: string): void {
-    const outros = participantesAtuais().filter(
-      (p) => p.papel === 'gestor' && p.usuario_id !== usuarioId,
-    )
-    if (outros.length === 0) {
-      throw new ErroEnvio('validacao', 'A obra precisa de pelo menos um gestor.')
-    }
-  }
+  const acessos = criarAcessosFixture({
+    admin: opcoes.admin === true,
+    estado: { pedidos, decisoes, papeis, removidos },
+    persistir,
+    exigirRede,
+    obras: OBRAS,
+  })
+  const { papelUsuario, exigirGestor } = acessos
+  const sessao = criarSessaoFixture({ admin: opcoes.admin === true, idUsuario: ID_USUARIO, exigirRede })
+  const equipe = criarEquipeServicoFixture({
+    etapas: [ETAPA_2, ETAPA_3, ETAPA_4],
+    etapaSemParticipacao: ETAPA_4.id,
+    exigirRede,
+  })
 
   const hoje = () => dataNoFuso(new Date(), FUSO_FIXTURE)
   const boletinsRel: BoletimRelatorio[] = boletinsIniciais(hoje())
@@ -749,9 +644,24 @@ export function criarRepositorioFixture(
     listarModelos: modelos.listarModelos,
     baixarModelo: modelos.baixarModelo,
     obterGeometria: ra.obterGeometria,
+    idUsuario: sessao.idUsuario,
+    souAdmin: sessao.souAdmin,
+    criarLinkAdmin: sessao.criarLinkAdmin,
+    equipeServico: equipe.equipeServico,
+    fazerCheckin: equipe.fazerCheckin,
+    fazerCheckout: equipe.fazerCheckout,
+    obrasDisponiveis: acessos.obrasDisponiveis,
+    solicitarAcesso: acessos.solicitarAcesso,
+    listarSolicitacoes: acessos.listarSolicitacoes,
+    decidirSolicitacao: acessos.decidirSolicitacao,
+    matrizAcessos: acessos.matrizAcessos,
+    definirAcesso: acessos.definirAcesso,
+    listarParticipantes: acessos.listarParticipantes,
+    definirPapel: acessos.definirPapel,
+    removerParticipante: acessos.removerParticipante,
 
     async etapasInicio(): Promise<EtapaInicio[]> {
-      return etapasServico.map((e) => ({ ...e, participa: e.id !== ETAPA_4.id }))
+      return [ETAPA_2, ETAPA_3, ETAPA_4].map((e) => ({ ...e, participa: e.id !== ETAPA_4.id }))
     },
 
     async relatorios(): Promise<Relatorios> {

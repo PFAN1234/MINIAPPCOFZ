@@ -4,6 +4,8 @@
  * organização "CO-FZ" sem logo, tudo em memória. Reproduz as regras das RPCs (slug, pavimento com
  * ambientes, último admin, etapas). Nunca entra no build de produção.
  */
+import { criarAcessosAdminFixture } from '@modules/acessos/infra/AcessosAdminFixtureAdapter.ts'
+import { criarSessaoAdminFixture } from '@modules/acessos/infra/SessaoAdminFixtureAdapter.ts'
 import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
 import { criarPlantasFixture, type AmbientesJson } from '@modules/plantas/infra/PlantasFixtureAdapter.ts'
 import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
@@ -16,7 +18,7 @@ import { aplicarCampos, calcularFaltando, calcularPrazo, CAMPOS_VAZIOS, camposDe
 import type { RepositorioAdmin } from './repositorio.ts'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
 import { CABECALHO_LINHA_MAX, CABECALHO_LINHAS_MAX, CAMINHO_LOGO, ErroAdmin, NOME_OM_MAX, novoCaminhoLogo, problemaDoLogo, type ErroCliente, type ResumoOrfaos, type BucketObra, type Aditivo, type CamposEtapa, type BoletimDaLista, type BoletimDetalhe, type BoletimEmitido, type EdicaoBoletim, type SnapshotBoletim, type PedidoEmissao, type EtapaDetalhe, type EtapaLista, type Responsavel, type Organizacao, type Exclusao, type ObraAdmin, type ObraLista, type PavimentoAdmin, type PavimentoResumo, type ResumoObra } from './tipos.ts'
-import type { Admin, EstadoSessao, Pessoa, MatrizAcessosAdmin, PapelAcesso, UsuarioApp } from '@modules/acessos/domain/tipos.ts'
+import type { UsuarioApp } from '@modules/acessos/domain/tipos.ts'
 
 const SLUG = /^[a-z0-9-]+$/
 const CODIGO = /^[a-z0-9][a-z0-9-]*$/
@@ -258,8 +260,6 @@ const ERROS_CLIENTE_BASE: ErroCliente[] = [
 ]
 
 export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?: boolean } = {}): RepositorioAdmin {
-  const ehAdmin = opcoes.admin !== false
-  let sessao = opcoes.sessao !== false
   const etapas: EtapaMemoria[] = [
     {
       id: 'etapa-2a',
@@ -382,23 +382,6 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       'COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)',
     ],
   }
-  /** `usuario.nome_exibicao`. */
-  const nomesExibicao = new Map<string, string | null>([['usuario-patricio', 'CP PATRICIO']])
-  const nomeExibicao = (id: string) => nomesExibicao.get(id) ?? null
-  /** Papel de cada pessoa em cada obra (para "participações" da tela de pessoas). */
-  const participantes: { usuario_id: string; obra_id: string; papel: string }[] = [
-    { usuario_id: 'usuario-patricio', obra_id: 'obra-hto', papel: 'gestor' },
-    { usuario_id: 'usuario-eduardo', obra_id: 'obra-hto', papel: 'equipe' },
-    { usuario_id: 'usuario-maria', obra_id: 'obra-cofz', papel: 'equipe' },
-  ]
-  /** Pedidos de acesso pendentes: usuário → obras. */
-  const pedidosAcesso = new Map<string, Set<string>>([['usuario-maria', new Set(['obra-hto'])]])
-  /** Admin do grupo é gestor de todas as obras. */
-  const papelEfetivo = (obraId: string, usuarioId: string): PapelAcesso => {
-    if (admins.has(usuarioId)) return 'gestor'
-    const p = participantes.find((x) => x.usuario_id === usuarioId && x.obra_id === obraId)?.papel
-    return p === 'gestor' ? 'gestor' : p === 'equipe' ? 'equipe' : 'nenhum'
-  }
   /** Logos enviados: caminho → data URL. */
   const logos = new Map<string, string>()
   const organizacaoAtual = (): Organizacao => ({
@@ -407,11 +390,6 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     cabecalho: [...organizacao.cabecalho],
     logo_url: organizacao.logo_path ? (logos.get(organizacao.logo_path) ?? null) : null,
   })
-  const admins = new Map<string, { criado_em: string; criado_por: string | null }>([
-    [VOCE.id, { criado_em: '2026-11-11T12:00:00Z', criado_por: null }],
-    ['usuario-patricio', { criado_em: '2026-11-11T12:00:00Z', criado_por: null }],
-  ])
-  if (!ehAdmin) admins.delete(VOCE.id)
   let sequencia = 0
   const exclusoes: Exclusao[] = []
   function resumoDe(o: ObraMemoria): ResumoObra {
@@ -428,8 +406,8 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     }
   }
   function exigirAdmin(): void {
-    if (!sessao) throw new ErroAdmin('Sua sessão expirou. Entre de novo.')
-    if (!admins.has(VOCE.id)) throw new ErroAdmin('Acesso negado: apenas admins do Mini App.')
+    if (!sessaoAdm.temSessaoAtiva()) throw new ErroAdmin('Sua sessão expirou. Entre de novo.')
+    if (!acessosAdm.ehAdmin()) throw new ErroAdmin('Acesso negado: apenas admins do Mini App.')
   }
 
   function obraPorSlug(slug: string): ObraMemoria {
@@ -448,7 +426,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     return e.responsaveis.map((r, i) => ({
       usuario_id: r.usuario_id,
       nome: nomeDaPessoa(r.usuario_id),
-      nome_exibicao: nomeExibicao(r.usuario_id),
+      nome_exibicao: acessosAdm.nomeExibicao(r.usuario_id),
       funcao: r.funcao,
       ordem: i,
     }))
@@ -496,10 +474,21 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     return exclusao
   }
 
-  const nomeDe = (id: string | null) => USUARIOS_BASE.find((u) => u.id === id)?.nome ?? null
   const ordenarPavs = (o: ObraMemoria) =>
     [...o.pavimentos].sort((a, b) => a.ordem - b.ordem || a.codigo.localeCompare(b.codigo))
 
+  const acessosAdm = criarAcessosAdminFixture({
+    admin: opcoes.admin !== false,
+    voce: VOCE,
+    usuarios: USUARIOS_BASE,
+    obras: () => obras.map((o) => ({ id: o.id, slug: o.slug, nome: o.nome, etapaNome: etapaDe(o).nome })),
+    exigirAdmin,
+  })
+  const sessaoAdm = criarSessaoAdminFixture({
+    sessaoInicial: opcoes.sessao !== false,
+    voce: VOCE,
+    ehAdmin: acessosAdm.ehAdmin,
+  })
   const ra = criarRaFixture({ exigirAdmin })
   const plantas = criarPlantasFixture({
     exigirAdmin,
@@ -520,6 +509,20 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     listarRA: ra.listarRA,
     definirQr: ra.definirQr,
     removerQr: ra.removerQr,
+    estadoSessao: sessaoAdm.estadoSessao,
+    entrarComToken: sessaoAdm.entrarComToken,
+    entrarComWidget: sessaoAdm.entrarComWidget,
+    entrarModoTeste: sessaoAdm.entrarModoTeste,
+    sair: sessaoAdm.sair,
+    meuId: sessaoAdm.meuId,
+    listarPessoas: acessosAdm.listarPessoas,
+    definirNomeExibicao: acessosAdm.definirNomeExibicao,
+    matrizAcessos: acessosAdm.matrizAcessos,
+    definirAcesso: acessosAdm.definirAcesso,
+    listarAdmins: acessosAdm.listarAdmins,
+    incluirAdmin: acessosAdm.incluirAdmin,
+    removerAdmin: acessosAdm.removerAdmin,
+    listarUsuarios: acessosAdm.listarUsuarios,
 
     async listarEtapas(): Promise<EtapaLista[]> {
       exigirAdmin()
