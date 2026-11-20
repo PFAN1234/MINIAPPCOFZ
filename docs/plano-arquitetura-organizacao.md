@@ -543,7 +543,8 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 
 **Objetivo:** Migrar os contextos centrais de negócio fatiando o restante dos adaptadores monolíticos (`dados/` e `admin/dados/`), extraindo cada porta *just-in-time* com seu *Contract Test*. Um PR por subfase:
 
-#### Fase 5A — Contexto `acessos`
+#### Fase 5A — Contexto `acessos` — concluída (partes 1 e 2)
+- `presentation/`: `miniapp/` (`Acessos`, `AcessosEquipe`, `PedidosAcesso`, `EquipeServico`) e `admin/` (`Pessoas`, `Admins`, `Entrar`); chunks e precache idênticos aos de antes.
 - Extrair `Sessao`, `Acessos`, `Pessoas`, `Admins` e `EquipeServico` (check-in/out) dos adaptadores monolíticos, com portas segregadas (sem `use-cases/` vazios).
 - **Critério de pronto:** `npm test -- acesso`, `npm run test:e2e -- e2e/acesso.spec.ts` verdes.
 

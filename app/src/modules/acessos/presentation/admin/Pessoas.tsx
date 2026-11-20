@@ -4,9 +4,9 @@
  * de cada um a cada obra (sem acesso, equipe ou gestor), salvo na hora.
  */
 import { useId, useState, type FormEvent } from 'react'
-import { Carregando, ComDados, Erro, Resultado } from '../componentes.tsx'
-import { useDefinirAcesso, useDefinirNomeExibicao, useMatrizAcessos, useMeuId, usePessoas } from '../dados/hooks.ts'
-import { NOME_EXIBICAO_MAX } from '../dados/tipos.ts'
+import { Carregando, ComDados, Erro, Resultado } from '../../../../admin/componentes.tsx'
+import { useDefinirAcesso, useDefinirNomeExibicao, useMatrizAcessos, useMeuId, usePessoas } from '../../../../admin/dados/hooks.ts'
+import { NOME_EXIBICAO_MAX } from '../../../../admin/dados/tipos.ts'
 import type { MatrizAcessosAdmin, PapelAcesso, Pessoa } from '@modules/acessos/domain/tipos.ts'
 
 /** Sem acentos e em minúsculas: a busca ignora os dois. */

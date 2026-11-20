@@ -73,3 +73,7 @@ Todo uso de `three` fica em `modules/ra/infra/three/` (`motor.ts`, `malha.ts`, `
 - Teste de integração que cruza camadas (domínio + porta + adaptador) fica em `application/use-cases/`, não em `domain/`, que deve testar só regra pura.
 - Constante compartilhada entre contextos vai para `shared/kernel` (como `REVISAO_VALIDA`), nunca importada de outro módulo.
 - Use-case recebe as dependências injetadas (repositório, serviço de PDF), por isso roda com fixture/serviço falso, sem I/O.
+
+### Lições da Fase 5A (`acessos`)
+
+- Tela só do contexto sai de `telas/`, `components/` e `admin/telas/` junto com seu teste; `NomeExibicao.test.tsx` cruza contextos e fica onde está. Um script que reescreve imports relativos para alias (`@shared/`, `@modules/`) evita erro manual; imports de `dados/` e `admin/` seguem relativos até a Fase 5.

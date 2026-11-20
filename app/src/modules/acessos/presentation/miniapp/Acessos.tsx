@@ -1,9 +1,9 @@
 import { Link, useParams } from 'react-router'
-import { EstadoConsulta, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
-import { PedidosAcesso } from '../components/PedidosAcesso.tsx'
-import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
-import { useObra } from '../dados/hooks.ts'
-import type { ObraDetalhe } from '../dados/tipos.ts'
+import { EstadoConsulta, EstadoVazio } from '@shared/ui/feedback/Estado.tsx'
+import { PedidosAcesso } from '@modules/acessos/presentation/miniapp/PedidosAcesso.tsx'
+import { TopoTela } from '@shared/ui/layout/TopoTela.tsx'
+import { useObra } from '../../../../dados/hooks.ts'
+import type { ObraDetalhe } from '../../../../dados/tipos.ts'
 
 /** Rota mantida por causa do link do bot (`acessos_<slug>`); o dia a dia fica na Gestão. */
 export default function Acessos() {

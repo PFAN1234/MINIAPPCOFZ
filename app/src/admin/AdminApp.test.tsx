@@ -8,7 +8,7 @@ import { RepositorioAdminProvider } from './dados/contexto.tsx'
 import { criarRepositorioAdminFixture } from './dados/fixture.ts'
 import type { RepositorioAdmin } from './dados/repositorio.ts'
 import { criarEntrada, tokenDoHash } from './entrada.ts'
-import { URL_WIDGET } from './telas/Entrar.tsx'
+import { URL_WIDGET } from '@modules/acessos/presentation/admin/Entrar.tsx'
 
 afterEach(() => {
   vi.unstubAllEnvs()
