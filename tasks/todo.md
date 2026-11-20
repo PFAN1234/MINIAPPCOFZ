@@ -413,3 +413,10 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - Estado final: typecheck, eslint (0 avisos), build e build:fixture verdes; 890 testes em 107 arquivos; e2e `acesso.spec.ts` e `admin.spec.ts` 6/6; chunks e precache idênticos aos de antes.
 - Lacunas conhecidas: sem contract test de `SessaoAdminRepositorio` (coberto por `AdminApp.test`); `acessos-supabase.test.ts` segue em `dados/`; `NomeExibicao.test.tsx` fica em `telas/` (cruza contextos).
 - Próximo: 5B (`obras`).
+
+## Arquitetura — Fase 5B (contexto `obras`)
+
+- [x] Parte 1 (lado Mini App): `modules/obras/{domain,application/ports,infra}`; portas `Obras`, `Organizacao`, `EtapasInicio`; adaptadores Supabase e Fixture (estado injetado); `util/etapas.ts` virou `domain/etapas.ts` (puro) + `presentation/miniapp/useEtapaGuardada.ts`.
+- Estado: typecheck, eslint (0 avisos), build e build:fixture verdes; 898 testes (890 + 8 de contrato).
+- Lacunas: sem contract test contra Supabase (mock já coberto por `dados/etapas-supabase.test.ts`); `Marcador` e `RecortePt` ficam em `dados/tipos.ts` (usados por `shared/kernel/coordenadas` e plantas).
+- [ ] Parte 2 (admin) e parte 3 (telas) pendentes.
