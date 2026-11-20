@@ -2,11 +2,11 @@ import type { EtapaRelatorio, Relatorios as DadosRelatorios } from '@modules/rel
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { criarRepositorioFixture } from '../dados/fixture.ts'
-import type { Repositorio } from '../dados/repositorio.ts'
+import { criarRepositorioFixture } from '../../../../dados/fixture.ts'
+import type { Repositorio } from '../../../../dados/repositorio.ts'
 
-import * as telegram from '../shared/infra/telegram/telegram.ts'
-import { renderizarApp } from '../shared/test/renderApp.tsx'
+import * as telegram from '@shared/infra/telegram/telegram.ts'
+import { renderizarApp } from '@shared/test/renderApp.tsx'
 
 afterEach(() => vi.restoreAllMocks())
 

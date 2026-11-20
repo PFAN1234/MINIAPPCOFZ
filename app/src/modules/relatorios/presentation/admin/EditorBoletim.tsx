@@ -1,3 +1,4 @@
+import { useBoletim, usePreviaBoletimEditado, useRetificarBoletim, useSalvarRascunhoBoletim, useUrlPdfBoletim, useUrlsFotos } from './hooks.ts'
 import type { BoletimDetalhe, EdicaoBoletim, FotoBoletim, SnapshotBoletim } from '@modules/relatorios/domain/tiposAdmin.ts'
 /**
  * Editor do boletim emitido (rota `/boletins/:id`): mostra o snapshot em blocos parecidos com o PDF e
@@ -7,17 +8,9 @@ import type { BoletimDetalhe, EdicaoBoletim, FotoBoletim, SnapshotBoletim } from
 import { useEffect, useRef, useState } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { ComDados, mensagemDe } from '../../componentes.tsx'
-import {
-  useBoletim,
-  usePreviaBoletimEditado,
-  useRetificarBoletim,
-  useSalvarRascunhoBoletim,
-  useUrlPdfBoletim,
-  useUrlsFotos,
-} from '../../dados/hooks.ts'
+import { ComDados, mensagemDe } from '../../../../admin/componentes.tsx'
 
-import { dataBr, dataHoraBr } from '../../formato.ts'
+import { dataBr, dataHoraBr } from '../../../../admin/formato.ts'
 import { abrir, rotuloPublicacao } from './util.ts'
 
 /** Remove o que está vazio, para comparar e enviar só o que importa. */

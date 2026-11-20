@@ -1,15 +1,16 @@
+import { useBoletins, usePedirEmissao, usePreviaBoletim } from './hooks.ts'
 import type { BoletimEmitido, PedidoEmissao } from '@modules/relatorios/domain/tiposAdmin.ts'
 /**
  * Bloco "Pré-visualizar / Emitir agora" da aba Boletins (com uma etapa escolhida): a prévia de uma
  * data e a emissão manual (ou retificação). Contrato: docs/contrato-boletim.md, partes 3 e 4.
  */
 import { useEffect, useState } from 'react'
-import { ComDados, mensagemDe } from '../../componentes.tsx'
-import { useBoletins, usePedirEmissao, usePreviaBoletim } from '../../dados/hooks.ts'
+import { ComDados, mensagemDe } from '../../../../admin/componentes.tsx'
+
 import { useOrganizacao } from '@modules/obras/presentation/admin/hooks.ts'
 
 import type { EtapaDetalhe } from '@modules/obras/domain/tiposAdmin.ts'
-import { dataBr, hojeNoFuso, numeroBoletim } from '../../formato.ts'
+import { dataBr, hojeNoFuso, numeroBoletim } from '../../../../admin/formato.ts'
 import { abrir } from './util.ts'
 
 /** Lê os boletins e pedidos da etapa (a revisão e o "em andamento" dependem de todos) e mostra o bloco. */

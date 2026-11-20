@@ -1,12 +1,12 @@
+import { useExcluirBoletim, useReenviarBoletim, useUrlPdfBoletim } from './hooks.ts'
 import type { BoletimDaLista, PedidoDaLista } from '@modules/relatorios/domain/tiposAdmin.ts'
 import type { ResultadoExclusaoBoletim } from '@modules/relatorios/domain/tipos.ts'
 /** Tabelas da aba Boletins: pedidos ainda não emitidos e boletins emitidos (todas as etapas ou uma). */
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { mensagemDe } from '../../componentes.tsx'
-import { useExcluirBoletim, useReenviarBoletim, useUrlPdfBoletim } from '../../dados/hooks.ts'
+import { mensagemDe } from '../../../../admin/componentes.tsx'
 
-import { dataBr, dataHoraBr } from '../../formato.ts'
+import { dataBr, dataHoraBr } from '../../../../admin/formato.ts'
 import { abrir, ROTULO_ESTADO, rotuloPublicacao } from './util.ts'
 
 export function Pedidos({ pedidos }: { pedidos: PedidoDaLista[] }) {

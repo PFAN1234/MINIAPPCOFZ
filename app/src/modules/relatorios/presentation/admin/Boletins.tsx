@@ -1,3 +1,4 @@
+import { useTodosBoletins } from './hooks.ts'
 /**
  * Aba "Relatórios" (rota `/boletins`; por ora só o boletim diário): pedidos não emitidos e boletins emitidos de todas as etapas (ou de uma, com
  * `?etapa=<slug>`), por período (padrão: últimos 30 dias). Com uma etapa escolhida, também o bloco
@@ -5,11 +6,11 @@
  */
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { ComDados } from '../../componentes.tsx'
-import { useTodosBoletins } from '../../dados/hooks.ts'
+import { ComDados } from '../../../../admin/componentes.tsx'
+
 import { useEtapa, useEtapas } from '@modules/obras/presentation/admin/hooks.ts'
 import type { EtapaLista } from '@modules/obras/domain/tiposAdmin.ts'
-import { hojeNoFuso, somarDiasIso } from '../../formato.ts'
+import { hojeNoFuso, somarDiasIso } from '../../../../admin/formato.ts'
 import EmitirOuPreverDaEtapa from './EmitirOuPrever.tsx'
 import { Emitidos, Pedidos } from './Tabelas.tsx'
 

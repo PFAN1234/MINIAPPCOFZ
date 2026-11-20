@@ -559,10 +559,10 @@ Para migrar sem interromper entregas nem quebrar o deploy na Vercel ou o CI:
 - Extraídos `Registros`, `Encerramentos`, `Publicações`, `use-cases/envio.ts` e telas/componentes (`NovoRegistro`, `Pendencias`, `PendenciaDetalhe`, `Publicacoes`, `Registros`, `CartaoPendencia`, `ListaRegistros`, `MiniaturaRegistro`) em `modules/fiscalizacao/`. (`Observações do Dia` segue junto com boletins na 5D.)
 - **Critério de pronto:** `npm test -- registro pendencia`, `npm run test:e2e -- e2e/novo-registro.spec.ts e2e/pendencias.spec.ts` verdes (10/10).
 
-#### Fase 5D — Contexto `relatorios` (Frontend)
-- Extrair `Relatórios`, `Painel` (`util/painel.ts`, `util/periodo.ts` → `domain/`), `Boletins` e `EditorBoletim` (`fixtureBoletim.ts` → `infrastructure/fixture/`).
+#### Fase 5D — Contexto `relatorios` (Frontend) — concluída (partes 1 e 2)
+- Extraídos `Relatórios`, `Observações do Dia`, `Painel` (`util/painel.ts` → `domain/painel.ts`), `Boletins` e `EditorBoletim` em `modules/relatorios/`; `admin/dados/fixtureBoletim.ts` resolvido como `modules/obras/infra/camposEtapa.ts` e `util/periodo.ts` movido para `shared/kernel/periodo.ts`.
 - **`app/servidor/{boletim,relatorio}/`:** mantido plano e local (*"If the code is already clear and local, leave it"*), sem alterar `app/api/*.ts` nem `app/vercel.json`.
-- **Critério de pronto:** `npm test -- relatorio boletim servidor` e `BOLETIM_EXIGIR_CHROMIUM=1 npx vitest run servidor` verdes.
+- **Critério de pronto:** `npm test -- relatorio boletim servidor` e e2e `observacoes` e `admin-etapas` (5/5) verdes.
 
 #### Fase 5E — Contexto `operacao`
 - Migrar `offline/` (`fila.ts` → `domain/`, `sincronizarFila` → `application/use-cases/`, `armazenamento.ts` e `cacheConsultas.ts` → `infrastructure/indexeddb/`, `contexto.tsx` e `BarraSincronizacao.tsx` → `presentation/miniapp/`).

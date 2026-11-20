@@ -1,22 +1,22 @@
 import type { BoletimRelatorio, EtapaRelatorio, ResultadoExclusaoBoletim } from '@modules/relatorios/domain/tipos.ts'
 import { useState, type ReactNode } from "react";
 import { useSearchParams } from "react-router";
-import { Abas } from "../shared/ui/inputs/Abas.tsx";
-import { AbasEtapa } from "../shared/ui/inputs/AbasEtapa.tsx";
-import { EstadoConsulta } from "../shared/ui/feedback/Estado.tsx";
-import { PainelRelatorios } from "../components/PainelRelatorios.tsx";
-import { TopoTela } from "../shared/ui/layout/TopoTela.tsx";
-import { useRepositorio } from "../dados/contexto.tsx";
+import { Abas } from "@shared/ui/inputs/Abas.tsx";
+import { AbasEtapa } from "@shared/ui/inputs/AbasEtapa.tsx";
+import { EstadoConsulta } from "@shared/ui/feedback/Estado.tsx";
+import { PainelRelatorios } from "./PainelRelatorios.tsx";
+import { TopoTela } from "@shared/ui/layout/TopoTela.tsx";
+import { useRepositorio } from "../../../../dados/contexto.tsx";
 import {
   useEmitirBoletim,
   useExcluirBoletim,
   useExportarPendencias,
   usePainelRelatorios,
   useRelatorios,
-} from "../dados/hooks.ts";
+} from "../../../../dados/hooks.ts";
 
-import { abrirLink } from "../shared/infra/telegram/telegram.ts";
-import { FUSO_PADRAO, formatarDia, horaNoFuso } from "../shared/kernel/fuso.ts";
+import { abrirLink } from "@shared/infra/telegram/telegram.ts";
+import { FUSO_PADRAO, formatarDia, horaNoFuso } from "@shared/kernel/fuso.ts";
 
 function mensagemDe(e: unknown, padrao: string): string {
   return e instanceof Error && e.message ? e.message : padrao;

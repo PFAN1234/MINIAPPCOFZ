@@ -430,4 +430,10 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Parte 1 (domínio, portas, use-case e adaptadores): `modules/fiscalizacao/{domain/tipos.ts, application/ports/{RegistrosRepositorio,PublicacoesRepositorio}, application/use-cases/envio.ts, infra/{RegistrosSupabaseAdapter,PublicacoesSupabaseAdapter,RegistrosFixtureAdapter,PublicacoesFixtureAdapter}}`; `FiscalizacaoFixture.contract.test.ts` (+9 testes de contrato).
 - [x] Parte 2 (telas e componentes): `NovoRegistro`, `Pendencias`, `PendenciaDetalhe`, `Publicacoes`, `Registros`, `CartaoPendencia`, `ListaRegistros`, `MiniaturaRegistro` e testes movidos para `modules/fiscalizacao/presentation/miniapp/`.
 - Estado final da 5C: typecheck, eslint (0 avisos), build e build:fixture verdes; 922 testes em 110 arquivos; e2e `novo-registro` e `pendencias` 10/10; chunks e `precache-manifest.json` inalterados.
-- Próximo: 5D (`relatorios`).
+
+## Arquitetura — Fase 5D (contexto `relatorios`)
+
+- [x] Parte 1 (domínio, portas, adaptadores e `camposEtapa`): `modules/relatorios/{domain/{tipos,tiposAdmin,painel}, application/ports/{RelatoriosRepositorio,ObservacoesRepositorio,BoletinsAdminRepositorio}, infra/*}`; `admin/dados/fixtureBoletim.ts` movido para `modules/obras/infra/camposEtapa.ts`; `util/periodo.ts` (+ `dataValida`/`somarDias`) movido para `shared/kernel/periodo.ts`; contract tests (+9 testes).
+- [x] Parte 2 (telas, componentes e hooks): `Relatorios`, `PainelRelatorios`, `GraficoAcumulado`, `GraficoPorObra`, `CartaoObservacoes` (+ testes) movidos para `modules/relatorios/presentation/miniapp/`; `Boletins`, `EditorBoletim`, `EmitirOuPrever`, `Tabelas`, `util` (+ testes) e hooks admin movidos para `modules/relatorios/presentation/admin/`.
+- Estado final da 5D: typecheck, eslint (0 avisos), build e build:fixture verdes; 931 testes em 112 arquivos; e2e `observacoes` e `admin-etapas` 5/5; chunks e `precache-manifest.json` inalterados.
+- Próximo: 5E (`operacao`).

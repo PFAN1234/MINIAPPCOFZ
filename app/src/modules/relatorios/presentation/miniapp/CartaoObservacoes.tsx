@@ -5,13 +5,13 @@ import type { Observacao } from '@modules/relatorios/domain/tipos.ts'
  * próprias com conexão, e o estado travado depois da emissão do boletim do dia.
  */
 import { useState, type FormEvent } from 'react'
-import { useAlterarObservacao, useObservacoesDoDia } from '../dados/hooks.ts'
+import { useAlterarObservacao, useObservacoesDoDia } from '../../../../dados/hooks.ts'
 
 import type { ObraResumo } from '@modules/obras/domain/tipos.ts'
-import { useFila, useObservacoesLocais } from '../offline/contexto.tsx'
-import type { ItemObservacao } from '../offline/fila.ts'
-import { FUSO_PADRAO, dataNoFuso, formatarDia, horaNoFuso } from '../shared/kernel/fuso.ts'
-import { useOnline } from '../shared/infra/browser/online.ts'
+import { useFila, useObservacoesLocais } from '../../../../offline/contexto.tsx'
+import type { ItemObservacao } from '../../../../offline/fila.ts'
+import { FUSO_PADRAO, dataNoFuso, formatarDia, horaNoFuso } from '@shared/kernel/fuso.ts'
+import { useOnline } from '@shared/infra/browser/online.ts'
 
 export const MAX_OBSERVACAO = 1000
 /** O contador aparece quando faltam até 100 caracteres. */

@@ -92,3 +92,8 @@ Todo uso de `three` fica em `modules/ra/infra/three/` (`motor.ts`, `malha.ts`, `
 
 - Use-cases com orquestração real (`enviarRegistro`, `enviarEncerramento`) recebem apenas `Pick<Porta, ...>` em vez da fachada `Repositorio`, desacoplando `application/use-cases/` do restante do app.
 - Adaptador fixture de registros expõe `todos()` para alimentar o cálculo de contagens em `ObrasFixtureAdapter` sem duplicar estado nem criar dependência cíclica.
+
+### Lições da Fase 5D (`relatorios`)
+
+- Helpers de calendário puros usados em múltiplos contextos (`dataValida`, `somarDias`, `limitesPeriodo`, `dentroDoPeriodo`) pertencem a `shared/kernel/periodo.ts`; regras puras do cadastro de etapa (`fixtureBoletim.ts`) pertencem a `modules/obras/infra/camposEtapa.ts`, eliminando dependência invertida entre `obras` e `relatorios`.
+- Testes de fixture determinística (`painelFixture`) ficam nos arquivos de contrato/infra, mantendo `domain/*.test.ts` 100% puro.

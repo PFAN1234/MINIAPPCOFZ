@@ -17,7 +17,7 @@ import Obras from '@modules/obras/presentation/miniapp/Obras.tsx'
 import PendenciaDetalhe from '@modules/fiscalizacao/presentation/miniapp/PendenciaDetalhe.tsx'
 import Pendencias from '@modules/fiscalizacao/presentation/miniapp/Pendencias.tsx'
 import Registros from '@modules/fiscalizacao/presentation/miniapp/Registros.tsx'
-import Relatorios from './telas/Relatorios.tsx'
+import Relatorios from '@modules/relatorios/presentation/miniapp/Relatorios.tsx'
 
 // Tela de teste da realidade aumentada (RA0): fora do pacote inicial.
 const DiagnosticoRA = lazy(() => import('@modules/ra/presentation/miniapp/DiagnosticoRA.tsx'))
