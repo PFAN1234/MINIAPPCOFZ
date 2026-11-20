@@ -841,6 +841,18 @@ export function criarMotorThatOpen(): MotorVisualizador {
       const mapa = await c.get(OBC.ItemsFinder).getItems([consulta])
       return refsDe(mapa)
     },
+    async existem(refs) {
+      const resultado: (boolean | null)[] = refs.map(() => null)
+      const porSigla = new Map<string, number[]>()
+      refs.forEach((r, i) => porSigla.set(r.sigla, [...(porSigla.get(r.sigla) ?? []), i]))
+      for (const [sigla, indices] of porSigla) {
+        const m = modelo(sigla)
+        if (!m) continue
+        const ids = await m.getLocalIdsByGuids(indices.map((i) => refs[i].globalId))
+        indices.forEach((i, k) => (resultado[i] = ids[k] !== null && ids[k] !== undefined))
+      }
+      return resultado
+    },
     // --- Etapa 3
     async propriedades(ref: RefElemento) {
       const m = modelo(ref.sigla)

@@ -23,16 +23,23 @@ import {
   tipoDoArquivo,
   type TipoArquivo,
 } from '../../../../domain/modelos.ts'
+import type { MotorVisualizador } from '../../../../application/ports/MotorVisualizador.port.ts'
+import { orfaos, todosVinculos, type Documento, type VinculoOrfao } from '../../../../../documentos/domain/documentos.ts'
 import { useConversor } from '../../../../infra/conversor.ts'
 import { hashModelo } from '../../../../infra/modelosLocais.ts'
 
 interface Props {
   obra: ObraCentral
+  /** Motor pronto (ou null): confere os GlobalIds dos vínculos dos documentos. */
+  motor: MotorVisualizador | null
+  /** Muda a cada carga/descarga de modelo, para conferir de novo. */
+  versao: number
+  documentos: Documento[]
   /** Chamado depois que publicar ou retirar der certo, com a sigla afetada. */
   aoMudar(sigla: string): void
 }
 
-export default function Gestao({ obra, aoMudar }: Props) {
+export default function Gestao({ obra, aoMudar, motor, versao, documentos }: Props) {
   const consulta = useModelosAdmin(obra.slug)
   return (
     <div className="central-gestao">
@@ -42,6 +49,7 @@ export default function Gestao({ obra, aoMudar }: Props) {
             <Publicados slug={obra.slug} modelos={d.modelos} aoMudar={aoMudar} />
             <Envio obra={obra} publicados={d.modelos} aoMudar={aoMudar} />
             <Historico eventos={d.historico} />
+            <Orfaos motor={motor} versao={versao} documentos={documentos} />
           </>
         )}
       </ComDados>
@@ -414,6 +422,85 @@ function Historico({ eventos }: { eventos: EventoModelo[] }) {
             </li>
           ))}
         </ul>
+      )}
+    </section>
+  )
+}
+
+/** Vínculos de documentos cujo GlobalId não existe mais no modelo carregado. */
+function Orfaos({ motor, versao, documentos }: { motor: MotorVisualizador | null; versao: number; documentos: Documento[] }) {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  const [existencia, setExistencia] = useState<(boolean | null)[] | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
+  const [removendo, setRemovendo] = useState(false)
+
+  useEffect(() => {
+    if (!motor) return
+    let ativo = true
+    const refs = todosVinculos(documentos).map((v) => ({ sigla: v.sigla, globalId: v.globalId }))
+    motor.existem(refs).then(
+      (r) => ativo && setExistencia(r),
+      () => ativo && setExistencia(null),
+    )
+    return () => {
+      ativo = false
+    }
+  }, [motor, versao, documentos])
+
+  const lista: VinculoOrfao[] = existencia ? orfaos(documentos, existencia) : []
+  const naoConferidos = existencia ? existencia.filter((e) => e === null).length : 0
+
+  async function remover({ documento, vinculo }: VinculoOrfao) {
+    setErro(null)
+    setRemovendo(true)
+    try {
+      await repo.vincularDocumento(
+        documento.id,
+        documento.vinculos.filter((v) => !(v.sigla === vinculo.sigla && v.globalId === vinculo.globalId)),
+      )
+      await qc.invalidateQueries({ queryKey: ['admin', 'documentos'] })
+    } catch (e) {
+      setErro(mensagemDe(e))
+    } finally {
+      setRemovendo(false)
+    }
+  }
+
+  return (
+    <section aria-labelledby="titulo-orfaos">
+      <h3 id="titulo-orfaos">Vínculos órfãos</h3>
+      {!motor || !existencia ? (
+        <p className="central-sec">Aguardando o modelo carregar para conferir.</p>
+      ) : lista.length === 0 ? (
+        <p className="central-sec">Nenhum vínculo órfão.</p>
+      ) : (
+        <ul className="central-gestao-lista" aria-label="Vínculos órfãos">
+          {lista.map((o) => (
+            <li key={`${o.documento.id}|${o.vinculo.sigla}|${o.vinculo.globalId}`}>
+              <strong>{o.documento.titulo}</strong>
+              <span className="central-sec">
+                {o.vinculo.nome ?? o.vinculo.classe ?? 'Sem nome'} · {o.vinculo.sigla} ·{' '}
+                <span className="central-guid">{o.vinculo.globalId}</span>
+              </span>
+              <span className="central-gestao-acoes">
+                <button type="button" className="central-botao" disabled={removendo} onClick={() => void remover(o)}>
+                  Remover vínculo
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {naoConferidos > 0 && (
+        <p className="central-sec">
+          {naoConferidos} vínculo(s) não conferido(s): disciplina não carregada.
+        </p>
+      )}
+      {erro && (
+        <p className="central-gestao-alerta" role="alert">
+          {erro}
+        </p>
       )}
     </section>
   )

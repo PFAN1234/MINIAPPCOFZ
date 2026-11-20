@@ -12,6 +12,7 @@ import Medicoes from './paineis/Medicoes.tsx'
 import Propriedades from './paineis/Propriedades.tsx'
 import Dicas from './Dica.tsx'
 import PainelDocumentos from '../../../../documentos/presentation/admin/PainelDocumentos.tsx'
+import DocumentosDoContexto from '../../../../documentos/presentation/admin/DocumentosDoContexto.tsx'
 import PreviaDocumento from '../../../../documentos/presentation/admin/PreviaDocumento.tsx'
 import { useDocumentos } from '../../../../../admin/dados/hooks.ts'
 import type { Documento } from '../../../../documentos/domain/documentos.ts'
@@ -54,23 +55,42 @@ const PAINEIS = [
  * `IFCBUILDINGSTOREY` (sem id) e, abaixo dele, um nó por pavimento já com o nome; nos dublês o
  * próprio nó `pavimento` traz o nome.
  */
-function pavimentosDe(nos: NoArvore[]): string[] {
-  const nomes = new Set<string>()
+function nosDePavimento(nos: NoArvore[]): NoArvore[] {
+  const achados: NoArvore[] = []
   const visitar = (n: NoArvore) => {
     if (n.nivel === 'pavimento') {
-      nomes.add(n.rotulo)
+      achados.push(n)
       return
     }
     if (n.classe?.toUpperCase() === 'IFCBUILDINGSTOREY') {
-      for (const f of n.filhos) if (f.nivel === 'elemento') nomes.add(f.rotulo)
+      for (const f of n.filhos) if (f.nivel === 'elemento') achados.push(f)
       return
     }
     n.filhos.forEach(visitar)
   }
   nos.forEach(visitar)
-  return [...nomes]
+  return achados
 }
 
+function pavimentosDe(nos: NoArvore[]): string[] {
+  return [...new Set(nosDePavimento(nos).map((n) => n.rotulo))]
+}
+
+/** Refs dos nós de pavimento que têm `ref` (para vincular documentos), com o nome do pavimento. */
+function refsPavimentosDe(nos: NoArvore[]): RefElemento[] {
+  const vistos = new Set<string>()
+  const refs: RefElemento[] = []
+  for (const n of nosDePavimento(nos)) {
+    if (!n.ref) continue
+    const chave = `${n.ref.sigla}|${n.ref.globalId}`
+    if (vistos.has(chave)) continue
+    vistos.add(chave)
+    refs.push({ ...n.ref, classe: n.ref.classe ?? 'IFCBUILDINGSTOREY', nome: n.rotulo })
+  }
+  return refs
+}
+
+const SEM_DOCUMENTOS: Documento[] = []
 const LARGURA_MIN = 240
 const LARGURA_MAX = 520
 const limitar = (n: number) => Math.min(LARGURA_MAX, Math.max(LARGURA_MIN, n))
@@ -115,6 +135,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   const [caminhando, setCaminhando] = useState(false)
   const [minimapa, setMinimapa] = useState(false)
   const [pavimentos, setPavimentos] = useState<string[]>([])
+  const [refsPavimentos, setRefsPavimentos] = useState<RefElemento[]>([])
   const [cortes, setCortes] = useState<Corte[]>([])
   const [corteMarcado, setCorteMarcado] = useState<string | null>(null)
   const [medidas, setMedidas] = useState<Medida[]>([])
@@ -134,8 +155,16 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
     if (!motor || !pronto) return
     let ativo = true
     motor.arvore().then(
-      (nos) => ativo && setPavimentos(pavimentosDe(nos)),
-      () => ativo && setPavimentos([]),
+      (nos) => {
+        if (!ativo) return
+        setPavimentos(pavimentosDe(nos))
+        setRefsPavimentos(refsPavimentosDe(nos))
+      },
+      () => {
+        if (!ativo) return
+        setPavimentos([])
+        setRefsPavimentos([])
+      },
     )
     return () => {
       ativo = false
@@ -175,6 +204,17 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
       { replace: true },
     )
   }, [setParams])
+
+  function abrirPainelDocumentos() {
+    const novo = new URLSearchParams(params)
+    novo.set('painel', 'documentos')
+    setParams(novo, { replace: true })
+    setAberto(true)
+  }
+  function mostrarRefs(refs: RefElemento[]) {
+    selecionar(refs)
+    motor?.enquadrar(refs)
+  }
 
   function enquadrar() {
     motor?.enquadrar(selecao.length > 0 ? selecao : undefined)
@@ -433,9 +473,18 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
                 obra={obra}
                 siglas={estado.modelos.map((m) => m.sigla)}
                 aoAbrir={(d: Documento) => abrirDoc(d.id)}
+                selecao={selecao}
+                pavimentos={refsPavimentos}
+                onMostrar={mostrarRefs}
               />
             ) : painel.id === 'gestao' ? (
-              <Gestao obra={obra} aoMudar={(s) => void estado.recarregarModelo(s)} />
+              <Gestao
+                obra={obra}
+                aoMudar={(s) => void estado.recarregarModelo(s)}
+                motor={pronto ? motor : null}
+                versao={estado.versao}
+                documentos={documentos.data ?? SEM_DOCUMENTOS}
+              />
             ) : (
               <p className="central-sec">Disponível na etapa {'etapa' in painel ? painel.etapa : ''}</p>
             )}
@@ -451,6 +500,13 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
               onApagarTodos={() => apagarCorte()}
             />
             {modo === 'inspecionar' ? <Propriedades motor={motor} selecao={selecao} /> : <Selecao refs={selecao} />}
+            <DocumentosDoContexto
+              slug={obra.slug}
+              selecao={selecao}
+              pavimento={vista.tipo === 'planta' ? vista.pavimento : null}
+              aoAbrirPrevia={(d) => abrirDoc(d.id)}
+              aoAbrirPainel={abrirPainelDocumentos}
+            />
           </section>
           <div
             role="separator"

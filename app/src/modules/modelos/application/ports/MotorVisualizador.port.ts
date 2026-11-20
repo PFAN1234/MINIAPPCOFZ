@@ -35,6 +35,8 @@ export interface MotorVisualizador {
   categorias(): Promise<CategoriaTotal[]>
   propriedades(ref: RefElemento): Promise<GrupoPropriedades[]>
   buscar(filtro: FiltroAtributo): Promise<RefElemento[]>
+  /** Confere se os GlobalIds existem nos modelos carregados, na ordem das refs; `null` = disciplina não carregada. */
+  existem(refs: RefElemento[]): Promise<(boolean | null)[]>
   selecionar(refs: RefElemento[]): void
   ocultar(refs: RefElemento[]): void
   /** Volta a mostrar os elementos (contrário de `ocultar`). */

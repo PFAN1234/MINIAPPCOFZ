@@ -4,6 +4,8 @@
  * na RPC `admin_registrar_documento`.
  */
 
+import type { RefElemento } from '../../modelos/domain/central.ts'
+
 export const LIMITE_BYTES = 104857600
 
 export type TipoDocumento = 'prancha' | 'memorial' | 'planilha' | 'desenho' | 'imagem' | 'outro'
@@ -227,4 +229,62 @@ export function tipoSugerido(ext: string): TipoDocumento {
     default:
       return 'outro'
   }
+}
+
+const chaveVinculo = (v: { sigla: string; globalId: string }) => `${v.sigla}|${v.globalId}`
+
+/** Converte refs do 3D em vínculos do tipo dado. */
+export function vinculosDe(refs: RefElemento[], tipo: VinculoDocumento['tipo']): VinculoDocumento[] {
+  return refs.map((r) => ({ tipo, sigla: r.sigla, globalId: r.globalId, classe: r.classe ?? null, nome: r.nome ?? null }))
+}
+
+/** Junta os vínculos novos aos atuais sem duplicar (chave sigla + GlobalId; o atual prevalece). */
+export function juntarVinculos(atuais: VinculoDocumento[], novos: VinculoDocumento[]): VinculoDocumento[] {
+  const vistos = new Set(atuais.map(chaveVinculo))
+  const resultado = [...atuais]
+  for (const v of novos) {
+    if (vistos.has(chaveVinculo(v))) continue
+    vistos.add(chaveVinculo(v))
+    resultado.push(v)
+  }
+  return resultado
+}
+
+/** Tira um vínculo da lista (pela chave sigla + GlobalId). */
+export function semVinculo(atuais: VinculoDocumento[], v: Pick<VinculoDocumento, 'sigla' | 'globalId'>): VinculoDocumento[] {
+  return atuais.filter((a) => chaveVinculo(a) !== chaveVinculo(v))
+}
+
+/** Documentos com vínculo ao elemento (sigla + GlobalId). */
+export function documentosVinculados(docs: Documento[], ref: Pick<RefElemento, 'sigla' | 'globalId'>): Documento[] {
+  return docs.filter((d) => d.vinculos.some((v) => chaveVinculo(v) === chaveVinculo(ref)))
+}
+
+/** Documentos vinculados a um pavimento, pelo nome do vínculo (sem diferenciar maiúsculas). */
+export function documentosDoPavimento(docs: Documento[], nomePavimento: string): Documento[] {
+  const alvo = nomePavimento.trim().toLowerCase()
+  if (!alvo) return []
+  return docs.filter((d) => d.vinculos.some((v) => v.tipo === 'pavimento' && (v.nome ?? '').trim().toLowerCase() === alvo))
+}
+
+export interface VinculoOrfao {
+  documento: Documento
+  vinculo: VinculoDocumento
+}
+
+/** Vínculos cuja existência no modelo foi conferida como `false` (`existencia` na ordem de `todosVinculos`). */
+export function orfaos(docs: Documento[], existencia: (boolean | null)[]): VinculoOrfao[] {
+  const resultado: VinculoOrfao[] = []
+  let i = 0
+  for (const documento of docs) {
+    for (const vinculo of documento.vinculos) {
+      if (existencia[i++] === false) resultado.push({ documento, vinculo })
+    }
+  }
+  return resultado
+}
+
+/** Todos os vínculos dos documentos, na ordem que `orfaos` espera. */
+export function todosVinculos(docs: Documento[]): VinculoDocumento[] {
+  return docs.flatMap((d) => d.vinculos)
 }

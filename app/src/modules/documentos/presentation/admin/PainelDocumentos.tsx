@@ -9,9 +9,19 @@ import { ComDados, mensagemDe } from '../../../../admin/componentes.tsx'
 import { useRepositorioAdmin } from '../../../../admin/dados/contexto.tsx'
 import { useDocumentos, useHistoricoDocumento, useRetirarDocumento } from '../../../../admin/dados/hooks.ts'
 import type { ObraCentral } from '../../../modelos/domain/tipos.ts'
-import { IconeHistorico, IconeRetirar } from '../../../modelos/presentation/admin/central/icones.tsx'
+import type { RefElemento } from '../../../modelos/domain/central.ts'
+import {
+  IconeHistorico,
+  IconeRemoverVinculo,
+  IconeRetirar,
+  IconeVinculos,
+} from '../../../modelos/presentation/admin/central/icones.tsx'
 import {
   extensaoArquivo,
+  juntarVinculos,
+  semVinculo,
+  vinculosDe,
+  type VinculoDocumento,
   mimeDoArquivo,
   problemaDocumento,
   sugerirProximaRevisao,
@@ -31,6 +41,12 @@ interface Props {
   /** Disciplinas com modelo na obra, sugeridas no formulário. */
   siglas: string[]
   aoAbrir(doc: Documento): void
+  /** Seleção atual do 3D (para "Vincular seleção"). */
+  selecao: RefElemento[]
+  /** Pavimentos da árvore que têm ref (para "Vincular pavimento"). */
+  pavimentos: RefElemento[]
+  /** Seleciona e enquadra no 3D. */
+  onMostrar(refs: RefElemento[]): void
 }
 
 const SEM_DISCIPLINA = 'Sem disciplina'
@@ -50,11 +66,13 @@ interface Rascunho {
   tipo: TipoDocumento
   disciplina: string
   revisao: string
+  /** Vínculos da revisão vigente, para copiar na nova revisão. */
+  vinculosAnteriores?: VinculoDocumento[]
 }
 
 const RASCUNHO_VAZIO: Rascunho = { titulo: '', codigo: '', tipo: 'prancha', disciplina: '', revisao: '' }
 
-export default function PainelDocumentos({ obra, siglas, aoAbrir }: Props) {
+export default function PainelDocumentos({ obra, siglas, aoAbrir, selecao, pavimentos, onMostrar }: Props) {
   const consulta = useDocumentos(obra.slug)
   const [busca, setBusca] = useState('')
   const [tipo, setTipo] = useState<'' | TipoDocumento>('')
@@ -123,6 +141,9 @@ export default function PainelDocumentos({ obra, siglas, aoAbrir }: Props) {
             busca={busca}
             tipo={tipo}
             aoAbrir={aoAbrir}
+            selecao={selecao}
+            pavimentos={pavimentos}
+            onMostrar={onMostrar}
             aoNovaRevisao={(d) => {
               setAviso(null)
               setFormulario({
@@ -132,6 +153,7 @@ export default function PainelDocumentos({ obra, siglas, aoAbrir }: Props) {
                 tipo: d.tipo,
                 disciplina: d.disciplina ?? '',
                 revisao: sugerirProximaRevisao(d.revisao),
+                vinculosAnteriores: d.vinculos,
               })
             }}
           />
@@ -147,12 +169,18 @@ function Lista({
   tipo,
   aoAbrir,
   aoNovaRevisao,
+  selecao,
+  pavimentos,
+  onMostrar,
 }: {
   docs: Documento[]
   busca: string
   tipo: '' | TipoDocumento
   aoAbrir(doc: Documento): void
   aoNovaRevisao(doc: Documento): void
+  selecao: RefElemento[]
+  pavimentos: RefElemento[]
+  onMostrar(refs: RefElemento[]): void
 }) {
   const grupos = useMemo(() => {
     const q = busca.trim().toLowerCase()
@@ -184,7 +212,15 @@ function Lista({
           </h3>
           <ul className="central-gestao-lista" aria-label={`Documentos de ${grupo}`}>
             {itens.map((d) => (
-              <Item key={d.id} doc={d} aoAbrir={aoAbrir} aoNovaRevisao={aoNovaRevisao} />
+              <Item
+                key={d.id}
+                doc={d}
+                aoAbrir={aoAbrir}
+                aoNovaRevisao={aoNovaRevisao}
+                selecao={selecao}
+                pavimentos={pavimentos}
+                onMostrar={onMostrar}
+              />
             ))}
           </ul>
         </section>
@@ -197,15 +233,22 @@ function Item({
   doc,
   aoAbrir,
   aoNovaRevisao,
+  selecao,
+  pavimentos,
+  onMostrar,
 }: {
   doc: Documento
   aoAbrir(doc: Documento): void
   aoNovaRevisao(doc: Documento): void
+  selecao: RefElemento[]
+  pavimentos: RefElemento[]
+  onMostrar(refs: RefElemento[]): void
 }) {
   const repo = useRepositorioAdmin()
   const retirar = useRetirarDocumento()
   const [confirmando, setConfirmando] = useState(false)
   const [historico, setHistorico] = useState(false)
+  const [vinculando, setVinculando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
   async function baixar(caminho: string, nome: string) {
@@ -253,6 +296,16 @@ function Item({
         <button
           type="button"
           className="central-botao central-botao-icone"
+          aria-label={`Vínculos (${doc.vinculos.length})`}
+          data-dica="Vínculos com pavimentos e elementos"
+          aria-expanded={vinculando}
+          onClick={() => setVinculando((v) => !v)}
+        >
+          <IconeVinculos />
+        </button>
+        <button
+          type="button"
+          className="central-botao central-botao-icone"
           aria-label="Retirar"
           data-dica="Retirar documento"
           onClick={() => setConfirmando(true)}
@@ -288,8 +341,107 @@ function Item({
           {erro}
         </p>
       )}
+      {vinculando && <Vinculos doc={doc} selecao={selecao} pavimentos={pavimentos} onMostrar={onMostrar} />}
       {historico && <Historico serie={doc.serie} aoBaixar={(r) => void baixar(r.caminho, r.arquivoNome)} />}
     </li>
+  )
+}
+
+function Vinculos({
+  doc,
+  selecao,
+  pavimentos,
+  onMostrar,
+}: {
+  doc: Documento
+  selecao: RefElemento[]
+  pavimentos: RefElemento[]
+  onMostrar(refs: RefElemento[]): void
+}) {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  const [gravando, setGravando] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+
+  /** Grava a lista completa (substitui) e atualiza a listagem. */
+  async function gravar(lista: VinculoDocumento[]) {
+    setErro(null)
+    setGravando(true)
+    try {
+      await repo.vincularDocumento(doc.id, lista)
+      await qc.invalidateQueries({ queryKey: ['admin', 'documentos'] })
+    } catch (e) {
+      setErro(mensagemDe(e))
+    } finally {
+      setGravando(false)
+    }
+  }
+
+  return (
+    <div className="central-docs-historico" aria-label="Vínculos">
+      {doc.vinculos.length === 0 ? (
+        <p className="central-sec">Sem vínculos.</p>
+      ) : (
+        <ul className="central-gestao-lista">
+          {doc.vinculos.map((v) => (
+            <li key={`${v.sigla}|${v.globalId}`}>
+              <button
+                type="button"
+                className="central-botao"
+                aria-label={`Mostrar ${v.nome ?? v.classe ?? v.globalId}`}
+                onClick={() =>
+                  onMostrar([{ sigla: v.sigla, globalId: v.globalId, classe: v.classe ?? undefined, nome: v.nome ?? undefined }])
+                }
+              >
+                {v.tipo === 'pavimento' ? 'Pavimento' : 'Elemento'} · {v.nome ?? v.classe ?? v.globalId}
+              </button>
+              <span className="central-sec">{v.sigla}</span>
+              <button
+                type="button"
+                className="central-botao central-botao-icone"
+                aria-label={`Remover vínculo ${v.nome ?? v.classe ?? v.globalId}`}
+                data-dica="Remover vínculo"
+                disabled={gravando}
+                onClick={() => void gravar(semVinculo(doc.vinculos, v))}
+              >
+                <IconeRemoverVinculo />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="central-gestao-acoes">
+        <button
+          type="button"
+          className="central-botao"
+          disabled={selecao.length === 0 || gravando}
+          onClick={() => void gravar(juntarVinculos(doc.vinculos, vinculosDe(selecao, 'elemento')))}
+        >
+          Vincular seleção ({selecao.length})
+        </button>
+        <select
+          aria-label="Vincular pavimento…"
+          value=""
+          disabled={pavimentos.length === 0 || gravando}
+          onChange={(e) => {
+            const ref = pavimentos.find((p) => p.globalId === e.target.value)
+            if (ref) void gravar(juntarVinculos(doc.vinculos, vinculosDe([ref], 'pavimento')))
+          }}
+        >
+          <option value="">Vincular pavimento…</option>
+          {pavimentos.map((p) => (
+            <option key={`${p.sigla}|${p.globalId}`} value={p.globalId}>
+              {p.nome ?? p.globalId} ({p.sigla})
+            </option>
+          ))}
+        </select>
+      </div>
+      {erro && (
+        <p className="central-gestao-alerta" role="alert">
+          {erro}
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -346,6 +498,7 @@ function Formulario({
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [copiar, setCopiar] = useState(true)
   const novaRevisao = inicial.serie !== undefined
 
   const mime = arquivo ? mimeDoArquivo(arquivo.name, arquivo.type) : ''
@@ -402,6 +555,10 @@ function Formulario({
           bytes,
         },
       })
+      const anteriores = inicial.vinculosAnteriores ?? []
+      if (novaRevisao && copiar && anteriores.length > 0) {
+        await repo.vincularDocumento(doc.id, anteriores)
+      }
       void qc.invalidateQueries({ queryKey: ['admin'], predicate: (q) => q.queryKey[1] !== 'sessao' })
       aoEnviar(doc)
     } catch (e) {
@@ -478,6 +635,12 @@ function Formulario({
           onChange={(e) => setR({ ...r, revisao: e.target.value.trim() })}
         />
       </label>
+      {novaRevisao && (
+        <label className="central-docs-copiar">
+          <input type="checkbox" checked={copiar} disabled={enviando} onChange={(e) => setCopiar(e.target.checked)} />
+          Copiar os vínculos da revisão anterior
+        </label>
+      )}
       {arquivo && (
         <p className="central-sec">
           {arquivo.name} · {tamanho(arquivo.size)}

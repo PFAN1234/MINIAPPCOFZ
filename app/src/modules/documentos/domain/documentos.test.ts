@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
+  documentosDoPavimento,
+  documentosVinculados,
+  juntarVinculos,
+  orfaos,
+  semVinculo,
+  todosVinculos,
+  vinculosDe,
+  type Documento,
+  type VinculoDocumento,
   caminhoDocumento,
   extensaoArquivo,
   LIMITE_BYTES,
@@ -103,5 +112,43 @@ describe('tipoSugerido', () => {
     expect(tipoSugerido('docx')).toBe('memorial')
     expect(tipoSugerido('png')).toBe('imagem')
     expect(tipoSugerido('zip')).toBe('outro')
+  })
+})
+
+describe('vínculos de documentos', () => {
+  const a = { tipo: 'elemento' as const, sigla: 'ARQ', globalId: 'g1', classe: 'IFCWALL', nome: 'Parede' }
+  const p = { tipo: 'pavimento' as const, sigla: 'ARQ', globalId: 'gp', classe: 'IFCBUILDINGSTOREY', nome: 'Térreo' }
+  const doc = (id: string, vinculos: VinculoDocumento[]) => ({ id, titulo: id, vinculos }) as unknown as Documento
+
+  it('vinculosDe converte refs no tipo pedido', () => {
+    expect(vinculosDe([{ sigla: 'ARQ', globalId: 'g1', classe: 'IFCWALL', nome: 'Parede' }], 'elemento')).toEqual([a])
+    expect(vinculosDe([{ sigla: 'EST', globalId: 'g2' }], 'pavimento')).toEqual([
+      { tipo: 'pavimento', sigla: 'EST', globalId: 'g2', classe: null, nome: null },
+    ])
+  })
+
+  it('juntarVinculos não duplica por sigla + GlobalId e semVinculo remove', () => {
+    const outraSigla = { ...a, sigla: 'EST' }
+    expect(juntarVinculos([a], [{ ...a, nome: 'Outro' }, outraSigla, outraSigla])).toEqual([a, outraSigla])
+    expect(semVinculo([a, outraSigla], a)).toEqual([outraSigla])
+    expect(semVinculo([a], { sigla: 'ARQ', globalId: 'nada' })).toEqual([a])
+  })
+
+  it('documentosVinculados e documentosDoPavimento', () => {
+    const docs = [doc('d1', [a]), doc('d2', [p]), doc('d3', [])]
+    expect(documentosVinculados(docs, { sigla: 'ARQ', globalId: 'g1' }).map((d) => d.id)).toEqual(['d1'])
+    expect(documentosVinculados(docs, { sigla: 'EST', globalId: 'g1' })).toEqual([])
+    expect(documentosDoPavimento(docs, 'TÉRREO').map((d) => d.id)).toEqual(['d2'])
+    expect(documentosDoPavimento(docs, 'Parede')).toEqual([])
+  })
+
+  it('orfaos devolve só os vínculos marcados false', () => {
+    const docs = [doc('d1', [a, p]), doc('d2', [{ ...a, globalId: 'g9' }])]
+    expect(todosVinculos(docs)).toHaveLength(3)
+    const r = orfaos(docs, [true, false, null])
+    expect(r).toHaveLength(1)
+    expect(r[0].documento.id).toBe('d1')
+    expect(r[0].vinculo.globalId).toBe('gp')
+    expect(orfaos(docs, [false, false, false])).toHaveLength(3)
   })
 })

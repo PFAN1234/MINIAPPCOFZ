@@ -9,6 +9,7 @@ import { MotorVisualizadorFalso } from '../../../infra/MotorVisualizadorFalso.ts
 import { temWebGL } from '../../../infra/modelosLocais.ts'
 import type { ModeloFrag } from '../../../domain/modelos.ts'
 import type { NoArvore } from '../../../domain/central.ts'
+import type { VinculoDocumento } from '../../../../documentos/domain/documentos.ts'
 import CentralObra from './CentralObra.tsx'
 import { PreviaPdfProvider } from '../../../../documentos/presentation/admin/previaPdf.tsx'
 import { FabricaMotorProvider } from './motorContexto.tsx'
@@ -23,11 +24,14 @@ const frag = (sigla: string): ModeloFrag => ({ sigla, revisao: 'R01', arquivo: `
 let motor: MotorVisualizadorFalso
 let modelos: ModeloFrag[]
 let portao: Promise<void>
+/** Vínculos injetados no documento "Planta baixa do pavimento tipo". */
+let vinculosTeste: VinculoDocumento[]
 
 beforeEach(() => {
   motor = new MotorVisualizadorFalso()
   modelos = [frag('ARQ'), frag('EST')]
   portao = Promise.resolve()
+  vinculosTeste = []
   vi.mocked(temWebGL).mockReturnValue(true)
 })
 afterEach(() => localStorage.clear())
@@ -50,6 +54,10 @@ function renderizar2(rota: string) {
       const id = (await base.obterObra('hto')).obra.id
       return OBRAS.map((o) => (o.slug === 'hto' ? { ...o, obra_id: id } : o))
     },
+    listarDocumentos: async (slug: string) =>
+      (await base.listarDocumentos(slug)).map((d) =>
+        d.titulo === 'Planta baixa do pavimento tipo' ? { ...d, vinculos: vinculosTeste } : d,
+      ),
     listarModelos: async () => modelos,
     baixarModelo: async () => {
       await portao
@@ -118,6 +126,21 @@ describe('CentralObra', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(screen.getByTestId('url')).toHaveTextContent('/modelos/hto?painel=documentos')
     expect(screen.getByTestId('url')).not.toHaveTextContent('doc=')
+  })
+
+  it('elemento selecionado com documento vinculado mostra o documento no contexto e abre a prévia', async () => {
+    const usuario = userEvent.setup()
+    vinculosTeste = [{ tipo: 'elemento', sigla: 'EST', globalId: 'GX', classe: 'IFCBEAM', nome: 'Viga' }]
+    renderizar('/modelos/hto')
+    await screen.findByRole('button', { name: 'Enquadrar' })
+    await waitFor(() => expect(motor.chamadasDe('carregar')).toHaveLength(1))
+    const contexto = screen.getByRole('region', { name: 'Contexto' })
+    expect(within(contexto).queryByText('Documentos deste elemento')).not.toBeInTheDocument()
+    act(() => motor.emitir('selecao', [{ sigla: 'EST', globalId: 'GX', classe: 'IFCBEAM', nome: 'Viga' }]))
+    expect(await within(contexto).findByText('Documentos deste elemento')).toBeInTheDocument()
+    await usuario.click(within(contexto).getByRole('button', { name: 'Planta baixa do pavimento tipo' }))
+    expect(screen.getByTestId('url')).toHaveTextContent(/doc=/)
+    expect(await screen.findByRole('dialog', { name: 'Planta baixa do pavimento tipo' })).toBeInTheDocument()
   })
 
   it('alternar o tema persiste a preferência', async () => {

@@ -34,6 +34,10 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
     { nome: 'Pset_WallCommon', itens: [{ nome: 'IsExternal', valor: 'Sim' }] },
   ]
   propriedadesErro = false
+  /** GlobalIds que `existem` responde como ausentes (`false`). */
+  globalIdsAusentes = new Set<string>()
+  /** Siglas que `existem` responde como não carregadas (`null`). */
+  siglasNaoCarregadas = new Set<string>()
   /** Resultado de `buscar`. */
   buscaDados: RefElemento[] = []
   /** Siglas que `carregar` recusa (rejeita com `ErroCarregamento` no fim). */
@@ -100,6 +104,10 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   async buscar(filtro: FiltroAtributo) {
     this.registrar('buscar', filtro)
     return this.buscaDados
+  }
+  async existem(refs: RefElemento[]) {
+    this.registrar('existem', refs)
+    return refs.map((r) => (this.siglasNaoCarregadas.has(r.sigla) ? null : !this.globalIdsAusentes.has(r.globalId)))
   }
   grade(ligado: boolean) {
     this.registrar('grade', ligado)

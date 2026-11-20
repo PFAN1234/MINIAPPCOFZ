@@ -7,6 +7,8 @@ import { criarRepositorioAdminFixture } from '../../../../../../admin/dados/fixt
 import type { Conversor } from '../../../../application/ports/ConversorIfcPort.port.ts'
 import { ConversorProvider } from '../../../../infra/conversor.ts'
 import { OBRAS } from '../obrasDeTeste.ts'
+import { MotorVisualizadorFalso } from '../../../../infra/MotorVisualizadorFalso.ts'
+import type { Documento } from '../../../../../documentos/domain/documentos.ts'
 import Gestao from './Gestao.tsx'
 
 const FRAG = new Uint8Array([0x78, 0x9c, 1, 2, 3, 4])
@@ -25,7 +27,11 @@ function conversorFalso(erro?: string): Conversor & { chamadas: number } {
   return c
 }
 
-async function renderizar(conversor: Conversor, repo = criarRepositorioAdminFixture()) {
+async function renderizar(
+  conversor: Conversor,
+  repo = criarRepositorioAdminFixture(),
+  extra: { motor?: MotorVisualizadorFalso | null; documentos?: Documento[] } = {},
+) {
   // O id da obra tem de ser o da fixture: o Storage falso confere a pasta.
   const obra = { ...OBRAS[0], obra_id: (await repo.obterObra('hto')).obra.id }
   const aoMudar = vi.fn()
@@ -34,7 +40,13 @@ async function renderizar(conversor: Conversor, repo = criarRepositorioAdminFixt
     <QueryClientProvider client={qc}>
       <RepositorioAdminProvider repositorio={repo}>
         <ConversorProvider conversor={conversor}>
-          <Gestao obra={obra} aoMudar={aoMudar} />
+          <Gestao
+            obra={obra}
+            aoMudar={aoMudar}
+            motor={extra.motor ?? null}
+            versao={0}
+            documentos={extra.documentos ?? []}
+          />
         </ConversorProvider>
       </RepositorioAdminProvider>
     </QueryClientProvider>,
@@ -112,5 +124,39 @@ describe('Gestão (fixture)', () => {
     await waitFor(() => expect(aoMudar).toHaveBeenCalledWith('ARQ'))
     const item = within(screen.getByRole('region', { name: 'Histórico' })).getAllByRole('listitem')[0]
     expect(item).toHaveTextContent('Retirado ARQ')
+  })
+
+  it('vínculos órfãos: lista o GlobalId ausente, conta os não conferidos e remove o vínculo', async () => {
+    const user = userEvent.setup()
+    const repo = criarRepositorioAdminFixture()
+    const doc = (await repo.listarDocumentos('hto'))[0]
+    const vinculos = [
+      { tipo: 'elemento' as const, sigla: 'ARQ', globalId: 'g-some', classe: 'IFCWALL', nome: 'Parede velha' },
+      { tipo: 'elemento' as const, sigla: 'ARQ', globalId: 'g-ok', classe: 'IFCWALL', nome: 'Parede nova' },
+      { tipo: 'elemento' as const, sigla: 'EST', globalId: 'g-est', classe: 'IFCBEAM', nome: 'Viga' },
+    ]
+    await repo.vincularDocumento(doc.id, vinculos)
+    const motor = new MotorVisualizadorFalso()
+    motor.globalIdsAusentes.add('g-some')
+    motor.siglasNaoCarregadas.add('EST')
+    const vincular = vi.spyOn(repo, 'vincularDocumento')
+    await renderizar(conversorFalso(), repo, { motor, documentos: [{ ...doc, vinculos }] })
+
+    const secao = await screen.findByRole('region', { name: 'Vínculos órfãos' })
+    expect(await within(secao).findByText('Parede velha', { exact: false })).toBeInTheDocument()
+    expect(within(secao).getByText('g-some')).toBeInTheDocument()
+    expect(within(secao).queryByText('g-ok')).not.toBeInTheDocument()
+    expect(within(secao).getByText(/1 vínculo\(s\) não conferido/)).toBeInTheDocument()
+
+    await user.click(within(secao).getByRole('button', { name: 'Remover vínculo' }))
+    await waitFor(() => expect(vincular).toHaveBeenCalledTimes(1))
+    expect(vincular.mock.calls[0][0]).toBe(doc.id)
+    expect(vincular.mock.calls[0][1].map((v) => v.globalId)).toEqual(['g-ok', 'g-est'])
+  })
+
+  it('sem órfãos mostra "Nenhum vínculo órfão."', async () => {
+    const motor = new MotorVisualizadorFalso()
+    await renderizar(conversorFalso(), criarRepositorioAdminFixture(), { motor })
+    expect(await screen.findByText('Nenhum vínculo órfão.')).toBeInTheDocument()
   })
 })
