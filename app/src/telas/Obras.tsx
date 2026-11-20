@@ -5,7 +5,8 @@ import { EstadoCarregando, EstadoConsulta, EstadoVazio } from '../shared/ui/feed
 import { AbasEtapa } from '../shared/ui/inputs/AbasEtapa.tsx'
 import { EquipeServico } from '../components/EquipeServico.tsx'
 import { TopoTela } from '../shared/ui/layout/TopoTela.tsx'
-import type { ObraDaLista, ObraDisponivel, ResumoObra } from '../dados/tipos.ts'
+import type { ObraDaLista, ResumoObra } from '../dados/tipos.ts'
+import type { ObraDisponivel } from '@modules/acessos/domain/tipos.ts'
 import {
   useCriarLinkAdmin,
   useEhGestorAlguma,

@@ -2,15 +2,8 @@ import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
-import type {
-  DadosAditivo,
-  DadosEtapa,
-  DadosObra,
-  EdicaoBoletim,
-  FiltroBoletins,
-  PapelAcesso,
-  PavimentoResumo,
-} from './tipos.ts'
+import type { DadosAditivo, DadosEtapa, DadosObra, EdicaoBoletim, FiltroBoletins, PavimentoResumo } from './tipos.ts'
+import type { PapelAcesso } from '@modules/acessos/domain/tipos.ts'
 
 export function useObrasAdmin() {
   const repo = useRepositorioAdmin()

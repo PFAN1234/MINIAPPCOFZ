@@ -1,7 +1,7 @@
 import { EstadoConsulta, EstadoErro, EstadoVazio } from '../shared/ui/feedback/Estado.tsx'
 import { Horario } from './Horario.tsx'
 import { useDecidirSolicitacao, useSolicitacoes } from '../dados/hooks.ts'
-import type { SolicitacaoAcesso } from '../dados/tipos.ts'
+import type { SolicitacaoAcesso } from '@modules/acessos/domain/tipos.ts'
 
 /** Pedidos de acesso pendentes da obra, com "Aprovar" e "Recusar". Só para gestores. */
 export function PedidosAcesso({ obraId }: { obraId: string }) {

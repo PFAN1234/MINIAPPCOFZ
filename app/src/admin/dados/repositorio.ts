@@ -2,42 +2,8 @@ import type { ModelosRepositorio } from '@modules/modelos/application/ports/Mode
 import type { PlantasRepositorio } from '@modules/plantas/application/ports/PlantasRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
-import type {
-  Admin,
-  ErroCliente,
-  ResumoOrfaos,
-  DadosAditivo,
-  DadosEtapa,
-  Aditivo,
-  BoletimDetalhe,
-  EdicaoBoletim,
-  FiltroBoletins,
-  ListaBoletins,
-  ListaTodosBoletins,
-  PedidoEmissao,
-  EtapaDetalhe,
-  Pessoa,
-  MatrizAcessosAdmin,
-  PapelAcesso,
-  Responsavel,
-  DadosObra,
-  DadosWidget,
-  Exclusao,
-  EstadoSessao,
-  EtapaLista,
-  EtapaSalva,
-  ObraAdmin,
-  Organizacao,
-  ObraLista,
-  ObraSalva,
-  PavimentoResumo,
-  ResultadoExclusao,
-  ResultadoExclusaoBoletim,
-  ResultadoExclusaoEtapa,
-  ResumoEtapa,
-  ResumoObra,
-  UsuarioApp,
-} from './tipos.ts'
+import type { ErroCliente, ResumoOrfaos, DadosAditivo, DadosEtapa, Aditivo, BoletimDetalhe, EdicaoBoletim, FiltroBoletins, ListaBoletins, ListaTodosBoletins, PedidoEmissao, EtapaDetalhe, Responsavel, DadosObra, Exclusao, EtapaLista, EtapaSalva, ObraAdmin, Organizacao, ObraLista, ObraSalva, PavimentoResumo, ResultadoExclusao, ResultadoExclusaoBoletim, ResultadoExclusaoEtapa, ResumoEtapa, ResumoObra } from './tipos.ts'
+import type { Admin, Pessoa, MatrizAcessosAdmin, PapelAcesso, DadosWidget, EstadoSessao, UsuarioApp } from '@modules/acessos/domain/tipos.ts'
 
 export interface RepositorioAdmin
   extends Pick<RaRepositorio, 'listarRA' | 'definirQr' | 'removerQr'>,

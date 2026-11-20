@@ -9,46 +9,8 @@ import { nomeMostrado } from './nome.ts'
 import { FUSO_PADRAO, dataNoFuso } from '../shared/kernel/fuso.ts'
 import type { Repositorio } from './repositorio.ts'
 import { dentroDoTelegram, idUsuarioTelegram, initData } from '../shared/infra/telegram/telegram.ts'
-import type {
-  Ambiente,
-  AmbienteDetalhe,
-  DetalhePlanta,
-  EquipeServico,
-  EstadoPublicacao,
-  EtapaInicio,
-  MembroServico,
-  FiltroRegistros,
-  LinkAdmin,
-  FotoRegistro,
-  ImagemPlanta,
-  Marcador,
-  NovaObservacao,
-  NovoEncerramento,
-  NovoRegistro,
-  Etapa,
-  Observacao,
-  ObservacoesDoDia,
-  ObraDaLista,
-  ObraDetalhe,
-  ObraDisponivel,
-  ObraResumo,
-  Organizacao,
-  PapelObra,
-  ResumoObra,
-  Participante,
-  Pavimento,
-  PendenciaDetalhe,
-  Planta,
-  PublicacaoProblema,
-  RecortePt,
-  RegistroLocalizado,
-  RegistroResumo,
-  SolicitacaoAcesso,
-  MatrizAcessos,
-  PainelRelatorios,
-  Relatorios,
-  ResultadoExclusaoBoletim,
-} from './tipos.ts'
+import type { Ambiente, AmbienteDetalhe, DetalhePlanta, EstadoPublicacao, EtapaInicio, FiltroRegistros, FotoRegistro, ImagemPlanta, Marcador, NovaObservacao, NovoEncerramento, NovoRegistro, Etapa, Observacao, ObservacoesDoDia, ObraDaLista, ObraDetalhe, ObraResumo, Organizacao, ResumoObra, Pavimento, PendenciaDetalhe, Planta, PublicacaoProblema, RecortePt, RegistroLocalizado, RegistroResumo, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
+import type { EquipeServico, MembroServico, LinkAdmin, ObraDisponivel, PapelObra, Participante, SolicitacaoAcesso, MatrizAcessos } from '@modules/acessos/domain/tipos.ts'
 
 const SEGUNDOS_URL_ASSINADA = 3600
 const LOTE_IN = 100

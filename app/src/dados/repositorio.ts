@@ -1,34 +1,5 @@
-import type {
-  AmbienteDetalhe,
-  CaminhoFoto,
-  EquipeServico,
-  EtapaInicio,
-  Posicao,
-  NovaObservacao,
-  NovoEncerramento,
-  Observacao,
-  ObservacoesDoDia,
-  Participante,
-  PendenciaDetalhe,
-  PublicacaoProblema,
-  PapelObra,
-  NovoRegistro,
-  FiltroRegistros,
-  LinkAdmin,
-  ObraDetalhe,
-  ObraDaLista,
-  ObraDisponivel,
-  Organizacao,
-  RegistroLocalizado,
-  PainelRelatorios,
-  Relatorios,
-  ResultadoExclusaoBoletim,
-  RegistroResumo,
-  ResumoObra,
-  SolicitacaoAcesso,
-  MatrizAcessos,
-  PapelAcesso,
-} from './tipos.ts'
+import type { AmbienteDetalhe, CaminhoFoto, EtapaInicio, NovaObservacao, NovoEncerramento, Observacao, ObservacoesDoDia, PendenciaDetalhe, PublicacaoProblema, NovoRegistro, FiltroRegistros, ObraDetalhe, ObraDaLista, Organizacao, RegistroLocalizado, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim, RegistroResumo, ResumoObra } from './tipos.ts'
+import type { EquipeServico, Posicao, Participante, PapelObra, LinkAdmin, ObraDisponivel, SolicitacaoAcesso, MatrizAcessos, PapelAcesso } from '@modules/acessos/domain/tipos.ts'
 import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 

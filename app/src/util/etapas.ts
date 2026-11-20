@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { Etapa, EtapaInicio, ObraDaLista, ObraDisponivel } from '../dados/tipos.ts'
+import type { Etapa, EtapaInicio, ObraDaLista } from '../dados/tipos.ts'
+import type { ObraDisponivel } from '@modules/acessos/domain/tipos.ts'
 import { compararNatural } from '../shared/kernel/ordenacao.ts'
 
 /**

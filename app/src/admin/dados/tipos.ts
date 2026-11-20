@@ -31,16 +31,6 @@ export const ROTULO_CATEGORIA: Record<string, string> = {
   area_comum: 'Área comum',
 }
 
-export interface UsuarioSessao {
-  id: string
-  nome: string
-}
-
-export type EstadoSessao =
-  | { tipo: 'sem_sessao' }
-  | { tipo: 'negado'; usuario: UsuarioSessao }
-  | { tipo: 'admin'; usuario: UsuarioSessao }
-
 export interface PavimentoResumo {
   codigo: string
   nome: string
@@ -270,43 +260,7 @@ export type DadosEtapa = Partial<{ [K in keyof CamposEtapa]: CamposEtapa[K] | nu
 /** Devolvido ao salvar: a etapa como em `admin_obter_etapa`. */
 export type EtapaSalva = EtapaDetalhe
 
-export interface ParticipacaoPessoa {
-  obra_slug: string
-  obra_nome: string
-  etapa_nome: string
-  papel: string
-}
-
-/** `admin_listar_pessoas`. */
-export interface Pessoa {
-  id: string
-  nome: string
-  nome_exibicao: string | null
-  username: string | null
-  telegram_id: number
-  eh_admin: boolean
-  participacoes: ParticipacaoPessoa[]
-}
-
 export const NOME_EXIBICAO_MAX = 60
-
-/** Acesso de uma pessoa a uma obra (RPC `definir_acesso`). */
-export type PapelAcesso = 'nenhum' | 'equipe' | 'gestor'
-
-/** `matriz_acessos()`: obras e, por pessoa, o papel em cada obra (por id) e os pedidos pendentes. */
-export interface MatrizAcessosAdmin {
-  obras: { id: string; slug: string; nome: string }[]
-  pessoas: {
-    id: string
-    nome: string
-    username: string | null
-    admin: boolean
-    vistoEm: string | null
-    acessos: Record<string, 'equipe' | 'gestor'>
-    /** Ids das obras em que a pessoa pediu acesso e ainda não foi decidido. */
-    pedidos: string[]
-  }[]
-}
 
 /**
  * Estações meteorológicas do Observatório de Riscos Climáticos de Fortaleza (lista fixa, só no
@@ -572,15 +526,6 @@ export interface ObraSalva {
   ordem: number
 }
 
-export interface Admin {
-  usuario_id: string
-  nome: string
-  username: string | null
-  telegram_id: number
-  criado_em: string
-  criado_por_nome: string | null
-}
-
 export interface ErroCliente {
   id: number
   criado_em: string
@@ -613,25 +558,6 @@ export interface ArquivoOrfao {
 export interface ResumoOrfaos {
   buckets: ResumoOrfaoBucket[]
   maiores: ArquivoOrfao[]
-}
-
-export interface UsuarioApp {
-  id: string
-  nome: string
-  username: string | null
-  telegram_id: number
-  eh_admin: boolean
-}
-
-/** Objeto que o Telegram Login Widget entrega ao `data-onauth`. */
-export interface DadosWidget {
-  id: number
-  first_name: string
-  last_name?: string
-  username?: string
-  photo_url?: string
-  auth_date: number
-  hash: string
 }
 
 export type Bucket = 'originais' | 'plantas' | 'modelos'

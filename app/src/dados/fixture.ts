@@ -12,49 +12,8 @@ import { nomeMostrado } from './nome.ts'
 import { dataNoFuso, formatarDia } from '../shared/kernel/fuso.ts'
 import { dentroDoPeriodo } from '../util/periodo.ts'
 import type { Repositorio } from './repositorio.ts'
-import type {
-  Ambiente,
-  AmbienteDetalhe,
-  Encerramento,
-  DetalhePlanta,
-  EquipeServico,
-  EstadoPublicacao,
-  EtapaInicio,
-  MembroServico,
-  FiltroRegistros,
-  LinkAdmin,
-  FotoRegistro,
-  ImagemPlanta,
-  NovaObservacao,
-  NovoEncerramento,
-  NovoRegistro,
-  Etapa,
-  Observacao,
-  ObservacoesDoDia,
-  ObraDaLista,
-  ObraDetalhe,
-  ObraDisponivel,
-  ObraResumo,
-  Organizacao,
-  PapelObra,
-  Participante,
-  Pavimento,
-  PendenciaDetalhe,
-  Planta,
-  PublicacaoProblema,
-  RecortePt,
-  RegistroLocalizado,
-  RegistroResumo,
-  ResumoObra,
-  SolicitacaoAcesso,
-  MatrizAcessos,
-  PapelAcesso,
-  BoletimRelatorio,
-  EtapaRelatorio,
-  PainelRelatorios,
-  Relatorios,
-  ResultadoExclusaoBoletim,
-} from './tipos.ts'
+import type { Ambiente, AmbienteDetalhe, Encerramento, DetalhePlanta, EstadoPublicacao, EtapaInicio, FiltroRegistros, FotoRegistro, ImagemPlanta, NovaObservacao, NovoEncerramento, NovoRegistro, Etapa, Observacao, ObservacoesDoDia, ObraDaLista, ObraDetalhe, ObraResumo, Organizacao, Pavimento, PendenciaDetalhe, Planta, PublicacaoProblema, RecortePt, RegistroLocalizado, RegistroResumo, ResumoObra, BoletimRelatorio, EtapaRelatorio, PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from './tipos.ts'
+import type { EquipeServico, MembroServico, LinkAdmin, ObraDisponivel, PapelObra, Participante, SolicitacaoAcesso, MatrizAcessos, PapelAcesso } from '@modules/acessos/domain/tipos.ts'
 
 const ID_HTO = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e01'
 const ID_AURORA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4e02'

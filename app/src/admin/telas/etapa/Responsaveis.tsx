@@ -3,7 +3,8 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { ComDados, Resultado } from "../../componentes.tsx";
 import { useDefinirResponsaveis, usePessoas } from "../../dados/hooks.ts";
-import type { Pessoa, Responsavel } from "../../dados/tipos.ts";
+import type { Responsavel } from "../../dados/tipos.ts";
+import type { Pessoa } from "@modules/acessos/domain/tipos.ts";
 
 interface Item {
   usuario_id: string;

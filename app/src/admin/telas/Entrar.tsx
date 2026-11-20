@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { IdentidadeOM, mensagemDe, NOME_APP } from '../componentes.tsx'
 import { useRepositorioAdmin } from '../dados/contexto.tsx'
-import type { DadosWidget, UsuarioSessao } from '../dados/tipos.ts'
+import type { DadosWidget, UsuarioSessao } from '@modules/acessos/domain/tipos.ts'
 
 /** Script oficial do Telegram Login Widget (https://core.telegram.org/widgets/login). */
 export const URL_WIDGET = 'https://telegram.org/js/telegram-widget.js?22'

@@ -11,45 +11,8 @@ import { criarClienteSupabase } from '../../dados/supabase.ts'
 import { configurarEnvioErros } from '../../shared/infra/erros.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
-import {
-  ErroAdmin,
-  CAMINHO_LOGO,
-  novoCaminhoLogo,
-  problemaDoLogo,
-  type Admin,
-  type ErroCliente,
-  type ResumoOrfaos,
-  type BucketObra,
-  type Aditivo,
-  type BoletimDaLista,
-  type BoletimDetalhe,
-  type BoletimEmitido,
-  type EdicaoBoletim,
-  type ListaTodosBoletins,
-  type PedidoDaLista,
-  type SnapshotBoletim,
-  type EstadoEmissao,
-  type ListaBoletins,
-  type PedidoEmissao,
-  type EtapaDetalhe,
-  type EtapaLista,
-  type Pessoa,
-  type MatrizAcessosAdmin,
-  type Responsavel,
-  type Organizacao,
-  type ResultadoExclusaoEtapa,
-  type ResumoEtapa,
-  type Exclusao,
-  type ResultadoExclusao,
-  type ResumoObra,
-  type DadosWidget,
-  type EstadoSessao,
-  type ObraAdmin,
-  type ObraLista,
-  type ObraSalva,
-  type PavimentoResumo,
-  type UsuarioApp,
-} from './tipos.ts'
+import { ErroAdmin, CAMINHO_LOGO, novoCaminhoLogo, problemaDoLogo, type ErroCliente, type ResumoOrfaos, type BucketObra, type Aditivo, type BoletimDaLista, type BoletimDetalhe, type BoletimEmitido, type EdicaoBoletim, type ListaTodosBoletins, type PedidoDaLista, type SnapshotBoletim, type EstadoEmissao, type ListaBoletins, type PedidoEmissao, type EtapaDetalhe, type EtapaLista, type Responsavel, type Organizacao, type ResultadoExclusaoEtapa, type ResumoEtapa, type Exclusao, type ResultadoExclusao, type ResumoObra, type ObraAdmin, type ObraLista, type ObraSalva, type PavimentoResumo } from './tipos.ts'
+import type { Admin, Pessoa, MatrizAcessosAdmin, DadosWidget, EstadoSessao, UsuarioApp } from '@modules/acessos/domain/tipos.ts'
 
 export const CHAVE_SESSAO_ADMIN = 'miniappcofz-admin-auth'
 

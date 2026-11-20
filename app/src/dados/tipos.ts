@@ -1,5 +1,6 @@
 /** Tipos do domínio usados pelo app (independentes da origem dos dados). */
 import type { DadosRA, OrigemFoto } from '@modules/ra/domain/tipos.ts'
+import type { PapelObra } from '@modules/acessos/domain/tipos.ts'
 
 /** Marcador normalizado na página do PDF (0 a 1, origem no canto superior esquerdo). */
 export interface Marcador {
@@ -78,8 +79,6 @@ export interface Ambiente {
    */
   ativo: boolean
 }
-
-export type PapelObra = 'equipe' | 'gestor'
 
 /** Totais de uma obra para o Início (`resumo_obras`): serviços de sempre, pendências abertas e resolvidas. */
 export interface ResumoObra {
@@ -191,49 +190,6 @@ export interface FiltroRegistros {
   limite?: number
 }
 
-/** Obra em que o usuário está no grupo do Telegram mas ainda não tem acesso. */
-export interface ObraDisponivel {
-  id: string
-  slug: string
-  nome: string
-  /** Estado do pedido mais recente; `null` se nunca pediu. */
-  solicitacao: 'pendente' | 'recusada' | null
-  etapa_id: string
-  etapa_nome: string
-  etapa_ordem: number
-}
-
-/** Pedido de acesso pendente, visto pelo gestor da obra. */
-export interface SolicitacaoAcesso {
-  id: string
-  usuario_id: string
-  nome: string
-  username: string | null
-  criado_em: string
-}
-
-/** Pessoa da lista de acessos (RPC `matriz_acessos`). */
-export interface PessoaAcesso {
-  id: string
-  nome: string
-  username: string | null
-  /** Administradora do grupo: gestora de todas as obras. */
-  admin: boolean
-  /** Última vez que o bot viu a pessoa no grupo ou no app. */
-  vistoEm: string | null
-  /** Só as obras em que a pessoa participa, por id da obra. */
-  acessos: Record<string, 'equipe' | 'gestor'>
-  /** Ids das obras com pedido de acesso pendente. */
-  pedidos: string[]
-}
-
-export interface MatrizAcessos {
-  obras: { id: string; slug: string; nome: string }[]
-  pessoas: PessoaAcesso[]
-}
-
-export type PapelAcesso = 'nenhum' | 'equipe' | 'gestor'
-
 export interface RegistroLocalizado {
   slug: string
   /** Código do ambiente do registro. */
@@ -274,14 +230,6 @@ export interface NovoEncerramento {
   fotos: { id: string; largura: number; altura: number; bytes: number }[]
 }
 
-export interface Participante {
-  usuario_id: string
-  nome: string
-  username: string | null
-  papel: PapelObra
-  desde: string
-}
-
 /** Publicação no Telegram que precisa de atenção do gestor. */
 export interface PublicacaoProblema {
   id: number
@@ -295,12 +243,6 @@ export interface PublicacaoProblema {
   tipo: TipoRegistro | 'encerramento'
   legenda: string
   ambiente: string
-}
-
-/** Link de uso único para abrir o site de administração (vale 2 min). */
-export interface LinkAdmin {
-  url: string
-  expira_em: string
 }
 
 /** Observação do dia na obra (RPC `observacoes_do_dia`). */
@@ -339,44 +281,6 @@ export interface EtapaInicio {
   nome: string
   ordem: number
   participa: boolean
-}
-
-/** Um serviço (entrada e saída) da equipe de uma etapa. */
-export interface MembroServico {
-  id: string
-  usuario_id: string
-  nome: string
-  entrada_em: string
-  saida_em: string | null
-  /** Fechado sozinho 24 h depois da entrada ("saída não registrada"). */
-  saida_automatica: boolean
-  /** É o próprio usuário. */
-  eu: boolean
-}
-
-export interface ServicoAberto {
-  id: string
-  etapa_id: string
-  etapa_nome: string
-  entrada_em: string
-}
-
-/** Equipe de serviço de uma etapa (`equipe_servico`, `fazer_checkin`, `fazer_checkout`). */
-export interface EquipeServico {
-  etapa_id: string
-  participa: boolean
-  /** A etapa tem coordenada cadastrada (sem ela, o check-in não vale). */
-  tem_localizacao: boolean
-  /** Serviço aberto do usuário em qualquer etapa. */
-  meu_servico: ServicoAberto | null
-  equipe: MembroServico[]
-}
-
-/** Posição do GPS do aparelho. */
-export interface Posicao {
-  latitude: number
-  longitude: number
-  precisao: number | null
 }
 
 /** Dados de `salvar_observacao`: id novo cria; id existente edita o texto (só o autor). */

@@ -1,4 +1,4 @@
-import type { Posicao } from '../../../dados/tipos.ts'
+import type { Posicao } from '@modules/acessos/domain/tipos.ts'
 import { localizacaoDoTelegram, type TelegramLocationManager } from '../telegram/telegram.ts'
 
 export type MotivoErroLocalizacao = 'permissao' | 'indisponivel' | 'tempo'

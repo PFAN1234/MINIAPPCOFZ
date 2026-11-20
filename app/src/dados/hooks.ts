@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorio } from './contexto.tsx'
-import type { EquipeServico, FiltroRegistros, NovaObservacao, PapelAcesso, PapelObra, Posicao } from './tipos.ts'
+import type { FiltroRegistros, NovaObservacao } from './tipos.ts'
+import type { EquipeServico, PapelAcesso, PapelObra, Posicao } from '@modules/acessos/domain/tipos.ts'
 
 export function useObras() {
   const repo = useRepositorio()

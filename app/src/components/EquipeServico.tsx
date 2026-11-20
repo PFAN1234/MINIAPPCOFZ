@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCheckin, useCheckout, useEquipeServico } from '../dados/hooks.ts'
-import type { EquipeServico as Equipe, MembroServico } from '../dados/tipos.ts'
+import type { EquipeServico as Equipe, MembroServico } from '@modules/acessos/domain/tipos.ts'
 import { ErroLocalizacao, obterPosicao } from '../shared/infra/browser/localizacao.ts'
 import { dataNoFuso, FUSO_PADRAO, horaNoFuso } from '../shared/kernel/fuso.ts'
 import { useOnline } from '../shared/infra/browser/online.ts'

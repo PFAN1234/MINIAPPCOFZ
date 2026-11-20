@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ComDados, Resultado } from '../componentes.tsx'
 import { useAdmins, useIncluirAdmin, useRemoverAdmin, useUsuarios } from '../dados/hooks.ts'
-import type { UsuarioApp } from '../dados/tipos.ts'
+import type { UsuarioApp } from '@modules/acessos/domain/tipos.ts'
 
 function rotuloUsuario(u: { nome: string; username: string | null; telegram_id: number }): string {
   return `${u.nome}${u.username ? ` (@${u.username})` : ''} · ${u.telegram_id}`

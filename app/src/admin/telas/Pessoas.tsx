@@ -6,7 +6,8 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Carregando, ComDados, Erro, Resultado } from '../componentes.tsx'
 import { useDefinirAcesso, useDefinirNomeExibicao, useMatrizAcessos, useMeuId, usePessoas } from '../dados/hooks.ts'
-import { NOME_EXIBICAO_MAX, type MatrizAcessosAdmin, type PapelAcesso, type Pessoa } from '../dados/tipos.ts'
+import { NOME_EXIBICAO_MAX } from '../dados/tipos.ts'
+import type { MatrizAcessosAdmin, PapelAcesso, Pessoa } from '@modules/acessos/domain/tipos.ts'
 
 /** Sem acentos e em minúsculas: a busca ignora os dois. */
 const simples = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
