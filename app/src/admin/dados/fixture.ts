@@ -6,6 +6,9 @@
  */
 import { criarAcessosAdminFixture } from '@modules/acessos/infra/AcessosAdminFixtureAdapter.ts'
 import { criarSessaoAdminFixture } from '@modules/acessos/infra/SessaoAdminFixtureAdapter.ts'
+import { criarEtapasAdminFixture, type EtapaMemoria } from '@modules/obras/infra/EtapasAdminFixtureAdapter.ts'
+import { criarObrasAdminFixture, type ObraMemoria } from '@modules/obras/infra/ObrasAdminFixtureAdapter.ts'
+import { criarOrganizacaoAdminFixture } from '@modules/obras/infra/OrganizacaoAdminFixtureAdapter.ts'
 import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
 import { criarPlantasFixture, type AmbientesJson } from '@modules/plantas/infra/PlantasFixtureAdapter.ts'
 import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
@@ -14,15 +17,11 @@ import obraCofz from '../../../../data/cofz/obra.json'
 import ambientesHto from '../../../../data/hto/ambientes.json'
 import obraHto from '../../../../data/hto/obra.json'
 import { dataBr, hojeNoFuso, numeroBoletim } from '../formato.ts'
-import { aplicarCampos, calcularFaltando, calcularPrazo, CAMPOS_VAZIOS, camposDe, dataValida, somarDias } from './fixtureBoletim.ts'
+import { CAMPOS_VAZIOS, dataValida, somarDias } from './fixtureBoletim.ts'
 import type { RepositorioAdmin } from './repositorio.ts'
 import type { ConfigObra } from '@modules/plantas/domain/tipos.ts'
-import { CABECALHO_LINHA_MAX, CABECALHO_LINHAS_MAX, CAMINHO_LOGO, ErroAdmin, NOME_OM_MAX, novoCaminhoLogo, problemaDoLogo, type ErroCliente, type ResumoOrfaos, type BoletimDaLista, type BoletimDetalhe, type BoletimEmitido, type EdicaoBoletim, type SnapshotBoletim, type PedidoEmissao } from './tipos.ts'
-import type { BucketObra, Aditivo, CamposEtapa, EtapaDetalhe, EtapaLista, Responsavel, Organizacao, Exclusao, ObraAdmin, ObraLista, PavimentoAdmin, PavimentoResumo, ResumoObra } from '@modules/obras/domain/tiposAdmin.ts'
+import { ErroAdmin, type ErroCliente, type ResumoOrfaos, type BoletimDaLista, type BoletimDetalhe, type BoletimEmitido, type EdicaoBoletim, type SnapshotBoletim, type PedidoEmissao } from './tipos.ts'
 import type { UsuarioApp } from '@modules/acessos/domain/tipos.ts'
-
-const SLUG = /^[a-z0-9-]+$/
-const CODIGO = /^[a-z0-9][a-z0-9-]*$/
 
 interface ObraJson {
   slug: string
@@ -31,46 +30,8 @@ interface ObraJson {
   [chave: string]: unknown
 }
 
-interface ObraMemoria {
-  id: string
-  slug: string
-  nome: string
-  ordem: number
-  pavimentos: (PavimentoResumo & { id: string; ambientes: number })[]
-  config: ConfigObra | null
-  config_atualizada_em: string | null
-  config_atualizada_por: string | null
-  arquivada_em: string | null
-  etapa_id: string
-  /** Grupo do Telegram do tópico vinculado (`obra.telegram_chat_id`); null sem vínculo. */
-  telegram_chat_id: number | null
-}
-
-interface EtapaMemoria extends CamposEtapa {
-  aditivos: Aditivo[]
-  /** Responsáveis na ordem (a `ordem` sai da posição). */
-  responsaveis: { usuario_id: string; funcao: string }[]
-  id: string
-  slug: string
-  nome: string
-  ordem: number
-  telegram_chat_id: number | null
-  telegram_chat_titulo: string | null
-  arquivada_em: string | null
-}
-
 /** Grupo do Telegram da 2ª ETAPA na fixture. */
 const GRUPO_2A = -1001234567890
-
-/** Lê o arquivo como data URL (a fixture guarda o logo em memória). */
-function dataUrl(arquivo: Blob): Promise<string> {
-  return new Promise((resolver, rejeitar) => {
-    const leitor = new FileReader()
-    leitor.onload = () => resolver(String(leitor.result))
-    leitor.onerror = () => rejeitar(leitor.error ?? new Error('Falha ao ler o arquivo'))
-    leitor.readAsDataURL(arquivo)
-  })
-}
 
 /**
  * PDF mínimo (uma página A4 com uma linha de texto ASCII), para "Abrir PDF" e a prévia na fixture.
@@ -374,37 +335,11 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     obraDoJson('obra-hto', 0, obraHto as unknown as ObraJson, ambientesHto as unknown as AmbientesJson, 'etapa-2a', GRUPO_2A),
     obraDoJson('obra-cofz', 1, obraCofz as unknown as ObraJson, ambientesCofz as unknown as AmbientesJson, 'etapa-2a', null),
   ]
-  const organizacao = {
-    nome: 'CO-FZ',
-    logo_path: null as string | null,
-    cabecalho: [
-      'COMANDO DA AERONÁUTICA',
-      'DIRETORIA DE INFRAESTRUTURA DA AERONÁUTICA',
-      'COMISSÃO DE OBRAS DE FORTALEZA (CO-FZ)',
-    ],
-  }
-  /** Logos enviados: caminho → data URL. */
-  const logos = new Map<string, string>()
-  const organizacaoAtual = (): Organizacao => ({
-    nome: organizacao.nome,
-    logo_path: organizacao.logo_path,
-    cabecalho: [...organizacao.cabecalho],
-    logo_url: organizacao.logo_path ? (logos.get(organizacao.logo_path) ?? null) : null,
-  })
   let sequencia = 0
-  const exclusoes: Exclusao[] = []
-  function resumoDe(o: ObraMemoria): ResumoObra {
-    return {
-      registros: 0,
-      fotos: 0,
-      ambientes: plantas.quantidadeAmbientes(o.id),
-      pavimentos: o.pavimentos.length,
-      plantas: plantas.quantidadePlantas(o.id),
-      modelos: modelos.quantidade(o.id),
-      participantes: 0,
-      publicacoes_telegram: 0,
-      arquivos: plantas.contarArquivos(o.id),
-    }
+  function etapaPorSlug(slug: string): EtapaMemoria {
+    const e = etapas.find((x) => x.slug === slug)
+    if (!e) throw new ErroAdmin('Etapa não encontrada')
+    return e
   }
   function exigirAdmin(): void {
     if (!sessaoAdm.temSessaoAtiva()) throw new ErroAdmin('Sua sessão expirou. Entre de novo.')
@@ -416,67 +351,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     if (!o) throw new ErroAdmin('Obra não encontrada')
     return o
   }
-
-  function etapaPorSlug(slug: string): EtapaMemoria {
-    const e = etapas.find((x) => x.slug === slug)
-    if (!e) throw new ErroAdmin('Etapa não encontrada')
-    return e
-  }
-  const nomeDaPessoa = (id: string) => USUARIOS_BASE.find((u) => u.id === id)?.nome ?? ''
-  function responsaveisDe(e: EtapaMemoria): Responsavel[] {
-    return e.responsaveis.map((r, i) => ({
-      usuario_id: r.usuario_id,
-      nome: nomeDaPessoa(r.usuario_id),
-      nome_exibicao: acessosAdm.nomeExibicao(r.usuario_id),
-      funcao: r.funcao,
-      ordem: i,
-    }))
-  }
-  function detalheDe(e: EtapaMemoria): EtapaDetalhe {
-    const campos = camposDe(e)
-    return {
-      ...campos,
-      id: e.id,
-      slug: e.slug,
-      nome: e.nome,
-      ordem: e.ordem,
-      arquivada_em: e.arquivada_em,
-      telegram_vinculado: e.telegram_chat_id !== null,
-      telegram_chat_titulo: e.telegram_chat_titulo,
-      aditivos: copia(e.aditivos).sort((a, b) => a.data.localeCompare(b.data) || a.numero.localeCompare(b.numero)),
-      responsaveis: responsaveisDe(e),
-      prazo: calcularPrazo(campos, e.aditivos),
-      faltando: calcularFaltando(campos, e.responsaveis.length),
-    }
-  }
   const etapaDe = (o: ObraMemoria): EtapaMemoria => etapas.find((e) => e.id === o.etapa_id)!
-
-  /** A mesma remoção de `admin_excluir_obra` (dados e arquivos), com o registro em `obra_excluida`. */
-  function removerObra(o: ObraMemoria, etapaNome: string | null): Exclusao {
-    const resumo = resumoDe(o)
-    obras.splice(obras.indexOf(o), 1)
-    modelos.removerObra(o.id)
-    const removidos = plantas.removerObra(o.id)
-    const agora = new Date().toISOString()
-    const exclusao: Exclusao = {
-      id: `exclusao-${++sequencia}`,
-      obra_id: o.id,
-      slug: o.slug,
-      nome: o.nome,
-      excluida_em: agora,
-      excluida_por_nome: VOCE.nome,
-      resumo,
-      arquivos_removidos_em: agora,
-      arquivos_removidos: removidos,
-      arquivos_erro: null,
-      etapa_nome: etapaNome,
-    }
-    exclusoes.unshift(exclusao)
-    return exclusao
-  }
-
-  const ordenarPavs = (o: ObraMemoria) =>
-    [...o.pavimentos].sort((a, b) => a.ordem - b.ordem || a.codigo.localeCompare(b.codigo))
 
   const acessosAdm = criarAcessosAdminFixture({
     admin: opcoes.admin !== false,
@@ -506,6 +381,40 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     nomeUsuario: VOCE.nome,
   })
 
+  const obrasAdm = criarObrasAdminFixture({
+    obras,
+    etapas,
+    exigirAdmin,
+    proximoId: () => ++sequencia,
+    nomeUsuario: VOCE.nome,
+    contagens: (o) => ({
+      ambientes: plantas.quantidadeAmbientes(o.id),
+      plantas: plantas.quantidadePlantas(o.id),
+      modelos: modelos.quantidade(o.id),
+      arquivos: plantas.contarArquivos(o.id),
+    }),
+    removerArquivos: (o) => {
+      modelos.removerObra(o.id)
+      return plantas.removerObra(o.id)
+    },
+  })
+  const etapasAdm = criarEtapasAdminFixture({
+    etapas,
+    obras,
+    usuarios: USUARIOS_BASE,
+    nomeExibicao: acessosAdm.nomeExibicao,
+    exigirAdmin,
+    proximoId: () => ++sequencia,
+    resumoObra: obrasAdm.resumoDe,
+    removerObra: obrasAdm.removerObra,
+    aoExcluirEtapa: (etapaId) => {
+      for (const lista of [boletins, pedidos] as { etapa_id: string }[][]) {
+        for (let i = lista.length - 1; i >= 0; i--) if (lista[i].etapa_id === etapaId) lista.splice(i, 1)
+      }
+    },
+  })
+  const organizacaoAdm = criarOrganizacaoAdminFixture({ exigirAdmin })
+
   return {
     listarRA: ra.listarRA,
     definirQr: ra.definirQr,
@@ -525,133 +434,30 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     removerAdmin: acessosAdm.removerAdmin,
     listarUsuarios: acessosAdm.listarUsuarios,
 
-    async listarEtapas(): Promise<EtapaLista[]> {
-      exigirAdmin()
-      return [...etapas]
-        .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome))
-        .map((e) => {
-          const daEtapa = obras.filter((o) => o.etapa_id === e.id)
-          return {
-            id: e.id,
-            slug: e.slug,
-            nome: e.nome,
-            ordem: e.ordem,
-            arquivada_em: e.arquivada_em,
-            telegram_vinculado: e.telegram_chat_id !== null,
-            telegram_chat_titulo: e.telegram_chat_titulo,
-            obras: daEtapa.length,
-            obras_arquivadas: daEtapa.filter((o) => o.arquivada_em).length,
-            sigla: e.sigla,
-            faltando: calcularFaltando(camposDe(e), e.responsaveis.length).length,
-          }
-        })
-    },
-
-    async salvarEtapa(d) {
-      exigirAdmin()
-      const nome = (d.nome ?? '').trim()
-      if (!nome || nome.length > 120) throw new ErroAdmin('Informe o nome da etapa (até 120 caracteres)')
-      if (!Number.isInteger(d.ordem)) throw new ErroAdmin('O campo ordem precisa ser um número inteiro')
-      if (d.id) {
-        const e = etapas.find((x) => x.id === d.id)
-        if (!e) throw new ErroAdmin('Etapa não encontrada')
-        const campos = aplicarCampos(
-          camposDe(e),
-          d,
-          etapas.filter((x) => x !== e && x.sigla !== null).map((x) => x.sigla as string),
-        )
-        e.nome = nome
-        e.ordem = d.ordem
-        Object.assign(e, campos)
-        return detalheDe(e)
-      }
-      const slug = d.slug ?? ''
-      if (!SLUG.test(slug) || slug.length > 40) {
-        throw new ErroAdmin('Slug inválido: use letras minúsculas, dígitos e hífen (até 40 caracteres)')
-      }
-      if (etapas.some((x) => x.slug === slug)) throw new ErroAdmin(`Já existe uma etapa com o slug ${slug}`)
-      const campos = aplicarCampos(
-        null,
-        d,
-        etapas.filter((x) => x.sigla !== null).map((x) => x.sigla as string),
-      )
-      const nova: EtapaMemoria = {
-        ...campos,
-        id: `etapa-nova-${++sequencia}`,
-        slug,
-        nome,
-        ordem: d.ordem,
-        telegram_chat_id: null,
-        telegram_chat_titulo: null,
-        arquivada_em: null,
-        aditivos: [],
-        responsaveis: [],
-      }
-      etapas.push(nova)
-      return detalheDe(nova)
-    },
-
-    async obterEtapa(slug) {
-      exigirAdmin()
-      return detalheDe(etapaPorSlug(slug))
-    },
-
-    async salvarAditivo(d) {
-      exigirAdmin()
-      const e = etapas.find((x) => x.id === d.etapa_id)
-      if (!e) throw new ErroAdmin('Etapa não encontrada')
-      const numero = (d.numero ?? '').trim()
-      if (!numero || numero.length > 40) throw new ErroAdmin('Informe o número do aditivo (até 40 caracteres)')
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(d.data ?? '') || Number.isNaN(Date.parse(d.data))) {
-        throw new ErroAdmin('Data do aditivo inválida: use AAAA-MM-DD')
-      }
-      if (!Number.isInteger(d.prazo_dias)) throw new ErroAdmin('O prazo do aditivo precisa ser um número inteiro de dias')
-      if (!Number.isFinite(d.valor)) throw new ErroAdmin('O valor do aditivo precisa ser um número')
-      const descricao = (d.descricao ?? '').trim() || null
-      if (descricao && descricao.length > 300) throw new ErroAdmin('A descrição do aditivo pode ter até 300 caracteres')
-      if (e.aditivos.some((a) => a.numero === numero && a.id !== d.id)) {
-        throw new ErroAdmin(`Já existe o aditivo ${numero} nesta etapa`)
-      }
-      const valor = Math.round(d.valor * 100) / 100
-      if (d.id) {
-        const atual = e.aditivos.find((a) => a.id === d.id)
-        if (!atual) throw new ErroAdmin('Aditivo não encontrado')
-        Object.assign(atual, { numero, data: d.data, prazo_dias: d.prazo_dias, valor, descricao })
-        return copia(atual)
-      }
-      const novo: Aditivo = { id: `aditivo-novo-${++sequencia}`, etapa_id: e.id, numero, data: d.data, prazo_dias: d.prazo_dias, valor, descricao }
-      e.aditivos.push(novo)
-      return copia(novo)
-    },
-
-    async removerAditivo(id) {
-      exigirAdmin()
-      for (const e of etapas) {
-        const i = e.aditivos.findIndex((a) => a.id === id)
-        if (i >= 0) {
-          e.aditivos.splice(i, 1)
-          return
-        }
-      }
-      throw new ErroAdmin('Aditivo não encontrado')
-    },
-
-    async definirResponsaveis(etapaId, lista) {
-      exigirAdmin()
-      const e = etapas.find((x) => x.id === etapaId)
-      if (!e) throw new ErroAdmin('Etapa não encontrada')
-      const vistos = new Set<string>()
-      const nova = lista.map((r) => {
-        if (vistos.has(r.usuario_id)) throw new ErroAdmin('Responsável repetido na lista')
-        vistos.add(r.usuario_id)
-        if (!USUARIOS_BASE.some((u) => u.id === r.usuario_id)) throw new ErroAdmin('Usuário não encontrado')
-        const funcao = (r.funcao ?? '').trim() || 'Fiscal'
-        if (funcao.length > 60) throw new ErroAdmin('A função pode ter até 60 caracteres')
-        return { usuario_id: r.usuario_id, funcao }
-      })
-      e.responsaveis = nova
-      return responsaveisDe(e)
-    },
+    listarEtapas: etapasAdm.listarEtapas,
+    salvarEtapa: etapasAdm.salvarEtapa,
+    obterEtapa: etapasAdm.obterEtapa,
+    salvarAditivo: etapasAdm.salvarAditivo,
+    removerAditivo: etapasAdm.removerAditivo,
+    definirResponsaveis: etapasAdm.definirResponsaveis,
+    arquivarEtapa: etapasAdm.arquivarEtapa,
+    desvincularEtapa: etapasAdm.desvincularEtapa,
+    resumoEtapa: etapasAdm.resumoEtapa,
+    excluirEtapa: etapasAdm.excluirEtapa,
+    obterOrganizacao: organizacaoAdm.obterOrganizacao,
+    salvarOrganizacao: organizacaoAdm.salvarOrganizacao,
+    enviarLogo: organizacaoAdm.enviarLogo,
+    listarObras: obrasAdm.listarObras,
+    obterObra: obrasAdm.obterObra,
+    salvarObra: obrasAdm.salvarObra,
+    salvarPavimentos: obrasAdm.salvarPavimentos,
+    salvarConfig: obrasAdm.salvarConfig,
+    exportarObra: obrasAdm.exportarObra,
+    arquivarObra: obrasAdm.arquivarObra,
+    resumoObra: obrasAdm.resumoObra,
+    excluirObra: obrasAdm.excluirObra,
+    listarExclusoes: obrasAdm.listarExclusoes,
+    limparExclusao: obrasAdm.limparExclusao,
 
     async listarBoletins(slug) {
       exigirAdmin()
@@ -681,7 +487,8 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
       }
       const doDia = boletins.filter((b) => b.etapa_id === e.id && b.data === data)
       const revisao = doDia.length === 0 ? 0 : Math.max(...doDia.map((b) => b.revisao)) + 1
-      const numeroDe = (r: number) => numeroBoletim(e.sigla as string, data, organizacao.nome) + (r > 0 ? `-R${r}` : '')
+      const nomeOm = (await organizacaoAdm.obterOrganizacao()).nome
+      const numeroDe = (r: number) => numeroBoletim(e.sigla as string, data, nomeOm) + (r > 0 ? `-R${r}` : '')
       const agora = new Date().toISOString()
       // Um pedido que falhou para a mesma revisão volta para a fila.
       const antigo = pedidos.find((p) => p.etapa_id === e.id && p.data === data && p.revisao === revisao)
@@ -818,7 +625,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         throw new ErroAdmin('Já há uma emissão em andamento para este dia')
       }
       const revisao = Math.max(...boletins.filter((x) => x.etapa_id === b.etapa_id && x.data === b.data).map((x) => x.revisao)) + 1
-      const numero = numeroBoletim(e.sigla ?? '3', b.data, organizacao.nome) + `-R${revisao}`
+      const numero = numeroBoletim(e.sigla ?? '3', b.data, (await organizacaoAdm.obterOrganizacao()).nome) + `-R${revisao}`
       const agora = new Date().toISOString()
       const antigo = pedidos.find((p) => p.etapa_id === b.etapa_id && p.data === b.data && p.revisao === revisao)
       const pedido: PedidoMemoria =
@@ -844,302 +651,6 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
         r[p] = `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="90"><rect width="120" height="90" fill="#ccc"/><text x="6" y="48" font-size="9">${p.split('/').pop()}</text></svg>`)}`
       }
       return r
-    },
-
-    async arquivarEtapa(slug, arquivada) {
-      exigirAdmin()
-      const e = etapaPorSlug(slug)
-      e.arquivada_em = arquivada ? (e.arquivada_em ?? new Date().toISOString()) : null
-      return e.arquivada_em
-    },
-
-    async desvincularEtapa(slug) {
-      exigirAdmin()
-      const e = etapaPorSlug(slug)
-      e.telegram_chat_id = null
-      e.telegram_chat_titulo = null
-      for (const o of obras) if (o.etapa_id === e.id) o.telegram_chat_id = null
-    },
-
-    async resumoEtapa(slug) {
-      exigirAdmin()
-      const e = etapaPorSlug(slug)
-      const daEtapa = [...obras]
-        .filter((o) => o.etapa_id === e.id)
-        .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome))
-      const total: ResumoObra = {
-        registros: 0,
-        fotos: 0,
-        ambientes: 0,
-        pavimentos: 0,
-        plantas: 0,
-        modelos: 0,
-        participantes: 0,
-        publicacoes_telegram: 0,
-        arquivos: { fotos: 0, plantas: 0, originais: 0, modelos: 0 },
-      }
-      for (const o of daEtapa) {
-        const r = resumoDe(o)
-        for (const k of Object.keys(r) as (keyof ResumoObra)[]) {
-          if (k === 'arquivos') {
-            for (const b of Object.keys(r.arquivos) as BucketObra[]) total.arquivos[b] += r.arquivos[b]
-          } else total[k] += r[k]
-        }
-      }
-      return { obras: daEtapa.map((o) => ({ slug: o.slug, nome: o.nome })), total }
-    },
-
-    async excluirEtapa(slug, confirmacao) {
-      exigirAdmin()
-      const e = etapaPorSlug(slug)
-      if ((confirmacao ?? '').trim() !== e.nome) {
-        throw new ErroAdmin(`Para excluir, digite exatamente o nome da etapa: ${e.nome}`)
-      }
-      const feitas = obras.filter((o) => o.etapa_id === e.id).map((o) => removerObra(o, e.nome))
-      etapas.splice(etapas.indexOf(e), 1)
-      // Como `admin_excluir_etapa`: os boletins (e os pedidos) da etapa saem antes.
-      for (const lista of [boletins, pedidos] as { etapa_id: string }[][]) {
-        for (let i = lista.length - 1; i >= 0; i--) if (lista[i].etapa_id === e.id) lista.splice(i, 1)
-      }
-      return {
-        exclusoes: feitas.map((x) => ({
-          exclusao_id: x.id,
-          removidos: x.arquivos_removidos ?? {},
-          pendente: false,
-          erro: null,
-        })),
-        pendente: false,
-        erro: null,
-      }
-    },
-
-    async obterOrganizacao() {
-      // Como a RPC `organizacao()`: também sem sessão (tela de entrada).
-      return organizacaoAtual()
-    },
-
-    async salvarOrganizacao(d) {
-      exigirAdmin()
-      const nome = (d.nome ?? '').trim()
-      if (!nome || nome.length > NOME_OM_MAX) throw new ErroAdmin(`Informe o nome da OM (até ${NOME_OM_MAX} caracteres)`)
-      if (d.logo_path !== null) {
-        if (!CAMINHO_LOGO.test(d.logo_path)) throw new ErroAdmin('Caminho do logo inválido')
-        if (!logos.has(d.logo_path)) throw new ErroAdmin('Logo não encontrado no Storage: envie o arquivo antes de salvar')
-      }
-      let cabecalho = organizacao.cabecalho
-      if (d.cabecalho !== undefined) {
-        if (d.cabecalho.length > CABECALHO_LINHAS_MAX) {
-          throw new ErroAdmin(`O cabeçalho pode ter até ${CABECALHO_LINHAS_MAX} linhas`)
-        }
-        cabecalho = d.cabecalho.map((l) => l.trim())
-        if (cabecalho.some((l) => l.length < 1 || l.length > CABECALHO_LINHA_MAX)) {
-          throw new ErroAdmin(`Cada linha do cabeçalho precisa ter de 1 a ${CABECALHO_LINHA_MAX} caracteres`)
-        }
-      }
-      organizacao.nome = nome
-      organizacao.logo_path = d.logo_path
-      organizacao.cabecalho = cabecalho
-      return organizacaoAtual()
-    },
-
-    async enviarLogo(arquivo) {
-      exigirAdmin()
-      const problema = problemaDoLogo(arquivo)
-      if (problema) throw new ErroAdmin(problema)
-      const caminho = novoCaminhoLogo(arquivo.type)
-      logos.set(caminho, await dataUrl(arquivo))
-      return caminho
-    },
-
-    async listarObras(): Promise<ObraLista[]> {
-      exigirAdmin()
-      return [...obras]
-        .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome))
-        .map((o) => ({
-          id: o.id,
-          slug: o.slug,
-          nome: o.nome,
-          ordem: o.ordem,
-          pavimentos: ordenarPavs(o).map(({ codigo, nome, ordem }) => ({ codigo, nome, ordem })),
-          ambientes_ativos: o.pavimentos.reduce((s, p) => s + p.ambientes, 0),
-          status: typeof o.config?.status === 'string' ? o.config.status : null,
-          config_atualizada_em: o.config_atualizada_em,
-          arquivada_em: o.arquivada_em,
-          etapa_id: o.etapa_id,
-          etapa_slug: etapaDe(o).slug,
-          etapa_nome: etapaDe(o).nome,
-          etapa_arquivada_em: etapaDe(o).arquivada_em,
-        }))
-    },
-
-    async obterObra(slug): Promise<ObraAdmin> {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      const e = etapaDe(o)
-      return copia({
-        obra: {
-          id: o.id,
-          slug: o.slug,
-          nome: o.nome,
-          ordem: o.ordem,
-          telegram_vinculado: o.telegram_chat_id !== null,
-          arquivada_em: o.arquivada_em,
-          etapa: {
-            id: e.id,
-            slug: e.slug,
-            nome: e.nome,
-            arquivada_em: e.arquivada_em,
-            telegram_vinculado: e.telegram_chat_id !== null,
-          },
-        },
-        pavimentos: ordenarPavs(o).map(
-          (p): PavimentoAdmin => ({ ...p, ambientes_ativos: p.ambientes, plantas: p.ambientes > 0 ? 1 : 0 }),
-        ),
-        config: o.config,
-        config_atualizada_em: o.config_atualizada_em,
-        config_atualizada_por: o.config_atualizada_por,
-      })
-    },
-
-    async salvarObra(d) {
-      exigirAdmin()
-      const nome = (d.nome ?? '').trim()
-      if (!nome || nome.length > 120) throw new ErroAdmin('Informe o nome da obra (até 120 caracteres)')
-      if (!Number.isInteger(d.ordem)) throw new ErroAdmin('O campo ordem precisa ser um número inteiro')
-      const destino = d.etapa_id === undefined ? null : etapas.find((e) => e.id === d.etapa_id)
-      if (destino === undefined) throw new ErroAdmin('Etapa não encontrada')
-      if (d.id) {
-        const o = obras.find((x) => x.id === d.id)
-        if (!o) throw new ErroAdmin('Obra não encontrada')
-        if (d.slug && d.slug !== o.slug) throw new ErroAdmin('O slug não pode ser alterado depois de criado')
-        o.nome = nome
-        o.ordem = d.ordem
-        if (destino && destino.id !== o.etapa_id) {
-          o.etapa_id = destino.id
-          // Grupo diferente: o tópico vinculado não vale mais.
-          if (o.telegram_chat_id !== destino.telegram_chat_id) o.telegram_chat_id = null
-        }
-        return { id: o.id, slug: o.slug, nome: o.nome, ordem: o.ordem }
-      }
-      const slug = d.slug ?? ''
-      if (!SLUG.test(slug) || slug.length > 40) {
-        throw new ErroAdmin('Slug inválido: use letras minúsculas, dígitos e hífen (até 40 caracteres)')
-      }
-      if (obras.some((x) => x.slug === slug)) throw new ErroAdmin(`Já existe uma obra com o slug ${slug}`)
-      if (!destino) throw new ErroAdmin('Escolha a etapa da obra')
-      const nova: ObraMemoria = {
-        id: `obra-nova-${++sequencia}`,
-        slug,
-        nome,
-        ordem: d.ordem,
-        pavimentos: [],
-        config: null,
-        config_atualizada_em: null,
-        config_atualizada_por: null,
-        arquivada_em: null,
-        etapa_id: destino.id,
-        telegram_chat_id: null,
-      }
-      obras.push(nova)
-      return { id: nova.id, slug, nome, ordem: nova.ordem }
-    },
-
-    async salvarPavimentos(slug, lista) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      const vistos = new Set<string>()
-      for (const p of lista) {
-        if (!CODIGO.test(p.codigo) || p.codigo.length > 30) {
-          throw new ErroAdmin(`Código de pavimento inválido: ${p.codigo}. Use letras minúsculas, dígitos e hífen (até 30)`)
-        }
-        if (!p.nome.trim() || p.nome.length > 80) {
-          throw new ErroAdmin(`Informe o nome do pavimento ${p.codigo} (até 80 caracteres)`)
-        }
-        if (vistos.has(p.codigo)) throw new ErroAdmin(`Código de pavimento repetido: ${p.codigo}`)
-        vistos.add(p.codigo)
-      }
-      const bloqueados = o.pavimentos.filter((p) => !vistos.has(p.codigo) && p.ambientes > 0)
-      if (bloqueados.length > 0) {
-        throw new ErroAdmin(
-          `Não é possível apagar pavimento com ambientes ou plantas: ${bloqueados.map((p) => p.codigo).join(', ')}`,
-        )
-      }
-      o.pavimentos = lista.map((p, i) => {
-        const atual = o.pavimentos.find((x) => x.codigo === p.codigo)
-        return {
-          id: atual?.id ?? `${slug}-${p.codigo}`,
-          codigo: p.codigo,
-          nome: p.nome.trim(),
-          ordem: Number.isInteger(p.ordem) ? p.ordem : i + 1,
-          ambientes: atual?.ambientes ?? 0,
-        }
-      })
-      return ordenarPavs(o).map(({ codigo, nome, ordem }) => ({ codigo, nome, ordem }))
-    },
-
-    async salvarConfig(slug, config) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      if (typeof config !== 'object' || config === null || Array.isArray(config)) {
-        throw new ErroAdmin('A configuração precisa ser um objeto JSON')
-      }
-      if (config.status !== undefined && config.status !== 'revisado' && config.status !== 'aguardando_revisao_humana') {
-        throw new ErroAdmin('Status inválido: use aguardando_revisao_humana ou revisado')
-      }
-      o.config = copia(config)
-      o.config_atualizada_em = new Date().toISOString()
-      o.config_atualizada_por = VOCE.nome
-    },
-
-    async exportarObra(slug) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      return {
-        formato: 'miniappcofz-obra',
-        versao: 1,
-        exportado_em: new Date().toISOString(),
-        obra: { slug: o.slug, nome: o.nome, ordem: o.ordem },
-        pavimentos: ordenarPavs(o).map(({ codigo, nome, ordem }) => ({ codigo, nome, ordem })),
-        config: copia(o.config),
-        ambientes: [],
-        plantas: [],
-      }
-    },
-
-    async arquivarObra(slug, arquivada) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      o.arquivada_em = arquivada ? (o.arquivada_em ?? new Date().toISOString()) : null
-      return o.arquivada_em
-    },
-
-    async resumoObra(slug) {
-      exigirAdmin()
-      return resumoDe(obraPorSlug(slug))
-    },
-
-    async excluirObra(slug, confirmacao) {
-      exigirAdmin()
-      const o = obraPorSlug(slug)
-      if ((confirmacao ?? '').trim() !== o.nome) {
-        throw new ErroAdmin(`Para excluir, digite exatamente o nome da obra: ${o.nome}`)
-      }
-      const exclusao = removerObra(o, null)
-      return { exclusao_id: exclusao.id, obra_id: o.id, arquivos_removidos: exclusao.arquivos_removidos ?? {}, pendente: false }
-    },
-
-    async listarExclusoes() {
-      exigirAdmin()
-      return copia(exclusoes)
-    },
-
-    async limparExclusao(id) {
-      exigirAdmin()
-      const e = exclusoes.find((x) => x.id === id)
-      if (!e) throw new ErroAdmin('Exclusão não encontrada')
-      e.arquivos_removidos_em = new Date().toISOString()
-      e.arquivos_erro = null
-      return { exclusao_id: e.id, obra_id: e.obra_id, arquivos_removidos: e.arquivos_removidos ?? {}, pendente: false }
     },
 
     obterEditorPlanta: plantas.obterEditorPlanta,

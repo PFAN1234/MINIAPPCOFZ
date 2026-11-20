@@ -18,3 +18,8 @@ export const codigoDe = (e: unknown) => {
 export type Rpc = <T>(nome: string, args?: Record<string, unknown>) => Promise<T>
 /** Chama a Edge Function `admin-excluir-obra` com a sessão do admin; devolve o JSON da resposta. */
 export type FuncaoExcluir = (corpo: Record<string, unknown>, naoEncontrado: string) => Promise<Record<string, unknown>>
+
+/** Cópia profunda (a fixture devolve cópias para a tela não mexer no estado). */
+export function copia<T>(v: T): T {
+  return JSON.parse(JSON.stringify(v)) as T
+}
