@@ -75,7 +75,7 @@ describe('CentralObra', () => {
     expect(screen.getByRole('heading', { name: 'HTO' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Todas as obras' })).toHaveAttribute('href', '/modelos')
     expect(screen.getByTestId('canvas-central')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Medir' })).toBeDisabled()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Medir' })).toBeEnabled())
   })
 
   it('a aba vem da query string e a troca atualiza a URL', async () => {

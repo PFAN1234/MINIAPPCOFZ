@@ -1,11 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { RepositorioAdminProvider } from '../../../../../admin/dados/contexto.tsx'
 import { criarRepositorioAdminFixture } from '../../../../../admin/dados/fixture.ts'
-import type { NoArvore } from '../../../domain/central.ts'
+import type { Medida, NoArvore } from '../../../domain/central.ts'
 import type { ModeloFrag } from '../../../domain/modelos.ts'
 import { MotorVisualizadorFalso } from '../../../infra/MotorVisualizadorFalso.ts'
 import { temWebGL } from '../../../infra/modelosLocais.ts'
@@ -174,5 +174,72 @@ describe('Isolar resultados do Filtro', () => {
     await usuario.click(isolar)
     expect(motor.chamadasDe('mostrarTudo')).toHaveLength(1)
     expect(isolar).toHaveAttribute('aria-pressed', 'false')
+  })
+})
+
+describe('Medições', () => {
+  const dist: Medida = { id: 'm1', tipo: 'distancia', valor: 12.3456, unidade: 'm', pontos: [] }
+  const area: Medida = { id: 'm2', tipo: 'area', valor: 4, unidade: 'm²', pontos: [] }
+
+  async function abrirMedicoes() {
+    const usuario = await pronto()
+    await usuario.click(screen.getByRole('tab', { name: 'Medições' }))
+    return usuario
+  }
+
+  it('liga e desliga os modos pela barra, com aria-pressed', async () => {
+    const usuario = await abrirMedicoes()
+    expect(screen.getByText('Nenhuma medição.')).toBeInTheDocument()
+    const medir = screen.getByRole('button', { name: 'Medir' })
+    expect(medir).toHaveAttribute('aria-pressed', 'false')
+    await usuario.click(medir)
+    await usuario.click(screen.getByRole('button', { name: 'Distância' }))
+    expect(motor.chamadasDe('medir.modo')).toEqual([['distancia']])
+    expect(screen.getByRole('button', { name: 'Distância' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Área' })).toHaveAttribute('aria-pressed', 'false')
+    expect(medir).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText(/Clique em dois pontos/)).toBeInTheDocument()
+
+    await usuario.click(screen.getByRole('button', { name: 'Área' }))
+    expect(motor.chamadasDe('medir.modo')).toEqual([['distancia'], ['area']])
+    await usuario.click(screen.getByRole('button', { name: 'Área' }))
+    expect(motor.chamadasDe('medir.modo')[2]).toEqual([null])
+    expect(medir).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('Esc sai do modo de medição', async () => {
+    const usuario = await abrirMedicoes()
+    await usuario.click(screen.getByRole('button', { name: 'Medir' }))
+    await usuario.click(screen.getByRole('button', { name: 'Ângulo' }))
+    await usuario.keyboard('{Escape}')
+    expect(motor.chamadasDe('medir.modo')).toEqual([['angulo'], [null]])
+    expect(screen.getByRole('button', { name: 'Medir' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('lista formatada, apaga uma, apaga todas e Del apaga a marcada', async () => {
+    const usuario = await abrirMedicoes()
+    act(() => {
+      motor.adicionarMedida(dist)
+      motor.adicionarMedida(area)
+    })
+    const lista = await screen.findByRole('list', { name: 'Lista de medições' })
+    expect(lista).toHaveTextContent('Distância: 12,35 m')
+    expect(lista).toHaveTextContent('Área: 4,00 m²')
+
+    await usuario.keyboard('{Delete}')
+    expect(motor.medidasLista).toHaveLength(2) // nada marcado
+    await usuario.click(screen.getByRole('button', { name: /^Área 2/ }))
+    await usuario.keyboard('{Delete}')
+    expect(motor.medidasLista.map((m) => m.id)).toEqual(['m1'])
+
+    act(() => motor.adicionarMedida(area))
+    await usuario.click(await screen.findByRole('button', { name: 'Apagar medição 1' }))
+    expect(motor.chamadasDe('medir.apagar')).toContainEqual(['m1'])
+    expect(motor.medidasLista.map((m) => m.id)).toEqual(['m2'])
+
+    act(() => motor.adicionarMedida(dist))
+    await usuario.click(await screen.findByRole('button', { name: 'Apagar todas as medições' }))
+    expect(motor.medidasLista).toEqual([])
+    expect(await screen.findByText('Nenhuma medição.')).toBeInTheDocument()
   })
 })

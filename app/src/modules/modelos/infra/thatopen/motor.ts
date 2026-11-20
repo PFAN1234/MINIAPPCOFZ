@@ -28,6 +28,8 @@ import {
   type ModoCor,
   type CategoriaTotal,
   type Corte,
+  type Medida,
+  type Ponto3,
   type NoArvore,
   type NoEstrutura,
   type RefElemento,
@@ -271,6 +273,157 @@ export function criarMotorThatOpen(): MotorVisualizador {
     for (const [, p] of components.get(OBC.Clipper).list) p.enabled = ligado
   }
 
+  // --- Etapa 4B: medições (distância, área, volume e ângulo)
+  type TipoMedida = Medida['tipo']
+  type Ferramenta = OBF.LengthMeasurement | OBF.AreaMeasurement | OBF.VolumeMeasurement | OBF.AngleMeasurement
+  const TIPOS_MEDIDA: TipoMedida[] = ['distancia', 'area', 'volume', 'angulo']
+  const ferramentas = new Map<TipoMedida, Ferramenta>()
+  let modoMedicao: TipoMedida | null = null
+  let hoverAntes = true
+  /** Volumes são calculados de forma assíncrona: valor e centro ficam em cache por id. */
+  const volumesCalculados = new Map<string, { valor: number; centro: Ponto3 }>()
+
+  const ponto = (v: THREE.Vector3): Ponto3 => [v.x, v.y, v.z]
+
+  function listarMedidas(): Medida[] {
+    if (liberado) return []
+    const medidas: Medida[] = []
+    for (const l of (ferramentas.get('distancia') as OBF.LengthMeasurement | undefined)?.list ?? [])
+      medidas.push({ id: l.id, tipo: 'distancia', valor: l.distance(), unidade: 'm', pontos: [ponto(l.start), ponto(l.end)] })
+    for (const a of (ferramentas.get('area') as OBF.AreaMeasurement | undefined)?.list ?? [])
+      medidas.push({ id: a.id, tipo: 'area', valor: a.rawValue, unidade: 'm²', pontos: [...a.points].map(ponto) })
+    for (const v of (ferramentas.get('volume') as OBF.VolumeMeasurement | undefined)?.list ?? []) {
+      const calc = volumesCalculados.get(v.id)
+      medidas.push({ id: v.id, tipo: 'volume', valor: calc?.valor ?? 0, unidade: 'm³', pontos: calc ? [calc.centro] : [] })
+    }
+    for (const g of (ferramentas.get('angulo') as OBF.AngleMeasurement | undefined)?.list ?? [])
+      medidas.push({
+        id: g.id,
+        tipo: 'angulo',
+        valor: (g.rawValue * 180) / Math.PI,
+        unidade: '°',
+        pontos: [ponto(g.start), ponto(g.vertex), ponto(g.end)],
+      })
+    return medidas
+  }
+  const emitirMedicoes = () => {
+    if (!liberado) emitir('medicao', listarMedidas())
+  }
+
+  function ferramentaDe(tipo: TipoMedida): Ferramenta {
+    const existente = ferramentas.get(tipo)
+    if (existente) return existente
+    const { components: c, mundo: w } = pronto()
+    let t: Ferramenta
+    if (tipo === 'distancia') {
+      const d = c.get(OBF.LengthMeasurement)
+      d.units = 'm'
+      t = d
+    } else if (tipo === 'area') {
+      const a = c.get(OBF.AreaMeasurement)
+      a.units = 'm2'
+      t = a
+    } else if (tipo === 'volume') {
+      const v = c.get(OBF.VolumeMeasurement)
+      v.units = 'm3'
+      v.list.onItemAdded.add((vol) => {
+        void Promise.all([vol.getRawValue(), vol.getCenter()]).then(([valor, centro]) => {
+          if (liberado) return
+          volumesCalculados.set(vol.id, { valor, centro: ponto(centro) })
+          emitirMedicoes()
+        })
+      })
+      t = v
+    } else {
+      const g = c.get(OBF.AngleMeasurement)
+      g.units = 'deg'
+      t = g
+    }
+    t.world = w
+    t.rounding = 2
+    t.list.onItemAdded.add(emitirMedicoes)
+    t.list.onItemDeleted.add(emitirMedicoes)
+    t.list.onCleared.add(emitirMedicoes)
+    ferramentas.set(tipo, t)
+    return t
+  }
+
+  function apagarMedidas(id?: string) {
+    for (const [, t] of ferramentas) {
+      const lista = t.list as Set<{ id: string }>
+      if (id === undefined) lista.clear()
+      else {
+        const item = [...lista].find((i) => i.id === id)
+        if (item) lista.delete(item)
+      }
+    }
+    if (id === undefined) volumesCalculados.clear()
+    else volumesCalculados.delete(id)
+  }
+
+  /** Cliques sem arrasto no canvas alimentam a ferramenta ativa; Enter/duplo clique concluem área e volume. */
+  function ligarEntradaMedicao(container: HTMLElement) {
+    let inicio: { x: number; y: number } | null = null
+    const ativa = () => (modoMedicao ? ferramentas.get(modoMedicao) : undefined)
+    const aoBaixar = (e: PointerEvent) => {
+      inicio = { x: e.clientX, y: e.clientY }
+    }
+    const aoSoltar = (e: PointerEvent) => {
+      const f = ativa()
+      const i = inicio
+      inicio = null
+      if (!f || !i || e.button !== 0) return
+      if (Math.hypot(e.clientX - i.x, e.clientY - i.y) > 5) return
+      void f.create()
+    }
+    const aoDuploClique = () => {
+      if (modoMedicao === 'area' || modoMedicao === 'volume') ativa()?.endCreation()
+    }
+    const aoTecla = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && (modoMedicao === 'area' || modoMedicao === 'volume')) ativa()?.endCreation()
+    }
+    container.addEventListener('pointerdown', aoBaixar)
+    container.addEventListener('pointerup', aoSoltar)
+    container.addEventListener('dblclick', aoDuploClique)
+    window.addEventListener('keydown', aoTecla)
+    limpezas.push(() => {
+      container.removeEventListener('pointerdown', aoBaixar)
+      container.removeEventListener('pointerup', aoSoltar)
+      container.removeEventListener('dblclick', aoDuploClique)
+      window.removeEventListener('keydown', aoTecla)
+    })
+  }
+
+  function definirModoMedicao(m: TipoMedida | null) {
+    const { mundo: w } = pronto()
+    if (m === modoMedicao) return
+    const ligando = modoMedicao === null && m !== null
+    const desligando = m === null && modoMedicao !== null
+    for (const t of TIPOS_MEDIDA) {
+      const f = ferramentas.get(t)
+      if (!f) continue
+      if (t !== m) {
+        f.cancelCreation()
+        f.enabled = false
+      }
+    }
+    modoMedicao = m
+    if (ligando) {
+      hoverAntes = hoverer?.enabled ?? true
+      if (hoverer) hoverer.enabled = false
+      if (highlighter) {
+        void highlighter.clear('select')
+        highlighter.enabled = false
+      }
+    }
+    if (m) ferramentaDe(m).enabled = true
+    if (desligando) {
+      if (hoverer) hoverer.enabled = hoverAntes
+      if (highlighter) highlighter.enabled = true
+    }
+    w.renderer.needsUpdate = true
+  }
+
   function caixaDosModelos(): THREE.Box3 {
     const caixa = new THREE.Box3()
     for (const [, m] of fragments?.list ?? []) caixa.union(m.box)
@@ -420,6 +573,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
         w.scene.three.add(m.object)
         void f.core.update(true)
       }
+      ligarEntradaMedicao(w.renderer.three.domElement.parentElement ?? w.renderer.three.domElement)
       f.list.onItemSet.add(aoAdicionar)
       limpezas.push(() => f.list.onItemSet.remove(aoAdicionar))
 
@@ -514,6 +668,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
         try {
           if (f.list.has(m.sigla)) this.descarregar(m.sigla)
           descartarVistas()
+          apagarMedidas()
           // O worker transfere o buffer: cópia para não esvaziar o que veio do cache.
           await f.core.load(m.dados.slice().buffer, { modelId: m.sigla, camera: w.camera.three })
         } catch (e) {
@@ -533,6 +688,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
       const m = modelo(sigla)
       if (!m) return
       descartarVistas()
+      apagarMedidas()
       w.scene.three.remove(m.object)
       classes.delete(sigla)
       contagens.delete(sigla)
@@ -607,6 +763,10 @@ export function criarMotorThatOpen(): MotorVisualizador {
       ouvintes.clear()
       minimapa?.dispose()
       minimapa = null
+      for (const [, t] of ferramentas) t.dispose()
+      ferramentas.clear()
+      volumesCalculados.clear()
+      modoMedicao = null
       for (const l of limpezas.splice(0)) l()
       // `dispose` do Components encerra o worker, o renderer e os componentes.
       components?.dispose()
@@ -789,9 +949,15 @@ export function criarMotorThatOpen(): MotorVisualizador {
       listar: listarCortes,
     },
     medir: {
-      modo: () => naoImplementado(4),
-      listar: () => naoImplementado(4),
-      apagar: () => naoImplementado(4),
+      modo(m) {
+        definirModoMedicao(m)
+      },
+      listar: listarMedidas,
+      apagar(id) {
+        pronto()
+        apagarMedidas(id)
+        if (id === undefined) emitirMedicoes()
+      },
     },
     // --- Etapa 7
     vistaAtual: () => naoImplementado(7),

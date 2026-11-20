@@ -24,7 +24,7 @@ test.describe('com o ARQ.frag gerado localmente', () => {
   test.skip(!existsSync(FRAG_LOCAL), 'ARQ.frag ausente: rode `npm run modelos -- --obra hto`')
 
   test('abre a obra, seleciona, isola, mostra tudo e troca o tema sem erros', async ({ page }) => {
-    test.setTimeout(360_000)
+    test.setTimeout(480_000)
     const erros: string[] = []
     page.on('pageerror', (e) => erros.push(e.message))
     await page.route('**/modelos/hto/manifesto.json', (rota) =>
@@ -65,7 +65,7 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     for (const [fx, fy] of alvos) {
       if (await selecionado.isVisible()) break
       await page.mouse.click(caixa.x + caixa.width * fx, caixa.y + caixa.height * fy)
-      await page.waitForTimeout(1500)
+      await page.waitForTimeout(700)
     }
     if (!(await selecionado.isVisible())) {
       // Plano B: seleciona pela busca por nome.
@@ -107,6 +107,39 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     await page.screenshot({ path: 'test-results/central-4a-corte.png' })
     await page.getByRole('button', { name: 'Apagar corte 1' }).click()
     await expect(listaCortes).toBeHidden()
+
+    // Medições: distância com dois cliques no canvas (vários pares de pontos, pois a captura depende do WebGL de software).
+    await page.getByRole('tab', { name: 'Medições' }).click()
+    await page.getByRole('button', { name: 'Medir' }).click()
+    await page.getByRole('button', { name: 'Distância' }).click()
+    await expect(page.getByRole('button', { name: 'Distância' })).toHaveAttribute('aria-pressed', 'true')
+    const itensMedicao = page.getByRole('list', { name: 'Lista de medições' }).getByRole('listitem')
+    const pares = [
+      [[0.45, 0.5], [0.55, 0.55]],
+      [[0.4, 0.45], [0.6, 0.6]],
+    ]
+    let medido = false
+    for (const [a, b] of pares) {
+      for (const [fx, fy] of [a, b]) {
+        await page.mouse.move(caixa.x + caixa.width * fx, caixa.y + caixa.height * fy)
+        await page.waitForTimeout(700)
+        await page.mouse.click(caixa.x + caixa.width * fx, caixa.y + caixa.height * fy)
+        await page.waitForTimeout(700)
+      }
+      medido = (await itensMedicao.count()) === 1
+      if (medido) break
+    }
+    if (medido) {
+      await expect(itensMedicao).toHaveCount(1)
+      await page.screenshot({ path: 'test-results/central-4b-medicao.png' })
+      await page.getByRole('button', { name: 'Apagar medição 1' }).click()
+      await expect(page.getByText('Nenhuma medição.')).toBeVisible()
+    } else {
+      test.info().annotations.push({ type: 'medicao', description: 'cliques no canvas não geraram medição no WebGL de software' })
+    }
+    await page.getByRole('button', { name: 'Distância' }).click()
+    await expect(page.getByRole('button', { name: 'Medir' })).toHaveAttribute('aria-pressed', 'false')
+    await page.getByRole('tab', { name: 'Itens' }).click()
 
     await page.getByRole('button', { name: 'Minimapa' }).click()
     await expect(page.getByTestId('minimapa')).toBeVisible()

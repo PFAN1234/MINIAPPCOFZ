@@ -76,6 +76,21 @@ export interface Medida {
   pontos: Ponto3[]
 }
 
+export type TipoMedida = Medida['tipo']
+
+export const NOMES_MEDIDA: Record<TipoMedida, string> = {
+  distancia: 'Distância',
+  area: 'Área',
+  volume: 'Volume',
+  angulo: 'Ângulo',
+}
+
+/** Valor com 2 casas e vírgula decimal (pt-BR): "12,35 m", "4,00 m²", "90,00°". */
+export function formatarMedida(m: Medida): string {
+  const numero = m.valor.toFixed(2).replace('.', ',')
+  return m.unidade === '°' ? `${numero}°` : `${numero} ${m.unidade}`
+}
+
 export interface CategoriaTotal {
   classe: string
   total: number

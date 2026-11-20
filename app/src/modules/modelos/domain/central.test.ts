@@ -4,6 +4,7 @@ import {
   corCategorica,
   ehClasseDeElemento,
   expressaoDoFiltro,
+  formatarMedida,
   filhosVisiveis, montarArvore, nivelDaClasse,
   progressoAgregado,
   type NoEstrutura,
@@ -186,5 +187,17 @@ describe('expressaoDoFiltro', () => {
     expect(expressaoDoFiltro({ operador: 'igual', valor: 'Laje' })!.test('laje')).toBe(true)
     expect(expressaoDoFiltro({ operador: 'igual', valor: 'Laje' })!.test('Laje 2')).toBe(false)
     expect(expressaoDoFiltro({ operador: 'existe' })).toBeUndefined()
+  })
+})
+
+describe('formatarMedida', () => {
+  const base = { id: 'm', pontos: [] }
+  it('usa vírgula decimal e duas casas', () => {
+    expect(formatarMedida({ ...base, tipo: 'distancia', valor: 12.3456, unidade: 'm' })).toBe('12,35 m')
+    expect(formatarMedida({ ...base, tipo: 'area', valor: 4, unidade: 'm²' })).toBe('4,00 m²')
+    expect(formatarMedida({ ...base, tipo: 'volume', valor: 1.5, unidade: 'm³' })).toBe('1,50 m³')
+  })
+  it('cola o símbolo de grau ao número', () => {
+    expect(formatarMedida({ ...base, tipo: 'angulo', valor: 90, unidade: '°' })).toBe('90,00°')
   })
 })

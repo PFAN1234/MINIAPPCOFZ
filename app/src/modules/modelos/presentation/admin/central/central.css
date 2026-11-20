@@ -366,3 +366,23 @@
 .central-filtro { display: flex; flex-direction: column; gap: 6px; }
 .central-filtro label { display: flex; flex-direction: column; gap: 2px; }
 .central-filtro-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.central-lista-medicoes {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.central-lista-medicoes li {
+  display: flex;
+  gap: 4px;
+}
+.central-lista-medicoes li > button:first-child {
+  flex: 1;
+  text-align: left;
+}
+.central-lista-medicoes [aria-pressed='true'] {
+  border-color: var(--c-acento);
+}

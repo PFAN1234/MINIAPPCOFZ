@@ -7,9 +7,10 @@ import type { ObraCentral } from '../../../domain/tipos.ts'
 import { useObrasCentral } from './CentralModelos.tsx'
 import Itens from './paineis/Itens.tsx'
 import Cortes from './paineis/Cortes.tsx'
+import Medicoes from './paineis/Medicoes.tsx'
 import Propriedades from './paineis/Propriedades.tsx'
 import { useMotorCentral, type EstadoCentral } from './useMotorCentral.ts'
-import type { Corte, ModoCor, NoArvore, RefElemento, Vista3dUi } from '../../../domain/central.ts'
+import type { Corte, Medida, ModoCor, TipoMedida, NoArvore, RefElemento, Vista3dUi } from '../../../domain/central.ts'
 import { gravarTema, lerTema, type Tema } from './tema.ts'
 import './central.css'
 
@@ -89,6 +90,9 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   const [pavimentos, setPavimentos] = useState<string[]>([])
   const [cortes, setCortes] = useState<Corte[]>([])
   const [corteMarcado, setCorteMarcado] = useState<string | null>(null)
+  const [medidas, setMedidas] = useState<Medida[]>([])
+  const [medidaMarcada, setMedidaMarcada] = useState<string | null>(null)
+  const [medicao, setMedicao] = useState<TipoMedida | null>(null)
   const [modo, setModo] = useState<'ver' | 'inspecionar'>('ver')
   const [categoriasOcultas, setCategoriasOcultas] = useState<ReadonlySet<string>>(new Set())
   const arrasto = useRef<{ x: number; largura: number } | null>(null)
@@ -114,6 +118,12 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
     if (!motor) return
     return motor.ao('cortes', (dados) => setCortes(dados as Corte[]))
   }, [motor])
+  // Lista de medições: o motor avisa a cada criação ou remoção.
+  useEffect(() => {
+    if (!motor) return
+    return motor.ao('medicao', (dados) => setMedidas(dados as Medida[]))
+  }, [motor])
+  const medidaSelecionada = medidas.some((m) => m.id === medidaMarcada) ? medidaMarcada : null
   const corteSelecionado = cortes.some((c) => c.id === corteMarcado) ? corteMarcado : null
 
   const pedido = params.get('painel')
@@ -175,6 +185,13 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
     setMinimapa(novo)
     motor?.minimapa?.(novo)
   }
+  function mudarMedicao(m: TipoMedida | null) {
+    setMedicao(m)
+    motor?.medir.modo(m)
+  }
+  function apagarMedida(id?: string) {
+    motor?.medir.apagar(id)
+  }
   function apagarCorte(id?: string) {
     motor?.cortes.apagar(id)
   }
@@ -216,9 +233,12 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
     })
   }
   // F enquadra (a seleção, se houver); H oculta; I isola; Esc limpa a seleção.
-  const atalhos = useRef({ ocultar, isolar, enquadrar, apagarCorte: () => {} })
+  const atalhos = useRef({ ocultar, isolar, enquadrar, apagarCorte: () => {}, apagarMedida: () => {}, sairMedicao: () => {} })
   useEffect(() => {
-    atalhos.current = { ocultar, isolar, enquadrar, apagarCorte: () => corteSelecionado && apagarCorte(corteSelecionado) }
+    atalhos.current = { ocultar, isolar, enquadrar, apagarCorte: () => corteSelecionado && apagarCorte(corteSelecionado),
+      apagarMedida: () => medidaSelecionada && apagarMedida(medidaSelecionada),
+      sairMedicao: () => medicao && mudarMedicao(null),
+    }
   })
   useEffect(() => {
     if (!pronto) return
@@ -228,8 +248,13 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
       if (k === 'f') atalhos.current.enquadrar()
       else if (k === 'h') atalhos.current.ocultar()
       else if (k === 'i') atalhos.current.isolar()
-      else if (e.key === 'Delete') atalhos.current.apagarCorte()
-      else if (e.key === 'Escape') selecionar([])
+      else if (e.key === 'Delete') {
+        atalhos.current.apagarCorte()
+        atalhos.current.apagarMedida()
+      } else if (e.key === 'Escape') {
+        atalhos.current.sairMedicao()
+        selecionar([])
+      }
     }
     window.addEventListener('keydown', tecla)
     return () => window.removeEventListener('keydown', tecla)
@@ -328,6 +353,15 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
                 onAlternarCategoria={(classe) => void alternarCategoria(classe)}
                 onAlternarModelo={(sigla, ligado) => void estado.alternarModelo(sigla, ligado)}
               />
+            ) : painel.id === 'medicoes' ? (
+              <Medicoes
+                medidas={medidas}
+                selecionada={medidaSelecionada}
+                modo={medicao}
+                onSelecionar={setMedidaMarcada}
+                onApagar={apagarMedida}
+                onApagarTodas={() => apagarMedida()}
+              />
             ) : (
               <p className="central-sec">Disponível na etapa {painel.etapa}</p>
             )}
@@ -389,6 +423,8 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
           cortes={cortes.length}
           minimapa={minimapa}
           onMinimapa={alternarMinimapa}
+          medicao={medicao}
+          onMedir={mudarMedicao}
         />
         <div className="central-canvas" data-testid="canvas-central">
           <div ref={tela} className="central-tela" />

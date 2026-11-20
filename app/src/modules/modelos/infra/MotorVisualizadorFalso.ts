@@ -3,6 +3,7 @@ import {
   ErroCarregamento,
   type CategoriaTotal,
   type Corte,
+  type Medida,
   type FiltroAtributo,
   type GrupoPropriedades,
   type NoArvore,
@@ -48,6 +49,7 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   minimapaLigacoes = 0
   minimapaLigado = false
   cortesLista: Corte[] = []
+  medidasLista: Medida[] = []
   private contadorCortes = 0
   private ouvintes = new Map<EventoMotor, Set<(d: unknown) => void>>()
 
@@ -171,8 +173,17 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   }
   medir = {
     modo: (m: 'distancia' | 'area' | 'volume' | 'angulo' | null) => this.registrar('medir.modo', m),
-    listar: () => [],
-    apagar: (id?: string) => this.registrar('medir.apagar', id),
+    listar: () => this.medidasLista,
+    apagar: (id?: string) => {
+      this.registrar('medir.apagar', id)
+      this.medidasLista = id ? this.medidasLista.filter((x) => x.id !== id) : []
+      this.emitir('medicao', this.medidasLista)
+    },
+  }
+  /** Simula o usuário concluindo uma medição (os testes populam a lista por aqui). */
+  adicionarMedida(m: Medida) {
+    this.medidasLista = [...this.medidasLista, m]
+    this.emitir('medicao', this.medidasLista)
   }
   vistaAtual(): Vista {
     return {

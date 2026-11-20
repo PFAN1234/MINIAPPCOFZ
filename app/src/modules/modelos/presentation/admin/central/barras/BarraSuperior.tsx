@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import type { ModoCor, Vista3dUi } from '../../../../domain/central.ts'
+import { NOMES_MEDIDA, type ModoCor, type TipoMedida, type Vista3dUi } from '../../../../domain/central.ts'
 
 /** Botões ainda desabilitados (ganham função nas próximas etapas). */
-const BOTOES_FUTUROS = ['Modelos', 'Issues', 'Medir', 'Captura', 'Obra']
+const BOTOES_FUTUROS = ['Modelos', 'Issues', 'Captura', 'Obra']
 
 const LADOS = ['N', 'S', 'L', 'O'] as const
 const NOMES_LADO = { N: 'norte', S: 'sul', L: 'leste', O: 'oeste' }
@@ -34,6 +34,9 @@ interface Props {
   cortes: number
   minimapa: boolean
   onMinimapa(): void
+  /** Modo de medição ativo (null: nenhum). */
+  medicao: TipoMedida | null
+  onMedir(modo: TipoMedida | null): void
 }
 
 /** Barra superior do visualizador: enquadrar (F), projeção, cor por categoria/disciplina e grade. */
@@ -55,7 +58,10 @@ export default function BarraSuperior({
   cortes,
   minimapa,
   onMinimapa,
+  medicao,
+  onMedir,
 }: Props) {
+  const [menuMedir, setMenuMedir] = useState(false)
   const [menu, setMenu] = useState(false)
   const [escolhido, setEscolhido] = useState('')
   const pavimento = pavimentos.includes(escolhido) ? escolhido : (pavimentos[0] ?? '')
@@ -201,6 +207,36 @@ export default function BarraSuperior({
         >
           Minimapa
         </button>
+      </div>
+      <div className="central-menu">
+        <button
+          type="button"
+          className="central-botao"
+          aria-label="Medir"
+          title="Medir distância, área, volume ou ângulo"
+          aria-expanded={menuMedir}
+          aria-pressed={medicao !== null}
+          disabled={!ativo}
+          onClick={() => setMenuMedir((m) => !m)}
+        >
+          Medir
+        </button>
+        {menuMedir && (
+          <div role="group" aria-label="Modo de medição" className="central-menu-lista">
+            {(Object.keys(NOMES_MEDIDA) as TipoMedida[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                className="central-botao"
+                aria-label={NOMES_MEDIDA[t]}
+                aria-pressed={medicao === t}
+                onClick={() => onMedir(medicao === t ? null : t)}
+              >
+                {NOMES_MEDIDA[t]}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       {BOTOES_FUTUROS.map((nome) => (
         <button key={nome} type="button" className="central-botao" aria-label={nome} aria-pressed="false" disabled>
