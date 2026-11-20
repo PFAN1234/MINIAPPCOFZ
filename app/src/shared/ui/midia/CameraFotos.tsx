@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { abrirCamera, capturarQuadro, fecharCamera } from '../../../ra/camera.ts'
+import { abrirCamera, capturarQuadro, fecharCamera } from '@modules/ra/infra/browser/camera.ts'
 
 /** Câmera em tela cheia para o Telegram Android, que ignora `capture` no input de arquivo. */
 export function CameraFotos({

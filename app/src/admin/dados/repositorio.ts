@@ -1,4 +1,4 @@
-import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
+import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 import type {
   Admin,
   ErroCliente,
@@ -31,7 +31,6 @@ import type {
   Organizacao,
   ObraLista,
   ModeloAdmin,
-  AmbienteRA,
   ObraSalva,
   PavimentoResumo,
   Publicacao,
@@ -45,7 +44,7 @@ import type {
   UsuarioApp,
 } from './tipos.ts'
 
-export interface RepositorioAdmin {
+export interface RepositorioAdmin extends Pick<RaRepositorio, 'listarRA' | 'definirQr' | 'removerQr'> {
   /** Há sessão? É de um admin? */
   estadoSessao(): Promise<EstadoSessao>
   /** Troca o token do link `#entrar=` (uso único) por sessão. */
@@ -161,13 +160,6 @@ export interface RepositorioAdmin {
   registrarModelo(slug: string, registro: RegistroModelo): Promise<ModeloAdmin>
   /** RPC `admin_retirar_modelo`: tira a disciplina do visualizador (o arquivo fica guardado). */
   retirarModelo(slug: string, sigla: string): Promise<void>
-
-  /** Realidade aumentada: ambientes com geometria e seu QR (RPC `admin_listar_ra`). */
-  listarRA(obraId: string): Promise<AmbienteRA[]>
-  /** RPC `admin_definir_qr` (distâncias em metros). */
-  definirQr(ambienteId: string, qr: QrAmbiente): Promise<void>
-  /** RPC `admin_remover_qr`. */
-  removerQr(ambienteId: string): Promise<void>
 
   listarAdmins(): Promise<Admin[]>
   incluirAdmin(usuarioId: string): Promise<void>

@@ -8,13 +8,13 @@ const mocks = vi.hoisted(() => ({
   criarLeitorQr: vi.fn().mockResolvedValue({ ler: vi.fn().mockResolvedValue(null) }),
 }))
 
-vi.mock('./camera.ts', async (orig) => ({
-  ...(await orig<typeof import('./camera.ts')>()),
+vi.mock('@modules/ra/infra/browser/camera.ts', async (orig) => ({
+  ...(await orig<typeof import('@modules/ra/infra/browser/camera.ts')>()),
   abrirCamera: mocks.abrirCamera,
   fecharCamera: mocks.fecharCamera,
 }))
 
-vi.mock('./leitorQr.ts', () => ({
+vi.mock('@modules/ra/infra/browser/leitorQr.ts', () => ({
   criarLeitorQr: mocks.criarLeitorQr,
 }))
 

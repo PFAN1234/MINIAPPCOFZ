@@ -30,9 +30,9 @@ import type {
   PapelAcesso,
 } from './tipos.ts'
 import type { ModeloFrag } from '../modelo/modelos.ts'
-import type { GeometriaAmbiente } from '@modules/ra/domain/tipos.ts'
+import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
 
-export interface Repositorio {
+export interface Repositorio extends Pick<RaRepositorio, 'obterGeometria'> {
   /** Obras em que o usuário participa, cada uma com a sua etapa. */
   listarObras(): Promise<ObraDaLista[]>
   /** Totais por obra visível (serviços, pendências abertas e resolvidas) e o papel do usuário. */
@@ -89,11 +89,6 @@ export interface Repositorio {
   listarModelos(slug: string): Promise<ModeloFrag[]>
   /** Baixa o `.frag`. O cache por hash fica a cargo de quem chama (`modeloComCache`). */
   baixarModelo(slug: string, modelo: ModeloFrag): Promise<ArrayBuffer>
-  /**
-   * Geometria do ambiente para a realidade aumentada (contorno, piso, forro, QR e
-   * referencial dos modelos); null se o ambiente não tem geometria.
-   */
-  obterGeometria(obra: { id: string; slug: string }, ambiente: { id: string; codigo: string }): Promise<GeometriaAmbiente | null>
   /** Id do usuário da sessão (fica no aparelho, funciona sem sinal) ou null sem sessão. */
   idUsuario(): Promise<string | null>
   /** O usuário é admin do Mini App (site de administração)? */

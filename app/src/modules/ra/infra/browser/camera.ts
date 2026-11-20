@@ -1,5 +1,7 @@
 /** Câmera traseira ao vivo, recorte visível do vídeo e captura do par de fotos da RA. */
 
+import type { Camera } from '@modules/ra/application/ports/Camera.port.ts'
+
 export const MENSAGEM_SEM_CAMERA = 'Este aparelho não permite abrir a câmera dentro do app.'
 export const MENSAGEM_CAMERA_NEGADA =
   'O acesso à câmera foi negado. Libere a câmera para o Telegram nos ajustes do aparelho e tente de novo.'
@@ -133,3 +135,5 @@ export async function capturarPar(opcoes: {
   const [limpa, comModelo] = await Promise.all([paraJpeg(canvasLimpa), paraJpeg(canvasModelo)])
   return { limpa, comModelo, largura, altura }
 }
+
+export const cameraNavegador: Camera = { abrir: abrirCamera, fechar: fecharCamera }

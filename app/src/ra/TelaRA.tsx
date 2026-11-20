@@ -2,12 +2,12 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as EventoPo
 import { Link } from 'react-router'
 import type { ModeloFrag } from '../modelo/modelos.ts'
 import { marcadorParaPixel } from '../shared/kernel/coordenadas.ts'
-import { abrirCamera, capturarPar, fecharCamera } from './camera.ts'
+import { abrirCamera, capturarPar, fecharCamera } from '@modules/ra/infra/browser/camera.ts'
 import { type GeometriaAmbiente } from '@modules/ra/domain/tipos.ts'
 import { qrEDoAmbiente } from '@modules/ra/domain/geometria.ts'
 import { cantoNoMundo, qrNoMundo, type Plano } from '@modules/ra/infra/three/geometria3d.ts'
-import { criarLeitorQr } from './leitorQr.ts'
-import { MotorRA } from './motor.ts'
+import { criarLeitorQr } from '@modules/ra/infra/browser/leitorQr.ts'
+import { MotorRA } from '@modules/ra/infra/three/motor.ts'
 import { iniciarOrientacao, type Orientacao } from '@modules/ra/infra/three/orientacao.ts'
 import {
   distanciaEntrePoses,

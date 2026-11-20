@@ -5,7 +5,7 @@
  */
 import ambientesJson from '../../../data/hto/ambientes.json'
 import plantasJson from '../../../data/hto/plantas.json'
-import geometriaJson from '../../../data/hto/geometria.json'
+import { criarRaFixture } from '@modules/ra/infra/RaFixtureAdapter.ts'
 import { ErroEnvio, MENSAGEM_REDE } from './erros.ts'
 import { nomeMostrado } from './nome.ts'
 import { dataNoFuso, formatarDia } from '../shared/kernel/fuso.ts'
@@ -783,26 +783,12 @@ export function criarRepositorioFixture(
     return { ...base, estado }
   }
 
+  const ra = criarRaFixture()
+
   return {
     listarModelos: listarModelosLocais,
     baixarModelo: baixarModeloLocal,
-    async obterGeometria(obra, ambiente) {
-      if (obra.slug !== geometriaJson.obra) return null
-      const g = (geometriaJson.ambientes as Record<string, { contorno: number[][]; contorno_pagina?: number[][]; y_piso: number; y_teto: number }>)[
-        ambiente.codigo
-      ]
-      if (!g) return null
-      return {
-        contorno: g.contorno.map(([x, z]) => [x, z]),
-        ...(g.contorno_pagina ? { contornoPagina: g.contorno_pagina.map(([x, y]) => [x, y] as [number, number]) } : {}),
-        yPiso: g.y_piso,
-        yTeto: g.y_teto,
-        // QR de teste só no Apto. 101: parede 1, a 1,20 m do canto, centro a 1,50 m.
-        qr: ambiente.codigo === 'terreo-apto-101' ? { parede: 0, distancia_m: 1.2, altura_m: 1.5, lado_m: 0.18 } : null,
-        referencial: { sigla: geometriaJson.referencial.sigla, coordenadas: geometriaJson.referencial.coordenadas },
-        matrizes: {},
-      }
-    },
+    obterGeometria: ra.obterGeometria,
     async idUsuario() {
       return 'usuario-teste'
     },

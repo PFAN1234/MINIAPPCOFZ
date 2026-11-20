@@ -2,6 +2,7 @@
  * Leitura do QR no vídeo. Usa o `BarcodeDetector` do navegador quando existe (Android) e,
  * senão, o `jsQR` (carregado sob demanda).
  */
+import type { LeitorQr as LeitorQrPorta } from '@modules/ra/application/ports/LeitorQr.port.ts'
 import { recorteVisivel } from './camera.ts'
 import type { Ponto2 } from '@modules/ra/domain/tipos.ts'
 
@@ -76,3 +77,9 @@ export async function criarLeitorQr(): Promise<LeitorQr> {
     },
   }
 }
+
+/** Adaptador da porta: cria o leitor na primeira leitura. */
+export const leitorQrNavegador: LeitorQrPorta = (() => {
+  let leitor: Promise<LeitorQr> | null = null
+  return { ler: async (video, aspecto) => (await (leitor ??= criarLeitorQr())).ler(video, aspecto) }
+})()

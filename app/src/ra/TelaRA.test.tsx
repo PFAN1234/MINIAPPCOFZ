@@ -9,8 +9,8 @@ const mocks = vi.hoisted(() => ({
   motorInstancias: [] as { descartar: ReturnType<typeof vi.fn> }[],
 }))
 
-vi.mock('./camera.ts', async (orig) => ({
-  ...(await orig<typeof import('./camera.ts')>()),
+vi.mock('@modules/ra/infra/browser/camera.ts', async (orig) => ({
+  ...(await orig<typeof import('@modules/ra/infra/browser/camera.ts')>()),
   abrirCamera: mocks.abrirCamera,
   fecharCamera: mocks.fecharCamera,
 }))
@@ -20,7 +20,7 @@ vi.mock('@modules/ra/infra/three/orientacao.ts', async (orig) => ({
   iniciarOrientacao: mocks.iniciarOrientacao,
 }))
 
-vi.mock('./motor.ts', () => ({
+vi.mock('@modules/ra/infra/three/motor.ts', () => ({
   MotorRA: class {
     descartar = vi.fn()
     carregar = vi.fn().mockResolvedValue(undefined)

@@ -1,4 +1,4 @@
-import type { QrLido } from '../../../../ra/leitorQr.ts'
+import type { QrLido } from '../../infra/browser/leitorQr.ts'
 
 /** Porta de leitura de QR no vídeo. */
 export interface LeitorQr {

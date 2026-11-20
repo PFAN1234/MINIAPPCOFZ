@@ -1,4 +1,6 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
+import { criarRaSupabase } from '@modules/ra/infra/RaSupabaseAdapter.ts'
+import { erroDeColunaAusente } from '../shared/infra/errosSupabase.ts'
 import { ErroEnvio, erroDoSupabase } from './erros.ts'
 import { entrarComTelegram } from './login.ts'
 import { configurarEnvioErros } from '../shared/infra/erros.ts'
@@ -89,14 +91,6 @@ function mapearEtapa(l: Linha | null | undefined): Etapa {
 function checar<T>(resposta: { data: T | null; error: { message: string } | null }): T {
   if (resposta.error) throw new Error(resposta.error.message)
   return resposta.data as T
-}
-
-function erroDeEsquemaAusente(err: { code?: string } | null): boolean {
-  return Boolean(err && (err.code === '42P01' || err.code === '42703' || err.code === 'PGRST204' || err.code === 'PGRST205'))
-}
-
-function erroDeColunaAusente(err: { code?: string } | null): boolean {
-  return Boolean(err && (err.code === '42703' || err.code === 'PGRST204'))
 }
 
 type Linha = Record<string, unknown>
@@ -216,6 +210,7 @@ export function criarRepositorioSupabase(
   cliente: SupabaseClient = criarClienteSupabase(),
 ): Repositorio {
   configurarEnvioErros(cliente, 'miniapp')
+  const ra = criarRaSupabase(cliente)
   async function obraPorSlug(slug: string): Promise<ObraResumo> {
     const linha = checar(
       await cliente.from('obra').select('id, slug, nome').eq('slug', slug).maybeSingle(),
@@ -335,6 +330,7 @@ export function criarRepositorioSupabase(
   }
 
   return {
+    obterGeometria: ra.obterGeometria,
     async temSessao() {
       return entrarComTelegram({
         cliente,
@@ -918,63 +914,6 @@ export function criarRepositorioSupabase(
           ...(Array.isArray(l.matriz) && l.matriz.length === 16 ? { matriz: l.matriz.map(Number) } : {}),
         }),
       )
-    },
-
-    async obterGeometria(obra, ambiente) {
-      // Tabelas/colunas da RA podem não existir em bancos sem a migration correspondente.
-      const comPagina = await cliente
-        .from('ambiente_geometria')
-        .select('contorno, contorno_pagina, y_piso, y_teto')
-        .eq('ambiente_id', ambiente.id)
-        .maybeSingle()
-      let { data: g, error } = comPagina
-      if (erroDeColunaAusente(error)) {
-        const semPagina = await cliente
-          .from('ambiente_geometria')
-          .select('contorno, y_piso, y_teto')
-          .eq('ambiente_id', ambiente.id)
-          .maybeSingle()
-        g = semPagina.data as typeof g
-        error = semPagina.error
-      }
-      if (error) {
-        if (erroDeEsquemaAusente(error)) return null
-        throw new Error(error.message)
-      }
-      if (!g) return null
-      const pagina = (g as Linha).contorno_pagina as [number, number][] | null | undefined
-      const [qr, referencial, modelos] = await Promise.all([
-        cliente.from('ambiente_qr').select('parede, distancia_m, altura_m, lado_m').eq('ambiente_id', ambiente.id).maybeSingle(),
-        cliente.from('ra_referencial').select('sigla, coordenadas').eq('obra_id', obra.id).maybeSingle(),
-        cliente.from('modelo').select('sigla, matriz').eq('obra_id', obra.id).not('matriz', 'is', null),
-      ])
-      if (qr.error && !erroDeEsquemaAusente(qr.error)) throw new Error(qr.error.message)
-      if (referencial.error && !erroDeEsquemaAusente(referencial.error)) throw new Error(referencial.error.message)
-      if (modelos.error && !erroDeEsquemaAusente(modelos.error)) throw new Error(modelos.error.message)
-      const linhaQr = qr.data as Linha | null
-      const linhaRef = referencial.data as Linha | null
-      return {
-        contorno: (g.contorno as [number, number][]).map(([x, z]) => [Number(x), Number(z)]),
-        ...(Array.isArray(pagina) && pagina.length >= 3
-          ? { contornoPagina: pagina.map(([x, y]) => [Number(x), Number(y)] as [number, number]) }
-          : {}),
-        yPiso: Number(g.y_piso),
-        yTeto: Number(g.y_teto),
-        qr: linhaQr
-          ? {
-              parede: Number(linhaQr.parede),
-              distancia_m: Number(linhaQr.distancia_m),
-              altura_m: Number(linhaQr.altura_m),
-              lado_m: Number(linhaQr.lado_m),
-            }
-          : null,
-        referencial: linhaRef
-          ? { sigla: String(linhaRef.sigla), coordenadas: (linhaRef.coordenadas as number[]).map(Number) }
-          : null,
-        matrizes: Object.fromEntries(
-          ((modelos.data ?? []) as Linha[]).map((m) => [String(m.sigla), (m.matriz as number[]).map(Number)]),
-        ),
-      }
     },
 
     async baixarModelo(_slug, modelo) {
