@@ -1,0 +1,204 @@
+.central[data-tema='escuro'] {
+  --c-fundo: #16161a;
+  --c-painel: #1e1e24;
+  --c-borda: #2c2c34;
+  --c-texto: #e6e6ea;
+  --c-sec: #9a9aa5;
+  --c-acento: #7c4dff;
+  --c-alerta: #ff8a3d;
+}
+.central[data-tema='claro'] {
+  --c-fundo: #f3f3f6;
+  --c-painel: #ffffff;
+  --c-borda: #d8d8e0;
+  --c-texto: #1c1c22;
+  --c-sec: #61616d;
+  --c-acento: #6a3de8;
+  --c-alerta: #d9600f;
+}
+
+/* A página da central ocupa a tela abaixo do header, sem a largura máxima do admin. */
+.adm-conteudo:has(.central) {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
+
+.central {
+  position: relative;
+  display: flex;
+  height: calc(100dvh - 56px);
+  min-height: 420px;
+  background: var(--c-fundo);
+  color: var(--c-texto);
+  overflow: hidden;
+}
+.central-trilho {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 84px;
+  flex: none;
+  padding: 8px 4px;
+  background: var(--c-painel);
+  border-right: 1px solid var(--c-borda);
+  z-index: 3;
+}
+.central-abas {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.central-aba,
+.central-botao {
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--c-texto);
+  background: transparent;
+  border: 1px solid var(--c-borda);
+  border-radius: 6px;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+.central-aba[aria-selected='true'],
+.central-botao[aria-pressed='true'] {
+  background: var(--c-acento);
+  border-color: var(--c-acento);
+  color: #fff;
+}
+.central-botao:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.central-lateral {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  background: var(--c-painel);
+  border-right: 1px solid var(--c-borda);
+  z-index: 2;
+}
+.central-painel {
+  flex: 1;
+  padding: 12px;
+  overflow: auto;
+}
+.central-contexto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-top: 1px solid var(--c-borda);
+}
+.central-contexto a,
+.central-lista a {
+  color: var(--c-acento);
+}
+.central-sec {
+  color: var(--c-sec);
+  margin: 0;
+}
+.central-borda {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+.central-borda:hover,
+.central-borda:focus-visible {
+  background: var(--c-acento);
+}
+.central-direita {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.central-recolher {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+.central-barra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 8px 8px 52px;
+  background: var(--c-painel);
+  border-bottom: 1px solid var(--c-borda);
+}
+.central-canvas {
+  position: relative;
+  flex: 1;
+  background: var(--c-fundo);
+}
+.central-modo {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+}
+.central-barra-visibilidade {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  padding: 6px;
+  border: 1px solid var(--c-borda);
+  border-radius: 8px;
+}
+
+.central-lista {
+  padding: 24px 32px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+.central-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+.central-card {
+  border: 1px solid #c8c8d0;
+  border-radius: 8px;
+  padding: 12px;
+}
+.central-card dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  margin: 8px 0 0;
+}
+.central-card dt {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+.central-card dd {
+  margin: 0;
+}
+.central-vazias li {
+  display: flex;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+/* Abaixo de 1024 px os painéis viram gaveta sobre o canvas. */
+@media (max-width: 1023px) {
+  .central-lateral {
+    position: absolute;
+    left: 84px;
+    top: 0;
+    bottom: 0;
+    max-width: calc(100% - 84px);
+    box-shadow: 4px 0 16px rgb(0 0 0 / 35%);
+  }
+}

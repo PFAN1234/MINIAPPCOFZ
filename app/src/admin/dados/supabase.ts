@@ -168,6 +168,7 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     baixarOriginal: plantas.baixarOriginal,
     publicarRevisao: plantas.publicarRevisao,
     listarModelosAdmin: modelos.listarModelosAdmin,
+    listarObrasCentral: modelos.listarObrasCentral,
     registrarModelo: modelos.registrarModelo,
     retirarModelo: modelos.retirarModelo,
     listarErrosCliente: telemetria.listarErrosCliente,

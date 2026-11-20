@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
-import { NavLink, Route, Routes } from 'react-router'
+import { lazy, Suspense, type ReactNode } from 'react'
+import { Navigate, NavLink, Route, Routes, useParams } from 'react-router'
 import { Carregando, Erro, IdentidadeOM, mensagemDe } from '../../admin/componentes.tsx'
 import { useRepositorioAdmin } from '../../admin/dados/contexto.tsx'
 import type { Entrada } from '../../admin/entrada.ts'
@@ -16,10 +16,17 @@ import EtapaAdmin, { NovaEtapa } from '@modules/obras/presentation/admin/EtapaAd
 import Organizacao from '@modules/obras/presentation/admin/Organizacao.tsx'
 import Pessoas from '@modules/acessos/presentation/admin/Pessoas.tsx'
 import EditorPlanta from '@modules/plantas/presentation/admin/EditorPlanta.tsx'
-import ModelosObra from '@modules/modelos/presentation/admin/ModelosObra.tsx'
+import CentralModelos from '@modules/modelos/presentation/admin/central/CentralModelos.tsx'
 import PlantaObra from '@modules/plantas/presentation/admin/PlantaObra.tsx'
 import RaObra from '@modules/ra/presentation/admin/RaObra.tsx'
 
+const CentralObra = lazy(() => import('@modules/modelos/presentation/admin/central/CentralObra.tsx'))
+
+/** A tela antiga de modelos da obra agora é o painel Gestão da central. */
+export function RedirecionarModelosObra() {
+  const { slug = '' } = useParams()
+  return <Navigate replace to={`/modelos/${slug}?painel=gestao`} />
+}
 
 interface Sessao {
   estado: EstadoSessao
@@ -78,7 +85,16 @@ export default function AdminApp({ entrada }: { entrada: Entrada }) {
         <Route path="obras/:slug" element={<ObraAdmin />} />
         <Route path="obras/:slug/planta" element={<PlantaObra />} />
         <Route path="obras/:slug/planta/:pavimento" element={<EditorPlanta />} />
-        <Route path="obras/:slug/modelos" element={<ModelosObra />} />
+        <Route path="obras/:slug/modelos" element={<RedirecionarModelosObra />} />
+        <Route path="modelos" element={<CentralModelos />} />
+        <Route
+          path="modelos/:slug"
+          element={
+            <Suspense fallback={<Carregando texto="Carregando a central…" />}>
+              <CentralObra />
+            </Suspense>
+          }
+        />
         <Route path="boletins" element={<Boletins />} />
         <Route path="boletins/:id" element={<EditorBoletim />} />
         <Route path="pessoas" element={<Pessoas />} />
@@ -106,6 +122,7 @@ function Layout({ usuario, onSair, children }: { usuario: UsuarioSessao; onSair:
           <NavLink to="/organizacao">Organização</NavLink>
           <NavLink to="/admins">Admins</NavLink>
           <NavLink to="/erros">Manutenção</NavLink>
+          <NavLink to="/modelos">Modelos</NavLink>
         </nav>
         <span className="adm-usuario">{usuario.nome}</span>
         <button type="button" className="adm-botao adm-botao-discreto" onClick={onSair}>

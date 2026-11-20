@@ -1,12 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router'
+import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, expect, it } from 'vitest'
-import AdminApp from '@apps/admin/AdminApp.tsx'
+import ObraAdmin from '@modules/obras/presentation/admin/ObraAdmin.tsx'
+import ModelosObra from './ModelosObra.tsx'
 import { RepositorioAdminProvider } from '../../../../admin/dados/contexto.tsx'
 import { criarRepositorioAdminFixture } from '../../../../admin/dados/fixture.ts'
-import { criarEntrada } from '../../../../admin/entrada.ts'
 import type { Conversor } from '@modules/modelos/application/ports/ConversorIfcPort.port.ts'
 import { ConversorProvider } from '@modules/modelos/infra/conversor.ts'
 
@@ -34,7 +34,10 @@ function renderizar(conversor: Conversor) {
       <RepositorioAdminProvider repositorio={repo}>
         <ConversorProvider conversor={conversor}>
           <MemoryRouter initialEntries={['/obras/hto/modelos']}>
-            <AdminApp entrada={criarEntrada(null)} />
+            <Routes>
+              <Route path="/obras/:slug/modelos" element={<ModelosObra />} />
+              <Route path="/obras/:slug" element={<ObraAdmin />} />
+            </Routes>
           </MemoryRouter>
         </ConversorProvider>
       </RepositorioAdminProvider>

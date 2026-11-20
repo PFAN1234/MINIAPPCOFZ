@@ -230,6 +230,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
   })
   const modelos = criarModelosFixture({
     exigirAdmin,
+    obras: () => obras,
     obraPorSlug,
     tamanhoArquivo: (caminho) => plantas.tamanhoArquivo(`modelos/${caminho}`),
     proximoId: () => ++sequencia,
@@ -342,6 +343,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     baixarOriginal: plantas.baixarOriginal,
     publicarRevisao: plantas.publicarRevisao,
     listarModelosAdmin: modelos.listarModelosAdmin,
+    listarObrasCentral: modelos.listarObrasCentral,
     registrarModelo: modelos.registrarModelo,
     retirarModelo: modelos.retirarModelo,
     listarErrosCliente: telemetriaAdm.listarErrosCliente,

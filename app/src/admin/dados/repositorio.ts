@@ -20,7 +20,7 @@ export interface RepositorioAdmin
     ObrasAdminRepositorio,
     BoletinsAdminRepositorio,
     TelemetriaRepositorio,
-    Pick<ModelosRepositorio, 'listarModelosAdmin' | 'registrarModelo' | 'retirarModelo'>,
+    Pick<ModelosRepositorio, 'listarModelosAdmin' | 'listarObrasCentral' | 'registrarModelo' | 'retirarModelo'>,
     Pick<PlantasRepositorio, 'obterEditorPlanta' | 'listarPublicacoes' | 'enviarArquivo' | 'baixarOriginal' | 'publicarRevisao'> {}
 
 /** Como no app: a fixture só entra no build com `VITE_DADOS=fixture`. */

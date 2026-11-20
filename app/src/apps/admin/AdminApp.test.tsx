@@ -286,3 +286,18 @@ describe('erros do cliente', () => {
     expect(screen.getByRole('table', { name: 'Maiores arquivos órfãos' })).toBeInTheDocument()
   })
 })
+
+describe('rotas de modelos', () => {
+  it('a rota antiga /obras/:slug/modelos redireciona para a central, no painel Gestão', async () => {
+    renderizar('/obras/hto/modelos')
+    expect(await screen.findByRole('tab', { name: 'Gestão', selected: true })).toBeInTheDocument()
+  })
+
+  it('o menu leva à lista de obras da central', async () => {
+    const usuario = userEvent.setup()
+    renderizar()
+    await usuario.click(await screen.findByRole('link', { name: 'Modelos' }))
+    expect(await screen.findByRole('heading', { name: 'Modelos' })).toBeInTheDocument()
+    expect(await screen.findByText(/Sem arquivos/)).toBeInTheDocument()
+  })
+})

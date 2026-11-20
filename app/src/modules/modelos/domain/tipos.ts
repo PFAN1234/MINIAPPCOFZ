@@ -23,6 +23,17 @@ export interface EventoModelo {
   publicado_por_nome: string | null
 }
 
+/** Linha da lista da Central de modelos (`admin_central_obras`). */
+export interface ObraCentral {
+  obra_id: string
+  slug: string
+  nome: string
+  disciplinas: number
+  documentos: number
+  issues_abertas: number
+  atualizado_em: string | null
+}
+
 export interface DadosModelos {
   modelos: ModeloAdmin[]
   historico: EventoModelo[]
