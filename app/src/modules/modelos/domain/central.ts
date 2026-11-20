@@ -146,13 +146,100 @@ export function montarArvore(sigla: string, estrutura: NoEstrutura, dados: Dados
   return converter(estrutura, sigla)
 }
 
-/** Soma as contagens por classe de vários modelos, da maior para a menor (empate: nome). */
+/**
+ * Classe IFC que descreve um elemento construtivo (parede, laje, porta…). Ficam de fora os tipos
+ * (`*TYPE`), propriedades, quantidades, materiais, unidades, relações e demais entidades abstratas.
+ */
+export function ehClasseDeElemento(classe: string): boolean {
+  const c = classe.toUpperCase()
+  if (!c.startsWith('IFC')) return false
+  if (c.endsWith('TYPE')) return false
+  return !CLASSES_ESTRUTURAIS.has(c) && !PREFIXOS_ABSTRATOS.some((p) => c.startsWith(p))
+}
+
+const CLASSES_ESTRUTURAIS = new Set(['IFCPROJECT', 'IFCSITE', 'IFCBUILDING', 'IFCBUILDINGSTOREY', 'IFCGRID', 'IFCOPENINGELEMENT'])
+
+const PREFIXOS_ABSTRATOS = [
+  'IFCPROPERTY',
+  'IFCQUANTITY',
+  'IFCMATERIAL',
+  'IFCREL',
+  'IFCUNIT',
+  'IFCSIUNIT',
+  'IFCDERIVEDUNIT',
+  'IFCMEASURE',
+  'IFCOWNERHISTORY',
+  'IFCPERSON',
+  'IFCORGANIZATION',
+  'IFCAPPLICATION',
+  'IFCPOSTALADDRESS',
+  'IFCLOCALPLACEMENT',
+  'IFCAXIS2PLACEMENT',
+  'IFCCARTESIANPOINT',
+  'IFCDIRECTION',
+  'IFCGEOMETRIC',
+  'IFCPRESENTATION',
+  'IFCSTYLE',
+  'IFCSURFACESTYLE',
+  'IFCCOLOUR',
+  'IFCCLASSIFICATION',
+  'IFCDOCUMENT',
+  'IFCCONSTRAINT',
+  'IFCACTORROLE',
+  'IFCCONNECTION',
+  'IFCSHAPE',
+  'IFCPRODUCTDEFINITIONSHAPE',
+  'IFCPROJECTLIBRARY',
+]
+
+/**
+ * Soma as contagens por classe de vários modelos, da maior para a menor (empate: nome).
+ * Só entram classes de elementos (ver `ehClasseDeElemento`).
+ */
 export function agregarCategorias(listas: readonly (readonly CategoriaTotal[])[]): CategoriaTotal[] {
   const soma = new Map<string, number>()
-  for (const lista of listas) for (const c of lista) soma.set(c.classe, (soma.get(c.classe) ?? 0) + c.total)
+  for (const lista of listas) {
+    for (const c of lista) if (c.total > 0 && ehClasseDeElemento(c.classe)) soma.set(c.classe, (soma.get(c.classe) ?? 0) + c.total)
+  }
   return [...soma]
     .map(([classe, total]) => ({ classe, total }))
     .sort((a, b) => b.total - a.total || a.classe.localeCompare(b.classe))
+}
+
+export type ModoCor = 'nenhum' | 'categoria' | 'disciplina'
+
+const PALETA_CATEGORICA = [
+  '#e6550d',
+  '#3182bd',
+  '#31a354',
+  '#756bb1',
+  '#d6a31b',
+  '#e7298a',
+  '#17a2b8',
+  '#8c6d31',
+  '#636363',
+  '#b5cf33',
+  '#d94a4a',
+  '#2f9e8f',
+]
+
+/** Cor categórica (hex) estável para uma chave (classe ou sigla): a mesma chave dá sempre a mesma cor. */
+export function corCategorica(chave: string): string {
+  let h = 2166136261
+  for (const ch of chave.toUpperCase()) {
+    h ^= ch.codePointAt(0) ?? 0
+    h = Math.imul(h, 16777619) >>> 0
+  }
+  return PALETA_CATEGORICA[h % PALETA_CATEGORICA.length]
+}
+
+const escaparRegex = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/** Expressão do valor para a busca por atributo; `undefined` quando o operador não compara valor. */
+export function expressaoDoFiltro(f: Pick<FiltroAtributo, 'operador' | 'valor'>): RegExp | undefined {
+  if (f.operador === 'existe') return undefined
+  const v = escaparRegex(f.valor ?? '')
+  return f.operador === 'contem' ? new RegExp(v, 'i') : new RegExp(`^${v}$`, 'i')
 }
 
 /** Quantos filhos de um nó a lista mostra de cada vez. */

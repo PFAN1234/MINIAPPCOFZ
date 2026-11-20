@@ -7,7 +7,7 @@ import type { ObraCentral } from '../../../domain/tipos.ts'
 import { useObrasCentral } from './CentralModelos.tsx'
 import Itens from './paineis/Itens.tsx'
 import { useMotorCentral, type EstadoCentral } from './useMotorCentral.ts'
-import type { RefElemento } from '../../../domain/central.ts'
+import type { ModoCor, RefElemento } from '../../../domain/central.ts'
 import { gravarTema, lerTema, type Tema } from './tema.ts'
 import './central.css'
 
@@ -54,6 +54,12 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   const [aberto, setAberto] = useState(true)
   const [largura, setLargura] = useState(320)
   const [ortografica, setOrtografica] = useState(false)
+  const [cor, setCor] = useState<ModoCor>('nenhum')
+  const [grade, setGrade] = useState(true)
+  const [hover, setHover] = useState(true)
+  const [isolado, setIsolado] = useState(false)
+  const [fantasma, setFantasma] = useState(false)
+  const [categoriasOcultas, setCategoriasOcultas] = useState<ReadonlySet<string>>(new Set())
   const arrasto = useRef<{ x: number; largura: number } | null>(null)
   const tela = useRef<HTMLDivElement>(null)
   const estado = useMotorCentral(obra.slug, tema, tela)
@@ -71,20 +77,76 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
     setOrtografica(nova)
     motor?.projecao(nova ? 'ortografica' : 'perspectiva')
   }
-  // F enquadra (a seleção, se houver); Esc limpa a seleção.
+  function ocultar() {
+    if (!motor || selecao.length === 0) return
+    motor.ocultar(selecao)
+    selecionar([])
+  }
+  function isolar() {
+    if (!motor) return
+    if (isolado) {
+      motor.mostrarTudo()
+      setIsolado(false)
+    } else if (selecao.length > 0) {
+      motor.isolar(selecao)
+      setIsolado(true)
+    }
+  }
+  function alternarFantasma() {
+    const novo = !fantasma
+    setFantasma(novo)
+    motor?.fantasma(novo)
+  }
+  function mostrarTudo() {
+    motor?.mostrarTudo()
+    setIsolado(false)
+    setCategoriasOcultas(new Set())
+  }
+  function trocarCor(modo: ModoCor) {
+    setCor(modo)
+    motor?.colorirPor(modo)
+  }
+  function alternarGrade() {
+    const nova = !grade
+    setGrade(nova)
+    motor?.grade(nova)
+  }
+  function alternarHover() {
+    const novo = !hover
+    setHover(novo)
+    motor?.hover(novo)
+  }
+  async function alternarCategoria(classe: string) {
+    if (!motor) return
+    const refs = await motor.buscar({ classe, operador: 'existe' })
+    const oculta = categoriasOcultas.has(classe)
+    if (oculta) motor.mostrar(refs)
+    else motor.ocultar(refs)
+    setCategoriasOcultas((atual) => {
+      const novo = new Set(atual)
+      if (oculta) novo.delete(classe)
+      else novo.add(classe)
+      return novo
+    })
+  }
+  // F enquadra (a seleção, se houver); H oculta; I isola; Esc limpa a seleção.
+  const atalhos = useRef({ ocultar, isolar, enquadrar })
+  useEffect(() => {
+    atalhos.current = { ocultar, isolar, enquadrar }
+  })
   useEffect(() => {
     if (!pronto) return
     function tecla(e: globalThis.KeyboardEvent) {
       if (ehCampoDeTexto(e.target) || e.ctrlKey || e.metaKey || e.altKey) return
-      if (e.key === 'f' || e.key === 'F') {
-        motor?.enquadrar(selecao.length > 0 ? selecao : undefined)
-      } else if (e.key === 'Escape') {
-        selecionar([])
-      }
+      const k = e.key.toLowerCase()
+      if (k === 'f') atalhos.current.enquadrar()
+      else if (k === 'h') atalhos.current.ocultar()
+      else if (k === 'i') atalhos.current.isolar()
+      else if (e.key === 'Escape') selecionar([])
     }
     window.addEventListener('keydown', tecla)
     return () => window.removeEventListener('keydown', tecla)
-  }, [pronto, motor, selecao, selecionar])
+  }, [pronto, selecionar])
 
   function escolher(id: string) {
     const novo = new URLSearchParams(params)
@@ -148,6 +210,17 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
         >
           ⚙ {tema === 'escuro' ? 'Escuro' : 'Claro'}
         </button>
+        <button
+          type="button"
+          className="central-botao"
+          aria-label="Realce ao passar"
+          title="Realçar o item sob o cursor"
+          aria-pressed={hover}
+          disabled={!pronto}
+          onClick={alternarHover}
+        >
+          Realce
+        </button>
       </nav>
 
       {aberto && (
@@ -163,6 +236,8 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
                 falhas={estado.falhas}
                 selecionados={selecao}
                 onSelecionar={selecionar}
+                categoriasOcultas={categoriasOcultas}
+                onAlternarCategoria={(classe) => void alternarCategoria(classe)}
                 onAlternarModelo={(sigla, ligado) => void estado.alternarModelo(sigla, ligado)}
               />
             ) : (
@@ -201,7 +276,16 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
         >
           {aberto ? '«' : '»'}
         </button>
-        <BarraSuperior ativo={pronto} ortografica={ortografica} onEnquadrar={enquadrar} onProjecao={alternarProjecao} />
+        <BarraSuperior
+          ativo={pronto}
+          ortografica={ortografica}
+          cor={cor}
+          grade={grade}
+          onEnquadrar={enquadrar}
+          onProjecao={alternarProjecao}
+          onCor={trocarCor}
+          onGrade={alternarGrade}
+        />
         <div className="central-canvas" data-testid="canvas-central">
           <div ref={tela} className="central-tela" />
           <Estados estado={estado} />
@@ -213,7 +297,17 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
               Inspecionar
             </button>
           </div>
-          <BarraVisibilidade />
+          <BarraVisibilidade
+            selecionados={selecao.length}
+            ativo={pronto}
+            isolado={isolado}
+            fantasma={fantasma}
+            onOcultar={ocultar}
+            onIsolar={isolar}
+            onFantasma={alternarFantasma}
+            onMostrarTudo={mostrarTudo}
+            onLimpar={() => selecionar([])}
+          />
         </div>
       </div>
     </div>

@@ -286,3 +286,52 @@
   word-break: break-all;
   font-family: monospace;
 }
+
+.central-menu {
+  position: relative;
+}
+.central-menu-lista {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 120px;
+  margin-top: 4px;
+  padding: 4px;
+  background: var(--c-painel);
+  border: 1px solid var(--c-borda);
+  border-radius: 8px;
+}
+.central-menu-lista [aria-checked='true'] {
+  border-color: var(--c-acento);
+}
+.central-barra-visibilidade {
+  align-items: center;
+}
+.central-busca {
+  margin-bottom: 8px;
+}
+.central-busca input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.central-resultados {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+}
+.central-categorias li {
+  align-items: center;
+  gap: 6px;
+}
+.central-categoria-nome {
+  flex: 1;
+}
+.central-olho {
+  padding: 0 6px;
+}

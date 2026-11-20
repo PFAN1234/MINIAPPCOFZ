@@ -257,6 +257,135 @@ describe('CentralObra', () => {
       expect(screen.getByText('Nenhuma seleção.')).toBeInTheDocument()
     })
 
+    describe('visibilidade, cor, grade e busca', () => {
+      const parede = { sigla: 'ARQ', globalId: 'G10', classe: 'IFCWALL', nome: 'Parede 1' }
+
+      async function pronto() {
+        const usuario = userEvent.setup()
+        renderizar('/modelos/hto')
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Enquadrar' })).toBeEnabled())
+        return usuario
+      }
+
+      it('sem seleção, Ocultar, Isolar, Fantasma e Limpar ficam desabilitados', async () => {
+        await pronto()
+        expect(screen.getByText('Selecionado (0)')).toBeInTheDocument()
+        for (const nome of ['Ocultar', 'Isolar', 'Fantasma', 'Limpar seleção']) {
+          expect(screen.getByRole('button', { name: nome })).toBeDisabled()
+        }
+        expect(screen.getByRole('button', { name: 'Mostrar tudo' })).toBeEnabled()
+      })
+
+      it('a barra chama ocultar, isolar (alterna), fantasma, mostrar tudo e limpar', async () => {
+        const usuario = await pronto()
+        act(() => motor.emitir('selecao', [parede]))
+        expect(screen.getByText('Selecionado (1)')).toBeInTheDocument()
+
+        const isolar = screen.getByRole('button', { name: 'Isolar' })
+        await usuario.click(isolar)
+        expect(motor.chamadasDe('isolar')).toEqual([[[parede]]])
+        expect(isolar).toHaveAttribute('aria-pressed', 'true')
+        await usuario.click(isolar)
+        expect(motor.chamadasDe('mostrarTudo')).toHaveLength(1)
+        expect(isolar).toHaveAttribute('aria-pressed', 'false')
+
+        const fantasma = screen.getByRole('button', { name: 'Fantasma' })
+        await usuario.click(fantasma)
+        expect(motor.chamadasDe('fantasma').at(-1)).toEqual([true])
+        expect(fantasma).toHaveAttribute('aria-pressed', 'true')
+
+        await usuario.click(screen.getByRole('button', { name: 'Mostrar tudo' }))
+        expect(motor.chamadasDe('mostrarTudo')).toHaveLength(2)
+
+        await usuario.click(screen.getByRole('button', { name: 'Ocultar' }))
+        expect(motor.chamadasDe('ocultar')).toEqual([[[parede]]])
+        expect(motor.chamadasDe('selecionar').at(-1)).toEqual([[]])
+
+        act(() => motor.emitir('selecao', [parede]))
+        await usuario.click(screen.getByRole('button', { name: 'Limpar seleção' }))
+        expect(motor.chamadasDe('selecionar').at(-1)).toEqual([[]])
+      })
+
+      it('atalhos H e I agem sobre a seleção e são ignorados em campos de texto', async () => {
+        const usuario = await pronto()
+        act(() => motor.emitir('selecao', [parede]))
+        await usuario.keyboard('i')
+        expect(motor.chamadasDe('isolar')).toHaveLength(1)
+        await usuario.keyboard('h')
+        expect(motor.chamadasDe('ocultar')).toEqual([[[parede]]])
+
+        act(() => motor.emitir('selecao', [parede]))
+        await usuario.click(screen.getByRole('searchbox', { name: 'Buscar itens' }))
+        await usuario.keyboard('hi')
+        expect(motor.chamadasDe('ocultar')).toHaveLength(1)
+        expect(motor.chamadasDe('isolar')).toHaveLength(1)
+      })
+
+      it('menu Cor: Categoria e Disciplina chamam colorirPor', async () => {
+        const usuario = await pronto()
+        const cor = screen.getByRole('button', { name: 'Cor' })
+        await usuario.click(cor)
+        await usuario.click(screen.getByRole('menuitemradio', { name: 'Categoria' }))
+        expect(motor.chamadasDe('colorirPor').at(-1)).toEqual(['categoria'])
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+        await usuario.click(cor)
+        expect(screen.getByRole('menuitemradio', { name: 'Categoria' })).toHaveAttribute('aria-checked', 'true')
+        await usuario.click(screen.getByRole('menuitemradio', { name: 'Disciplina' }))
+        expect(motor.chamadasDe('colorirPor').at(-1)).toEqual(['disciplina'])
+        await usuario.click(cor)
+        await usuario.click(screen.getByRole('menuitemradio', { name: 'Nenhuma' }))
+        expect(motor.chamadasDe('colorirPor').at(-1)).toEqual(['nenhum'])
+      })
+
+      it('Grade e Realce alternam no motor', async () => {
+        const usuario = await pronto()
+        const grade = screen.getByRole('button', { name: 'Grade' })
+        expect(grade).toHaveAttribute('aria-pressed', 'true')
+        await usuario.click(grade)
+        expect(motor.chamadasDe('grade').at(-1)).toEqual([false])
+        expect(grade).toHaveAttribute('aria-pressed', 'false')
+        await usuario.click(screen.getByRole('button', { name: 'Realce ao passar' }))
+        expect(motor.chamadasDe('hover').at(-1)).toEqual([false])
+      })
+
+      it('busca com debounce de 300 ms: o resultado seleciona e enquadra', async () => {
+        const usuario = await pronto()
+        motor.buscaDados = [parede]
+        await usuario.type(screen.getByRole('searchbox', { name: 'Buscar itens' }), 'Parede')
+        expect(motor.chamadasDe('buscar')).toHaveLength(0)
+        const resultados = await screen.findByRole('list', { name: 'Resultados da busca' })
+        expect(motor.chamadasDe('buscar')).toEqual([[{ operador: 'contem', valor: 'Parede' }]])
+        await usuario.click(within(resultados).getByRole('button', { name: /Parede 1/ }))
+        expect(motor.chamadasDe('selecionar').at(-1)).toEqual([[parede]])
+        expect(motor.chamadasDe('enquadrar').at(-1)).toEqual([[parede]])
+      })
+
+      it('busca sem resultado avisa', async () => {
+        const usuario = await pronto()
+        await usuario.type(screen.getByRole('searchbox', { name: 'Buscar itens' }), 'xyz')
+        expect(await screen.findByText('Nenhum item encontrado.')).toBeInTheDocument()
+      })
+
+      it('categorias: clicar seleciona a classe toda e o olho oculta e mostra', async () => {
+        const usuario = await pronto()
+        motor.categoriasDados = [{ classe: 'IFCWALL', total: 9 }]
+        motor.buscaDados = [parede]
+        await usuario.click(screen.getByRole('tab', { name: 'Categorias' }))
+        await screen.findByRole('list', { name: 'Categorias IFC' })
+
+        await usuario.click(screen.getByRole('button', { name: 'Selecionar IFCWALL' }))
+        await waitFor(() => expect(motor.chamadasDe('selecionar').at(-1)).toEqual([[parede]]))
+        expect(motor.chamadasDe('buscar').at(-1)).toEqual([{ classe: 'IFCWALL', operador: 'existe' }])
+
+        await usuario.click(screen.getByRole('button', { name: 'Ocultar IFCWALL' }))
+        await waitFor(() => expect(motor.chamadasDe('ocultar')).toEqual([[[parede]]]))
+        const olho = await screen.findByRole('button', { name: 'Mostrar IFCWALL' })
+        await usuario.click(olho)
+        await waitFor(() => expect(motor.chamadasDe('mostrar')).toEqual([[[parede]]]))
+        expect(await screen.findByRole('button', { name: 'Ocultar IFCWALL' })).toBeInTheDocument()
+      })
+    })
+
     it('trocar o tema repassa ao motor sem remontar', async () => {
       const usuario = userEvent.setup()
       renderizar('/modelos/hto')

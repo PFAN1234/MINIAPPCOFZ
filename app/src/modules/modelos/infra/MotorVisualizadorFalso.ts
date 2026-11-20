@@ -2,6 +2,7 @@ import type { EventoMotor, MotorVisualizador, TemaCentral } from '../application
 import {
   ErroCarregamento,
   type CategoriaTotal,
+  type FiltroAtributo,
   type NoArvore,
   type RefElemento,
   type Vista,
@@ -17,6 +18,8 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   chamadas: ChamadaMotor[] = []
   arvoreDados: NoArvore[] = []
   categoriasDados: CategoriaTotal[] = []
+  /** Resultado de `buscar`. */
+  buscaDados: RefElemento[] = []
   /** Siglas que `carregar` recusa (rejeita com `ErroCarregamento` no fim). */
   siglasComFalha = new Set<string>()
   carregadas: string[] = []
@@ -66,15 +69,24 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
     this.registrar('propriedades')
     return []
   }
-  async buscar() {
-    this.registrar('buscar')
-    return []
+  async buscar(filtro: FiltroAtributo) {
+    this.registrar('buscar', filtro)
+    return this.buscaDados
+  }
+  grade(ligado: boolean) {
+    this.registrar('grade', ligado)
+  }
+  hover(ligado: boolean) {
+    this.registrar('hover', ligado)
   }
   selecionar(refs: RefElemento[]) {
     this.registrar('selecionar', refs)
   }
   ocultar(refs: RefElemento[]) {
     this.registrar('ocultar', refs)
+  }
+  mostrar(refs: RefElemento[]) {
+    this.registrar('mostrar', refs)
   }
   isolar(refs: RefElemento[]) {
     this.registrar('isolar', refs)

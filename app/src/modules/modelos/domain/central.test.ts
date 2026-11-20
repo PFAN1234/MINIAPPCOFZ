@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { agregarCategorias, filhosVisiveis, montarArvore, nivelDaClasse, progressoAgregado, type NoEstrutura } from './central.ts'
+import {
+  agregarCategorias,
+  corCategorica,
+  ehClasseDeElemento,
+  expressaoDoFiltro,
+  filhosVisiveis, montarArvore, nivelDaClasse,
+  progressoAgregado,
+  type NoEstrutura,
+} from './central.ts'
 
 const ESTRUTURA: NoEstrutura = {
   category: 'IFCPROJECT',
@@ -123,5 +131,60 @@ describe('progressoAgregado', () => {
     expect(progressoAgregado([{ peso: 1, fracao: 1 }, { peso: 1, fracao: 0 }])).toBe(0.5)
     expect(progressoAgregado([{ peso: 1, fracao: 3 }])).toBe(1)
     expect(progressoAgregado([])).toBe(0)
+  })
+})
+
+describe('ehClasseDeElemento / filtro de categorias', () => {
+  it('aceita elementos e rejeita tipos, propriedades, materiais e unidades', () => {
+    for (const c of ['IFCWALL', 'IFCBUILDINGELEMENTPROXY', 'IFCDOOR', 'IFCFLOWSEGMENT']) expect(ehClasseDeElemento(c)).toBe(true)
+    for (const c of [
+      'IFCPROPERTYSET',
+      'IFCPROPERTYSINGLEVALUE',
+      'IFCMATERIAL',
+      'IFCWALLTYPE',
+      'IFCRELDEFINESBYPROPERTIES',
+      'IFCSIUNIT',
+      'IFCBUILDINGSTOREY',
+      'IFCPROJECT',
+    ]) {
+      expect(ehClasseDeElemento(c)).toBe(false)
+    }
+  })
+
+  it('agregarCategorias descarta classes abstratas e totais zerados', () => {
+    const r = agregarCategorias([
+      [
+        { classe: 'IFCWALL', total: 3 },
+        { classe: 'IFCPROPERTYSET', total: 90 },
+        { classe: 'IFCDOORTYPE', total: 4 },
+        { classe: 'IFCSLAB', total: 0 },
+      ],
+    ])
+    expect(r).toEqual([{ classe: 'IFCWALL', total: 3 }])
+  })
+})
+
+describe('corCategorica', () => {
+  it('é determinística, hexadecimal e ignora caixa', () => {
+    expect(corCategorica('IFCWALL')).toBe(corCategorica('IFCWALL'))
+    expect(corCategorica('arq')).toBe(corCategorica('ARQ'))
+    expect(corCategorica('IFCWALL')).toMatch(/^#[0-9a-f]{6}$/)
+  })
+  it('varia entre chaves diferentes', () => {
+    const cores = new Set(['ARQ', 'EST', 'HID', 'ELE', 'IFCWALL', 'IFCSLAB', 'IFCDOOR', 'IFCWINDOW'].map(corCategorica))
+    expect(cores.size).toBeGreaterThan(3)
+  })
+})
+
+describe('expressaoDoFiltro', () => {
+  it('contém sem diferenciar caixa e escapa caracteres especiais', () => {
+    const r = expressaoDoFiltro({ operador: 'contem', valor: 'p(1)' })!
+    expect(r.test('Porta P(1) x')).toBe(true)
+    expect(r.test('Porta P1')).toBe(false)
+  })
+  it('igual é exato e existe não compara valor', () => {
+    expect(expressaoDoFiltro({ operador: 'igual', valor: 'Laje' })!.test('laje')).toBe(true)
+    expect(expressaoDoFiltro({ operador: 'igual', valor: 'Laje' })!.test('Laje 2')).toBe(false)
+    expect(expressaoDoFiltro({ operador: 'existe' })).toBeUndefined()
   })
 })

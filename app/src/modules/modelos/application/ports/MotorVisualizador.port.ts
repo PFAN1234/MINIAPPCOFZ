@@ -1,5 +1,6 @@
 import type {
   CategoriaTotal,
+  ModoCor,
   Corte,
   FiltroAtributo,
   GrupoPropriedades,
@@ -23,6 +24,10 @@ export interface MotorVisualizador {
   montar(el: HTMLElement, tema: TemaCentral): Promise<void>
   /** Troca o tema (fundo e grade) sem remontar o motor. */
   tema(tema: TemaCentral): void
+  /** Mostra ou esconde a grade do piso. */
+  grade(ligado: boolean): void
+  /** Liga ou desliga o realce do item sob o cursor. */
+  hover(ligado: boolean): void
   /** Carrega as disciplinas. Rejeita com `ErroCarregamento` (siglas falhas) só no fim; as demais ficam carregadas. */
   carregar(modelos: { sigla: string; dados: Uint8Array }[], progresso: (fracao: number) => void): Promise<void>
   descarregar(sigla: string): void
@@ -32,10 +37,13 @@ export interface MotorVisualizador {
   buscar(filtro: FiltroAtributo): Promise<RefElemento[]>
   selecionar(refs: RefElemento[]): void
   ocultar(refs: RefElemento[]): void
+  /** Volta a mostrar os elementos (contrário de `ocultar`). */
+  mostrar(refs: RefElemento[]): void
   isolar(refs: RefElemento[]): void
   mostrarTudo(): void
+  /** Deixa translúcidos (~0,1) os itens fora da seleção atual; acompanha a seleção enquanto ligado. */
   fantasma(ligado: boolean): void
-  colorirPor(modo: 'nenhum' | 'categoria' | 'disciplina'): void
+  colorirPor(modo: ModoCor): void
   enquadrar(refs?: RefElemento[]): void
   projecao(p: Projecao): void
   vistaPlanta(pavimento: string): void
