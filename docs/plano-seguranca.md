@@ -82,16 +82,20 @@ Cada fase foi desenhada para caber em sessões curtas e independentes, com entre
 #### Tarefa 1.1 — Cabeçalhos de Segurança HTTP e CSP na Vercel
 - **Arquivo:** `app/vercel.json`
 - **Ação:** Adicionar seção `"headers"` mantendo `"functions"` e `"rewrites"` intactos:
-  - `/(.*)`: `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: geolocation=(), microphone=(), payment=(), camera=(self)`.
-  - `/admin` e `/admin/(.*)`: `X-Frame-Options: DENY` e `Content-Security-Policy` com `frame-ancestors 'none'`, `default-src 'self'`, `script-src 'self' https://telegram.org`, `connect-src 'self' https://*.supabase.co`, `img-src 'self' data: blob: https://*.supabase.co`, `style-src 'self' 'unsafe-inline'`, `object-src 'none'`, `base-uri 'self'`.
-  - `/((?!admin|api).*)`: `Content-Security-Policy` equivalente com `frame-ancestors https://web.telegram.org https://*.telegram.org` e `worker-src 'self' blob:` (motor 3D/WASM e SW).
+  - `/(.*)`: `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: geolocation=(self), microphone=(), payment=(), camera=(self)` *(geolocalização mantida em `self` para o check-in da Equipe de Serviço em campo; câmera em `self` para QR/RA)*.
+  - `/admin` e `/admin/(.*)`:
+    - `X-Frame-Options: DENY`
+    - `Permissions-Policy: geolocation=(), microphone=(), payment=(), camera=()`
+    - `Content-Security-Policy`: `default-src 'self'; frame-ancestors 'none'; frame-src https://oauth.telegram.org; script-src 'self' 'wasm-unsafe-eval' https://telegram.org; worker-src 'self' blob:; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob: https://*.supabase.co https://tile.openstreetmap.org https://server.arcgisonline.com; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'` *(permite Telegram Login Widget, tiles Leaflet em `MapaEscolha.tsx` e conversão WASM/Worker de plantas PDF e IFC)*.
+  - `/((?!admin|api).*)`:
+    - `Content-Security-Policy`: `default-src 'self'; frame-ancestors https://web.telegram.org https://*.telegram.org; script-src 'self' 'wasm-unsafe-eval' https://telegram.org; worker-src 'self' blob:; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob: https://*.supabase.co; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'` *(permite embutimento no Telegram e motor 3D/RA/WASM + Service Worker)*.
   - `/api/(.*)`: `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`.
-- **Nota de validação:** Testar localmente e em Preview Deploy da Vercel o carregamento do Mini App (incluindo 3D/RA e Service Worker) e do `/admin/` (incluindo Telegram Login Widget) sem violações no console.
+- **Estratégia de rollout:** Publicar primeiro com `Content-Security-Policy-Report-Only` em Preview Deploy da Vercel, validar todos os fluxos (Mini App + 3D/RA + check-in + SW; Admin + mapa Leaflet + conversão de planta/IFC + Login Widget) sem violações no console, e então promover para `Content-Security-Policy` em modo enforcement.
 
 #### Tarefa 1.2 — Isolamento Anti-SSRF e Anti-XSS na Geração de PDF
 - **Arquivos:** `app/servidor/boletim/pdf.ts`, `app/servidor/boletim/pdf.test.ts`, `app/servidor/boletim/template.test.ts`, `app/servidor/relatorio/template.test.ts`
 - **Ação:**
-  1. Em `gerarPdf()` (`app/servidor/boletim/pdf.ts`), criar o contexto com `javaScriptEnabled: false` e interceptar todas as requisições:
+  1. Em `gerarPdf()` (`app/servidor/boletim/pdf.ts`), criar o contexto com `javaScriptEnabled: false` e interceptar todas as requisições *(sem impacto em `capturarClima()`, que utiliza seu próprio `BrowserContext` isolado)*:
      ```ts
      const contexto = await navegador.newContext({ locale: 'pt-BR', javaScriptEnabled: false })
      await contexto.route('**/*', (route) => {
@@ -100,7 +104,8 @@ Cada fase foi desenhada para caber em sessões curtas e independentes, com entre
        return route.abort('blockedbyclient')
      })
      ```
-  2. Adicionar testes automatizados comprovando que:
+  2. Validar explicitamente em teste com Chromium (`BOLETIM_EXIGIR_CHROMIUM=1`) que `pagina.evaluate(() => document.fonts.ready)` continua carregando as fontes embutidas sob `javaScriptEnabled: false` (se necessário, substituir por espera determinística de fontes sem regressão visual).
+  3. Adicionar testes automatizados comprovando que:
      - Uma tentativa de carregar `<img src="http://127.0.0.1:...">` ou `<link rel="stylesheet" href="http://169.254.169.254/...">` durante `gerarPdf()` é bloqueada e nenhuma requisição externa sai.
      - Payloads XSS/HTML injection em nomes de obra, etapa, descrição de pendência e observação são escapados tanto no boletim quanto no relatório de pendências.
 
@@ -195,10 +200,11 @@ Cada fase foi desenhada para caber em sessões curtas e independentes, com entre
 - **Arquivos:** nova migration `supabase/migrations/<ts>_rate_limit.sql`, `supabase/functions/_shared/rate_limit.ts`, `supabase/functions/auth-telegram/handler.ts`, `supabase/functions/admin-sessao/handler.ts`, `app/servidor/boletim/http.ts`, `app/servidor/relatorio/http.ts`
 - **Ação:**
   1. Criar tabela `privado.rate_limit` + RPC atômica `privado.consumir_cota(p_chave text, p_limite int, p_janela_segundos int) returns boolean` (com limpeza periódica via `pg_cron`), evitando dependência externa adicional.
-  2. Aplicar limites iniciais:
+  2. Aplicar limites iniciais calibrados para não atrapalhar edição legítima:
      - `auth-telegram`: 20 req / 5 min por IP (ou `x-forwarded-for` normalizado).
      - `admin-sessao` (`trocar`, `widget`): 10 req / 15 min por IP.
-     - `previa-boletim` e `relatorio-pendencias`: 5 req / 5 min por `usuario_id`.
+     - `previa-boletim` (admin editando boletim): **15 req / 5 min** por `usuario_id`.
+     - `relatorio-pendencias` (equipe): **5 req / 5 min** por `usuario_id`.
   3. Retornar `429 Too Many Requests` com `Retry-After` e corpo JSON genérico.
 
 #### Tarefa 3.3 — Eliminação de Claim JWT Não Verificado e Limites de Payload
@@ -232,8 +238,8 @@ Cada fase foi desenhada para caber em sessões curtas e independentes, com entre
 #### Tarefa 4.2 — Hardening de Sessões e Configuração do Supabase
 - **Arquivos:** `supabase/config.toml` + conferência no painel Supabase Cloud
 - **Ação:**
-  1. Avaliar e ativar `[auth.sessions]` (`timebox = "24h"`, `inactivity_timeout = "8h"`) conforme operação de campo.
-  2. Reduzir `IDADE_MAXIMA_MS` em `supabase/functions/_shared/init_data.ts` (ex.: de 24h para 2h, validando o impacto no uso offline/reabertura do Mini App).
+  1. Avaliar e ativar `[auth.sessions]` com foco restritivo no portal `/admin/`, preservando a resiliência offline do Mini App em canteiros com sinal intermitente.
+  2. Calibrar `IDADE_MAXIMA_MS` em `supabase/functions/_shared/init_data.ts` para **6h–12h** (em vez de 24h, sem quebrar fiscais que mantêm o WebView aberto durante o turno em campo).
   3. Ativar `db.ssl_enforcement` em produção e revisar `auto_expose_new_tables = false` em `supabase/config.toml`.
 
 #### Tarefa 4.3 — Inventário de Dados (LGPD) e Política de Rotação de Segredos
@@ -253,7 +259,20 @@ Cada fase foi desenhada para caber em sessões curtas e independentes, com entre
 
 ---
 
-## 5. Resumo do Fluxo de Trabalho Diário (IA-DevSecOps)
+## 5. Avaliação de Impactos e Mitigações
+
+| Dimensão | Impacto Esperado | Mitigação Incorporada no Plano |
+|---|---|---|
+| **Funcionalidades do Admin (Mapa, Login Widget, Conversores)** | Médio risco se CSP fosse genérico (quebraria tiles Leaflet, iframe `oauth.telegram.org` e WASM/Workers). | Diretivas explícitas na Tarefa 1.1 + rollout inicial via `Content-Security-Policy-Report-Only`. |
+| **Mini App em Canteiro (GPS, 3D/RA, Offline)** | Risco de bloquear GPS do check-in ou expirar `initData` durante o turno sem sinal. | `geolocation=(self)` em `/`, `'wasm-unsafe-eval'` + `worker-src 'self' blob:`, e `IDADE_MAXIMA_MS` calibrado em 6h–12h. |
+| **Geração de Boletim e Clima (Chromium)** | Sem impacto na captura do clima (`capturarClima()` usa contexto separado); validar carregamento de fontes com JS desligado. | Teste real com `BOLETIM_EXIGIR_CHROMIUM=1` na Tarefa 1.2. |
+| **UX / Troca de Usuário e Edição de Boletim** | Purga do cache SW exige novo download apenas ao trocar de conta no mesmo aparelho; prévias frequentes poderiam bater em rate limit baixo. | Purga restrita à troca de `telegram_id`/logout; `previa-boletim` calibrado em 15 req / 5 min. |
+| **Performance e Custos** | Headers/CSP = 0 ms / R$ 0; `privado.rate_limit` = +5–15 ms apenas em login/PDF; `auditoria_seguranca` = +1 `INSERT` (< 5 ms) em ações admin. | Nenhuma infraestrutura paga externa (Redis/WAF) obrigatória nesta etapa. |
+| **CI/CD e Consumo de Tokens (IA)** | Job `seguranca` roda em paralelo ao `e2e` (não aumenta tempo total do CI); `test_seguranca_invariantes.py` pode exigir allowlist/ajuste inicial em tabelas legadas. | `auditor-seguranca` acionado apenas quando o diff toca superfícies críticas. |
+
+---
+
+## 6. Resumo do Fluxo de Trabalho Diário (IA-DevSecOps)
 
 ```mermaid
 flowchart TD
@@ -267,7 +286,7 @@ flowchart TD
 
 ---
 
-## 6. Checklist de Acompanhamento
+## 7. Checklist de Acompanhamento
 
 ### Fase 1 — Blindagem Imediata
 - [ ] **1.1** Cabeçalhos HTTP e CSP em `app/vercel.json`
