@@ -258,6 +258,10 @@ function arquivosDaObra(): Arquivos {
     ],
     originais: [`${OBRA_ID}/R01/terreo/${"a".repeat(64)}.pdf`],
     modelos: [],
+    documentos: [
+      `${OBRA_ID}/${"1".repeat(8)}-serie/${"c".repeat(64)}.pdf`,
+      `${OUTRA_OBRA}/${"2".repeat(8)}-serie/${"d".repeat(64)}.pdf`,
+    ],
   };
 }
 
@@ -272,7 +276,13 @@ Deno.test("excluir: apaga no banco como o admin, remove tudo em lotes e registra
     exclusao_id: EXCLUSAO,
     obra_id: OBRA_ID,
     resumo: RESUMO,
-    arquivos_removidos: { fotos: 250, plantas: 5, originais: 1, modelos: 0 },
+    arquivos_removidos: {
+      fotos: 250,
+      plantas: 5,
+      originais: 1,
+      modelos: 0,
+      documentos: 1,
+    },
     pendente: false,
   });
 
@@ -287,7 +297,13 @@ Deno.test("excluir: apaga no banco como o admin, remove tudo em lotes e registra
     nome: "admin_registrar_limpeza",
     args: {
       p_id: EXCLUSAO,
-      p_removidos: { fotos: 250, plantas: 5, originais: 1, modelos: 0 },
+      p_removidos: {
+        fotos: 250,
+        plantas: 5,
+        originais: 1,
+        modelos: 0,
+        documentos: 1,
+      },
       p_erro: null,
     },
   });
@@ -386,6 +402,7 @@ Deno.test("excluir: falha no Storage depois do banco dá 200 pendente e registra
     plantas: 0,
     originais: 1,
     modelos: 0,
+    documentos: 1,
   });
   const registro = m.rpcs.at(-1)!;
   assertEquals(registro.nome, "admin_registrar_limpeza");
@@ -428,7 +445,13 @@ Deno.test("limpar: confere o admin, pega o obra_id pela service role e remove o 
     ok: true,
     exclusao_id: EXCLUSAO,
     obra_id: OBRA_ID,
-    arquivos_removidos: { fotos: 1, plantas: 5, originais: 1, modelos: 0 },
+    arquivos_removidos: {
+      fotos: 1,
+      plantas: 5,
+      originais: 1,
+      modelos: 0,
+      documentos: 1,
+    },
     pendente: false,
   });
   assertEquals(m.rpcs.map((x) => [x.jwt, x.nome]), [
@@ -476,13 +499,25 @@ Deno.test("excluir_etapa: apaga no banco como o admin e limpa os arquivos de cad
     exclusoes: [
       {
         exclusao_id: EXCLUSAO,
-        removidos: { fotos: 250, plantas: 5, originais: 1, modelos: 0 },
+        removidos: {
+          fotos: 250,
+          plantas: 5,
+          originais: 1,
+          modelos: 0,
+          documentos: 1,
+        },
         pendente: false,
         erro: null,
       },
       {
         exclusao_id: EXCLUSAO_2,
-        removidos: { fotos: 1, plantas: 1, originais: 0, modelos: 0 },
+        removidos: {
+          fotos: 1,
+          plantas: 1,
+          originais: 0,
+          modelos: 0,
+          documentos: 1,
+        },
         pendente: false,
         erro: null,
       },
