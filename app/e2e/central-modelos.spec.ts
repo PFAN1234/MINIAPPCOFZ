@@ -36,10 +36,8 @@ test.describe('com o ARQ.frag gerado localmente', () => {
 
     await page.goto('/admin/modelos')
     await expect(page.getByRole('heading', { name: 'Modelos', level: 1 })).toBeVisible()
-    // A fixture ainda não tem disciplinas "publicadas": a HTO aparece em "Sem arquivos".
-    await page.getByText(/Sem arquivos/).click()
-    await expect(page.getByText('HTO', { exact: true })).toBeVisible()
-    await page.getByRole('link', { name: 'Enviar primeiro modelo' }).first().click()
+    // A fixture semeia documentos na HTO: ela aparece na lista principal (fora de "Sem arquivos").
+    await page.getByRole('link', { name: /HTO/ }).first().click()
     await page.getByRole('tab', { name: 'Itens' }).click()
 
     await expect(page.getByText(/Carregando modelos/)).toBeHidden({ timeout: 120_000 })
@@ -154,6 +152,23 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     const categorias = page.getByRole('list', { name: 'Categorias IFC' })
     await expect(categorias).toBeVisible()
     await expect(categorias).not.toContainText(/IFCPROPERTY|IFCMATERIAL|TYPE/)
+
+    // Documentos: vincular a seleção à prancha, vê-la no contexto e abrir a prévia do PDF.
+    await page.mouse.click(caixa.x + caixa.width * 0.5, caixa.y + caixa.height * 0.5)
+    await page.getByRole('tab', { name: 'Documentos' }).click()
+    const prancha = page.locator('[data-testid^="documento-"]').filter({ hasText: 'Planta baixa' })
+    await prancha.getByRole('button', { name: /Vínculos/ }).click()
+    const vincular = prancha.getByRole('button', { name: /Vincular seleção/ })
+    if (await vincular.isEnabled()) {
+      await vincular.click()
+      await expect(page.getByRole('region', { name: 'Contexto' })).toContainText('Documentos deste elemento')
+    }
+    await prancha.getByRole('button', { name: 'Ver', exact: true }).click()
+    const previa = page.getByRole('dialog', { name: /Planta baixa/ })
+    await expect(previa.locator('canvas')).toBeVisible({ timeout: 60_000 })
+    await expect(page).toHaveURL(/doc=/)
+    await page.keyboard.press('Escape')
+    await expect(previa).toBeHidden()
 
     const raiz = page.locator('.central')
     await expect(raiz).toHaveAttribute('data-tema', 'escuro')

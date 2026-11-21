@@ -11,6 +11,7 @@ import { useDocumentos, useHistoricoDocumento, useRetirarDocumento } from '../..
 import type { ObraCentral } from '../../../modelos/domain/tipos.ts'
 import type { RefElemento } from '../../../modelos/domain/central.ts'
 import {
+  IconeBaixar,
   IconeHistorico,
   IconeRemoverVinculo,
   IconeRetirar,
@@ -266,7 +267,7 @@ function Item({
       <span className="central-sec">
         {[doc.codigo, doc.revisao, rotuloTipo(doc.tipo), tamanho(doc.bytes)].filter(Boolean).join(' · ')}
       </span>
-      <span className="central-gestao-acoes">
+      <span className="central-gestao-acoes central-docs-acoes">
         {temPrevia(doc) && (
           <button type="button" className="central-botao" aria-label="Ver" onClick={() => aoAbrir(doc)}>
             Ver
@@ -274,11 +275,12 @@ function Item({
         )}
         <button
           type="button"
-          className="central-botao"
+          className="central-botao central-botao-icone"
           aria-label="Baixar"
+          data-dica={`Baixar ${doc.arquivoNome}`}
           onClick={() => void baixar(doc.caminho, doc.arquivoNome)}
         >
-          Baixar
+          <IconeBaixar />
         </button>
         <button type="button" className="central-botao" aria-label="Nova revisão" onClick={() => aoNovaRevisao(doc)}>
           Nova revisão
@@ -387,7 +389,7 @@ function Vinculos({
             <li key={`${v.sigla}|${v.globalId}`}>
               <button
                 type="button"
-                className="central-botao"
+                className="central-botao central-docs-vinculo"
                 aria-label={`Mostrar ${v.nome ?? v.classe ?? v.globalId}`}
                 onClick={() =>
                   onMostrar([{ sigla: v.sigla, globalId: v.globalId, classe: v.classe ?? undefined, nome: v.nome ?? undefined }])

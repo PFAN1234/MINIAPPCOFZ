@@ -776,3 +776,14 @@
 .central-docs-fim {
   margin-left: auto;
 }
+.central-docs-acoes {
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+.central-docs-vinculo {
+  flex: 1;
+  justify-content: flex-start;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

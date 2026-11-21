@@ -466,6 +466,12 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
   - [x] 4C visual: 34 ícones SVG (barra, submenu Medir, trilho, visibilidade, modo), paleta Canteiro nos dois temas (azul-escuro + amarelo; seleção 3D amarela), polimento pelas diretrizes do impeccable (estados, foco, campos, flutuantes, scrollbar, tabular-nums), menus fecham com Esc/clique fora (Medir fica aberto com modo ativo), gaveta < 1024 px acima dos flutuantes. e2e verde (5,4 min). Em aberto: menus Cor/Medir podem ser cortados com a barra rolando < 1024 px; cabeçalho do admin quebra em 820 px (fora da central)
 - [x] 5 Gestão de modelos: painel Gestão (enviar IFC/.frag, converter, publicar, retirar, histórico) no lugar de `ModelosObra.tsx` (removido); após publicar/retirar a cena recarrega só a disciplina (obra vazia remonta o motor). Nomes das ferramentas só como dica no hover/foco (`Dica.tsx`), trilho de 56 px. e2e `admin-modelo` reescrito e verde junto com `central-modelos` (5,2 min). Em aberto: na fixture o visualizador lê o manifesto estático, então a publicação não muda a cena no e2e (coberto no teste de componente)
   - Decisão (2026-11-20): não integrar o open-pdf-studio agora (app Tauri/SolidJS sem pacote npm, LGPL com MuPDF AGPL a esclarecer, projeto novo de um mantenedor, quantitativos manuais). Etapa 6 segue com `pdfjs-dist`; medição calibrada e contagem sobre prancha viram etapa própria depois; reavaliar a ferramenta quando amadurecer
-- [ ] 6 Documentos
+- [x] 6 Documentos (2026-11-21)
+  - Migration `20261127090000_documentos.sql` (tabelas `documento` e `documento_vinculo`, bucket privado `documentos` de 100 MB, RPCs listar/histórico/registrar/retirar/vincular, `admin_central_obras` contando documentos). **Não aplicada**: vai junto com `admin_central_obras` na etapa 8
+  - Módulo `modules/documentos` (domínio com validações, porta com contract test, adaptadores Supabase e fixture com semente PDF + DWG na HTO, caso de uso `enviarDocumento`)
+  - Painel Documentos: lista por disciplina, busca, filtro por tipo, envio novo/nova revisão (copia vínculos), download, retirar, histórico; prévia de PDF (pdf.js) sobre o 3D com página e zoom, em `?doc=`
+  - Vínculos a pavimento e elementos da seleção; "Documentos deste elemento/pavimento" no contexto; vínculos órfãos na Gestão (`MotorVisualizador.existem`)
+  - e2e `central-modelos` cobre vincular, contexto e prévia; suíte completa verde (1061)
+  - Em aberto: se copiar os vínculos falhar depois de registrar a revisão, o reenvio dá "revisão já existe" (tratar com mensagem própria)
 - [ ] 7 Issues e BCF
 - [ ] 8 Fechamento (e2e, docs, produção, PR)

@@ -283,3 +283,10 @@ export const IconeRemoverVinculo = ({ tamanho }: Props) => (
     <path d="M6 6l12 12M18 6L6 18" />
   </Icone>
 )
+export const IconeBaixar = ({ tamanho }: Props) => (
+  <Icone tamanho={tamanho}>
+    <path d="M12 4v11" />
+    <path d="m7 10 5 5 5-5" />
+    <path d="M5 20h14" />
+  </Icone>
+)
