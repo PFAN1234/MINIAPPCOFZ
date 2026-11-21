@@ -475,3 +475,5 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
   - Em aberto: se copiar os vínculos falhar depois de registrar a revisão, o reenvio dá "revisão já existe" (tratar com mensagem própria)
 - [ ] 7 Issues e BCF
 - [ ] 8 Fechamento (e2e, docs, produção, PR)
+  - PR #61 mergeado (2026-11-21) com a correção do CI: o cenário do teste de exclusão grava `documento`, `documento_vinculo` e o arquivo no bucket `documentos`; `admin-excluir-obra` passa a limpar o bucket `documentos`
+  - [ ] Publicar `admin-excluir-obra` **depois** de aplicar `20261127090000_documentos.sql`: sem o bucket `documentos` em produção, a limpeza falha nele e toda exclusão fica pendente. Produção está na versão 5 = código anterior ao PR (a versão 4, publicada antes da migration, foi revertida)
