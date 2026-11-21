@@ -1,7 +1,8 @@
 /**
  * pdf.js no navegador do admin: o worker, as fontes padrão e os WASM são servidos pelo
  * próprio site (arquivos do pacote `pdfjs-dist` emitidos pelo Vite), nunca de CDN. Este
- * módulo só é importado pelo editor de planta (chunk do site de administração).
+ * módulo só é importado sob demanda, pelo editor de planta e pela prévia de documentos
+ * (chunks do site de administração).
  */
 import * as pdfjs from 'pdfjs-dist'
 import urlWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'

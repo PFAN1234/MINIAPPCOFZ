@@ -13,9 +13,8 @@ test('converte um IFC no navegador, envia um .frag pronto, retira e mostra o his
   const erros: string[] = []
   page.on('pageerror', (e) => erros.push(e.message))
 
-  await page.goto('/admin/obras/hto')
-  await page.getByRole('link', { name: 'Modelos 3D' }).click()
-  await expect(page.getByRole('heading', { name: 'Modelos 3D · HTO' })).toBeVisible()
+  await page.goto('/admin/modelos/hto?painel=gestao')
+  await expect(page.getByRole('heading', { name: 'Enviar modelo' })).toBeVisible()
   await expect(page.getByText(/Nenhum modelo publicado/)).toBeVisible()
 
   // IFC: sigla e revisão pelo nome; a conversão roda no worker e gera o .frag.
@@ -43,8 +42,8 @@ test('converte um IFC no navegador, envia um .frag pronto, retira e mostra o his
   await page.getByRole('button', { name: 'Confirmar: retirar EST' }).click()
   await expect(page.getByTestId('modelo-EST')).toHaveCount(0)
   const historico = page.getByRole('region', { name: 'Histórico' })
-  await expect(historico.getByRole('row')).toHaveCount(4)
-  await expect(historico.getByRole('row').nth(1)).toContainText('Retirado EST')
-  await expect(historico.getByRole('row').nth(3)).toContainText('convertido no site')
+  await expect(historico.getByRole('listitem')).toHaveCount(3)
+  await expect(historico.getByRole('listitem').nth(0)).toContainText('Retirado EST')
+  await expect(historico.getByRole('listitem').nth(2)).toContainText('convertido no site')
   expect(erros).toEqual([])
 })

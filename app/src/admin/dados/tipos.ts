@@ -123,7 +123,7 @@ export function novoCaminhoLogo(tipo: string): string {
   return `logo-${hex}.${TIPOS_LOGO[tipo] ?? 'png'}`
 }
 
-export type Bucket = 'originais' | 'plantas' | 'modelos'
+export type Bucket = 'originais' | 'plantas' | 'modelos' | 'documentos'
 
 /** Ambiente com geometria (`admin_listar_ra`). */
 export interface AmbienteRA {

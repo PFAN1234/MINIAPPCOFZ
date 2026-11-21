@@ -2,9 +2,9 @@
 
 Exclusão de obra pelo site de administração (`/admin/`): apaga a obra no banco
 (RPC `admin_excluir_obra`, como o admin) e depois os arquivos dela no Storage
-(buckets `fotos`, `plantas`, `originais` e `modelos`, todos em `<obra_id>/...`).
-Regras, RPCs e o que acontece com o Telegram em `docs/admin.md` ("Arquivar e
-excluir obra").
+(buckets `fotos`, `plantas`, `originais`, `modelos` e `documentos`, todos em
+`<obra_id>/...`). Regras, RPCs e o que acontece com o Telegram em
+`docs/admin.md` ("Arquivar e excluir obra").
 
 ## Ações
 
@@ -32,7 +32,8 @@ Resposta `200`:
     "fotos": 0,
     "plantas": 0,
     "originais": 0,
-    "modelos": 0
+    "modelos": 0,
+    "documentos": 0
   },
   "pendente": false
 }

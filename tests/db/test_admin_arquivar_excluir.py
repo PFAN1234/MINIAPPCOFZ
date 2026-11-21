@@ -18,7 +18,7 @@ from conftest import sessao  # noqa: E402
 
 CONCLUIR = 'select * from public.concluir_registro(%s, %s, %s, %s, %s, %s::jsonb)'
 ENCERRAR = 'select * from public.encerrar_pendencia(%s, %s, %s, %s::jsonb)'
-BUCKETS = ('fotos', 'plantas', 'originais', 'modelos')
+BUCKETS = ('fotos', 'plantas', 'originais', 'modelos', 'documentos')
 
 
 @pytest.fixture(autouse=True)
@@ -121,11 +121,19 @@ def popular(c, obra, amb, gestor, equipe):
     su(c, "insert into public.obra_config (obra_id, config) values (%s, '{\"status\": \"revisado\"}')", (obra,))
     su(c, "insert into public.observacao (id, obra_id, autor_id, data, texto, escrito_em) "
           "values (%s, %s, %s, current_date, 'Observação', now())", (uuid.uuid4(), obra, equipe))
+    did, serie = uuid.uuid4(), uuid.uuid4()
+    doc_path = f'{obra}/{serie}/{"c" * 64}.pdf'
+    su(c, 'insert into public.documento (id, obra_id, serie, titulo, tipo, revisao, caminho, arquivo_nome, mime, '
+          "bytes, sha256) values (%s, %s, %s, 'Memorial', 'memorial', 'R01', %s, 'memorial.pdf', "
+          "'application/pdf', 10, %s)", (did, obra, serie, doc_path, 'c' * 64))
+    su(c, 'insert into public.documento_vinculo (documento_id, tipo, sigla, global_id) '
+          "values (%s, 'pavimento', 'ARQ', 'g1')", (did,))
     for p in (f'{obra}/R01/terreo/planta.webp', f'{obra}/R01/terreo/planta-hd.webp',
               f'{obra}/R01/terreo/ambientes/amb0.webp'):
         objeto(c, 'plantas', p)
     objeto(c, 'originais', f'{obra}/R01/terreo/{"a" * 64}.pdf')
     objeto(c, 'modelos', f'{obra}/ARQ/{"b" * 16}.frag')
+    objeto(c, 'documentos', doc_path)
     return rid, pend
 
 

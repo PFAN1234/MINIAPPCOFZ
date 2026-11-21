@@ -9,6 +9,7 @@ import { criarEtapasAdminSupabase } from '@modules/obras/infra/EtapasAdminSupaba
 import { criarObrasAdminSupabase } from '@modules/obras/infra/ObrasAdminSupabaseAdapter.ts'
 import { criarOrganizacaoAdminSupabase } from '@modules/obras/infra/OrganizacaoAdminSupabaseAdapter.ts'
 import { MENSAGEM_REDE } from '@modules/obras/infra/validacao.ts'
+import { criarDocumentosSupabase } from '@modules/documentos/infra/DocumentosSupabaseAdapter.ts'
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
 import { criarTelemetriaSupabase } from '@modules/operacao/infra/TelemetriaSupabaseAdapter.ts'
 import { criarPlantasSupabase } from '@modules/plantas/infra/PlantasSupabaseAdapter.ts'
@@ -99,6 +100,7 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
   const ra = criarRaSupabase(cliente, rpc)
   const modelos = criarModelosSupabase(cliente, rpc)
   const plantas = criarPlantasSupabase(cliente, rpc)
+  const documentos = criarDocumentosSupabase(cliente, rpc)
   const sessao = criarSessaoAdminSupabase(cliente, erroDaRpc)
   const acessos = criarAcessosAdminSupabase(rpc)
   const etapas = criarEtapasAdminSupabase(rpc, funcaoExcluir)
@@ -167,9 +169,18 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     enviarArquivo: plantas.enviarArquivo,
     baixarOriginal: plantas.baixarOriginal,
     publicarRevisao: plantas.publicarRevisao,
+    listarModelos: modelos.listarModelos,
+    baixarModelo: modelos.baixarModelo,
     listarModelosAdmin: modelos.listarModelosAdmin,
+    listarObrasCentral: modelos.listarObrasCentral,
     registrarModelo: modelos.registrarModelo,
     retirarModelo: modelos.retirarModelo,
+    listarDocumentos: documentos.listarDocumentos,
+    historicoDocumento: documentos.historicoDocumento,
+    registrarDocumento: documentos.registrarDocumento,
+    retirarDocumento: documentos.retirarDocumento,
+    vincularDocumento: documentos.vincularDocumento,
+    baixarDocumento: documentos.baixarDocumento,
     listarErrosCliente: telemetria.listarErrosCliente,
     resumoOrfaos: telemetria.resumoOrfaos,
   }

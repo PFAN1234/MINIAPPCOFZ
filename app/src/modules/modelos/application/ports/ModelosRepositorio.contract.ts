@@ -76,6 +76,20 @@ export function contratoModelosRepositorio(nome: string, criar: () => AmbienteMo
       await expect(a.repo.retirarModelo('hto', 'ARQ')).rejects.toThrow(/Não há modelo publicado/)
     })
 
+    it('listarObrasCentral traz todas as obras; a que publicou modelo conta a disciplina', async () => {
+      const a = criar()
+      const antes = await a.repo.listarObrasCentral()
+      const hto = antes.find((o) => o.slug === 'hto')!
+      expect(hto).toMatchObject({ disciplinas: 0, documentos: 0, issues_abertas: 0, atualizado_em: null })
+      expect(antes.length).toBeGreaterThan(1)
+      a.depositar(`${a.obraId}/ARQ/${HASH}.frag`, 10)
+      await a.repo.registrarModelo('hto', registro(a))
+      const depois = (await a.repo.listarObrasCentral()).find((o) => o.slug === 'hto')!
+      expect(depois.disciplinas).toBe(1)
+      expect(depois.atualizado_em).not.toBeNull()
+      expect((await a.repo.listarObrasCentral()).filter((o) => o.disciplinas === 0).length).toBe(antes.length - 1)
+    })
+
     it('o estado de uma instância não vaza para outra', async () => {
       const a = criar()
       a.depositar(`${a.obraId}/ARQ/${HASH}.frag`, 10)

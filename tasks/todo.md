@@ -450,3 +450,28 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Todos os 31 shims de re-export da Fase 2 removidos (`components/*`, `util/*`, `telegram*.ts`, `registrarSw.ts`); pasta `util/` removida.
 - [x] Regras de fronteira `no-restricted-imports` promovidas de `warn` para `error` em `app/eslint.config.js`.
 - Estado final da Fase 6: typecheck, eslint (0 erros/avisos com fronteiras em `error`), build e build:fixture verdes; 933 testes em 113 arquivos; suíte E2E completa 48/48; `precache-manifest.json` inalterado (19 arquivos, nenhum chunk do Admin).
+
+## Central de modelos (admin › Modelos)
+
+Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelos.md`. Branch `feature/admin-central-modelos`, PR único ao fim.
+
+- [x] Decisões fechadas com o usuário (2026-11-20).
+- [x] 0 Spike: R1 resolvido (`.frag` traz psets, espacial e GlobalId); minimapa próprio; chunk medido na etapa 2
+- [x] 1 Página, tema e casca (migration `admin_central_obras` ainda não aplicada)
+- [x] 2 Motor 3D e navegação (e2e `central-modelos.spec.ts` verde; `admin-modelo.spec.ts` volta na etapa 5)
+- [x] 3 Inspeção (propriedades por grupos, modo Inspecionar, filtro por atributo direto na sub-aba Filtro; psets no filtro ficam para depois; os .frag da HTO não trazem quantidades)
+- [x] 4 Cortes, vistas e medições
+  - [x] 4A vistas (planta por pavimento, elevações N/S/L/O, 3D), cortes horizontais com lista e Del, caminhar, minimapa; e2e verde (4.5 min). Em aberto: orientação das elevações não conferida (supõe norte do projeto), corte sem preenchimento de seção, desenho do minimapa não conferido
+  - [x] 4B medições (distância, área, volume, ângulo; components-front), painel Medições com lista, apagar e Del/Esc; e2e verde (6,4 min, timeout 480 s). Em aberto: duplo clique para concluir área pode duplicar o último ponto
+  - [x] 4C visual: 34 ícones SVG (barra, submenu Medir, trilho, visibilidade, modo), paleta Canteiro nos dois temas (azul-escuro + amarelo; seleção 3D amarela), polimento pelas diretrizes do impeccable (estados, foco, campos, flutuantes, scrollbar, tabular-nums), menus fecham com Esc/clique fora (Medir fica aberto com modo ativo), gaveta < 1024 px acima dos flutuantes. e2e verde (5,4 min). Em aberto: menus Cor/Medir podem ser cortados com a barra rolando < 1024 px; cabeçalho do admin quebra em 820 px (fora da central)
+- [x] 5 Gestão de modelos: painel Gestão (enviar IFC/.frag, converter, publicar, retirar, histórico) no lugar de `ModelosObra.tsx` (removido); após publicar/retirar a cena recarrega só a disciplina (obra vazia remonta o motor). Nomes das ferramentas só como dica no hover/foco (`Dica.tsx`), trilho de 56 px. e2e `admin-modelo` reescrito e verde junto com `central-modelos` (5,2 min). Em aberto: na fixture o visualizador lê o manifesto estático, então a publicação não muda a cena no e2e (coberto no teste de componente)
+  - Decisão (2026-11-20): não integrar o open-pdf-studio agora (app Tauri/SolidJS sem pacote npm, LGPL com MuPDF AGPL a esclarecer, projeto novo de um mantenedor, quantitativos manuais). Etapa 6 segue com `pdfjs-dist`; medição calibrada e contagem sobre prancha viram etapa própria depois; reavaliar a ferramenta quando amadurecer
+- [x] 6 Documentos (2026-11-21)
+  - Migration `20261127090000_documentos.sql` (tabelas `documento` e `documento_vinculo`, bucket privado `documentos` de 100 MB, RPCs listar/histórico/registrar/retirar/vincular, `admin_central_obras` contando documentos). **Não aplicada**: vai junto com `admin_central_obras` na etapa 8
+  - Módulo `modules/documentos` (domínio com validações, porta com contract test, adaptadores Supabase e fixture com semente PDF + DWG na HTO, caso de uso `enviarDocumento`)
+  - Painel Documentos: lista por disciplina, busca, filtro por tipo, envio novo/nova revisão (copia vínculos), download, retirar, histórico; prévia de PDF (pdf.js) sobre o 3D com página e zoom, em `?doc=`
+  - Vínculos a pavimento e elementos da seleção; "Documentos deste elemento/pavimento" no contexto; vínculos órfãos na Gestão (`MotorVisualizador.existem`)
+  - e2e `central-modelos` cobre vincular, contexto e prévia; suíte completa verde (1061)
+  - Em aberto: se copiar os vínculos falhar depois de registrar a revisão, o reenvio dá "revisão já existe" (tratar com mensagem própria)
+- [ ] 7 Issues e BCF
+- [ ] 8 Fechamento (e2e, docs, produção, PR)

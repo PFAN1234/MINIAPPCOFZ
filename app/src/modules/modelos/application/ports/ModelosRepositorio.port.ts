@@ -1,5 +1,5 @@
 import type { ModeloFrag } from '../../domain/modelos.ts'
-import type { DadosModelos, ModeloAdmin, RegistroModelo } from '../../domain/tipos.ts'
+import type { DadosModelos, ModeloAdmin, ObraCentral, RegistroModelo } from '../../domain/tipos.ts'
 
 /** Porta de dados dos modelos 3D (visualizador do campo e publicação no admin). */
 export interface ModelosRepositorio {
@@ -11,6 +11,8 @@ export interface ModelosRepositorio {
   listarModelosAdmin(slug: string): Promise<DadosModelos>
   /** RPC `admin_registrar_modelo`, depois de enviar o `.frag` ao bucket `modelos`. */
   registrarModelo(slug: string, registro: RegistroModelo): Promise<ModeloAdmin>
+  /** RPC `admin_central_obras`: todas as obras, com os totais da Central de modelos. */
+  listarObrasCentral(): Promise<ObraCentral[]>
   /** RPC `admin_retirar_modelo`: tira a disciplina do visualizador (o arquivo fica guardado). */
   retirarModelo(slug: string, sigla: string): Promise<void>
 }

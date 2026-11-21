@@ -3,7 +3,7 @@ import { erroDoSupabase } from '../../../dados/erros.ts'
 import { erroDeColunaAusente } from '../../../shared/infra/errosSupabase.ts'
 import type { ModelosRepositorio } from '../application/ports/ModelosRepositorio.port.ts'
 import type { ModeloFrag } from '../domain/modelos.ts'
-import type { DadosModelos, ModeloAdmin, RegistroModelo } from '../domain/tipos.ts'
+import type { DadosModelos, ModeloAdmin, ObraCentral, RegistroModelo } from '../domain/tipos.ts'
 
 type Linha = Record<string, unknown>
 type Rpc = <T>(nome: string, args?: Record<string, unknown>) => Promise<T>
@@ -67,6 +67,16 @@ export function criarModelosSupabase(cliente: SupabaseClient, rpcAdmin?: Rpc): M
         modelos: (d?.modelos ?? []).map((m) => ({ ...m, bytes: Number(m.bytes) })),
         historico: (d?.historico ?? []).map((h) => ({ ...h, bytes: numero(h.bytes), ifc_bytes: numero(h.ifc_bytes) })),
       }
+    },
+
+    async listarObrasCentral() {
+      const linhas = await rpc<ObraCentral[] | null>('admin_central_obras')
+      return (linhas ?? []).map((o) => ({
+        ...o,
+        disciplinas: Number(o.disciplinas),
+        documentos: Number(o.documentos),
+        issues_abertas: Number(o.issues_abertas),
+      }))
     },
 
     async registrarModelo(slug, registro: RegistroModelo) {

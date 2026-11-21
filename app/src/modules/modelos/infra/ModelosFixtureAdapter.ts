@@ -1,7 +1,7 @@
 import { ErroAdmin } from '../../../admin/dados/tipos.ts'
 import type { ModelosRepositorio } from '../application/ports/ModelosRepositorio.port.ts'
 import { SIGLA_VALIDA } from '../domain/modelos.ts'
-import type { EventoModelo, ModeloAdmin } from '../domain/tipos.ts'
+import type { EventoModelo, ModeloAdmin, ObraCentral } from '../domain/tipos.ts'
 import { baixarModeloLocal, listarModelosLocais } from './modelosLocais.ts'
 
 function copia<T>(v: T): T {
@@ -14,6 +14,10 @@ export interface DepsModelosFixture {
   exigirAdmin?: () => void
   /** Obra do slug; lança se não existir. */
   obraPorSlug?: (slug: string) => { id: string }
+  /** Obras da Central de modelos; o padrão traz a HTO e uma obra sem arquivos. */
+  obras?: () => { id: string; slug: string; nome: string }[]
+  /** Séries de documentos vigentes da obra (a Central conta); o padrão é 0. */
+  documentos?: (obraId: string) => number
   /** Tamanho do arquivo enviado ao bucket `modelos` (caminho dentro do bucket); `undefined` se não houver. */
   tamanhoArquivo?: (caminho: string) => number | undefined
   /** Numeração dos eventos do histórico (compartilhada com o resto da fixture, se houver). */
@@ -37,6 +41,11 @@ export function criarModelosFixture(deps: DepsModelosFixture = {}): ModelosFixtu
   const {
     exigirAdmin = () => {},
     obraPorSlug = (slug) => ({ id: `obra-${slug}` }),
+    obras = () => [
+      { id: 'obra-hto', slug: 'hto', nome: 'HTO' },
+      { id: 'obra-vazia', slug: 'vazia', nome: 'Obra sem arquivos' },
+    ],
+    documentos = () => 0,
     tamanhoArquivo = () => undefined,
     proximoId = () => ++contador,
     nomeUsuario = 'Você',
@@ -54,6 +63,23 @@ export function criarModelosFixture(deps: DepsModelosFixture = {}): ModelosFixtu
       return copia({
         modelos: [...(modelosPorObra.get(o.id) ?? [])].sort((a, b) => a.sigla.localeCompare(b.sigla)),
         historico: historico.filter((h) => h.obra_id === o.id).map((h) => ({ ...h, obra_id: undefined })),
+      })
+    },
+
+    async listarObrasCentral() {
+      exigirAdmin()
+      return obras().map((o): ObraCentral => {
+        const lista = modelosPorObra.get(o.id) ?? []
+        const datas = historico.filter((h) => h.obra_id === o.id).map((h) => h.publicado_em)
+        return {
+          obra_id: o.id,
+          slug: o.slug,
+          nome: o.nome,
+          disciplinas: lista.length,
+          documentos: documentos(o.id),
+          issues_abertas: 0,
+          atualizado_em: datas.length ? datas.sort().at(-1)! : null,
+        }
       })
     },
 

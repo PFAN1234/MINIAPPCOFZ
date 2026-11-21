@@ -8,6 +8,8 @@ import { RepositorioAdminProvider } from '../../admin/dados/contexto.tsx'
 import { criarRepositorioAdminFixture } from '../../admin/dados/fixture.ts'
 import type { RepositorioAdmin } from '../../admin/dados/repositorio.ts'
 import { criarEntrada, tokenDoHash } from '../../admin/entrada.ts'
+import { MotorVisualizadorFalso } from '@modules/modelos/infra/MotorVisualizadorFalso.ts'
+import { FabricaMotorProvider } from '@modules/modelos/presentation/admin/central/motorContexto.tsx'
 import { URL_WIDGET } from '@modules/acessos/presentation/admin/Entrar.tsx'
 
 afterEach(() => {
@@ -24,9 +26,11 @@ function renderizar(
   render(
     <QueryClientProvider client={qc}>
       <RepositorioAdminProvider repositorio={repositorio}>
-        <MemoryRouter initialEntries={[rota]}>
-          <AdminApp entrada={criarEntrada(token)} />
-        </MemoryRouter>
+        <FabricaMotorProvider fabrica={async () => new MotorVisualizadorFalso()}>
+          <MemoryRouter initialEntries={[rota]}>
+            <AdminApp entrada={criarEntrada(token)} />
+          </MemoryRouter>
+        </FabricaMotorProvider>
       </RepositorioAdminProvider>
     </QueryClientProvider>,
   )
@@ -284,5 +288,20 @@ describe('erros do cliente', () => {
     expect(within(resumo).getByRole('cell', { name: 'modelos' })).toBeInTheDocument()
     expect(within(resumo).getByRole('cell', { name: '50,0 MB' })).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Maiores arquivos órfãos' })).toBeInTheDocument()
+  })
+})
+
+describe('rotas de modelos', () => {
+  it('a rota antiga /obras/:slug/modelos redireciona para a central, no painel Gestão', async () => {
+    renderizar('/obras/hto/modelos')
+    expect(await screen.findByRole('tab', { name: 'Gestão', selected: true })).toBeInTheDocument()
+  })
+
+  it('o menu leva à lista de obras da central', async () => {
+    const usuario = userEvent.setup()
+    renderizar()
+    await usuario.click(await screen.findByRole('link', { name: 'Modelos' }))
+    expect(await screen.findByRole('heading', { name: 'Modelos' })).toBeInTheDocument()
+    expect(await screen.findByText(/Sem arquivos/)).toBeInTheDocument()
   })
 })

@@ -16,7 +16,13 @@
 import { cabecalhosCors, json } from "../_shared/http.ts";
 import type { ClienteTelegram } from "../_shared/telegram.ts";
 
-export const BUCKETS = ["fotos", "plantas", "originais", "modelos"] as const;
+export const BUCKETS = [
+  "fotos",
+  "plantas",
+  "originais",
+  "modelos",
+  "documentos",
+] as const;
 export type Bucket = typeof BUCKETS[number];
 export type Contagem = Record<Bucket, number>;
 
@@ -82,7 +88,7 @@ function bearer(req: Request): string | null {
 }
 
 function zerada(): Contagem {
-  return { fotos: 0, plantas: 0, originais: 0, modelos: 0 };
+  return { fotos: 0, plantas: 0, originais: 0, modelos: 0, documentos: 0 };
 }
 
 /** Todos os caminhos de arquivos sob `prefixo`, descendo nas pastas (listagem paginada). */

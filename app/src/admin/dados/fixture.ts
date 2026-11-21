@@ -9,6 +9,8 @@ import { criarSessaoAdminFixture } from '@modules/acessos/infra/SessaoAdminFixtu
 import { criarEtapasAdminFixture, type EtapaMemoria } from '@modules/obras/infra/EtapasAdminFixtureAdapter.ts'
 import { criarObrasAdminFixture, type ObraMemoria } from '@modules/obras/infra/ObrasAdminFixtureAdapter.ts'
 import { criarOrganizacaoAdminFixture } from '@modules/obras/infra/OrganizacaoAdminFixtureAdapter.ts'
+import { criarDocumentosFixture } from '@modules/documentos/infra/DocumentosFixtureAdapter.ts'
+import { sementeHto } from '@modules/documentos/infra/documentosSemente.ts'
 import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
 import { CAMPOS_VAZIOS } from '@modules/obras/infra/camposEtapa.ts'
 import { criarTelemetriaFixture } from '@modules/operacao/infra/TelemetriaFixtureAdapter.ts'
@@ -228,9 +230,20 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     proximoId: () => ++sequencia,
     nomeUsuario: VOCE.nome,
   })
-  const modelos = criarModelosFixture({
+  const documentos = criarDocumentosFixture({
     exigirAdmin,
     obraPorSlug,
+    tamanhoArquivo: (caminho) => plantas.tamanhoArquivo(`documentos/${caminho}`),
+    conteudoArquivo: (caminho) => plantas.conteudoArquivo(`documentos/${caminho}`),
+    proximoId: () => ++sequencia,
+    nomeUsuario: VOCE.nome,
+    semente: sementeHto(),
+  })
+  const modelos = criarModelosFixture({
+    exigirAdmin,
+    obras: () => obras,
+    obraPorSlug,
+    documentos: (obraId) => documentos.quantidade(obraId),
     tamanhoArquivo: (caminho) => plantas.tamanhoArquivo(`modelos/${caminho}`),
     proximoId: () => ++sequencia,
     nomeUsuario: VOCE.nome,
@@ -250,6 +263,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     }),
     removerArquivos: (o) => {
       modelos.removerObra(o.id)
+      documentos.removerObra(o.id)
       return plantas.removerObra(o.id)
     },
   })
@@ -341,9 +355,18 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     enviarArquivo: plantas.enviarArquivo,
     baixarOriginal: plantas.baixarOriginal,
     publicarRevisao: plantas.publicarRevisao,
+    listarModelos: modelos.listarModelos,
+    baixarModelo: modelos.baixarModelo,
     listarModelosAdmin: modelos.listarModelosAdmin,
+    listarObrasCentral: modelos.listarObrasCentral,
     registrarModelo: modelos.registrarModelo,
     retirarModelo: modelos.retirarModelo,
+    listarDocumentos: documentos.listarDocumentos,
+    historicoDocumento: documentos.historicoDocumento,
+    registrarDocumento: documentos.registrarDocumento,
+    retirarDocumento: documentos.retirarDocumento,
+    vincularDocumento: documentos.vincularDocumento,
+    baixarDocumento: documentos.baixarDocumento,
     listarErrosCliente: telemetriaAdm.listarErrosCliente,
     resumoOrfaos: telemetriaAdm.resumoOrfaos,
   }

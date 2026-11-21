@@ -114,6 +114,8 @@ export interface PlantasFixture extends PlantasRepositorio {
   contarArquivos(obraId: string): Record<BucketObra, number>
   /** Tamanho de um arquivo do Storage (`<bucket>/<caminho>`); `undefined` se não houver. */
   tamanhoArquivo(chave: string): number | undefined
+  /** Conteúdo de um arquivo do Storage (`<bucket>/<caminho>`); `undefined` se não houver. */
+  conteudoArquivo(chave: string): Blob | undefined
   /** Apaga planta, publicações e arquivos da obra; devolve quantos arquivos saíram por bucket. */
   removerObra(obraId: string): Record<BucketObra, number>
 }
@@ -190,6 +192,10 @@ export function criarPlantasFixture(deps: DepsPlantasFixture): PlantasFixture {
       if (bucket === 'originais' && !/\.pdf$/.test(caminho)) throw new ErroAdmin('O bucket originais só aceita PDF.')
       // Como as políticas `modelos_admin_*`: <obra_id>/<SIGLA>/<hash16>.frag.
       if (bucket === 'modelos' && !/^[^/]+\/[A-Z]{2,4}\/[0-9a-f]{16}\.frag$/.test(caminho)) {
+        throw new ErroAdmin(`Sem permissão para gravar ${caminho} no Storage (${bucket}).`)
+      }
+      // Como as políticas `documentos_admin_*`: <obra_id>/<serie>/<sha256>.<ext>.
+      if (bucket === 'documentos' && !/^[^/]+\/[0-9a-f-]{36}\/[0-9a-f]{64}\.(pdf|png|jpg|webp|dwg|dxf|xlsx|docx)$/.test(caminho)) {
         throw new ErroAdmin(`Sem permissão para gravar ${caminho} no Storage (${bucket}).`)
       }
       // Como o Storage (allowed_mime_types): o bucket plantas só aceita WebP, e aqui conferimos os bytes.
@@ -308,11 +314,12 @@ export function criarPlantasFixture(deps: DepsPlantasFixture): PlantasFixture {
       const contagem: Record<BucketObra, number> = { fotos: 0, plantas: 0, originais: 0, modelos: 0 }
       for (const k of arquivos.keys()) {
         const [bucket, obra] = k.split('/')
-        if (obra === obraId) contagem[bucket as BucketObra]++
+        if (obra === obraId && bucket in contagem) contagem[bucket as BucketObra]++
       }
       return contagem
     },
     tamanhoArquivo: (chave) => arquivos.get(chave)?.size,
+    conteudoArquivo: (chave) => arquivos.get(chave),
     removerObra(obraId) {
       plantaPorObra.delete(obraId)
       const removidos: Record<BucketObra, number> = { fotos: 0, plantas: 0, originais: 0, modelos: 0 }
@@ -320,7 +327,7 @@ export function criarPlantasFixture(deps: DepsPlantasFixture): PlantasFixture {
         const [bucket, obra] = k.split('/')
         if (obra !== obraId) continue
         arquivos.delete(k)
-        removidos[bucket as BucketObra]++
+        if (bucket in removidos) removidos[bucket as BucketObra]++
       }
       for (let i = publicacoes.length - 1; i >= 0; i--) if (publicacoes[i].obra_id === obraId) publicacoes.splice(i, 1)
       return removidos

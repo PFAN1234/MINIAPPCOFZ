@@ -1,20 +1,17 @@
 /**
- * Modelos 3D da obra (`/admin/obras/<slug>/modelos`): os `.frag` publicados por disciplina, o
- * envio de um modelo novo e o histórico. O IFC é convertido neste navegador, num Web Worker
- * (`modules/modelos/infra/conversor.ts`); um `.frag` já convertido (script `npm run modelos`) vai direto.
- * Nada é gravado até "Publicar".
+ * Painel Gestão da central: os `.frag` publicados por disciplina, o envio de um modelo novo e o
+ * histórico, em colunas únicas para o painel estreito. O IFC é convertido neste navegador, num Web
+ * Worker (`modules/modelos/infra/conversor.ts`); um `.frag` já convertido vai direto. Nada é gravado
+ * até "Publicar". Depois de publicar ou retirar, `aoMudar(sigla)` avisa a central para atualizar a cena.
  */
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router'
-import { ComDados, mensagemDe } from '../../../../admin/componentes.tsx'
-import { useRepositorioAdmin } from '../../../../admin/dados/contexto.tsx'
-import { useModelosAdmin, useRetirarModelo } from '../../../../admin/dados/hooks.ts'
-import { useObraAdmin } from '@modules/obras/presentation/admin/hooks.ts'
-import type { ObraAdmin } from '@modules/obras/domain/tiposAdmin.ts'
-import type { DadosModelos, EventoModelo, ModeloAdmin } from '@modules/modelos/domain/tipos.ts'
-import type { ProgressoConversao } from '@modules/modelos/application/ports/ConversorIfcPort.port.ts'
-import { useConversor } from '@modules/modelos/infra/conversor.ts'
+import { ComDados, mensagemDe } from '../../../../../../admin/componentes.tsx'
+import { useRepositorioAdmin } from '../../../../../../admin/dados/contexto.tsx'
+import { useModelosAdmin, useRetirarModelo } from '../../../../../../admin/dados/hooks.ts'
+import type { ProgressoConversao } from '../../../../application/ports/ConversorIfcPort.port.ts'
+import { publicarModelo } from '../../../../application/use-cases/publicarModelo.ts'
+import type { DadosModelos, EventoModelo, ModeloAdmin, ObraCentral } from '../../../../domain/tipos.ts'
 import {
   AVISO_IFC,
   LIMITE_FRAG,
@@ -25,116 +22,97 @@ import {
   siglaERevisao,
   tipoDoArquivo,
   type TipoArquivo,
-} from '@modules/modelos/domain/modelos.ts'
-import { publicarModelo } from '@modules/modelos/application/use-cases/publicarModelo.ts'
-import { hashModelo } from '@modules/modelos/infra/modelosLocais.ts'
+} from '../../../../domain/modelos.ts'
+import type { MotorVisualizador } from '../../../../application/ports/MotorVisualizador.port.ts'
+import { orfaos, todosVinculos, type Documento, type VinculoOrfao } from '../../../../../documentos/domain/documentos.ts'
+import { useConversor } from '../../../../infra/conversor.ts'
+import { hashModelo } from '../../../../infra/modelosLocais.ts'
 
-export default function ModelosObra() {
-  const { slug = '' } = useParams()
-  const obra = useObraAdmin(slug)
-  return <ComDados consulta={obra}>{(o) => <Pagina obra={o} />}</ComDados>
+interface Props {
+  obra: ObraCentral
+  /** Motor pronto (ou null): confere os GlobalIds dos vínculos dos documentos. */
+  motor: MotorVisualizador | null
+  /** Muda a cada carga/descarga de modelo, para conferir de novo. */
+  versao: number
+  documentos: Documento[]
+  /** Chamado depois que publicar ou retirar der certo, com a sigla afetada. */
+  aoMudar(sigla: string): void
 }
 
-function Pagina({ obra }: { obra: ObraAdmin }) {
-  const slug = obra.obra.slug
-  const consulta = useModelosAdmin(slug)
+export default function Gestao({ obra, aoMudar, motor, versao, documentos }: Props) {
+  const consulta = useModelosAdmin(obra.slug)
   return (
-    <article aria-labelledby="titulo-modelos">
-      <p>
-        <Link to={`/obras/${slug}`}>← {obra.obra.nome}</Link>
-      </p>
-      <h1 id="titulo-modelos">Modelos 3D · {obra.obra.nome}</h1>
-      <p className="adm-dica">
-        Um modelo por disciplina (sigla: ARQ, EST, HID…), mostrado no visualizador do Mini App. Envie o IFC (convertido
-        aqui, neste navegador) ou o .frag já convertido no computador.
-      </p>
+    <div className="central-gestao">
       <ComDados consulta={consulta}>
         {(d: DadosModelos) => (
           <>
-            <Publicados slug={slug} modelos={d.modelos} />
-            <Envio obra={obra} publicados={d.modelos} />
+            <Publicados slug={obra.slug} modelos={d.modelos} aoMudar={aoMudar} />
+            <Envio obra={obra} publicados={d.modelos} aoMudar={aoMudar} />
             <Historico eventos={d.historico} />
+            <Orfaos motor={motor} versao={versao} documentos={documentos} />
           </>
         )}
       </ComDados>
-    </article>
+    </div>
   )
 }
 
 const data = (iso: string) => new Date(iso).toLocaleString('pt-BR')
 
-function Publicados({ slug, modelos }: { slug: string; modelos: ModeloAdmin[] }) {
+function Publicados({ slug, modelos, aoMudar }: { slug: string; modelos: ModeloAdmin[]; aoMudar(sigla: string): void }) {
   const retirar = useRetirarModelo(slug)
   const [confirmando, setConfirmando] = useState<string | null>(null)
   return (
-    <section className="adm-secao" aria-labelledby="titulo-publicados">
-      <h2 id="titulo-publicados">Publicados</h2>
+    <section aria-labelledby="titulo-publicados">
+      <h3 id="titulo-publicados">Publicados</h3>
       {modelos.length === 0 ? (
-        <p className="adm-dica">Nenhum modelo publicado: o visualizador do Mini App fica vazio nesta obra.</p>
+        <p className="central-sec">Nenhum modelo publicado: o visualizador do Mini App fica vazio nesta obra.</p>
       ) : (
-        <table className="adm-tabela">
-          <thead>
-            <tr>
-              <th scope="col">Disciplina</th>
-              <th scope="col">Revisão</th>
-              <th scope="col" className="adm-num">
-                Tamanho
-              </th>
-              <th scope="col">Atualizado em</th>
-              <th scope="col">
-                <span className="adm-oculto">Ações</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {modelos.map((m) => (
-              <tr key={m.sigla} data-testid={`modelo-${m.sigla}`}>
-                <td>
-                  <strong>{m.sigla}</strong>
-                </td>
-                <td>{m.revisao ?? '—'}</td>
-                <td className="adm-num">{mb(m.bytes)}</td>
-                <td>{data(m.atualizado_em)}</td>
-                <td>
-                  {confirmando === m.sigla ? (
-                    <span className="adm-acoes">
-                      <button
-                        type="button"
-                        className="adm-botao adm-botao-perigo"
-                        disabled={retirar.isPending}
-                        onClick={() =>
-                          retirar.mutate(m.sigla, {
-                            onSuccess: () => setConfirmando(null),
-                          })
-                        }
-                      >
-                        Confirmar: retirar {m.sigla}
-                      </button>
-                      <button type="button" className="adm-botao" onClick={() => setConfirmando(null)}>
-                        Cancelar
-                      </button>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="adm-botao adm-botao-discreto"
-                      onClick={() => setConfirmando(m.sigla)}
-                    >
-                      Retirar {m.sigla}
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul className="central-gestao-lista" aria-label="Modelos publicados">
+          {modelos.map((m) => (
+            <li key={m.sigla} data-testid={`modelo-${m.sigla}`}>
+              <span>
+                <strong className="central-gestao-sigla">{m.sigla}</strong> · {m.revisao ?? '—'} · {mb(m.bytes)}
+              </span>
+              <span className="central-sec">{data(m.atualizado_em)}</span>
+              {confirmando === m.sigla ? (
+                <span className="central-gestao-acoes">
+                  <button
+                    type="button"
+                    className="central-botao central-botao-perigo"
+                    disabled={retirar.isPending}
+                    onClick={() =>
+                      retirar.mutate(m.sigla, {
+                        onSuccess: () => {
+                          setConfirmando(null)
+                          aoMudar(m.sigla)
+                        },
+                      })
+                    }
+                  >
+                    Confirmar: retirar {m.sigla}
+                  </button>
+                  <button type="button" className="central-botao" onClick={() => setConfirmando(null)}>
+                    Cancelar
+                  </button>
+                </span>
+              ) : (
+                <span className="central-gestao-acoes">
+                  <button type="button" className="central-botao" onClick={() => setConfirmando(m.sigla)}>
+                    Retirar {m.sigla}
+                  </button>
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
       )}
       {retirar.isError && (
-        <p className="adm-alerta adm-alerta-erro" role="alert">
+        <p className="central-gestao-alerta" role="alert">
           {mensagemDe(retirar.error)}
         </p>
       )}
-      <p className="adm-dica">
+      <p className="central-sec">
         Retirar tira a disciplina do visualizador; o arquivo fica guardado e pode ser publicado de novo.
       </p>
     </section>
@@ -153,7 +131,15 @@ type Fase =
   | { tipo: 'publicando'; texto: string; frag: Uint8Array }
   | { tipo: 'publicado'; modelo: ModeloAdmin }
 
-function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[] }) {
+function Envio({
+  obra,
+  publicados,
+  aoMudar,
+}: {
+  obra: ObraCentral
+  publicados: ModeloAdmin[]
+  aoMudar(sigla: string): void
+}) {
   const repo = useRepositorioAdmin()
   const conversor = useConversor()
   const qc = useQueryClient()
@@ -247,7 +233,7 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
             return repo.registrarModelo(s, r)
           },
         },
-        obra: { id: obra.obra.id, slug: obra.obra.slug },
+        obra: { id: obra.obra_id, slug: obra.slug },
         sigla,
         revisao: revisao || null,
         frag,
@@ -257,9 +243,8 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
       })
       setFase({ tipo: 'publicado', modelo })
       setEscolhido(null)
-      void qc.invalidateQueries({
-        queryKey: ['admin', 'modelos', obra.obra.slug],
-      })
+      void qc.invalidateQueries({ queryKey: ['admin', 'modelos', obra.slug] })
+      aoMudar(modelo.sigla)
     } catch (e) {
       setErro(mensagemDe(e))
       setFase(convertido ? { tipo: 'convertido', frag: convertido } : { tipo: 'parado' })
@@ -281,9 +266,9 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
   const podePublicar = !!escolhido && !problema && !ocupado && (escolhido.tipo === 'frag' || fase.tipo === 'convertido')
 
   return (
-    <section className="adm-secao" aria-labelledby="titulo-envio">
-      <h2 id="titulo-envio">Enviar modelo</h2>
-      <div className="adm-form">
+    <section aria-labelledby="titulo-envio">
+      <h3 id="titulo-envio">Enviar modelo</h3>
+      <div className="central-gestao-form">
         <label>
           Arquivo do modelo (.ifc ou .frag)
           <input
@@ -296,17 +281,17 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
               e.target.value = ''
             }}
           />
-          <span className="adm-dica">
+          <span className="central-sec">
             IFC: convertido aqui (pode levar alguns minutos; a aba precisa ficar aberta). O .frag resultante tem de
             ficar em até {mb(LIMITE_FRAG)}. Nome no padrão {'<obra>-<projeto>-<SIGLA>-<REV>'}, como
             CE01-14PE01-ARQ-R06.ifc, preenche a sigla e a revisão.
           </span>
         </label>
         {fase.tipo === 'publicado' && (
-          <p className="adm-alerta adm-alerta-ok" role="status">
+          <p className="central-gestao-alerta central-gestao-ok" role="status">
             Publicado: {fase.modelo.sigla}
             {fase.modelo.revisao ? `, revisão ${fase.modelo.revisao}` : ''} ({mb(fase.modelo.bytes)}). O Mini App baixa
-            a versão nova na próxima abertura do modelo.
+            a versão nova na próxima abertura do modelo; a cena desta página já foi atualizada.
           </p>
         )}
         {escolhido && (
@@ -316,7 +301,7 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
               {escolhido.tipo === 'ifc' ? 'IFC (será convertido)' : '.frag pronto'}
             </p>
             {escolhido.tipo === 'ifc' && escolhido.arquivo.size > AVISO_IFC && (
-              <p className="adm-alerta adm-alerta-aviso">
+              <p className="central-gestao-alerta">
                 IFC grande ({mb(escolhido.arquivo.size)}): a conversão pode ficar sem memória neste navegador. Se
                 falhar, converta no computador com <code>npm run modelos</code> e envie o .frag.
               </p>
@@ -341,23 +326,23 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
               />
             </label>
             {problema && (
-              <p className="adm-alerta adm-alerta-erro" role="alert">
+              <p className="central-gestao-alerta" role="alert">
                 {problema}
               </p>
             )}
             {existente && !problema && (
-              <p className="adm-alerta adm-alerta-info">
+              <p className="central-gestao-alerta central-gestao-ok">
                 Já há {existente.sigla} publicado ({existente.revisao ? `revisão ${existente.revisao}, ` : ''}
                 {mb(existente.bytes)}): publicar substitui no visualizador.
               </p>
             )}
             {fase.tipo === 'convertendo' && (
-              <div className="adm-progresso">
+              <div className="central-gestao-form">
                 <progress max={1} value={fase.progresso.fracao} aria-label="Progresso da conversão" />
                 <span role="status">
                   {fase.progresso.texto}… {Math.round(fase.progresso.fracao * 100)}%
                 </span>
-                <button type="button" className="adm-botao" onClick={() => cancelar.current?.abort()}>
+                <button type="button" className="central-botao" onClick={() => cancelar.current?.abort()}>
                   Cancelar conversão
                 </button>
               </div>
@@ -365,25 +350,21 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
             {frag && (
               <p role="status">
                 Convertido: .frag com {mb(frag.byteLength)}.{' '}
-                <button
-                  type="button"
-                  className="adm-botao adm-botao-discreto adm-botao-mini"
-                  onClick={() => baixarFrag(frag)}
-                >
+                <button type="button" className="central-botao" onClick={() => baixarFrag(frag)}>
                   Baixar o .frag
                 </button>
               </p>
             )}
             {fase.tipo === 'publicando' && (
-              <p className="adm-estado" role="status">
+              <p className="central-sec" role="status">
                 {fase.texto}
               </p>
             )}
-            <div className="adm-acoes">
+            <div className="central-gestao-acoes">
               {escolhido.tipo === 'ifc' && fase.tipo !== 'convertido' && fase.tipo !== 'publicando' && (
                 <button
                   type="button"
-                  className="adm-botao adm-botao-principal"
+                  className="central-botao central-botao-principal"
                   disabled={!!problema || ocupado}
                   onClick={() => void converter()}
                 >
@@ -393,7 +374,7 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
               {(escolhido.tipo === 'frag' || fase.tipo === 'convertido' || fase.tipo === 'publicando') && (
                 <button
                   type="button"
-                  className="adm-botao adm-botao-principal"
+                  className="central-botao central-botao-principal"
                   disabled={!podePublicar}
                   onClick={() => void publicar()}
                 >
@@ -404,7 +385,7 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
           </>
         )}
         {erro && (
-          <p className="adm-alerta adm-alerta-erro" role="alert">
+          <p className="central-gestao-alerta" role="alert">
             {erro}
           </p>
         )}
@@ -415,42 +396,111 @@ function Envio({ obra, publicados }: { obra: ObraAdmin; publicados: ModeloAdmin[
 
 function Historico({ eventos }: { eventos: EventoModelo[] }) {
   return (
-    <section className="adm-secao" aria-labelledby="titulo-historico-modelos">
-      <h2 id="titulo-historico-modelos">Histórico</h2>
+    <section aria-labelledby="titulo-historico-modelos">
+      <h3 id="titulo-historico-modelos">Histórico</h3>
       {eventos.length === 0 ? (
-        <p className="adm-dica">Nenhum envio pelo site ainda.</p>
+        <p className="central-sec">Nenhum envio pelo site ainda.</p>
       ) : (
-        <table className="adm-tabela">
-          <thead>
-            <tr>
-              <th scope="col">Quando</th>
-              <th scope="col">O quê</th>
-              <th scope="col">Revisão</th>
-              <th scope="col">Por</th>
-              <th scope="col">Arquivo</th>
-              <th scope="col" className="adm-num">
-                .frag
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {eventos.map((h) => (
-              <tr key={h.id}>
-                <td>{data(h.publicado_em)}</td>
-                <td>
-                  {h.acao === 'publicado' ? 'Publicado' : 'Retirado'} {h.sigla}
-                </td>
-                <td>{h.revisao ?? '—'}</td>
-                <td>{h.publicado_por_nome ?? '—'}</td>
-                <td>
-                  {h.arquivo_nome ?? '—'}
+        <ul className="central-gestao-lista">
+          {eventos.map((h) => (
+            <li key={h.id}>
+              <strong>
+                {h.acao === 'publicado' ? 'Publicado' : 'Retirado'} {h.sigla}
+              </strong>
+              <span className="central-sec">
+                {data(h.publicado_em)}
+                {h.revisao ? ` · ${h.revisao}` : ''}
+                {h.publicado_por_nome ? ` · ${h.publicado_por_nome}` : ''}
+                {h.bytes ? ` · ${mb(h.bytes)}` : ''}
+              </span>
+              {(h.arquivo_nome || (h.origem === 'ifc' && h.ifc_bytes)) && (
+                <span className="central-sec">
+                  {h.arquivo_nome ?? ''}
                   {h.origem === 'ifc' && h.ifc_bytes ? ` (IFC de ${mb(h.ifc_bytes)}, convertido no site)` : ''}
-                </td>
-                <td className="adm-num">{h.bytes ? mb(h.bytes) : '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+/** Vínculos de documentos cujo GlobalId não existe mais no modelo carregado. */
+function Orfaos({ motor, versao, documentos }: { motor: MotorVisualizador | null; versao: number; documentos: Documento[] }) {
+  const repo = useRepositorioAdmin()
+  const qc = useQueryClient()
+  const [existencia, setExistencia] = useState<(boolean | null)[] | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
+  const [removendo, setRemovendo] = useState(false)
+
+  useEffect(() => {
+    if (!motor) return
+    let ativo = true
+    const refs = todosVinculos(documentos).map((v) => ({ sigla: v.sigla, globalId: v.globalId }))
+    motor.existem(refs).then(
+      (r) => ativo && setExistencia(r),
+      () => ativo && setExistencia(null),
+    )
+    return () => {
+      ativo = false
+    }
+  }, [motor, versao, documentos])
+
+  const lista: VinculoOrfao[] = existencia ? orfaos(documentos, existencia) : []
+  const naoConferidos = existencia ? existencia.filter((e) => e === null).length : 0
+
+  async function remover({ documento, vinculo }: VinculoOrfao) {
+    setErro(null)
+    setRemovendo(true)
+    try {
+      await repo.vincularDocumento(
+        documento.id,
+        documento.vinculos.filter((v) => !(v.sigla === vinculo.sigla && v.globalId === vinculo.globalId)),
+      )
+      await qc.invalidateQueries({ queryKey: ['admin', 'documentos'] })
+    } catch (e) {
+      setErro(mensagemDe(e))
+    } finally {
+      setRemovendo(false)
+    }
+  }
+
+  return (
+    <section aria-labelledby="titulo-orfaos">
+      <h3 id="titulo-orfaos">Vínculos órfãos</h3>
+      {!motor || !existencia ? (
+        <p className="central-sec">Aguardando o modelo carregar para conferir.</p>
+      ) : lista.length === 0 ? (
+        <p className="central-sec">Nenhum vínculo órfão.</p>
+      ) : (
+        <ul className="central-gestao-lista" aria-label="Vínculos órfãos">
+          {lista.map((o) => (
+            <li key={`${o.documento.id}|${o.vinculo.sigla}|${o.vinculo.globalId}`}>
+              <strong>{o.documento.titulo}</strong>
+              <span className="central-sec">
+                {o.vinculo.nome ?? o.vinculo.classe ?? 'Sem nome'} · {o.vinculo.sigla} ·{' '}
+                <span className="central-guid">{o.vinculo.globalId}</span>
+              </span>
+              <span className="central-gestao-acoes">
+                <button type="button" className="central-botao" disabled={removendo} onClick={() => void remover(o)}>
+                  Remover vínculo
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {naoConferidos > 0 && (
+        <p className="central-sec">
+          {naoConferidos} vínculo(s) não conferido(s): disciplina não carregada.
+        </p>
+      )}
+      {erro && (
+        <p className="central-gestao-alerta" role="alert">
+          {erro}
+        </p>
       )}
     </section>
   )

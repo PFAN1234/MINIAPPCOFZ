@@ -117,6 +117,27 @@ export function useRetirarModelo(slug: string) {
   return useMutation({ mutationFn: (sigla: string) => repo.retirarModelo(slug, sigla), onSuccess: invalidar })
 }
 
+export function useDocumentos(slug: string) {
+  const repo = useRepositorioAdmin()
+  return useQuery({ queryKey: ['admin', 'documentos', slug], queryFn: () => repo.listarDocumentos(slug) })
+}
+
+/** Histórico da série; sem série, não busca. */
+export function useHistoricoDocumento(serie: string | null) {
+  const repo = useRepositorioAdmin()
+  return useQuery({
+    queryKey: ['admin', 'documentos', 'historico', serie],
+    queryFn: () => repo.historicoDocumento(serie as string),
+    enabled: serie !== null,
+  })
+}
+
+export function useRetirarDocumento() {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarAdmin()
+  return useMutation({ mutationFn: (id: string) => repo.retirarDocumento(id), onSuccess: invalidar })
+}
+
 export function useAmbientesRA(obraId: string) {
   const repo = useRepositorioAdmin()
   return useQuery({ queryKey: ['admin', 'ra', obraId], queryFn: () => repo.listarRA(obraId) })
