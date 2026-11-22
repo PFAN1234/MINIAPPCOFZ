@@ -395,7 +395,7 @@ Admin › Modelos (contrato: `docs/contrato-central-modelos.md`). Só no site, s
 | Painéis | Itens e Filtro (por atributo e por pset), Propriedades, Cortes (com preenchimento), Medições, Gestão de modelos e documentos, Issues |
 | Vistas | Planta, elevações (pelo norte do projeto), 3D, caminhar e minimapa; vistas salvas guardam câmera, cortes, visibilidade e modo de cor |
 | Captura | Botão "Captura" da barra superior baixa a vista atual em PNG |
-| Documentos | Pasta `documentos` do R2 (`<obra_id>/<serie>/<sha256>.<ext>`); RPCs `admin_listar_documentos`, `admin_registrar_documento`, `admin_vincular_documento`, `admin_retirar_documento`, `admin_historico_documento`; vínculos por GlobalId (pavimento ou elemento); arquivos órfãos aparecem na Gestão |
+| Documentos | Pasta `documentos` do R2 (`<obra_id>/<serie>/<sha256>.<ext>`); RPCs `admin_listar_documentos`, `admin_registrar_documento`, `admin_vincular_documento`, `admin_retirar_documento`, `admin_historico_documento`; vínculos por GlobalId (pavimento ou elemento); vínculos órfãos (GlobalId ausente na revisão nova do modelo) aparecem na Gestão |
 | Testes | vitest em `app/src/modules/modelos`, `documentos` e `issues`; e2e `app/e2e/central-modelos.spec.ts` e `central-issues.spec.ts`; pytest `tests/db/test_documentos.py`, `test_issues.py`, `test_admin_modelo.py`, `test_arquivo.py` |
 
 ## Issues da Central de modelos
