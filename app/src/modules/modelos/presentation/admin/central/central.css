@@ -299,6 +299,16 @@
   .central-barra-superior {
     overflow-x: auto;
   }
+  /* O overflow da barra cortaria o menu absoluto: ele vira fixo, na posição calculada a partir do botão (BarraSuperior). */
+  .central-barra-superior .central-menu {
+    position: static;
+  }
+  .central-barra-superior .central-menu-lista {
+    position: fixed;
+    top: var(--menu-y, auto);
+    left: var(--menu-x, auto);
+    margin-top: 0;
+  }
 }
 .central-canvas {
   position: relative;

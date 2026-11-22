@@ -1196,6 +1196,25 @@ textarea {
   }
 }
 
+/* Entre tablet e desktop pequeno: o menu quebra em outra linha, sem sobrepor o usuário. */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .adm-topo {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 12px 24px;
+  }
+
+  .adm-nav {
+    order: 3;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+  }
+
+  .adm-marca {
+    margin-right: auto;
+  }
+}
+
 @media (max-width: 640px) {
   .adm-topo {
     flex-wrap: wrap;

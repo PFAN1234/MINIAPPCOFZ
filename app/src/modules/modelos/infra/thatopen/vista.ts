@@ -47,3 +47,20 @@ export function projetarParaTela(p: Ponto3, camera: THREE.Camera, largura: numbe
   const visivel = Number.isFinite(v.x) && v.z >= -1 && v.z <= 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1
   return { x: ((v.x + 1) / 2) * largura, y: ((1 - v.y) / 2) * altura, visivel }
 }
+
+export interface ToqueMedicao {
+  x: number
+  y: number
+  /** Instante do toque, em ms. */
+  t: number
+}
+
+/**
+ * Decide se um clique de área/volume é o segundo toque de um duplo clique (mesmo lugar, em poucos ms)
+ * e deve ser ignorado: o duplo clique conclui a medição e não pode acrescentar o último ponto de novo.
+ */
+export function ehToqueRepetido(anterior: ToqueMedicao | null, atual: ToqueMedicao, maxPx = 5, maxMs = 400): boolean {
+  if (!anterior) return false
+  const dt = atual.t - anterior.t
+  return dt >= 0 && dt < maxMs && Math.hypot(atual.x - anterior.x, atual.y - anterior.y) < maxPx
+}
