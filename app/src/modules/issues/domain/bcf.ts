@@ -14,6 +14,10 @@
  * `getCoordinationMatrix()`); vem de `MotorVisualizador.origemCena()` e o painel o passa ao exportar e
  * importar. Assim posições e pontos de corte saem em coordenadas de mundo para outras ferramentas, e a
  * ida e volta no próprio app é exata.
+ *
+ * CORES. `Vista.cores` (lista explícita de refs e cor) vai e volta em `<Coloring>` (cor `AARRGGBB` ao
+ * exportar; ao importar aceita `AARRGGBB` ou `RRGGBB`, com ou sem `#`, e guarda `#rrggbb`). O `Vista.modoCor`
+ * (por disciplina/categoria) NÃO é exportado: viraria uma lista com todos os elementos do modelo.
  */
 import type { Ponto3, RefElemento, Vista } from '../../modelos/domain/central.ts'
 import {
@@ -51,6 +55,8 @@ export interface BcfViewpoint {
   /** `DefaultVisibility`: true = tudo visível salvo as exceções (ocultas); false = tudo oculto salvo as exceções. */
   visibilidadePadrao: boolean
   excecoes: string[]
+  /** `Coloring`: cor ARGB/RGB como veio no arquivo (ou `#rrggbb`) e os GlobalIds. */
+  cores?: { cor: string; ids: string[] }[]
   /** PNG ou JPEG do snapshot, se houver. */
   snapshot: Uint8Array | null
 }
@@ -275,6 +281,13 @@ const naoVazio = (s: string | null | undefined) => (s && s.trim() ? s.trim() : n
 
 const unicos = (xs: string[]) => [...new Set(xs)]
 
+/** `AARRGGBB`, `RRGGBB` (com ou sem `#`) → `#rrggbb` minúsculo; `null` se inválida. */
+export function normalizarCorBcf(cor: string): string | null {
+  const h = cor.trim().replace(/^#/, '')
+  if (!/^([0-9a-f]{6}|[0-9a-f]{8})$/i.test(h)) return null
+  return `#${h.slice(-6).toLowerCase()}`
+}
+
 export function vistaParaViewpoint(vista: Vista, guid: string, origemCena: Ponto3 = ZERO): BcfViewpoint {
   const { camera } = vista
   const dir =
@@ -316,13 +329,22 @@ export function vistaParaViewpoint(vista: Vista, guid: string, origemCena: Ponto
     excecoes: isolados
       ? ids(isolados.filter((r) => !vista.ocultos.some((o) => o.globalId === r.globalId)))
       : ids(vista.ocultos),
+    ...(vista.cores?.length
+      ? {
+          cores: vista.cores
+            .map((c) => ({ cor: `FF${c.cor.replace(/^#/, '').toUpperCase()}`, ids: ids(c.refs) }))
+            .filter((c) => c.ids.length > 0),
+        }
+      : {}),
     snapshot: null,
   }
 }
 
 /** Todos os GlobalIds citados pelos viewpoints do tópico (seleção e exceções), sem repetir. */
 export function globalIdsDoTopico(t: BcfTopico): string[] {
-  return unicos(t.viewpoints.flatMap((vp) => [...vp.selecionados, ...vp.excecoes]))
+  return unicos(
+    t.viewpoints.flatMap((vp) => [...vp.selecionados, ...vp.excecoes, ...(vp.cores ?? []).flatMap((c) => c.ids)]),
+  )
 }
 
 /**
@@ -360,6 +382,11 @@ export function viewpointParaVista(
   ]
   const selecionados = refs(vp.selecionados)
   const excecoes = refs(vp.excecoes)
+  const cores = (vp.cores ?? []).flatMap((c) => {
+    const hex = normalizarCorBcf(c.cor)
+    const r = refs(c.ids)
+    return hex && r.length ? [{ refs: r, cor: hex }] : []
+  })
   const vista: Vista = {
     camera: {
       posicao,
@@ -376,6 +403,7 @@ export function viewpointParaVista(
     selecionados,
     ocultos: vp.visibilidadePadrao ? excecoes : [],
     isolados: !vp.visibilidadePadrao && excecoes.length > 0 ? excecoes : null,
+    ...(cores.length ? { cores } : {}),
   }
   return { vista, descartados: ausentes.size }
 }

@@ -237,7 +237,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
     void fragments.core.update(true)
   }
 
-  async function aplicarCores() {
+  async function aplicarCores(explicitas?: Vista['cores']) {
     if (!fragments || liberado) return
     for (const [sigla, m] of fragments.list) {
       await m.resetColor(undefined)
@@ -250,6 +250,11 @@ export function criarMotorThatOpen(): MotorVisualizador {
           if (ehClasseDeElemento(classe)) porClasse.set(classe, [...(porClasse.get(classe) ?? []), id])
         }
         for (const [classe, ids] of porClasse) await m.setColor(ids, cor(corCategorica(classe)))
+      }
+      // Cores explícitas da vista por cima do modo.
+      for (const { refs, cor: hex } of explicitas ?? []) {
+        const ids = (await mapaDeRefs(refs))[sigla]
+        if (ids?.size) await m.setColor([...ids], cor(hex))
       }
     }
     void fragments.core.update(true)
@@ -558,7 +563,8 @@ export function criarMotorThatOpen(): MotorVisualizador {
       selecionados: selecaoRefs,
       ocultos: ocultosRefs,
       isolados: isoladosRefs,
-      // As cores por categoria/disciplina são um modo global (`colorirPor`), não uma lista de refs.
+      // `cores` (lista explícita) só vem do BCF; o modo global (`colorirPor`) vai em `modoCor`.
+      ...(modoCor !== 'nenhum' ? { modoCor } : {}),
     }
   }
 
@@ -619,6 +625,10 @@ export function criarMotorThatOpen(): MotorVisualizador {
     if (liberado) return
     if (Object.keys(mapaSel).length) await h.highlightByID('select', mapaSel, true, false)
     else await h.clear('select')
+    // Cores: modo da vista (ausente = nenhum) e depois as explícitas; some o que havia antes.
+    modoCor = v.modoCor ?? 'nenhum'
+    emitir('cor', modoCor)
+    await aplicarCores(v.cores)
     w.renderer.needsUpdate = true
   }
 
@@ -1061,7 +1071,35 @@ export function criarMotorThatOpen(): MotorVisualizador {
       const { components: c } = pronto()
       const consulta: ItemsQueryParams = {}
       if (filtro.classe) consulta.categories = [new RegExp(`^${filtro.classe}$`, 'i')]
-      if (filtro.operador !== 'existe' || filtro.atributo) {
+      if (filtro.grupo) {
+        // Propriedade de pset: elemento -IsDefinedBy-> IFCPROPERTYSET (Name = pset) -HasProperties->
+        // IFCPROPERTYSINGLEVALUE (Name = propriedade E NominalValue comparado), com agregação
+        // `exclusive` (E) para nome e valor valerem na MESMA propriedade. Limitação: só psets de
+        // valor simples (não quantidades `IFCELEMENTQUANTITY`).
+        const valor = expressaoDoFiltro(filtro)
+        const nomeProp = filtro.atributo ? new RegExp(`^${escaparRegex(filtro.atributo)}$`) : /^.*$/
+        consulta.relation = {
+          name: 'IsDefinedBy',
+          query: {
+            categories: [/^IFCPROPERTYSET$/i],
+            attributes: { queries: [{ name: /^Name$/, value: new RegExp(`^${escaparRegex(filtro.grupo)}$`) }] },
+            relation: {
+              name: 'HasProperties',
+              query: {
+                attributes: {
+                  aggregation: 'exclusive',
+                  queries: [
+                    { name: /^Name$/, value: nomeProp },
+                    ...(valor
+                      ? [{ name: /^NominalValue$/, value: valor, ...(filtro.operador === 'diferente' ? { negate: true } : {}) }]
+                      : []),
+                  ],
+                },
+              },
+            },
+          },
+        }
+      } else if (filtro.operador !== 'existe' || filtro.atributo) {
         const valor = expressaoDoFiltro(filtro)
         consulta.attributes = {
           queries: [
@@ -1073,7 +1111,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
           ],
         }
       }
-      if (!consulta.categories && !consulta.attributes) return []
+      if (!consulta.categories && !consulta.attributes && !consulta.relation) return []
       const mapa = await c.get(OBC.ItemsFinder).getItems([consulta])
       return refsDe(mapa)
     },

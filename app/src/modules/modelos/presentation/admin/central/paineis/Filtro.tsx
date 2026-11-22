@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import type { MotorVisualizador } from '../../../../application/ports/MotorVisualizador.port.ts'
-import type { CategoriaTotal, FiltroAtributo, RefElemento } from '../../../../domain/central.ts'
+import type { CategoriaTotal, FiltroAtributo, GrupoPropriedades, RefElemento } from '../../../../domain/central.ts'
 
 const ATRIBUTOS = ['Name', 'ObjectType', 'Tag', 'PredefinedType']
 const OUTRO = '__outro__'
+type Origem = 'atributo' | 'pset'
 const OPERADORES: { id: FiltroAtributo['operador']; nome: string }[] = [
   { id: 'contem', nome: 'contém' },
   { id: 'igual', nome: 'é igual a' },
@@ -20,14 +21,20 @@ interface Props {
   onSelecionar(refs: RefElemento[]): void
   /** Isola pelo mesmo caminho da barra de visibilidade (mantém o estado "isolado" da barra). */
   onIsolar(refs: RefElemento[]): void
+  /** Elemento selecionado: dá sugestões de pset/propriedade (opcional). */
+  selecionado?: RefElemento | null
 }
 
-/** Busca por atributo direto (classe, atributo, operador e valor). Psets ficam para uma etapa futura. */
-export default function Filtro({ motor, versao, onSelecionar, onIsolar }: Props) {
+/** Busca por atributo direto ou por propriedade de pset (classe, origem, nome, operador e valor). */
+export default function Filtro({ motor, versao, onSelecionar, onIsolar, selecionado }: Props) {
   const [categorias, setCategorias] = useState<CategoriaTotal[]>([])
   const [classe, setClasse] = useState('')
   const [atributo, setAtributo] = useState('Name')
   const [livre, setLivre] = useState('')
+  const [origem, setOrigem] = useState<Origem>('atributo')
+  const [pset, setPset] = useState('')
+  const [propriedade, setPropriedade] = useState('')
+  const [sugestoes, setSugestoes] = useState<GrupoPropriedades[]>([])
   const [operador, setOperador] = useState<FiltroAtributo['operador']>('contem')
   const [valor, setValor] = useState('')
   const [estado, setEstado] = useState<Estado>(null)
@@ -45,17 +52,38 @@ export default function Filtro({ motor, versao, onSelecionar, onIsolar }: Props)
     }
   }, [motor, versao])
 
+  // Sugestões de pset/propriedade vêm do elemento selecionado, quando houver.
+  useEffect(() => {
+    if (!motor || !selecionado || origem !== 'pset') return
+    let ativo = true
+    motor.propriedades(selecionado).then(
+      (g) => ativo && setSugestoes(g.filter((x) => x.nome !== 'Atributos')),
+      () => ativo && setSugestoes([]),
+    )
+    return () => {
+      ativo = false
+    }
+  }, [motor, selecionado, origem])
+
   const nomeAtributo = atributo === OUTRO ? livre.trim() : atributo
   const precisaValor = operador !== 'existe'
 
   async function buscar() {
     if (!motor) return
+    if (origem === 'pset' && !pset.trim()) return
     const n = ++pedido.current
     setEstado('buscando')
     const filtro: FiltroAtributo = {
       operador,
       ...(classe ? { classe } : {}),
-      ...(nomeAtributo ? { atributo: nomeAtributo } : {}),
+      ...(origem === 'pset'
+        ? {
+            grupo: pset.trim(),
+            ...(propriedade.trim() ? { atributo: propriedade.trim() } : {}),
+          }
+        : nomeAtributo
+          ? { atributo: nomeAtributo }
+          : {}),
       ...(precisaValor && valor.trim() ? { valor: valor.trim() } : {}),
     }
     try {
@@ -87,21 +115,63 @@ export default function Filtro({ motor, versao, onSelecionar, onIsolar }: Props)
         </select>
       </label>
       <label>
-        Atributo
-        <select value={atributo} onChange={(e) => setAtributo(e.target.value)}>
-          {ATRIBUTOS.map((a) => (
-            <option key={a} value={a}>
-              {a}
-            </option>
-          ))}
-          <option value={OUTRO}>Outro…</option>
+        Origem
+        <select value={origem} onChange={(e) => setOrigem(e.target.value as Origem)}>
+          <option value="atributo">Atributo</option>
+          <option value="pset">Propriedade (pset)</option>
         </select>
       </label>
-      {atributo === OUTRO && (
-        <label>
-          Nome do atributo
-          <input value={livre} onChange={(e) => setLivre(e.target.value)} />
-        </label>
+      {origem === 'pset' ? (
+        <>
+          <label>
+            Pset
+            <input
+              value={pset}
+              onChange={(e) => setPset(e.target.value)}
+              list="filtro-psets"
+              placeholder="Pset_WallCommon"
+            />
+          </label>
+          <label>
+            Propriedade
+            <input
+              value={propriedade}
+              onChange={(e) => setPropriedade(e.target.value)}
+              list="filtro-props"
+              placeholder="IsExternal"
+            />
+          </label>
+          <datalist id="filtro-psets">
+            {sugestoes.map((g) => (
+              <option key={g.nome} value={g.nome} />
+            ))}
+          </datalist>
+          <datalist id="filtro-props">
+            {(sugestoes.find((g) => g.nome === pset.trim())?.itens ?? []).map((i) => (
+              <option key={i.nome} value={i.nome} />
+            ))}
+          </datalist>
+        </>
+      ) : (
+        <>
+          <label>
+            Atributo
+            <select value={atributo} onChange={(e) => setAtributo(e.target.value)}>
+              {ATRIBUTOS.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+              <option value={OUTRO}>Outro…</option>
+            </select>
+          </label>
+          {atributo === OUTRO && (
+            <label>
+              Nome do atributo
+              <input value={livre} onChange={(e) => setLivre(e.target.value)} />
+            </label>
+          )}
+        </>
       )}
       <label>
         Operador

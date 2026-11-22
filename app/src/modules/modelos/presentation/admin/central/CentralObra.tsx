@@ -194,7 +194,12 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   // Lista de cortes: o motor avisa quando muda (a criação é assíncrona).
   useEffect(() => {
     if (!motor) return
-    return motor.ao('cortes', (dados) => setCortes(dados as Corte[]))
+    const sair = motor.ao('cortes', (dados) => setCortes(dados as Corte[]))
+    const sairCor = motor.ao('cor', (dados) => setCor(dados as ModoCor))
+    return () => {
+      sair()
+      sairCor()
+    }
   }, [motor])
   // Lista de medições: o motor avisa a cada criação ou remoção.
   useEffect(() => {

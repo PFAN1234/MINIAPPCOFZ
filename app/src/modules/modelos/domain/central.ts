@@ -28,6 +28,9 @@ export interface Vista {
   selecionados: RefElemento[]
   ocultos: RefElemento[]
   isolados: RefElemento[] | null
+  /** Modo global de cor (por disciplina ou categoria); ausente = sem cores. */
+  modoCor?: Exclude<ModoCor, 'nenhum'>
+  /** Cores explícitas (hex `#rrggbb`, vindas do BCF), aplicadas por cima do modo. */
   cores?: { refs: RefElemento[]; cor: string }[]
 }
 
