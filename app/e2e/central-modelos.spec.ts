@@ -24,7 +24,8 @@ test.describe('com o ARQ.frag gerado localmente', () => {
   test.skip(!existsSync(FRAG_LOCAL), 'ARQ.frag ausente: rode `npm run modelos -- --obra hto`')
 
   test('abre a obra, seleciona, isola, mostra tudo e troca o tema sem erros', async ({ page }) => {
-    test.setTimeout(480_000)
+    // O WebGL por software leva ~7,5 min sozinho (já antes da etapa 7); com outros specs em paralelo passa de 8.
+    test.setTimeout(900_000)
     const erros: string[] = []
     page.on('pageerror', (e) => erros.push(e.message))
     await page.route('**/modelos/hto/manifesto.json', (rota) =>
@@ -174,6 +175,110 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     await expect(raiz).toHaveAttribute('data-tema', 'escuro')
     await page.getByRole('button', { name: /Configurações/ }).click()
     await expect(raiz).toHaveAttribute('data-tema', 'claro')
+    expect(erros).toEqual([])
+  })
+
+  test('vista salva, captura PNG e marcadores no motor 3D (etapa 7C1)', async ({ page }) => {
+    test.setTimeout(480_000)
+    const erros: string[] = []
+    page.on('pageerror', (e) => erros.push(e.message))
+    await page.route('**/modelos/hto/manifesto.json', (rota) =>
+      rota.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MANIFESTO) }),
+    )
+    await page.route('**/modelos/hto/ARQ.frag*', (rota) =>
+      rota.fulfill({ status: 200, contentType: 'application/octet-stream', body: readFileSync(FRAG_LOCAL) }),
+    )
+    await page.goto('/admin/modelos')
+    await page.getByRole('link', { name: /HTO/ }).first().click()
+    await page.getByRole('tab', { name: 'Itens' }).click()
+    await expect(page.getByText(/Carregando modelos/)).toBeHidden({ timeout: 120_000 })
+    await expect(page.getByRole('tree', { name: 'Árvore do modelo' })).toBeVisible({ timeout: 60_000 })
+    await page.waitForFunction(() => Boolean((window as never as { __motorCentral?: unknown }).__motorCentral))
+
+    // Câmera + corte + elemento oculto: lê a vista, muda tudo, reaplica e confere que voltou.
+    const resultado = await page.evaluate(async () => {
+      type Motor = {
+        vistaAtual(): { camera: { posicao: number[]; alvo: number[]; projecao: string; campo?: number }; cortes: unknown[]; ocultos: unknown[]; isolados: unknown }
+        aplicarVista(v: unknown): Promise<void>
+        buscar(f: unknown): Promise<unknown[]>
+        ocultar(r: unknown[]): void
+        mostrarTudo(): void
+        projecao(p: string): void
+        cortes: { criar(): void; apagar(): void; listar(): unknown[] }
+      }
+      const m = (window as never as { __motorCentral: Motor }).__motorCentral
+      const espera = (ms: number) => new Promise((r) => setTimeout(r, ms))
+      let refs: unknown[] = []
+      for (const classe of ['IFCWALL', 'IFCWALLSTANDARDCASE', 'IFCSLAB', 'IFCDOOR']) {
+        refs = await m.buscar({ classe, operador: 'existe' })
+        if (refs.length) break
+      }
+      m.ocultar(refs.slice(0, 2))
+      m.cortes.criar()
+      for (let i = 0; i < 60 && m.cortes.listar().length === 0; i++) await espera(250)
+      const original = m.vistaAtual()
+      // Muda tudo.
+      m.mostrarTudo()
+      m.cortes.apagar()
+      await m.aplicarVista({
+        ...m.vistaAtual(),
+        camera: { posicao: [-40, 50, 15], alvo: [2, 3, 4], projecao: 'ortografica', campo: 30 },
+        cortes: [],
+        ocultos: [],
+      })
+      const alterada = m.vistaAtual()
+      // Volta.
+      await m.aplicarVista(original)
+      const restaurada = m.vistaAtual()
+      // Refs de disciplina não carregada e GlobalId inexistente não derrubam a aplicação.
+      await m.aplicarVista({ ...original, ocultos: [{ sigla: 'XXX', globalId: 'nao-existe' }], selecionados: [{ sigla: 'ARQ', globalId: 'nao-existe' }] })
+      return { tinha: refs.length, original, alterada, restaurada }
+    })
+    expect(resultado.tinha).toBeGreaterThan(0)
+    expect(resultado.original.cortes).toHaveLength(1)
+    expect(resultado.original.ocultos.length).toBeGreaterThan(0)
+    expect(resultado.alterada.cortes).toHaveLength(0)
+    expect(resultado.alterada.camera.projecao).toBe('ortografica')
+    // Na ortográfica, `campo` é a altura visível em metros: o zoom volta igual.
+    expect(resultado.alterada.camera.campo).toBeCloseTo(30, 1)
+    expect(resultado.restaurada.cortes).toEqual(resultado.original.cortes)
+    expect(resultado.restaurada.ocultos).toEqual(resultado.original.ocultos)
+    expect(resultado.restaurada.camera.projecao).toBe(resultado.original.camera.projecao)
+    resultado.original.camera.posicao.forEach((v, i) => expect(resultado.restaurada.camera.posicao[i]).toBeCloseTo(v, 1))
+    resultado.original.camera.alvo.forEach((v, i) => expect(resultado.restaurada.camera.alvo[i]).toBeCloseTo(v, 1))
+
+    // Captura: PNG não vazio, até 1600 px de largura.
+    const png = await page.evaluate(async () => {
+      const m = (window as never as { __motorCentral: { capturar(): Promise<Blob> } }).__motorCentral
+      const b = await m.capturar()
+      const bytes = new Uint8Array(await b.arrayBuffer())
+      const img = await createImageBitmap(b)
+      return { tipo: b.type, tamanho: b.size, assinatura: [...bytes.slice(0, 4)], largura: img.width }
+    })
+    expect(png.tipo).toBe('image/png')
+    expect(png.tamanho).toBeGreaterThan(1000)
+    expect(png.tamanho).toBeLessThan(5 * 1024 * 1024)
+    expect(png.assinatura).toEqual([0x89, 0x50, 0x4e, 0x47])
+    expect(png.largura).toBeLessThanOrEqual(1600)
+
+    // Marcador: pino visível no alvo da câmera; o clique emite o evento; lista vazia limpa.
+    await page.evaluate(() => {
+      type Motor = {
+        vistaAtual(): { camera: { alvo: number[] } }
+        marcadores(i: unknown[]): void
+        ao(e: string, cb: (d: unknown) => void): void
+      }
+      const w = window as never as { __motorCentral: Motor; __cliques: unknown[] }
+      w.__cliques = []
+      w.__motorCentral.ao('marcador', (d) => w.__cliques.push(d))
+      w.__motorCentral.marcadores([{ id: 'issue-3', posicao: w.__motorCentral.vistaAtual().camera.alvo, rotulo: '#3' }])
+    })
+    const pino = page.getByRole('button', { name: 'Marcador #3' })
+    await expect(pino).toBeVisible({ timeout: 30_000 })
+    await pino.click()
+    expect(await page.evaluate(() => (window as never as { __cliques: unknown[] }).__cliques)).toEqual([{ id: 'issue-3' }])
+    await page.evaluate(() => (window as never as { __motorCentral: { marcadores(i: unknown[]): void } }).__motorCentral.marcadores([]))
+    await expect(pino).toHaveCount(0)
     expect(erros).toEqual([])
   })
 })

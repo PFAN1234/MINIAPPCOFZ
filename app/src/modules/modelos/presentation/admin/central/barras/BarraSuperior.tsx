@@ -23,10 +23,23 @@ import { NOMES_MEDIDA, type ModoCor, type TipoMedida, type Vista3dUi } from '../
 /** Botões ainda desabilitados (ganham função nas próximas etapas). */
 const BOTOES_FUTUROS: { nome: string; icone: ReactNode }[] = [
   { nome: 'Modelos', icone: <IconeModelos /> },
-  { nome: 'Issues', icone: <IconeIssues /> },
   { nome: 'Captura', icone: <IconeCaptura /> },
   { nome: 'Obra', icone: <IconeObra /> },
 ]
+
+const botaoFuturo = ({ nome, icone }: { nome: string; icone: ReactNode }) => (
+  <button
+    key={nome}
+    type="button"
+    className="central-botao central-botao-icone"
+    aria-label={nome}
+    data-dica={nome}
+    aria-pressed="false"
+    disabled
+  >
+    {icone}
+  </button>
+)
 
 const ICONES_MEDIDA: Record<TipoMedida, ReactNode> = {
   distancia: <IconeDistancia />,
@@ -89,6 +102,9 @@ interface Props {
   /** Modo de medição ativo (null: nenhum). */
   medicao: TipoMedida | null
   onMedir(modo: TipoMedida | null): void
+  /** Marcadores de issues ligados no 3D. */
+  marcadores: boolean
+  onMarcadores(): void
 }
 
 /** Barra superior do visualizador: enquadrar (F), projeção, cor por categoria/disciplina e grade. */
@@ -112,6 +128,8 @@ export default function BarraSuperior({
   onMinimapa,
   medicao,
   onMedir,
+  marcadores,
+  onMarcadores,
 }: Props) {
   const [menuMedir, setMenuMedir] = useState(false)
   const [menu, setMenu] = useState(false)
@@ -303,19 +321,19 @@ export default function BarraSuperior({
         </div>
       </div>
       <div className="central-barra-grupo central-barra-futuros">
-        {BOTOES_FUTUROS.map(({ nome, icone }) => (
-          <button
-            key={nome}
-            type="button"
-            className="central-botao central-botao-icone"
-            aria-label={nome}
-            data-dica={nome}
-            aria-pressed="false"
-            disabled
-          >
-            {icone}
-          </button>
-        ))}
+        {BOTOES_FUTUROS.slice(0, 1).map(botaoFuturo)}
+        <button
+          type="button"
+          className="central-botao central-botao-icone"
+          aria-label="Issues"
+          data-dica={marcadores ? 'Ocultar os marcadores de issues' : 'Mostrar os marcadores de issues'}
+          aria-pressed={marcadores}
+          disabled={!ativo}
+          onClick={onMarcadores}
+        >
+          <IconeIssues />
+        </button>
+        {BOTOES_FUTUROS.slice(1).map(botaoFuturo)}
       </div>
     </div>
   )

@@ -61,6 +61,11 @@ export interface MotorVisualizador {
     listar(): Medida[]
     apagar(id?: string): void
   }
+  /**
+   * Deslocamento da cena em relação ao mundo (coordenadas do modelo-base, metros, Y-up):
+   * mundo = cena + origemCena. `[0, 0, 0]` sem modelo carregado.
+   */
+  origemCena(): Ponto3
   vistaAtual(): Vista
   aplicarVista(v: Vista): Promise<void>
   capturar(): Promise<Blob>

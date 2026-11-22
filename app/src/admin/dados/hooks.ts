@@ -1,6 +1,9 @@
 import type { QrAmbiente } from '@modules/ra/domain/tipos.ts'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRepositorioAdmin } from './contexto.tsx'
+import { adicionarVista, criarIssueComVista } from '@modules/issues/application/use-cases/criarIssueComVista.ts'
+import type { DadosIssue, TopicoBcf } from '@modules/issues/domain/issues.ts'
+import type { Vista } from '@modules/modelos/domain/central.ts'
 import type { PapelAcesso } from '@modules/acessos/domain/tipos.ts'
 
 /** Depois de gravar algo ligado a obras/etapas, relê as consultas do admin (exceto sessão). */
@@ -136,6 +139,90 @@ export function useRetirarDocumento() {
   const repo = useRepositorioAdmin()
   const invalidar = useInvalidarAdmin()
   return useMutation({ mutationFn: (id: string) => repo.retirarDocumento(id), onSuccess: invalidar })
+}
+
+// --- Issues ------------------------------------------------------------------------------------
+
+/** Depois de gravar uma issue: relê a lista da obra e a Central (issues abertas no card). */
+function useInvalidarIssues(obraId: string | null) {
+  const qc = useQueryClient()
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: ['admin', 'issues', obraId] }),
+      qc.invalidateQueries({ queryKey: ['admin', 'central', 'obras'] }),
+    ])
+}
+
+/** Issues da obra (por id, não slug: é o que as RPCs pedem); sem obra, não busca. Responsáveis: `useAdmins()`. */
+export function useIssues(obraId: string | null) {
+  const repo = useRepositorioAdmin()
+  return useQuery({
+    queryKey: ['admin', 'issues', obraId],
+    queryFn: () => repo.listarIssues(obraId as string),
+    enabled: obraId !== null,
+  })
+}
+
+/** Cria (sem `id`) ou atualiza (com `id`, só as chaves de `dados`). */
+export function useSalvarIssue(obraId: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarIssues(obraId)
+  return useMutation({
+    mutationFn: (p: { id?: string; dados: DadosIssue }) => repo.salvarIssue(obraId, p.dados, p.id),
+    onSuccess: invalidar,
+    // Também se a issue foi criada e a imagem falhou
+    onError: invalidar,
+  })
+}
+
+export function useComentarIssue(obraId: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarIssues(obraId)
+  return useMutation({
+    mutationFn: (p: { issueId: string; texto: string; vistaId?: string | null }) =>
+      repo.comentarIssue(p.issueId, p.texto, p.vistaId),
+    onSuccess: invalidar,
+  })
+}
+
+/** Cria a issue e, se houver `vista`, envia o PNG e salva a vista (ver `criarIssueComVista`). */
+export function useCriarIssueComVista(obraId: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarIssues(obraId)
+  return useMutation({
+    mutationFn: (p: { dados: DadosIssue & { titulo: string }; vista?: Vista | null; imagem?: Blob | null }) =>
+      criarIssueComVista({ deps: repo, obraId, ...p }),
+    onSuccess: invalidar,
+    onError: invalidar,
+  })
+}
+
+/** Acrescenta uma vista (com PNG opcional) a uma issue existente. */
+export function useAdicionarVistaIssue(obraId: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarIssues(obraId)
+  return useMutation({
+    mutationFn: (p: { issue: { id: string; numero?: number }; vista: Vista; imagem?: Blob | null }) =>
+      adicionarVista({ deps: repo, obraId, ...p }),
+    onSuccess: invalidar,
+  })
+}
+
+export function useImportarBcf(obraId: string) {
+  const repo = useRepositorioAdmin()
+  const invalidar = useInvalidarIssues(obraId)
+  return useMutation({ mutationFn: (topicos: TopicoBcf[]) => repo.importarBcf(obraId, topicos), onSuccess: invalidar })
+}
+
+/** URL de leitura da imagem de uma vista; sem caminho, não busca. */
+export function useUrlImagemVista(caminho: string | null) {
+  const repo = useRepositorioAdmin()
+  return useQuery({
+    queryKey: ['admin', 'issues', 'imagem', caminho],
+    queryFn: () => repo.urlImagemVista(caminho as string),
+    enabled: caminho !== null,
+    staleTime: 5 * 60_000,
+  })
 }
 
 export function useAmbientesRA(obraId: string) {

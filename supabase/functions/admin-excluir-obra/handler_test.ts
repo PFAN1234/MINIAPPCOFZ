@@ -306,6 +306,7 @@ function arquivosDaObra(): Arquivos {
       `${OBRA_ID}/${"1".repeat(8)}-serie/${"c".repeat(64)}.pdf`,
       `${OUTRA_OBRA}/${"2".repeat(8)}-serie/${"d".repeat(64)}.pdf`,
     ],
+    issues: [],
   };
 }
 
@@ -326,6 +327,7 @@ Deno.test("excluir: apaga no banco como o admin, remove tudo em lotes e registra
       originais: 1,
       modelos: 0,
       documentos: 1,
+      issues: 0,
     },
     pendente: false,
   });
@@ -347,6 +349,7 @@ Deno.test("excluir: apaga no banco como o admin, remove tudo em lotes e registra
         originais: 1,
         modelos: 0,
         documentos: 1,
+        issues: 0,
       },
       p_erro: null,
     },
@@ -357,7 +360,7 @@ Deno.test("excluir: apaga no banco como o admin, remove tudo em lotes e registra
   assertEquals(apagadas.length, 257);
   assert(
     apagadas.every((k) =>
-      /^(fotos|plantas|originais|modelos|documentos)\//.test(k) &&
+      /^(fotos|plantas|originais|modelos|documentos|issues)\//.test(k) &&
       k.split("/")[1] === OBRA_ID
     ),
   );
@@ -460,6 +463,7 @@ Deno.test("excluir: falha no R2 depois do banco dá 200 pendente e registra o er
     originais: 1,
     modelos: 0,
     documentos: 1,
+    issues: 0,
   });
   const registro = m.rpcs.at(-1)!;
   assertEquals(registro.nome, "admin_registrar_limpeza");
@@ -510,6 +514,7 @@ Deno.test("limpar: confere o admin, pega o obra_id pela service role e remove o 
       originais: 1,
       modelos: 0,
       documentos: 1,
+      issues: 0,
     },
     pendente: false,
   });
@@ -565,6 +570,7 @@ Deno.test("excluir_etapa: apaga no banco como o admin e limpa os arquivos de cad
           originais: 1,
           modelos: 0,
           documentos: 1,
+          issues: 0,
         },
         pendente: false,
         erro: null,
@@ -577,6 +583,7 @@ Deno.test("excluir_etapa: apaga no banco como o admin e limpa os arquivos de cad
           originais: 0,
           modelos: 0,
           documentos: 1,
+          issues: 0,
         },
         pendente: false,
         erro: null,

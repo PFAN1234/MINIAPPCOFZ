@@ -56,7 +56,7 @@ modules/issues/{domain,application/ports,infra,presentation/admin}   (inclui bcf
 ```ts
 type RefElemento = { sigla: string; globalId: string; classe?: string; nome?: string }
 type Vista = {
-  camera: { posicao: [number, number, number]; alvo: [number, number, number]; projecao: 'perspectiva' | 'ortografica'; campo?: number }
+  camera: { posicao: [number, number, number]; alvo: [number, number, number]; projecao: 'perspectiva' | 'ortografica'; campo?: number }  // campo: fov (graus) na perspectiva; altura visível (m) na ortográfica
   cortes: { origem: [number, number, number]; normal: [number, number, number] }[]
   selecionados: RefElemento[]; ocultos: RefElemento[]; isolados: RefElemento[] | null
   cores?: { refs: RefElemento[]; cor: string }[]
@@ -79,6 +79,7 @@ interface MotorVisualizador {
   caminhar(ligado: boolean): void
   cortes: { criar(): void; apagar(id?: string): void; listar(): Corte[] }
   medir: { modo(m: 'distancia' | 'area' | 'volume' | 'angulo' | null): void; listar(): Medida[]; apagar(id?: string): void }
+  origemCena(): Ponto3   // deslocamento da cena: mundo = cena + origem (coordenadas do modelo-base); [0,0,0] sem modelo
   vistaAtual(): Vista; aplicarVista(v: Vista): Promise<void>
   capturar(): Promise<Blob>                     // PNG da vista atual
   marcadores(itens: { id: string; posicao: [number, number, number]; rotulo: string }[]): void
@@ -186,7 +187,7 @@ create table public.issue_comentario (
 
 - Bucket privado `issues` (PNG, 5 MB). Responsável: qualquer usuário admin (lista de `admin_app`).
 - RPCs: `admin_listar_issues(p_obra)`, `admin_salvar_issue(jsonb)` (cria com próximo número ou atualiza), `admin_comentar_issue(...)`, `admin_salvar_vista_issue(...)`, `admin_importar_bcf(p_obra, jsonb)` (upsert por `guid`, idempotente).
-- BCF: exportar/importar `.bcfzip` versão 2.1 e 3.0 pelo `BCFTopics`; o mapeamento issue ↔ topic é função pura em `modules/issues/domain/bcf.ts` (status, prioridade, tipo, comentários, viewpoints; GlobalIds como `components`). Campos BCF sem equivalente vão para `descricao` com um prefixo.
+- BCF: exportar/importar `.bcfzip` versão 2.1 e 3.0, com implementação própria (`fflate` + `DOMParser` na leitura e strings escapadas na escrita, em `infra/bcf/`) em vez do `BCFTopics`, que exige `Components`, mundo com renderer e vistas vivas (WebGL); assim a ida e volta é determinística, testável sem WebGL, e a idempotência vem do GUID do tópico; o mapeamento issue ↔ topic é função pura em `modules/issues/domain/bcf.ts` (status, prioridade, tipo, comentários, viewpoints; GlobalIds como `components`). Os eixos trocam Y-up da cena por Z-up do BCF e somam a `origemCena()` do motor (o Fragments desloca a cena para o modelo-base ficar na origem). O BCF não guarda o alvo da câmera: a `CameraDirection` exportada tem comprimento = distância até o alvo (ida e volta exata no app); direção unitária, de outras ferramentas, põe o alvo a 10 m. Campos BCF sem equivalente vão para `descricao` com o prefixo `[BCF]`.
 
 ### 5.3 Lista de obras
 

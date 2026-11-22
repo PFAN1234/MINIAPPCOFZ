@@ -7,6 +7,7 @@ import {
   type FiltroAtributo,
   type GrupoPropriedades,
   type NoArvore,
+  type Ponto3,
   type RefElemento,
   type Vista,
 } from '../domain/central.ts'
@@ -193,6 +194,11 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
     this.medidasLista = [...this.medidasLista, m]
     this.emitir('medicao', this.medidasLista)
   }
+  /** Resultado de `origemCena` (coordenadas do modelo-base). */
+  origemCenaDados: Ponto3 = [0, 0, 0]
+  origemCena(): Ponto3 {
+    return this.origemCenaDados
+  }
   vistaAtual(): Vista {
     return {
       camera: { posicao: [0, 0, 0], alvo: [0, 0, 0], projecao: 'perspectiva' },
@@ -208,8 +214,15 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   async capturar() {
     return new Blob()
   }
+  /** Marcadores atualmente mostrados (a última chamada de `marcadores` substitui o conjunto). */
+  marcadoresAtuais: { id: string; posicao: [number, number, number]; rotulo: string }[] = []
   marcadores(itens: { id: string; posicao: [number, number, number]; rotulo: string }[]) {
     this.registrar('marcadores', itens)
+    this.marcadoresAtuais = itens
+  }
+  /** Simula o clique do usuário num pino 3D. */
+  clicarMarcador(id: string) {
+    this.emitir('marcador', { id })
   }
   ao(evento: EventoMotor, cb: (dados: unknown) => void) {
     const set = this.ouvintes.get(evento) ?? new Set()
