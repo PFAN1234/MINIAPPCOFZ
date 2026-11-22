@@ -44,7 +44,7 @@ Pontos de código:
 - **App (adapters `infra`):** `documentos/DocumentosSupabaseAdapter`, `documentos/presentation/admin/salvarBlob`, `fiscalizacao/RegistrosSupabaseAdapter`, `modelos/ModelosSupabaseAdapter`, `obras/OrganizacaoAdminSupabaseAdapter`, `plantas/PlantasSupabaseAdapter`, `ra/RaSupabaseAdapter`, `relatorios/BoletinsAdminSupabaseAdapter`, `relatorios/RelatoriosSupabaseAdapter`; fila offline em `operacao/infra/indexeddb/armazenamento.ts`.
 - **Edge Functions:** `publish-outbox` (lê fotos para o Telegram), `admin-excluir-obra` (apaga arquivos), `assinar-envio-plantas` (assina envio de plantas).
 - **Servidores Vercel:** `app/servidor/boletim/supabase.ts`, `app/servidor/relatorio/supabase.ts`.
-- **Script:** `scripts/publicar_plantas.py` (via `assinar-envio-plantas`).
+- **Scripts:** `scripts/publicar_plantas.py` e `app/scripts/publicar_modelos.mjs` (POST direto no Storage com a chave de serviço); `app/scripts/testar_modelos_supabase.mjs`.
 - **SQL que lê `storage.objects`:** `concluir_registro` (rpcs), emissão e edição do boletim, plantas, modelos, documentos, resumo de exclusão de obra, `varrer_orfaos_storage`; políticas de `storage.objects` em 14 migrations.
 - **Testes de banco** que tocam storage (`tests/db/`): `stub_supabase.sql`, `test_banco`, `test_etapas`, `test_admin_planta`, `test_admin_modelo`, `test_admin_arquivar_excluir`, `test_boletim_base`, `test_boletim_emissao`, `test_boletim_edicao`, `test_relatorios_painel`, `test_revisoes_banco`, `test_orfaos_storage`.
 
@@ -77,12 +77,12 @@ Recebe o JWT do usuário, chama RPCs de permissão (uma por operação, reaprove
 ### Servidores e script
 
 - `publish-outbox` e `admin-excluir-obra` usam `_shared/r2.ts` direto (já rodam com a chave de serviço).
-- `assinar-envio-plantas` passa a assinar no R2; `publicar_plantas.py` segue chamando essa function.
+- `assinar-envio-plantas` é removida (só serviu à carga de plantas); `publicar_plantas.py` e `publicar_modelos.mjs` chamam `armazenamento` no modo interno (segredo interno).
 - Servidores Vercel (boletim e relatório): assinam direto no R2 com o mesmo módulo de assinatura e as chaves do token restrito.
 
 ## Partes
 
-Cada parte vira um contrato (`docs/contrato-r2.md`, uma seção por parte) antes de ir para o implementador.
+Contrato: `docs/contrato-r2.md` (uma seção por parte).
 
 ### 0. Cloudflare
 - Criar os buckets de dev e produção, o CORS de cada um e (antes da parte 5) o token restrito do app.
@@ -112,7 +112,7 @@ Cada parte vira um contrato (`docs/contrato-r2.md`, uma seção por parte) antes
 
 ## Dependências
 
-- **Central de modelos (etapas 7 e 8 em `tasks/todo.md`):** a migration `20261127090000_documentos.sql` ainda não foi aplicada e cria o bucket `documentos` no Storage. Fechar a central antes de começar a parte 1, ou já levar `documentos` direto para o R2 e retirar o bucket dessa migration antes de aplicá-la.
+- **Central de modelos:** decisão de 2026-11-22 — `documentos` nasce direto no R2. A migration `20261127090000_documentos.sql` (não aplicada) é editada na parte 1 para não criar bucket nem políticas de Storage. A migration `arquivo_r2` fica antes dela.
 
 ## Riscos
 
