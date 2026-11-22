@@ -294,7 +294,8 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
       document.body.appendChild(a)
       a.click()
       a.remove()
-      URL.revokeObjectURL(url)
+      // Revogar só depois: alguns navegadores abortam o download se a URL some no mesmo ciclo do clique.
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (e) {
       setErroCaptura(e instanceof Error && e.message ? `Não foi possível capturar a vista: ${e.message}` : 'Não foi possível capturar a vista.')
     }

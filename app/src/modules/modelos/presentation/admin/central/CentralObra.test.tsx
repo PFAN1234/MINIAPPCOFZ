@@ -106,7 +106,7 @@ describe('CentralObra', () => {
     renderizar('/modelos/hto')
     await waitFor(() => expect(screen.getByRole('button', { name: 'Captura' })).toBeEnabled())
     await usuario.click(screen.getByRole('button', { name: 'Captura' }))
-    await waitFor(() => expect(revogar).toHaveBeenCalledWith('blob:teste'))
+    await waitFor(() => expect(revogar).toHaveBeenCalledWith('blob:teste'), { timeout: 2500 })
     expect(capturar).toHaveBeenCalledTimes(1)
     expect(criar).toHaveBeenCalledTimes(1)
     expect(nomes[0]).toMatch(/^captura-hto-\d{4}-\d{2}-\d{2}-\d{4}\.png$/)
