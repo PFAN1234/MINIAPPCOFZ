@@ -44,12 +44,14 @@ Decisões de 2026-11-18 (com o usuário):
 
 Pronto quando: typecheck, lint, Vitest dos arquivos novos e `pytest tests/db/test_erro_cliente.py` passam; `docs/admin.md` ganha a seção "Erros do cliente".
 
-## Parte B — Varredura de órfãos nos buckets (simulação)
+## Parte B — Varredura de órfãos no R2 (simulação)
+
+> Atualizado na troca do Storage pelo Cloudflare R2: a varredura lê a tabela `public.arquivo` (e não mais `storage.objects`); "bucket" passou a ser a pasta do bucket único do R2.
 
 ### O que é órfão
 
-Objeto em `storage.objects` dos buckets `fotos`, `plantas`, `modelos`, `boletins`, `relatorios` (e o bucket de logos de etapa, se houver)
-cujo `name` não aparece em nenhuma coluna de caminho das tabelas que apontam para aquele bucket, e cujo `created_at` tem mais de 7 dias.
+Arquivo confirmado em `public.arquivo` (`situacao = 'confirmado'`), nas pastas `fotos`, `plantas`, `originais`, `modelos`, `boletins`, `organizacao`, `relatorios` e `documentos`,
+cujo `caminho` não aparece em nenhuma coluna de caminho das tabelas que apontam para aquele bucket, e cujo `criado_em` tem mais de 7 dias.
 O mapeamento bucket → colunas (ex.: `foto.storage_path`, `planta.imagem_path`/`imagem_hd_path`, `planta_detalhe.imagem_path`,
 `modelo.caminho`, PDFs de revisão de planta, `boletim.pdf_path`, `etapa.logo_path`, relatórios) deve ser levantado nas migrations
 e escrito no topo da função SQL. Caminhos guardados como prefixo ou montados por convenção (sem coluna) devem ser tratados como referenciados — na dúvida, **não** marcar como órfão.
@@ -57,14 +59,18 @@ e escrito no topo da função SQL. Caminhos guardados como prefixo ou montados p
 ### Banco (migration `20261125100000_orfaos_storage.sql`)
 
 - Tabela `public.orfao_storage`: `bucket text`, `caminho text`, `tamanho bigint`, `criado_em timestamptz`,
-  `detectado_em timestamptz default now()`, `removido_em timestamptz`, PK `(bucket, caminho)`. RLS; leitura só admin.
+  `detectado_em timestamptz default now()`, `removido_em timestamptz`,
+  `origem text not null default 'sem_referencia'` (`sem_referencia` ou `sem_registro`, ver abaixo), PK `(bucket, caminho)`. RLS; leitura só admin.
 - Função `privado.varrer_orfaos_storage()` (`security definer`, `search_path = ''`, só o cron executa): recalcula a lista —
-  insere os novos órfãos, apaga da tabela os que voltaram a ter referência ou sumiram do bucket. **Não remove nada do Storage.**
+  insere os novos órfãos, apaga da tabela os que voltaram a ter referência ou deixaram de estar confirmados em `arquivo`. **Não remove nada do R2.**
 - `cron.schedule` diário (03:17 UTC) chamando a varredura.
 - RPC `public.admin_resumo_orfaos()`: só admin; devolve, por bucket, quantidade e soma de bytes, e os 100 maiores.
-- A remoção real (fase seguinte, fora deste contrato) será por Edge Function usando a API do Storage, nunca `delete` direto em `storage.objects`.
+- Valores de `origem` (migration `20261126080000_arquivo_r2.sql`):
+  - `sem_referencia`: linha de `arquivo` sem nenhuma coluna que aponte para ela (gravada pela varredura do banco);
+  - `sem_registro`: objeto que existe no R2 mas não tem linha em `arquivo`; o banco não enxerga o R2, então só a rotina `manutencao` da Edge Function `armazenamento` grava esses itens.
+- A remoção real é feita pela `manutencao` (API do R2); nada de SQL sobre o Storage antigo.
 - Testes `tests/db/test_orfaos_storage.py`: objeto referenciado não entra; objeto recente (< 7 dias) não entra; órfão antigo entra;
-  ganhar referência depois o tira da lista; nada é apagado de `storage.objects`; não admin não lê.
+  ganhar referência depois o tira da lista; nada é apagado de `arquivo`; não admin não lê.
 
 ### Site admin
 

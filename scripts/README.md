@@ -142,3 +142,28 @@ python3 scripts/supabase_api.py sql "select count(*) from public.etapa"
 ```
 
 `aplicar` roda o arquivo numa transação e grava a migration em `supabase_migrations.schema_migrations` (versão e nome tirados do nome do arquivo). Depois de aplicar, conferir as funções alteradas comparando `md5(prosrc)` com um banco local montado a partir do repositório.
+
+## Backup do R2
+
+O workflow `.github/workflows/backup-r2.yml` copia o bucket `miniappcofz-arquivos` para a pasta `backup-r2/` do Google Drive, todo domingo às 03:47 (Brasília) e sob demanda. Usa `rclone copy` (nunca `sync`): o que for apagado no R2 continua no Drive.
+
+**Gerar o `[drive]` (numa máquina local).** Instale o rclone, rode `rclone config` e crie um remote chamado `drive`, tipo `drive` (Google Drive), escopo `drive`. Deixe `client_id` e `client_secret` em branco: o rclone usa o client id padrão dele, cujo refresh token não expira em 7 dias, como expira o de um app OAuth próprio em modo de teste. Autorize no navegador. Depois rode `rclone config show drive` e copie o trecho `[drive]` inteiro (inclui o `token`). Esse trecho é um segredo: não vai para o Git nem para o chat.
+
+**Segredos no GitHub** (Settings, Secrets and variables, Actions):
+
+| Segredo | Conteúdo |
+|---|---|
+| `R2_BACKUP_ACCOUNT_ID` | ID da conta Cloudflare |
+| `R2_BACKUP_ACCESS_KEY_ID` | Chave de acesso de um token do R2 só de leitura (Object Read only) no bucket de produção |
+| `R2_BACKUP_SECRET_ACCESS_KEY` | Segredo desse token |
+| `RCLONE_DRIVE_CONF` | O trecho `[drive]` do `rclone.conf` |
+
+**Rodar manualmente.** Na aba Actions, escolha "Backup do R2" e clique em "Run workflow"; ou `gh workflow run backup-r2.yml`. Acompanhe com `gh run list --workflow backup-r2.yml`.
+
+**Restaurar.** Com o `[drive]` e um remote `r2` com permissão de escrita configurados localmente:
+
+```bash
+rclone copy drive:backup-r2/<pasta> r2:<bucket>/<pasta>
+```
+
+`<pasta>` é uma das pastas do bucket (`fotos`, `plantas`, `originais`, `modelos`, `boletins`, `relatorios`, `organizacao`, `documentos`). Isso devolve só os objetos: as linhas da tabela `arquivo` (e as demais tabelas) vêm do backup do banco. Restaurados os dois, o que ficar sem linha aparece na varredura de órfãos.

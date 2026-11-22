@@ -391,6 +391,11 @@ def test_nenhuma_funcao_le_storage_objects(c):
     assert r == []
 
 
+def test_nenhuma_politica_em_storage_objects(c):
+    r = su(c.dsn, "select policyname from pg_policies where schemaname = 'storage' and tablename = 'objects'")
+    assert r == []
+
+
 def test_documento_exige_arquivo_confirmado(c):
     sha, serie = 'ab' * 32, str(uuid.uuid4())
     cam = f'{c.obra}/{serie}/{sha}.pdf'

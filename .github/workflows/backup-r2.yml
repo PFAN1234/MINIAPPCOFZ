@@ -1,0 +1,50 @@
+name: Backup do R2
+
+on:
+  schedule:
+    # Domingo às 06:47 UTC = 03:47 de domingo no horário de Brasília (UTC-3), em minuto quebrado
+    # para fugir do horário cheio, quando o GitHub Actions atrasa os agendamentos.
+    - cron: '47 6 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      # Remote "r2" do rclone, configurado só por variáveis (token do R2 somente de leitura).
+      RCLONE_CONFIG_R2_TYPE: s3
+      RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+      RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+      RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+      RCLONE_CONFIG_R2_ENDPOINT: https://${{ secrets.R2_BACKUP_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      RCLONE_CONFIG_R2_NO_CHECK_BUCKET: 'true'
+      DRIVE_CONF: ${{ secrets.RCLONE_DRIVE_CONF }}
+    steps:
+      - name: Instalar o rclone
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y rclone
+
+      - name: Gravar a configuração do Drive
+        run: |
+          umask 077
+          printf '%s\n' "$DRIVE_CONF" > "$RUNNER_TEMP/rclone-drive.conf"
+
+      - name: Copiar o R2 para o Drive
+        # `copy`, nunca `sync`: o que for apagado no R2 continua guardado no Drive.
+        # --checksum compara o MD5 quando os dois lados o oferecem (objetos simples no R2 e o Drive);
+        # nos objetos enviados em partes o R2 não tem MD5, e o rclone cai para tamanho e data.
+        # Sem -v, para o log não mostrar nomes de arquivos nem configuração.
+        run: |
+          rclone copy r2:miniappcofz-arquivos drive:backup-r2/ \
+            --config "$RUNNER_TEMP/rclone-drive.conf" \
+            --fast-list --transfers 4 --checksum \
+            --stats-one-line --stats 60s
+
+      - name: Apagar a configuração do Drive
+        if: always()
+        run: rm -f "$RUNNER_TEMP/rclone-drive.conf"

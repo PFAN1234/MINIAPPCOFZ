@@ -425,78 +425,6 @@ def test_bucket_fotos_privado_com_limite_e_mime(cenario):
         assert cur.fetchone() == (False, 10 * 1024 * 1024, ['image/jpeg'])
 
 
-def test_storage_participante_insere_na_propria_obra(cenario):
-    c = cenario
-    inserir_objeto(c, c.equipe_a, c.obra_a)
-
-
-@pytest.mark.parametrize('pasta', ['{outra}', 'nao-e-uuid', '', '{outra}x', '00000000-0000-0000-0000-000000000000'])
-def test_storage_nao_insere_em_outra_obra_nem_pasta_invalida(cenario, pasta):
-    c = cenario
-    pasta = pasta.format(outra=c.obra_b)
-    with pytest.raises(errors.InsufficientPrivilege) as e:  # negação por RLS, nunca erro de cast
-        inserir_objeto(c, c.equipe_a, pasta)
-    assert e.value.sqlstate == '42501'
-
-
-def test_storage_objeto_sem_pasta_e_outro_bucket_negados(cenario):
-    c = cenario
-    with pytest.raises(errors.InsufficientPrivilege):
-        with sessao(c.dsn, c.equipe_a) as cur:
-            cur.execute("insert into storage.objects (bucket_id, name, owner_id) values ('fotos', 'solto.jpg', %s)",
-                        (str(c.equipe_a),))
-    with sessao(c.dsn, papel=None) as cur:
-        cur.execute("insert into storage.buckets (id, name) values ('outro', 'outro')")
-    with pytest.raises(errors.InsufficientPrivilege):
-        with sessao(c.dsn, c.equipe_a) as cur:
-            cur.execute("insert into storage.objects (bucket_id, name, owner_id) values ('outro', %s, %s)",
-                        (f'{c.obra_a}/x/a.jpg', str(c.equipe_a)))
-
-
-def test_storage_leitura_update_e_delete(cenario):
-    c = cenario
-    inserir_objeto(c, c.equipe_a, c.obra_a, 'meu.jpg')
-    with sessao(c.dsn, papel=None) as cur:
-        cur.execute("insert into storage.objects (bucket_id, name, owner_id) values ('fotos', %s, %s)",
-                    (f'{c.obra_b}/x/b.jpg', str(c.gestor_b)))
-    with sessao(c.dsn, c.equipe_a) as cur:
-        cur.execute("select name from storage.objects where bucket_id = 'fotos' and name like %s", (f'{c.obra_a}/%',))
-        assert len(cur.fetchall()) == 1
-        cur.execute("select name from storage.objects where bucket_id = 'fotos' and name like %s", (f'{c.obra_b}/%',))
-        assert cur.fetchall() == []
-        # update do próprio objeto (reenvio) afeta 1 linha; o de outro dono, 0
-        cur.execute("update storage.objects set owner_id = owner_id where name like %s", (f'{c.obra_a}/%',))
-        assert cur.rowcount == 1
-    with sessao(c.dsn, c.gestor_a) as cur:
-        cur.execute("update storage.objects set owner_id = owner_id where name like %s", (f'{c.obra_a}/%',))
-        assert cur.rowcount == 0  # participa, mas não é o dono
-        cur.execute("delete from storage.objects where name like %s", (f'{c.obra_a}/%',))
-        assert cur.rowcount == 0  # sem política de delete
-    with pytest.raises(errors.InsufficientPrivilege):
-        with sessao(c.dsn, papel='anon') as cur:
-            cur.execute('select * from storage.objects')
-
-
-def test_storage_foto_vinculada_nao_pode_ser_sobrescrita(cenario):
-    c = cenario
-    rid, fid = uuid.uuid4(), uuid.uuid4()
-    nome = f'{c.obra_a}/{rid}/{fid}.jpg'
-
-    def pode_enviar():
-        with sessao(c.dsn, c.equipe_a) as cur:
-            cur.execute("select privado.pode_arquivo('enviar', 'fotos', %s)", (nome,))
-            return cur.fetchone()[0]
-
-    with sessao(c.dsn, papel=None) as cur:
-        cur.execute("insert into public.arquivo (pasta, caminho, tamanho, tipo, autor, situacao) "
-                    "values ('fotos', %s, 1, 'image/jpeg', %s, 'confirmado')", (nome, str(c.equipe_a)))
-    assert pode_enviar() is True  # antes de concluir: reenvio permitido
-    with sessao(c.dsn, c.equipe_a) as cur:
-        cur.execute(CONCLUIR, (rid, c.amb_a, 'pendencia', 'Fissura na parede', AGORA - timedelta(minutes=1),
-                               json.dumps([{'id': str(fid), 'largura': 800, 'altura': 600, 'bytes': 1}])))
-    assert pode_enviar() is False  # depois: a evidência fica travada
-
-
 # --- solicitacao_acesso -------------------------------------------------------
 
 def test_solicitacao_propria_pendente_e_aceita(cenario):
@@ -654,32 +582,6 @@ def test_bucket_plantas_configurado(dsn):
     with sessao(dsn, papel=None) as cur:
         cur.execute("select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'plantas'")
         assert cur.fetchone() == (False, 5242880, ['image/webp'])
-
-
-def test_politica_do_bucket_plantas(cenario):
-    c = cenario
-    with sessao(c.dsn, papel=None) as cur:
-        for obra in (c.obra_a, c.obra_b):
-            cur.execute("insert into storage.objects (bucket_id, name) values ('plantas', %s)",
-                        (f'{obra}/R05/terreo/planta.webp',))
-    with sessao(c.dsn, c.equipe_a) as cur:
-        cur.execute("select name from storage.objects where bucket_id = 'plantas' and name like %s",
-                    (f'{c.obra_a}/%',))
-        assert cur.fetchall() == [(f'{c.obra_a}/R05/terreo/planta.webp',)]
-        cur.execute("select count(*) from storage.objects where bucket_id = 'plantas' and name like %s",
-                    (f'{c.obra_b}/%',))
-        assert cur.fetchone()[0] == 0
-    with sessao(c.dsn, c.sem_obra) as cur:
-        cur.execute("select count(*) from storage.objects where bucket_id = 'plantas' and name like %s",
-                    (f'{c.obra_a}/%',))
-        assert cur.fetchone()[0] == 0
-    with sessao(c.dsn, papel='anon') as cur:
-        with pytest.raises(errors.InsufficientPrivilege):
-            cur.execute("select count(*) from storage.objects")
-    with pytest.raises(errors.InsufficientPrivilege):  # sem política de insert
-        with sessao(c.dsn, c.gestor_a) as cur:
-            cur.execute("insert into storage.objects (bucket_id, name) values ('plantas', %s)",
-                        (f'{c.obra_a}/R05/terreo/outra.webp',))
 
 
 def test_seed_hto_carrega_plantas_e_e_idempotente(dsn):
