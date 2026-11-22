@@ -384,6 +384,20 @@ Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra,
 | Repositório | `listarRA`, `definirQr`, `removerQr` (`dados/`; a fixture traz dois ambientes da HTO com geometria, um deles com QR) |
 | Testes | `app/src/modules/ra/domain/*.test.ts`, `app/src/modules/ra/presentation/admin/RaObra.test.tsx` |
 
+## Central de modelos
+
+Admin › Modelos (contrato: `docs/contrato-central-modelos.md`). Só no site, só para administradores.
+
+| Peça | Onde |
+| --- | --- |
+| Rota | `/modelos` lista as obras (`admin_central_obras`); `/modelos/:slug` abre a central da obra (carregada sob demanda); `/obras/:slug/modelos` redireciona para o painel Gestão |
+| Motor | That Open (three + `@thatopen/fragments`), no chunk `motor-3d`, carregado sob demanda e fora do precache |
+| Painéis | Itens e Filtro (por atributo e por pset), Propriedades, Cortes (com preenchimento), Medições, Gestão de modelos e documentos, Issues |
+| Vistas | Planta, elevações (pelo norte do projeto), 3D, caminhar e minimapa; vistas salvas guardam câmera, cortes, visibilidade e modo de cor |
+| Captura | Botão "Captura" da barra superior baixa a vista atual em PNG |
+| Documentos | Pasta `documentos` do R2 (`<obra_id>/<serie>/<sha256>.<ext>`); RPCs `admin_listar_documentos`, `admin_registrar_documento`, `admin_vincular_documento`, `admin_retirar_documento`, `admin_historico_documento`; vínculos por GlobalId (pavimento ou elemento); arquivos órfãos aparecem na Gestão |
+| Testes | vitest em `app/src/modules/modelos`, `documentos` e `issues`; e2e `app/e2e/central-modelos.spec.ts` e `central-issues.spec.ts`; pytest `tests/db/test_documentos.py`, `test_issues.py`, `test_admin_modelo.py`, `test_arquivo.py` |
+
 ## Issues da Central de modelos
 
 Admin › Modelos › obra › aba Issues (contrato: `docs/contrato-central-modelos.md` §5.2). Só no site, só para administradores; o responsável é um administrador.
