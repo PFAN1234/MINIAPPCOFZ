@@ -1,3 +1,4 @@
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { erroDoSupabase } from '../../../dados/erros.ts'
 import { erroDeColunaAusente } from '../../../shared/infra/errosSupabase.ts'
@@ -17,7 +18,11 @@ function checar<T>(resposta: { data: T | null; error: { message: string } | null
  * Adaptador Supabase dos modelos. `rpcAdmin` traduz os erros das chamadas admin; o app do campo
  * não usa essas operações, então o padrão apenas repassa a mensagem.
  */
-export function criarModelosSupabase(cliente: SupabaseClient, rpcAdmin?: Rpc): ModelosRepositorio {
+export function criarModelosSupabase(
+  cliente: SupabaseClient,
+  armazenamento: Armazenamento,
+  rpcAdmin?: Rpc,
+): ModelosRepositorio {
   const rpc: Rpc =
     rpcAdmin ??
     (async (nome, args) => {
@@ -52,9 +57,8 @@ export function criarModelosSupabase(cliente: SupabaseClient, rpcAdmin?: Rpc): M
 
     async baixarModelo(_slug, modelo) {
       try {
-        const { data, error } = await cliente.storage.from('modelos').download(modelo.arquivo)
-        if (error) throw error
-        return await data.arrayBuffer()
+        const blob = await armazenamento.baixar('modelos', modelo.arquivo)
+        return await blob.arrayBuffer()
       } catch (e) {
         throw erroDoSupabase(e)
       }

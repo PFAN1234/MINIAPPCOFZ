@@ -1,4 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
+import { ErroEnvio } from '../../../dados/erros.ts'
 import { ErroAdmin } from '../../../admin/dados/tipos.ts'
 import type { PlantasRepositorio } from '../application/ports/PlantasRepositorio.port.ts'
 import type { DadosEditorPlanta, Publicacao, ResultadoPublicacao } from '../domain/tipos.ts'
@@ -8,7 +9,7 @@ type Rpc = <T>(nome: string, args?: Record<string, unknown>) => Promise<T>
 const MENSAGEM_REDE = 'Sem conexão com o servidor. Verifique a internet e tente de novo.'
 
 /** Adaptador Supabase da planta (admin). `rpc` é o do admin, que traduz os erros das RPCs. */
-export function criarPlantasSupabase(cliente: SupabaseClient, rpc: Rpc): PlantasRepositorio {
+export function criarPlantasSupabase(armazenamento: Armazenamento, rpc: Rpc): PlantasRepositorio {
   return {
     obterEditorPlanta(slug) {
       return rpc<DadosEditorPlanta>('admin_editor_planta', { p_slug: slug })
@@ -21,30 +22,29 @@ export function criarPlantasSupabase(cliente: SupabaseClient, rpc: Rpc): Plantas
       }))
     },
 
-    async enviarArquivo(bucket, caminho, arquivo, tipo) {
-      let erro: unknown
+    async enviarArquivo(pasta, caminho, arquivo, tipo) {
       try {
-        const { error } = await cliente.storage.from(bucket).upload(caminho, arquivo, { upsert: true, contentType: tipo })
-        erro = error
+        // `ja_confirmado` (reenvio) conta como enviado.
+        await armazenamento.enviar(pasta, caminho, arquivo, tipo)
       } catch (e) {
+        if (e instanceof ErroEnvio) {
+          if (e.tipo === 'rede') throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
+          if (e.tipo === 'permissao') {
+            throw new ErroAdmin(`Sem permissão para gravar ${caminho} (${pasta}).`, { cause: e })
+          }
+          throw new ErroAdmin(`Falha ao enviar ${caminho}: ${e.message}`, { cause: e })
+        }
         throw new ErroAdmin(MENSAGEM_REDE, { cause: e })
-      }
-      if (erro) {
-        const msg = (erro as { message?: string }).message ?? ''
-        if (/row-level security|unauthorized|403/i.test(msg)) {
-          throw new ErroAdmin(`Sem permissão para gravar ${caminho} no Storage (${bucket}).`, { cause: erro })
-        }
-        if (/payload too large|413|exceeded/i.test(msg)) {
-          throw new ErroAdmin(`Arquivo grande demais para o bucket ${bucket}: ${caminho}.`, { cause: erro })
-        }
-        throw new ErroAdmin(`Falha ao enviar ${caminho}: ${msg || 'erro do Storage'}`, { cause: erro })
       }
     },
 
     async baixarOriginal(caminho) {
-      const { data, error } = await cliente.storage.from('originais').download(caminho)
-      if (error || !data) throw new ErroAdmin('Não foi possível baixar o PDF guardado.', { cause: error })
-      return new Uint8Array(await data.arrayBuffer())
+      try {
+        const blob = await armazenamento.baixar('originais', caminho)
+        return new Uint8Array(await blob.arrayBuffer())
+      } catch (e) {
+        throw new ErroAdmin('Não foi possível baixar o PDF guardado.', { cause: e })
+      }
     },
 
     publicarRevisao(slug, payload) {

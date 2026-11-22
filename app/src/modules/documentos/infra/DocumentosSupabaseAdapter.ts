@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
 import type { DocumentosRepositorio } from '../application/ports/DocumentosRepositorio.port.ts'
 import type { Documento, RevisaoDocumento, TipoDocumento, VinculoDocumento } from '../domain/documentos.ts'
 
@@ -45,7 +45,7 @@ function documento(l: Linha): Documento {
 }
 
 /** Adaptador Supabase dos documentos. `rpc` é a chamada admin (traduz os erros). */
-export function criarDocumentosSupabase(cliente: SupabaseClient, rpc: Rpc): DocumentosRepositorio {
+export function criarDocumentosSupabase(armazenamento: Armazenamento, rpc: Rpc): DocumentosRepositorio {
   return {
     async listarDocumentos(slug) {
       const d = await rpc<{ documentos?: Linha[] } | null>('admin_listar_documentos', { p_slug: slug })
@@ -102,9 +102,11 @@ export function criarDocumentosSupabase(cliente: SupabaseClient, rpc: Rpc): Docu
     },
 
     async baixarDocumento(caminho) {
-      const { data, error } = await cliente.storage.from('documentos').download(caminho)
-      if (error || !data) throw new Error('Não foi possível baixar o documento guardado.', { cause: error })
-      return data
+      try {
+        return await armazenamento.baixar('documentos', caminho)
+      } catch (e) {
+        throw new Error('Não foi possível baixar o documento guardado.', { cause: e })
+      }
     },
   }
 }

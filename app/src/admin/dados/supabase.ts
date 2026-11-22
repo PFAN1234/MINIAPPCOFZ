@@ -5,6 +5,8 @@
  */
 import { criarAcessosAdminSupabase } from '@modules/acessos/infra/AcessosAdminSupabaseAdapter.ts'
 import { criarSessaoAdminSupabase } from '@modules/acessos/infra/SessaoAdminSupabaseAdapter.ts'
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
+import { criarArmazenamentoSupabase } from '@modules/armazenamento/infra/ArmazenamentoSupabaseAdapter.ts'
 import { criarEtapasAdminSupabase } from '@modules/obras/infra/EtapasAdminSupabaseAdapter.ts'
 import { criarObrasAdminSupabase } from '@modules/obras/infra/ObrasAdminSupabaseAdapter.ts'
 import { criarOrganizacaoAdminSupabase } from '@modules/obras/infra/OrganizacaoAdminSupabaseAdapter.ts'
@@ -54,7 +56,10 @@ function erroDaRpc(e: unknown): ErroAdmin {
   return new ErroAdmin(msg || 'Não foi possível concluir a operação.', { cause: e })
 }
 
-export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarClienteAdmin()): RepositorioAdmin {
+export function criarRepositorioAdminSupabase(
+  cliente: SupabaseClient = criarClienteAdmin(),
+  armazenamento: Armazenamento = criarArmazenamentoSupabase(cliente),
+): RepositorioAdmin {
   configurarEnvioErros(cliente, 'admin')
   const base = String(import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '')
   const chave = String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '')
@@ -97,16 +102,16 @@ export function criarRepositorioAdminSupabase(cliente: SupabaseClient = criarCli
     return json
   }
 
-  const ra = criarRaSupabase(cliente, rpc)
-  const modelos = criarModelosSupabase(cliente, rpc)
-  const plantas = criarPlantasSupabase(cliente, rpc)
-  const documentos = criarDocumentosSupabase(cliente, rpc)
+  const ra = criarRaSupabase(cliente, armazenamento, rpc)
+  const modelos = criarModelosSupabase(cliente, armazenamento, rpc)
+  const plantas = criarPlantasSupabase(armazenamento, rpc)
+  const documentos = criarDocumentosSupabase(armazenamento, rpc)
   const sessao = criarSessaoAdminSupabase(cliente, erroDaRpc)
   const acessos = criarAcessosAdminSupabase(rpc)
   const etapas = criarEtapasAdminSupabase(rpc, funcaoExcluir)
-  const organizacao = criarOrganizacaoAdminSupabase(cliente, rpc, base)
+  const organizacao = criarOrganizacaoAdminSupabase(armazenamento, rpc)
   const obras = criarObrasAdminSupabase(rpc, funcaoExcluir)
-  const boletins = criarBoletinsAdminSupabase(cliente, rpc, funcaoExcluir, erroDaRpc)
+  const boletins = criarBoletinsAdminSupabase(cliente, armazenamento, rpc, funcaoExcluir, erroDaRpc)
   const telemetria = criarTelemetriaSupabase(rpc)
 
   return {

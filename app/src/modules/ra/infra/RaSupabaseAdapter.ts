@@ -1,3 +1,4 @@
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AmbienteRA } from '../../../admin/dados/tipos.ts'
 import type { PlantaAdmin } from '../domain/planta.ts'
@@ -15,7 +16,11 @@ type Rpc = <T>(nome: string, args?: Record<string, unknown>) => Promise<T>
  * Adaptador Supabase da RA. `rpcAdmin` traduz os erros das chamadas admin; o app do campo não
  * usa essas operações, então o padrão apenas repassa a mensagem.
  */
-export function criarRaSupabase(cliente: SupabaseClient, rpcAdmin?: Rpc): RaRepositorio {
+export function criarRaSupabase(
+  cliente: SupabaseClient,
+  armazenamento: Armazenamento,
+  rpcAdmin?: Rpc,
+): RaRepositorio {
   const rpc: Rpc =
     rpcAdmin ??
     (async (nome, args) => {
@@ -88,9 +93,7 @@ export function criarRaSupabase(cliente: SupabaseClient, rpcAdmin?: Rpc): RaRepo
       const urls: Record<string, string> = {}
       if (caminhos.length > 0) {
         try {
-          const { data, error } = await cliente.storage.from('plantas').createSignedUrls(caminhos, 3600)
-          if (error) throw error
-          for (const x of data ?? []) if (x.path && x.signedUrl && !x.error) urls[x.path] = x.signedUrl
+          for (const [c, u] of await armazenamento.urls('plantas', caminhos)) urls[c] = u
         } catch {
           /* sem URL, sem planta */
         }

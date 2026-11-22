@@ -1,3 +1,4 @@
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { BoletinsAdminRepositorio } from '@modules/relatorios/application/ports/BoletinsAdminRepositorio.port.ts'
 import type {
@@ -16,8 +17,6 @@ import { codigoDe, ehMensagemBruta, MENSAGEM_REDE, type Linha } from '@modules/o
 import { ErroAdmin } from '../../../admin/dados/tipos.ts'
 
 /** Validade da URL assinada do PDF de um boletim (abre numa aba nova logo em seguida). */
-const SEGUNDOS_URL_PDF = 300
-const SEGUNDOS_URL_FOTO = 3600
 /** Gerador do boletim (função da Vercel no mesmo domínio do site). */
 const URL_PREVIA = '/api/previa-boletim'
 
@@ -136,6 +135,7 @@ export type ChamarFuncaoExcluir = (corpo: Record<string, unknown>, naoEncontrado
 
 export function criarBoletinsAdminSupabase(
   cliente: SupabaseClient,
+  armazenamento: Armazenamento,
   rpc: ChamarRpcAdmin,
   funcaoExcluir: ChamarFuncaoExcluir,
   erroDaRpc: (e: unknown) => ErroAdmin,
@@ -206,9 +206,9 @@ export function criarBoletinsAdminSupabase(
 
     async urlPdfBoletim(caminho) {
       try {
-        const { data, error } = await cliente.storage.from('boletins').createSignedUrl(caminho, SEGUNDOS_URL_PDF)
-        if (error) throw error
-        return data.signedUrl
+        const url = (await armazenamento.urls('boletins', [caminho])).get(caminho)
+        if (!url) throw new Error('Boletim indisponível.')
+        return url
       } catch (e) {
         throw erroDaRpc(e)
       }
@@ -259,11 +259,7 @@ export function criarBoletinsAdminSupabase(
       const unicos = [...new Set(paths)]
       if (unicos.length === 0) return {}
       try {
-        const { data, error } = await cliente.storage.from('fotos').createSignedUrls(unicos, SEGUNDOS_URL_FOTO)
-        if (error) throw error
-        const r: Record<string, string> = {}
-        for (const x of data ?? []) if (x.path && x.signedUrl && !x.error) r[x.path] = x.signedUrl
-        return r
+        return Object.fromEntries(await armazenamento.urls('fotos', unicos))
       } catch (e) {
         throw erroDaRpc(e)
       }

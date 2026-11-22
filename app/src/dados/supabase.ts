@@ -6,6 +6,7 @@ import {
 import { criarAcessosSupabase } from '@modules/acessos/infra/AcessosSupabaseAdapter.ts'
 import { criarEquipeServicoSupabase } from '@modules/acessos/infra/EquipeServicoSupabaseAdapter.ts'
 import { criarSessaoSupabase } from '@modules/acessos/infra/SessaoSupabaseAdapter.ts'
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
 import { criarArmazenamentoSupabase } from '@modules/armazenamento/infra/ArmazenamentoSupabaseAdapter.ts'
 import { criarPublicacoesSupabase } from '@modules/fiscalizacao/infra/PublicacoesSupabaseAdapter.ts'
 import { criarRegistrosSupabase } from '@modules/fiscalizacao/infra/RegistrosSupabaseAdapter.ts'
@@ -33,27 +34,20 @@ export function criarClienteSupabase(opcoes?: SupabaseClientOptions<'public'>): 
 
 export function criarRepositorioSupabase(
   cliente: SupabaseClient = criarClienteSupabase(),
+  armazenamento: Armazenamento = criarArmazenamentoSupabase(cliente),
 ): Repositorio {
   configurarEnvioErros(cliente, 'miniapp')
-  const ra = criarRaSupabase(cliente)
-  const modelos = criarModelosSupabase(cliente)
+  const ra = criarRaSupabase(cliente, armazenamento)
+  const modelos = criarModelosSupabase(cliente, armazenamento)
   const acessos = criarAcessosSupabase(cliente)
   const sessao = criarSessaoSupabase(cliente)
   const equipe = criarEquipeServicoSupabase(cliente)
   const obras = criarObrasSupabase(cliente)
-  const organizacao = criarOrganizacaoSupabase(cliente)
+  const organizacao = criarOrganizacaoSupabase(cliente, armazenamento)
   const etapasInicio = criarEtapasInicioSupabase(cliente)
-  const armazenamento = criarArmazenamentoSupabase(cliente)
-  const registros = criarRegistrosSupabase(cliente, armazenamento, async (paths, bucket) => {
-    // Plantas continuam no Storage do Supabase até a Parte 3b.
-    const { data, error } = await cliente.storage.from(bucket).createSignedUrls(paths, 3600)
-    if (error) throw new Error(error.message)
-    const mapa: Record<string, string> = {}
-    for (const item of data ?? []) if (item.path && item.signedUrl) mapa[item.path] = item.signedUrl
-    return mapa
-  })
+  const registros = criarRegistrosSupabase(cliente, armazenamento)
   const publicacoes = criarPublicacoesSupabase(cliente)
-  const relatorios = criarRelatoriosSupabase(cliente)
+  const relatorios = criarRelatoriosSupabase(cliente, armazenamento)
   const observacoes = criarObservacoesSupabase(cliente)
 
   return {

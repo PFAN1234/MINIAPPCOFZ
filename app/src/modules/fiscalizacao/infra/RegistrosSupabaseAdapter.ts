@@ -16,12 +16,6 @@ import { ErroEnvio, erroDoSupabase } from '../../../dados/erros.ts'
 import { nomeMostrado } from '../../../dados/nome.ts'
 import { limitesPeriodo } from '@shared/kernel/periodo.ts'
 
-/** URLs de imagens fora do `Armazenamento` (plantas, até a migração delas para o R2). */
-export type UrlsImagensLegado = (
-  paths: string[],
-  bucket: 'plantas',
-) => Promise<Record<string, string>>
-
 const LOTE_IN = 100
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const MENSAGEM_JA_ENCERRADA = 'Esta pendência já foi encerrada.'
@@ -49,7 +43,6 @@ function lotes<T>(itens: T[]): T[][] {
 export function criarRegistrosSupabase(
   cliente: SupabaseClient,
   armazenamento: Armazenamento,
-  urlsLegado?: UrlsImagensLegado,
 ): RegistrosRepositorio {
   async function chamar(nome: string, args: Record<string, unknown>): Promise<unknown> {
     try {
@@ -184,9 +177,8 @@ export function criarRegistrosSupabase(
     async urlsImagens(paths, bucket = 'plantas') {
       const unicos = [...new Set(paths)]
       if (unicos.length === 0) return {}
-      if (bucket !== 'fotos') return urlsLegado ? urlsLegado(unicos, bucket) : {}
       try {
-        return Object.fromEntries(await armazenamento.urls('fotos', unicos))
+        return Object.fromEntries(await armazenamento.urls(bucket, unicos))
       } catch (e) {
         throw erroDoSupabase(e)
       }
