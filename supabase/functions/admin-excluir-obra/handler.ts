@@ -23,6 +23,7 @@ export const BUCKETS = [
   "originais",
   "modelos",
   "documentos",
+  "issues",
 ] as const;
 export type Bucket = typeof BUCKETS[number];
 export type Contagem = Record<Bucket, number>;
@@ -73,7 +74,7 @@ function bearer(req: Request): string | null {
 }
 
 function zerada(): Contagem {
-  return { fotos: 0, plantas: 0, originais: 0, modelos: 0, documentos: 0 };
+  return { fotos: 0, plantas: 0, originais: 0, modelos: 0, documentos: 0, issues: 0 };
 }
 
 /** Linha de `arquivo` marcada para exclusão. */
