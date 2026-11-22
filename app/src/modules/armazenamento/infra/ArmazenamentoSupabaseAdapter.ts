@@ -34,7 +34,7 @@ const TIPO_POR_CODIGO: Record<string, TipoErroEnvio> = {
 
 const MENSAGENS: Record<string, string> = {
   sem_sessao: 'Sua sessão expirou. Abra o app novamente pelo Telegram.',
-  sem_permissao: 'Sem permissão para enviar esta foto.',
+  sem_permissao: 'Sem permissão para este arquivo.',
   nao_encontrado: 'Arquivo não encontrado.',
 }
 
