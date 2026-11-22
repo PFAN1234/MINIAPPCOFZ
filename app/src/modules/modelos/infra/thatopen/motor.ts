@@ -522,7 +522,13 @@ export function criarMotorThatOpen(): MotorVisualizador {
         posicao: ponto(pos),
         alvo: ponto(alvo),
         projecao: ortografica ? 'ortografica' : 'perspectiva',
-        ...(cam instanceof THREE.PerspectiveCamera ? { campo: cam.fov } : {}),
+        // `campo`: fov em graus na perspectiva; na ortográfica, a altura visível em metros
+        // (o ViewToWorldScale do BCF), para o zoom voltar igual.
+        ...(cam instanceof THREE.PerspectiveCamera
+          ? { campo: cam.fov }
+          : cam instanceof THREE.OrthographicCamera
+            ? { campo: (cam.top - cam.bottom) / cam.zoom }
+            : {}),
       },
       cortes: listarCortes().map(({ origem, normal }) => ({ origem, normal })),
       selecionados: selecaoRefs,
@@ -547,6 +553,11 @@ export function criarMotorThatOpen(): MotorVisualizador {
     const [ax, ay, az] = v.camera.alvo
     // Direto, sem animação: o salto é imediato e o estado fica determinístico.
     await w.camera.controls.setLookAt(px, py, pz, ax, ay, az, false)
+    const orto = w.camera.three
+    if (v.camera.projecao === 'ortografica' && v.camera.campo && orto instanceof THREE.OrthographicCamera) {
+      // Pelos controles, para o camera-controls não sobrescrever o zoom no próximo quadro.
+      await w.camera.controls.zoomTo((orto.top - orto.bottom) / v.camera.campo, false)
+    }
 
     // Cortes: substitui os atuais pelos da vista.
     const clipper = c.get(OBC.Clipper)

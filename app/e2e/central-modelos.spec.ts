@@ -197,7 +197,7 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     // Câmera + corte + elemento oculto: lê a vista, muda tudo, reaplica e confere que voltou.
     const resultado = await page.evaluate(async () => {
       type Motor = {
-        vistaAtual(): { camera: { posicao: number[]; alvo: number[]; projecao: string }; cortes: unknown[]; ocultos: unknown[]; isolados: unknown }
+        vistaAtual(): { camera: { posicao: number[]; alvo: number[]; projecao: string; campo?: number }; cortes: unknown[]; ocultos: unknown[]; isolados: unknown }
         aplicarVista(v: unknown): Promise<void>
         buscar(f: unknown): Promise<unknown[]>
         ocultar(r: unknown[]): void
@@ -221,7 +221,7 @@ test.describe('com o ARQ.frag gerado localmente', () => {
       m.cortes.apagar()
       await m.aplicarVista({
         ...m.vistaAtual(),
-        camera: { posicao: [-40, 50, 15], alvo: [2, 3, 4], projecao: 'ortografica' },
+        camera: { posicao: [-40, 50, 15], alvo: [2, 3, 4], projecao: 'ortografica', campo: 30 },
         cortes: [],
         ocultos: [],
       })
@@ -238,6 +238,8 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     expect(resultado.original.ocultos.length).toBeGreaterThan(0)
     expect(resultado.alterada.cortes).toHaveLength(0)
     expect(resultado.alterada.camera.projecao).toBe('ortografica')
+    // Na ortográfica, `campo` é a altura visível em metros: o zoom volta igual.
+    expect(resultado.alterada.camera.campo).toBeCloseTo(30, 1)
     expect(resultado.restaurada.cortes).toEqual(resultado.original.cortes)
     expect(resultado.restaurada.ocultos).toEqual(resultado.original.ocultos)
     expect(resultado.restaurada.camera.projecao).toBe(resultado.original.camera.projecao)

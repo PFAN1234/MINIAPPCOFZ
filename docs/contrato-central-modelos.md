@@ -56,7 +56,7 @@ modules/issues/{domain,application/ports,infra,presentation/admin}   (inclui bcf
 ```ts
 type RefElemento = { sigla: string; globalId: string; classe?: string; nome?: string }
 type Vista = {
-  camera: { posicao: [number, number, number]; alvo: [number, number, number]; projecao: 'perspectiva' | 'ortografica'; campo?: number }
+  camera: { posicao: [number, number, number]; alvo: [number, number, number]; projecao: 'perspectiva' | 'ortografica'; campo?: number }  // campo: fov (graus) na perspectiva; altura visível (m) na ortográfica
   cortes: { origem: [number, number, number]; normal: [number, number, number] }[]
   selecionados: RefElemento[]; ocultos: RefElemento[]; isolados: RefElemento[] | null
   cores?: { refs: RefElemento[]; cor: string }[]
