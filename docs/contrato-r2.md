@@ -288,4 +288,5 @@ Entre os passos 1 e 3, o app antigo não conclui registros: a janela deve ser cu
   - `MaxAgeSeconds` 3600;
   - origens: `https://miniappcofz.vercel.app` e as prévias do projeto; no dev, também `http://localhost:5173`.
 - Conferir se o R2 aceita curinga para as prévias. Se não aceitar, listar os domínios ou usar `*`; as URLs são assinadas de qualquer forma.
+- **Feito em 2026-11-22:** buckets criados; o R2 aceita curinga, e as origens ficaram `https://miniappcofz.vercel.app` e `https://miniappcofz-*.vercel.app` (mais `http://localhost:5173` no dev). O cabeçalho `etag` é exposto nas respostas, não no preflight.
 - **Pronto quando:** PUT, GET e HEAD assinados funcionam no bucket de dev a partir de um script, e o preflight do domínio da Vercel responde com os cabeçalhos certos.

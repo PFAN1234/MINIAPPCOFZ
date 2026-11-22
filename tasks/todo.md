@@ -482,8 +482,8 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
 - [x] Decisões: tudo no R2; permissão pela Edge Function `armazenamento`; logo por URL assinada
 - [x] Decisões do plano fechadas (2026-11-22): Vercel assina direto; buckets `miniappcofz-arquivos`/`-dev`; links 10 min/1 h/7 dias; `relatorios` sem limite próprio; pendentes apagados após 7 dias; backup semanal no Google Drive
 - [x] Contrato `docs/contrato-r2.md` (2026-11-22); `documentos` nasce direto no R2
-- [ ] 0 Cloudflare (buckets, CORS)
-- [ ] 1 Banco e permissões (tabela `arquivo`)
+- [x] 0 Cloudflare (2026-11-22): buckets `miniappcofz-arquivos` e `miniappcofz-arquivos-dev` criados (ENAM); CORS GET/PUT/HEAD para `https://miniappcofz.vercel.app`, `https://miniappcofz-*.vercel.app` (o R2 aceita curinga) e `http://localhost:5173` (só dev); teste no dev: PUT/HEAD/GET/DELETE assinados ok, PUT com tamanho diferente do assinado recusado (403), sem assinatura recusado, preflight de origem alheia recusado
+- [ ] 1 Banco e permissões (tabela `arquivo`) — pré-condição conferida: `admin_central_obras` e `documentos` não aplicadas (última aplicada: `20261125100000`)
 - [ ] 2 Function `armazenamento`
 - [ ] 3 App
 - [ ] 4 Servidores, órfãos e script
