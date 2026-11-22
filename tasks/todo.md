@@ -475,3 +475,16 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
   - Em aberto: se copiar os vínculos falhar depois de registrar a revisão, o reenvio dá "revisão já existe" (tratar com mensagem própria)
 - [ ] 7 Issues e BCF
 - [ ] 8 Fechamento (e2e, docs, produção, PR)
+
+## Arquivos no Cloudflare R2 (plano: `tasks/plano-r2.md`)
+
+- [x] Acesso conferido (2026-11-22): token de conta ativo, listagem pela API e pelo endpoint S3 funcionando; conta sem buckets
+- [x] Decisões: tudo no R2; permissão pela Edge Function `armazenamento`; logo por URL assinada
+- [ ] Decisões em aberto do plano (servidores Vercel, nomes dos buckets, validades, limite de `relatorios`, pendentes abandonados, backup)
+- [ ] Contrato `docs/contrato-r2.md`
+- [ ] 0 Cloudflare (buckets, CORS)
+- [ ] 1 Banco e permissões (tabela `arquivo`)
+- [ ] 2 Function `armazenamento`
+- [ ] 3 App
+- [ ] 4 Servidores, órfãos e script
+- [ ] 5 Testes, documentação, backup e produção (criar antes o token restrito do app)
