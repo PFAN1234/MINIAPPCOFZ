@@ -74,7 +74,14 @@ function bearer(req: Request): string | null {
 }
 
 function zerada(): Contagem {
-  return { fotos: 0, plantas: 0, originais: 0, modelos: 0, documentos: 0, issues: 0 };
+  return {
+    fotos: 0,
+    plantas: 0,
+    originais: 0,
+    modelos: 0,
+    documentos: 0,
+    issues: 0,
+  };
 }
 
 /** Linha de `arquivo` marcada para exclusão. */
