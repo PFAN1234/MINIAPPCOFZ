@@ -208,8 +208,15 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   async capturar() {
     return new Blob()
   }
+  /** Marcadores atualmente mostrados (a última chamada de `marcadores` substitui o conjunto). */
+  marcadoresAtuais: { id: string; posicao: [number, number, number]; rotulo: string }[] = []
   marcadores(itens: { id: string; posicao: [number, number, number]; rotulo: string }[]) {
     this.registrar('marcadores', itens)
+    this.marcadoresAtuais = itens
+  }
+  /** Simula o clique do usuário num pino 3D. */
+  clicarMarcador(id: string) {
+    this.emitir('marcador', { id })
   }
   ao(evento: EventoMotor, cb: (dados: unknown) => void) {
     const set = this.ouvintes.get(evento) ?? new Set()

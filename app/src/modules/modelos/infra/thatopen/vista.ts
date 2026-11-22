@@ -1,0 +1,49 @@
+/**
+ * Funções puras do motor 3D para vistas salvas, captura e marcadores (etapa 7C1): chaves de
+ * referência, redimensionamento da captura e projeção de pontos 3D para a tela.
+ */
+import * as THREE from 'three'
+import type { Ponto3, RefElemento } from '../../domain/central.ts'
+
+/** Largura máxima da captura (px): mantém o PNG bem abaixo de 5 MB. */
+export const LARGURA_MAX_CAPTURA = 1600
+
+export const chaveRef = (r: Pick<RefElemento, 'sigla' | 'globalId'>) => `${r.sigla}:${r.globalId}`
+
+/** Acrescenta refs ao conjunto (sem repetir o mesmo elemento). */
+export function somarRefs(base: RefElemento[], novos: RefElemento[]): RefElemento[] {
+  const mapa = new Map(base.map((r) => [chaveRef(r), r]))
+  for (const r of novos) mapa.set(chaveRef(r), r)
+  return [...mapa.values()]
+}
+
+/** Remove refs do conjunto. */
+export function tirarRefs(base: RefElemento[], tirar: RefElemento[]): RefElemento[] {
+  const fora = new Set(tirar.map(chaveRef))
+  return base.filter((r) => !fora.has(chaveRef(r)))
+}
+
+/** Mantém só os refs de outras siglas (disciplina descarregada). */
+export const semSigla = (base: RefElemento[], sigla: string) => base.filter((r) => r.sigla !== sigla)
+
+/** Tamanho final da captura: nunca passa de `max` de largura e mantém a proporção. */
+export function tamanhoCaptura(largura: number, altura: number, max = LARGURA_MAX_CAPTURA): { largura: number; altura: number } {
+  if (largura <= 0 || altura <= 0) return { largura: 0, altura: 0 }
+  if (largura <= max) return { largura: Math.round(largura), altura: Math.round(altura) }
+  return { largura: max, altura: Math.max(1, Math.round((altura * max) / largura)) }
+}
+
+export interface PosicaoTela {
+  x: number
+  y: number
+  /** Falso quando o ponto está atrás da câmera, fora do volume visível ou além do plano distante. */
+  visivel: boolean
+}
+
+/** Projeta um ponto do mundo para pixels do canvas (origem no canto superior esquerdo). */
+export function projetarParaTela(p: Ponto3, camera: THREE.Camera, largura: number, altura: number): PosicaoTela {
+  camera.updateMatrixWorld()
+  const v = new THREE.Vector3(p[0], p[1], p[2]).project(camera)
+  const visivel = Number.isFinite(v.x) && v.z >= -1 && v.z <= 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1
+  return { x: ((v.x + 1) / 2) * largura, y: ((1 - v.y) / 2) * altura, visivel }
+}

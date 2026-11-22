@@ -16,6 +16,7 @@ import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
 import { criarMinimapa, type Minimapa } from './minimapa.ts'
 import { gruposDeDados, RELACOES_PROPRIEDADES, type DadosBrutos } from './propriedades.ts'
+import { projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs } from './vista.ts'
 import type { EventoMotor, MotorVisualizador, TemaCentral } from '../../application/ports/MotorVisualizador.port.ts'
 import {
   ErroCarregamento,
@@ -30,6 +31,7 @@ import {
   type Corte,
   type Medida,
   type Ponto3,
+  type Vista,
   type NoArvore,
   type NoEstrutura,
   type RefElemento,
@@ -55,9 +57,10 @@ const LIMITE_CLASSE_POR_ITEM = 300
 const TAMANHO_EIXOS = 84
 const LOTE_NOMES = 4000
 
-const naoImplementado = (etapa: number): never => {
-  throw new Error(`não implementado (etapa ${etapa})`)
-}
+/** Cor de alerta da Central (tokens do tema): pinos de issue sobre o 3D. */
+const COR_MARCADOR = '#ff8a3d'
+
+type JanelaTeste = Window & { __motorCentral?: MotorVisualizador }
 
 /** Cria o motor That Open (nada é montado até `montar`). */
 export function criarMotorThatOpen(): MotorVisualizador {
@@ -70,6 +73,10 @@ export function criarMotorThatOpen(): MotorVisualizador {
   let modoCor: ModoCor = 'nenhum'
   let fantasmaLigado = false
   let selecaoAtual: OBC.ModelIdMap = {}
+  /** Estado de visibilidade acompanhado pelos comandos da porta (o Hider não guarda refs por GlobalId). */
+  let selecaoRefs: RefElemento[] = []
+  let ocultosRefs: RefElemento[] = []
+  let isoladosRefs: RefElemento[] | null = null
   let liberado = false
   const ouvintes = new Map<EventoMotor, Set<(d: unknown) => void>>()
   const limpezas: (() => void)[] = []
@@ -502,6 +509,180 @@ export function criarMotorThatOpen(): MotorVisualizador {
     emitirCortes()
   }
 
+  // --- Etapa 7: vistas salvas, captura e marcadores de issue
+  function vistaAtual(): Vista {
+    const { mundo: w } = pronto()
+    const ctrl = w.camera.controls
+    const pos = ctrl.getPosition(new THREE.Vector3())
+    const alvo = ctrl.getTarget(new THREE.Vector3())
+    const cam = w.camera.three
+    const ortografica = w.camera.projection.current === 'Orthographic'
+    return {
+      camera: {
+        posicao: ponto(pos),
+        alvo: ponto(alvo),
+        projecao: ortografica ? 'ortografica' : 'perspectiva',
+        ...(cam instanceof THREE.PerspectiveCamera ? { campo: cam.fov } : {}),
+      },
+      cortes: listarCortes().map(({ origem, normal }) => ({ origem, normal })),
+      selecionados: selecaoRefs,
+      ocultos: ocultosRefs,
+      isolados: isoladosRefs,
+      // As cores por categoria/disciplina são um modo global (`colorirPor`), não uma lista de refs.
+    }
+  }
+
+  async function aplicarVista(v: Vista): Promise<void> {
+    const { components: c, mundo: w } = pronto()
+    if (caminhando) await alternarCaminhar(false)
+    if (vistaAberta) fecharVista()
+    // Projeção primeiro: ela troca a câmera ativa, e só depois a câmera é posicionada.
+    await w.camera.projection.set(v.camera.projecao === 'ortografica' ? 'Orthographic' : 'Perspective')
+    if (liberado) return
+    if (v.camera.campo && w.camera.three instanceof THREE.PerspectiveCamera) {
+      w.camera.three.fov = v.camera.campo
+      w.camera.three.updateProjectionMatrix()
+    }
+    const [px, py, pz] = v.camera.posicao
+    const [ax, ay, az] = v.camera.alvo
+    // Direto, sem animação: o salto é imediato e o estado fica determinístico.
+    await w.camera.controls.setLookAt(px, py, pz, ax, ay, az, false)
+
+    // Cortes: substitui os atuais pelos da vista.
+    const clipper = c.get(OBC.Clipper)
+    clipper.deleteAll()
+    for (const corte of v.cortes) {
+      clipper.createFromNormalAndCoplanarPoint(
+        w,
+        new THREE.Vector3(...corte.normal),
+        new THREE.Vector3(...corte.origem),
+      )
+    }
+    emitirCortes()
+
+    // Visibilidade: tudo visível, depois isolamento ou ocultos (refs ausentes são ignorados).
+    const hider = c.get(OBC.Hider)
+    await hider.set(true)
+    ocultosRefs = []
+    isoladosRefs = null
+    if (v.isolados && v.isolados.length) {
+      const mapa = await mapaDeRefs(v.isolados)
+      if (Object.keys(mapa).length) {
+        await hider.isolate(mapa)
+        isoladosRefs = v.isolados
+      }
+    }
+    if (v.ocultos.length) {
+      const mapa = await mapaDeRefs(v.ocultos)
+      if (Object.keys(mapa).length) await hider.set(false, mapa)
+      ocultosRefs = v.ocultos
+    }
+
+    // Seleção: o Highlighter dispara o evento `selecao` sozinho.
+    const h = highlighter!
+    const mapaSel = await mapaDeRefs(v.selecionados)
+    if (liberado) return
+    if (Object.keys(mapaSel).length) await h.highlightByID('select', mapaSel, true, false)
+    else await h.clear('select')
+    w.renderer.needsUpdate = true
+  }
+
+  /**
+   * PNG do que está na tela. O contexto WebGL descarta o buffer depois de apresentado, então em vez
+   * de ligar `preserveDrawingBuffer` (que custa desempenho o tempo todo) um quadro é renderizado e
+   * copiado para um canvas 2D reduzido no mesmo ciclo síncrono; só depois o PNG é codificado.
+   */
+  async function capturar(): Promise<Blob> {
+    const { mundo: w } = pronto()
+    const origem = w.renderer.three.domElement
+    w.renderer.needsUpdate = true
+    w.renderer.update()
+    const { largura, altura } = tamanhoCaptura(origem.width, origem.height)
+    if (!largura) throw new Error('canvas sem tamanho para capturar')
+    const destino = document.createElement('canvas')
+    destino.width = largura
+    destino.height = altura
+    const ctx = destino.getContext('2d')
+    if (!ctx) throw new Error('canvas 2D indisponível')
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(origem, 0, 0, largura, altura)
+    return new Promise<Blob>((resolve, reject) => {
+      destino.toBlob((b) => (b ? resolve(b) : reject(new Error('falha ao gerar o PNG'))), 'image/png')
+    })
+  }
+
+  /** Pinos HTML sobrepostos ao canvas, reposicionados a cada quadro. */
+  let camadaMarcadores: HTMLDivElement | null = null
+  let pinos: { posicao: Ponto3; el: HTMLButtonElement }[] = []
+  let removerQuadroMarcadores: (() => void) | null = null
+
+  function posicionarMarcadores() {
+    if (!mundo || !camadaMarcadores) return
+    const cv = mundo.renderer.three.domElement
+    const largura = cv.clientWidth
+    const altura = cv.clientHeight
+    for (const pino of pinos) {
+      const t = projetarParaTela(pino.posicao, mundo.camera.three, largura, altura)
+      pino.el.style.display = t.visivel ? '' : 'none'
+      if (t.visivel) pino.el.style.transform = `translate(${t.x}px, ${t.y}px) translate(-50%, -100%)`
+    }
+  }
+
+  function limparMarcadores() {
+    removerQuadroMarcadores?.()
+    removerQuadroMarcadores = null
+    camadaMarcadores?.remove()
+    camadaMarcadores = null
+    pinos = []
+  }
+
+  function marcadores(itens: { id: string; posicao: Ponto3; rotulo: string }[]) {
+    const { mundo: w } = pronto()
+    limparMarcadores()
+    if (itens.length === 0) return
+    const container = w.renderer.three.domElement.parentElement
+    if (!container) return
+    const camada = document.createElement('div')
+    camada.dataset.testid = 'marcadores-3d'
+    Object.assign(camada.style, { position: 'absolute', inset: '0', overflow: 'hidden', pointerEvents: 'none', zIndex: '5' })
+    pinos = itens.map((item) => {
+      const el = document.createElement('button')
+      el.type = 'button'
+      el.textContent = item.rotulo
+      el.setAttribute('aria-label', `Marcador ${item.rotulo}`)
+      el.dataset.marcador = item.id
+      Object.assign(el.style, {
+        position: 'absolute',
+        left: '0',
+        top: '0',
+        pointerEvents: 'auto',
+        cursor: 'pointer',
+        background: COR_MARCADOR,
+        color: '#1a1004',
+        border: '2px solid #fff',
+        borderRadius: '12px 12px 12px 2px',
+        padding: '2px 8px',
+        font: '700 12px/16px system-ui, sans-serif',
+        boxShadow: '0 1px 4px rgba(0,0,0,.5)',
+        display: 'none',
+      })
+      // Não deixa o clique no pino virar seleção, medição ou arrasto da câmera.
+      for (const tipo of ['pointerdown', 'pointerup', 'dblclick'] as const) el.addEventListener(tipo, (e) => e.stopPropagation())
+      el.addEventListener('click', (e) => {
+        e.stopPropagation()
+        emitir('marcador', { id: item.id })
+      })
+      camada.append(el)
+      return { posicao: item.posicao, el }
+    })
+    container.append(camada)
+    camadaMarcadores = camada
+    w.renderer.onAfterUpdate.add(posicionarMarcadores)
+    removerQuadroMarcadores = () => w.renderer.onAfterUpdate.remove(posicionarMarcadores)
+    posicionarMarcadores()
+    w.renderer.needsUpdate = true
+  }
+
   return {
     async montar(el, tema) {
       if (components) throw new Error('motor já montado')
@@ -606,7 +787,9 @@ export function criarMotorThatOpen(): MotorVisualizador {
           selecaoAtual = h.selection.select ?? {}
           if (fantasmaLigado) void aplicarFantasma()
           void refsDe(selecaoAtual).then((refs) => {
-            if (!liberado) emitir('selecao', refs)
+            if (liberado) return
+            selecaoRefs = refs
+            emitir('selecao', refs)
           })
         })
       }
@@ -639,6 +822,8 @@ export function criarMotorThatOpen(): MotorVisualizador {
       o.enabled = true
 
       this.tema(tema)
+      // Só no build de teste (fixture): os e2e inspecionam e comandam o motor por aqui.
+      if (import.meta.env.VITE_DADOS === 'fixture') (window as JanelaTeste).__motorCentral = this as MotorVisualizador
     },
 
     grade(ligado) {
@@ -693,6 +878,9 @@ export function criarMotorThatOpen(): MotorVisualizador {
       classes.delete(sigla)
       contagens.delete(sigla)
       guidsCache.delete(sigla)
+      ocultosRefs = semSigla(ocultosRefs, sigla)
+      selecaoRefs = semSigla(selecaoRefs, sigla)
+      if (isoladosRefs) isoladosRefs = semSigla(isoladosRefs, sigla)
       void f.core.disposeModel(sigla)
     },
 
@@ -760,6 +948,8 @@ export function criarMotorThatOpen(): MotorVisualizador {
     liberar() {
       if (liberado) return
       liberado = true
+      limparMarcadores()
+      delete (window as JanelaTeste).__motorCentral
       ouvintes.clear()
       minimapa?.dispose()
       minimapa = null
@@ -785,6 +975,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
     // --- Etapa 2b
     ocultar(refs) {
       const { components: c } = pronto()
+      ocultosRefs = somarRefs(ocultosRefs, refs)
       void mapaDeRefs(refs).then((mapa) => {
         if (!liberado && Object.keys(mapa).length) void c.get(OBC.Hider).set(false, mapa)
       })
@@ -792,6 +983,8 @@ export function criarMotorThatOpen(): MotorVisualizador {
 
     mostrar(refs) {
       const { components: c } = pronto()
+      ocultosRefs = tirarRefs(ocultosRefs, refs)
+      if (isoladosRefs) isoladosRefs = somarRefs(isoladosRefs, refs)
       void mapaDeRefs(refs).then((mapa) => {
         if (!liberado && Object.keys(mapa).length) void c.get(OBC.Hider).set(true, mapa)
       })
@@ -799,6 +992,8 @@ export function criarMotorThatOpen(): MotorVisualizador {
 
     isolar(refs) {
       const { components: c } = pronto()
+      isoladosRefs = refs.length ? refs : null
+      ocultosRefs = []
       void mapaDeRefs(refs).then((mapa) => {
         if (!liberado && Object.keys(mapa).length) void c.get(OBC.Hider).isolate(mapa)
       })
@@ -806,6 +1001,8 @@ export function criarMotorThatOpen(): MotorVisualizador {
 
     mostrarTudo() {
       const { components: c } = pronto()
+      ocultosRefs = []
+      isoladosRefs = null
       void c.get(OBC.Hider).set(true)
     },
 
@@ -972,9 +1169,9 @@ export function criarMotorThatOpen(): MotorVisualizador {
       },
     },
     // --- Etapa 7
-    vistaAtual: () => naoImplementado(7),
-    aplicarVista: () => naoImplementado(7),
-    capturar: () => naoImplementado(7),
-    marcadores: () => naoImplementado(7),
+    vistaAtual,
+    aplicarVista,
+    capturar,
+    marcadores,
   }
 }
