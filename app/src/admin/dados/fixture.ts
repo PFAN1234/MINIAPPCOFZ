@@ -11,6 +11,8 @@ import { criarObrasAdminFixture, type ObraMemoria } from '@modules/obras/infra/O
 import { criarOrganizacaoAdminFixture } from '@modules/obras/infra/OrganizacaoAdminFixtureAdapter.ts'
 import { criarDocumentosFixture } from '@modules/documentos/infra/DocumentosFixtureAdapter.ts'
 import { sementeHto } from '@modules/documentos/infra/documentosSemente.ts'
+import { criarIssuesFixture } from '@modules/issues/infra/IssuesFixtureAdapter.ts'
+import { sementeIssuesHto } from '@modules/issues/infra/issuesSemente.ts'
 import { criarModelosFixture } from '@modules/modelos/infra/ModelosFixtureAdapter.ts'
 import { CAMPOS_VAZIOS } from '@modules/obras/infra/camposEtapa.ts'
 import { criarTelemetriaFixture } from '@modules/operacao/infra/TelemetriaFixtureAdapter.ts'
@@ -239,11 +241,19 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     nomeUsuario: VOCE.nome,
     semente: sementeHto(),
   })
+  const issues = criarIssuesFixture({
+    exigirAdmin,
+    tamanhoArquivo: (caminho) => plantas.tamanhoArquivo(`issues/${caminho}`),
+    nomeUsuario: (id) => USUARIOS_BASE.find((u) => u.id === id)?.nome ?? null,
+    autor: { id: VOCE.id, nome: VOCE.nome },
+    semente: [{ obraId: 'obra-hto', issues: sementeIssuesHto() }],
+  })
   const modelos = criarModelosFixture({
     exigirAdmin,
     obras: () => obras,
     obraPorSlug,
     documentos: (obraId) => documentos.quantidade(obraId),
+    issuesAbertas: (obraId) => issues.abertas(obraId),
     tamanhoArquivo: (caminho) => plantas.tamanhoArquivo(`modelos/${caminho}`),
     proximoId: () => ++sequencia,
     nomeUsuario: VOCE.nome,
@@ -264,6 +274,7 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     removerArquivos: (o) => {
       modelos.removerObra(o.id)
       documentos.removerObra(o.id)
+      issues.removerObra(o.id)
       return plantas.removerObra(o.id)
     },
   })
@@ -367,6 +378,12 @@ export function criarRepositorioAdminFixture(opcoes: { admin?: boolean; sessao?:
     retirarDocumento: documentos.retirarDocumento,
     vincularDocumento: documentos.vincularDocumento,
     baixarDocumento: documentos.baixarDocumento,
+    listarIssues: issues.listarIssues,
+    salvarIssue: issues.salvarIssue,
+    comentarIssue: issues.comentarIssue,
+    salvarVistaIssue: issues.salvarVistaIssue,
+    urlImagemVista: issues.urlImagemVista,
+    importarBcf: issues.importarBcf,
     listarErrosCliente: telemetriaAdm.listarErrosCliente,
     resumoOrfaos: telemetriaAdm.resumoOrfaos,
   }

@@ -5,6 +5,7 @@ import type { EtapasAdminRepositorio } from '@modules/obras/application/ports/Et
 import type { ObrasAdminRepositorio } from '@modules/obras/application/ports/ObrasAdminRepositorio.port.ts'
 import type { OrganizacaoAdminRepositorio } from '@modules/obras/application/ports/OrganizacaoAdminRepositorio.port.ts'
 import type { DocumentosRepositorio } from '@modules/documentos/application/ports/DocumentosRepositorio.port.ts'
+import type { IssuesRepositorio } from '@modules/issues/application/ports/IssuesRepositorio.port.ts'
 import type { ModelosRepositorio } from '@modules/modelos/application/ports/ModelosRepositorio.port.ts'
 import type { PlantasRepositorio } from '@modules/plantas/application/ports/PlantasRepositorio.port.ts'
 import type { RaRepositorio } from '@modules/ra/application/ports/RaRepositorio.port.ts'
@@ -23,6 +24,7 @@ export interface RepositorioAdmin
     TelemetriaRepositorio,
     Pick<ModelosRepositorio, 'listarModelos' | 'baixarModelo' | 'listarModelosAdmin' | 'listarObrasCentral' | 'registrarModelo' | 'retirarModelo'>,
     DocumentosRepositorio,
+    IssuesRepositorio,
     Pick<PlantasRepositorio, 'obterEditorPlanta' | 'listarPublicacoes' | 'enviarArquivo' | 'baixarOriginal' | 'publicarRevisao'> {}
 
 /** Como no app: a fixture só entra no build com `VITE_DADOS=fixture`. */

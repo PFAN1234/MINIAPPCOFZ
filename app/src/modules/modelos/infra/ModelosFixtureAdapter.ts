@@ -18,6 +18,8 @@ export interface DepsModelosFixture {
   obras?: () => { id: string; slug: string; nome: string }[]
   /** Séries de documentos vigentes da obra (a Central conta); o padrão é 0. */
   documentos?: (obraId: string) => number
+  /** Issues abertas da obra (a Central conta); o padrão é 0. */
+  issuesAbertas?: (obraId: string) => number
   /** Tamanho do arquivo enviado ao bucket `modelos` (caminho dentro do bucket); `undefined` se não houver. */
   tamanhoArquivo?: (caminho: string) => number | undefined
   /** Numeração dos eventos do histórico (compartilhada com o resto da fixture, se houver). */
@@ -46,6 +48,7 @@ export function criarModelosFixture(deps: DepsModelosFixture = {}): ModelosFixtu
       { id: 'obra-vazia', slug: 'vazia', nome: 'Obra sem arquivos' },
     ],
     documentos = () => 0,
+    issuesAbertas = () => 0,
     tamanhoArquivo = () => undefined,
     proximoId = () => ++contador,
     nomeUsuario = 'Você',
@@ -77,7 +80,7 @@ export function criarModelosFixture(deps: DepsModelosFixture = {}): ModelosFixtu
           nome: o.nome,
           disciplinas: lista.length,
           documentos: documentos(o.id),
-          issues_abertas: 0,
+          issues_abertas: issuesAbertas(o.id),
           atualizado_em: datas.length ? datas.sort().at(-1)! : null,
         }
       })
