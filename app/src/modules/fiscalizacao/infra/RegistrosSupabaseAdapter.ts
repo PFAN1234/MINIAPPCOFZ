@@ -10,12 +10,18 @@ import type {
   RegistroLocalizado,
   RegistroResumo,
 } from '@modules/fiscalizacao/domain/tipos.ts'
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
 import type { ObraResumo } from '@modules/obras/domain/tipos.ts'
 import { ErroEnvio, erroDoSupabase } from '../../../dados/erros.ts'
 import { nomeMostrado } from '../../../dados/nome.ts'
 import { limitesPeriodo } from '@shared/kernel/periodo.ts'
 
-const SEGUNDOS_URL_ASSINADA = 3600
+/** URLs de imagens fora do `Armazenamento` (plantas, até a migração delas para o R2). */
+export type UrlsImagensLegado = (
+  paths: string[],
+  bucket: 'plantas',
+) => Promise<Record<string, string>>
+
 const LOTE_IN = 100
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const MENSAGEM_JA_ENCERRADA = 'Esta pendência já foi encerrada.'
@@ -40,7 +46,11 @@ function lotes<T>(itens: T[]): T[][] {
   return saida
 }
 
-export function criarRegistrosSupabase(cliente: SupabaseClient): RegistrosRepositorio {
+export function criarRegistrosSupabase(
+  cliente: SupabaseClient,
+  armazenamento: Armazenamento,
+  urlsLegado?: UrlsImagensLegado,
+): RegistrosRepositorio {
   async function chamar(nome: string, args: Record<string, unknown>): Promise<unknown> {
     try {
       const { data, error } = await cliente.rpc(nome, args)
@@ -174,23 +184,19 @@ export function criarRegistrosSupabase(cliente: SupabaseClient): RegistrosReposi
     async urlsImagens(paths, bucket = 'plantas') {
       const unicos = [...new Set(paths)]
       if (unicos.length === 0) return {}
-      const dados = checar(
-        await cliente.storage.from(bucket).createSignedUrls(unicos, SEGUNDOS_URL_ASSINADA),
-      )
-      const mapa: Record<string, string> = {}
-      for (const item of dados) {
-        if (item.path && item.signedUrl) mapa[item.path] = item.signedUrl
+      if (bucket !== 'fotos') return urlsLegado ? urlsLegado(unicos, bucket) : {}
+      try {
+        return Object.fromEntries(await armazenamento.urls('fotos', unicos))
+      } catch (e) {
+        throw erroDoSupabase(e)
       }
-      return mapa
     },
 
     async enviarFoto({ obraId, registroId, fotoId }, blob) {
       const caminho = `${exigirUuid(obraId, 'obra')}/${exigirUuid(registroId, 'registro')}/${exigirUuid(fotoId, 'foto')}.jpg`
       try {
-        const { error } = await cliente.storage
-          .from('fotos')
-          .upload(caminho, blob, { upsert: true, contentType: 'image/jpeg' })
-        if (error) throw error
+        // `ja_confirmado` (reenvio) conta como enviada.
+        await armazenamento.enviar('fotos', caminho, blob, 'image/jpeg')
       } catch (e) {
         throw erroDoSupabase(e)
       }
@@ -273,7 +279,10 @@ export function criarRegistrosSupabase(cliente: SupabaseClient): RegistrosReposi
       }
       return {
         registro: resumos[0],
-        pavimento: { codigo: String(pavLinha.codigo), nome: String(pavLinha.nome) },
+        pavimento: {
+          codigo: String(pavLinha.codigo),
+          nome: String(pavLinha.nome),
+        },
         papel: (checar(partic) as Linha | null)?.papel === 'gestor' ? 'gestor' : 'equipe',
         encerramento,
       }
@@ -305,9 +314,17 @@ export function criarRegistrosSupabase(cliente: SupabaseClient): RegistrosReposi
           .select('tipo, ambiente(codigo), obra(slug)')
           .eq('id', id)
           .maybeSingle(),
-      ) as unknown as { tipo: RegistroLocalizado['tipo']; ambiente: { codigo: string }; obra: { slug: string } } | null
+      ) as unknown as {
+        tipo: RegistroLocalizado['tipo']
+        ambiente: { codigo: string }
+        obra: { slug: string }
+      } | null
       if (!linha) return null
-      return { slug: linha.obra.slug, codigo: linha.ambiente.codigo, tipo: linha.tipo }
+      return {
+        slug: linha.obra.slug,
+        codigo: linha.ambiente.codigo,
+        tipo: linha.tipo,
+      }
     },
   }
 }

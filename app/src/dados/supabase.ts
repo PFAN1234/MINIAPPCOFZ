@@ -1,7 +1,12 @@
-import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
+import {
+  createClient,
+  type SupabaseClient,
+  type SupabaseClientOptions,
+} from '@supabase/supabase-js'
 import { criarAcessosSupabase } from '@modules/acessos/infra/AcessosSupabaseAdapter.ts'
 import { criarEquipeServicoSupabase } from '@modules/acessos/infra/EquipeServicoSupabaseAdapter.ts'
 import { criarSessaoSupabase } from '@modules/acessos/infra/SessaoSupabaseAdapter.ts'
+import { criarArmazenamentoSupabase } from '@modules/armazenamento/infra/ArmazenamentoSupabaseAdapter.ts'
 import { criarPublicacoesSupabase } from '@modules/fiscalizacao/infra/PublicacoesSupabaseAdapter.ts'
 import { criarRegistrosSupabase } from '@modules/fiscalizacao/infra/RegistrosSupabaseAdapter.ts'
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
@@ -38,7 +43,15 @@ export function criarRepositorioSupabase(
   const obras = criarObrasSupabase(cliente)
   const organizacao = criarOrganizacaoSupabase(cliente)
   const etapasInicio = criarEtapasInicioSupabase(cliente)
-  const registros = criarRegistrosSupabase(cliente)
+  const armazenamento = criarArmazenamentoSupabase(cliente)
+  const registros = criarRegistrosSupabase(cliente, armazenamento, async (paths, bucket) => {
+    // Plantas continuam no Storage do Supabase até a Parte 3b.
+    const { data, error } = await cliente.storage.from(bucket).createSignedUrls(paths, 3600)
+    if (error) throw new Error(error.message)
+    const mapa: Record<string, string> = {}
+    for (const item of data ?? []) if (item.path && item.signedUrl) mapa[item.path] = item.signedUrl
+    return mapa
+  })
   const publicacoes = criarPublicacoesSupabase(cliente)
   const relatorios = criarRelatoriosSupabase(cliente)
   const observacoes = criarObservacoesSupabase(cliente)
