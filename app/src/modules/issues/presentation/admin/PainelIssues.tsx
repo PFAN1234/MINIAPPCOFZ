@@ -127,7 +127,8 @@ function Lista({
         {abertas} {abertas === 1 ? 'aberta' : 'abertas'} de {issues.length}
         <span className="central-sec">
           {' '}
-          · {contagem.em_andamento} em andamento · {contagem.resolvida} resolvidas · {contagem.fechada} fechadas
+          · {contagem.em_andamento} em andamento · {contagem.resolvida} {contagem.resolvida === 1 ? 'resolvida' : 'resolvidas'} ·{' '}
+          {contagem.fechada} {contagem.fechada === 1 ? 'fechada' : 'fechadas'}
         </span>
       </p>
       <div className="central-gestao-acoes">
@@ -536,7 +537,7 @@ function Detalhe({
       <h3>
         #{issue.numero} <Selo status={issue.status} />
       </h3>
-      <p className="central-sec">
+      <p className="central-sec central-issue-criada">
         Criada em {dataHora(issue.criadoEm)}
         {issue.criadoPorNome ? ` por ${issue.criadoPorNome}` : ''}
       </p>

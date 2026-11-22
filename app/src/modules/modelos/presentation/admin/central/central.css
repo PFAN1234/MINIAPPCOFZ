@@ -838,6 +838,10 @@
 .central-issue-titulo {
   overflow-wrap: anywhere;
 }
+.central-issue-criada {
+  font-size: 12px;
+  margin-bottom: 8px;
+}
 .central-issue-meta {
   display: flex;
   flex-wrap: wrap;
