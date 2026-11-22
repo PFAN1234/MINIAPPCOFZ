@@ -289,6 +289,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
   let minimapa: Minimapa | null = null
   /** Ids de vistas criadas por nós (zeradas quando os modelos mudam). */
   const vistasCriadas = new Set<string>()
+  const bordasVistas = new Map<string, OBF.ClipEdges>()
 
   const escaparRegex = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -501,7 +502,18 @@ export function criarMotorThatOpen(): MotorVisualizador {
   function preencherVista(c: OBC.Components, v: OBC.View) {
     const bordas = c.get(OBF.ClipStyler).createFromView(v, { items: { corte: { style: ESTILO_CORTE } } })
     bordas.visible = v.open
+    bordasVistas.set(v.id, bordas)
     void bordas.update()
+  }
+
+  /** Recalcula o preenchimento da planta ao abri-la (o cálculo feito ao criar, com a vista fechada, não basta). */
+  function atualizarPreenchimentoVista(id: string) {
+    const bordas = bordasVistas.get(id)
+    if (!bordas) return
+    bordas.visible = true
+    void bordas.update().then(() => {
+      if (!liberado && mundo) mundo.renderer.needsUpdate = true
+    })
   }
 
   function descartarVistas() {
@@ -511,6 +523,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
     vistaAberta = null
     habilitarCortes(true)
     for (const id of vistasCriadas) views.list.delete(id)
+    bordasVistas.clear()
     vistasCriadas.clear()
   }
 
@@ -520,6 +533,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
     habilitarCortes(false)
     c.get(OBC.Views).open(id)
     vistaAberta = id
+    atualizarPreenchimentoVista(id)
     w.renderer.needsUpdate = true
   }
 
@@ -1215,7 +1229,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
         const novas = views.createElevations({
           combine: true,
           world: w,
-          // Sem rotação de norte verdadeiro: o +Y do IFC é o norte do projeto (a HTO foi exportada com o ponto base "oriented in True North"); a frente (+Z) olha o sul e a esquerda (+X) olha o leste.
+          // N/S/L/O são do norte do projeto (+Y do IFC), sem rotação de norte verdadeiro: o TrueNorth do ARQ da HTO é (-0,75; -0,66), não (0, 1), então o norte geográfico fica girado (~131°) em relação a elas; a frente (+Z) olha o sul e a esquerda (+X) olha o leste.
           namingCallback: () => ({
             front: ID_ELEVACAO.S,
             back: ID_ELEVACAO.N,
