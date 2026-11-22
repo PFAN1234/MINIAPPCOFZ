@@ -473,7 +473,12 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
   - Vínculos a pavimento e elementos da seleção; "Documentos deste elemento/pavimento" no contexto; vínculos órfãos na Gestão (`MotorVisualizador.existem`)
   - e2e `central-modelos` cobre vincular, contexto e prévia; suíte completa verde (1061)
   - Em aberto: se copiar os vínculos falhar depois de registrar a revisão, o reenvio dá "revisão já existe" (tratar com mensagem própria)
-- [ ] 7 Issues e BCF
+- [x] 7 Issues e BCF (2026-11-22; decisões: só no site admin; PR próprio com a migration aplicada em produção)
+  - Banco: migration `20261129090000_issues.sql` (tabelas `issue`, `issue_vista`, `issue_comentario`; RPCs listar/salvar/comentar/salvar vista/importar BCF; pasta `issues` no R2, PNG até 5 MB, na exclusão de obra e na varredura de órfãos; `admin_central_obras` conta abertas + em andamento). `admin-excluir-obra` remove a pasta `issues`
+  - App: módulo `modules/issues` (domínio, porta, fixture com 3 issues na HTO, Supabase, `criarIssueComVista`/`adicionarVista`, hooks); motor com `vistaAtual`/`aplicarVista` (câmera com zoom da ortográfica, cortes, ocultos, isolados, seleção), `capturar` (PNG ≤ 1600 px), `marcadores` (pinos HTML, clique abre a issue) e `origemCena`
+  - Painel Issues: lista com filtro e busca, nova issue a partir da vista com miniatura, detalhe editável, vistas com "Restaurar vista", comentários, `?issue=N`, botão de marcadores na barra
+  - BCF 2.1/3.0 próprio (`fflate` + DOMParser; o `BCFTopics` exige WebGL): eixos Y-up↔Z-up + origem do modelo-base; a direção exportada guarda a distância até o alvo; campos sem equivalente vão para a descrição com `[BCF]`; reimportar atualiza sem duplicar; snapshots JPEG viram PNG
+  - Em aberto: a vista não guarda as cores por categoria/disciplina (modo global do motor)
 - [ ] 8 Fechamento (e2e, docs, produção, PR)
 
 ## Arquivos no Cloudflare R2 (plano: `tasks/plano-r2.md`)

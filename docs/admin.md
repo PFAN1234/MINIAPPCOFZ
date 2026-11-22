@@ -384,13 +384,25 @@ Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra,
 | Repositório | `listarRA`, `definirQr`, `removerQr` (`dados/`; a fixture traz dois ambientes da HTO com geometria, um deles com QR) |
 | Testes | `app/src/modules/ra/domain/*.test.ts`, `app/src/modules/ra/presentation/admin/RaObra.test.tsx` |
 
+## Issues da Central de modelos
+
+Admin › Modelos › obra › aba Issues (contrato: `docs/contrato-central-modelos.md` §5.2). Só no site, só para administradores; o responsável é um administrador.
+
+| Peça | Onde |
+| --- | --- |
+| Banco | Migration `20261129090000_issues.sql`: tabelas `issue`, `issue_vista`, `issue_comentario` (RLS sem acesso direto); RPCs `admin_listar_issues`, `admin_salvar_issue`, `admin_comentar_issue`, `admin_salvar_vista_issue`, `admin_importar_bcf`; `admin_central_obras` conta as abertas e em andamento |
+| Arquivos | Pasta `issues` do R2 (PNG, até 5 MB): `<obra_id>/<issue_id>/<vista_id>.png`; entra na exclusão de obra e na varredura de órfãos |
+| App | `app/src/modules/issues/` (domínio, BCF, porta, adaptadores, painel); motor 3D: `vistaAtual`, `aplicarVista`, `capturar`, `marcadores`, `origemCena` |
+| Fluxo | "Nova issue" captura a vista atual; abrir a issue restaura a vista; marcadores laranja no 3D para abertas e em andamento (botão de bandeira na barra liga e desliga); BCF 2.1/3.0 para importar e exportar (reimportar o mesmo arquivo atualiza, não duplica) |
+| Testes | `tests/db/test_issues.py`, `app/src/modules/issues/**/*.test.ts(x)`, `CentralIssues.test.tsx`, e2e `app/e2e/central-issues.spec.ts` |
+
 ## Erros do cliente
 
 Erros do Mini App e do site admin ficam na tabela `public.erro_cliente` (migration `20261125090000_erro_cliente.sql`; contrato em `docs/contrato-erros-orfaos.md`, Parte A), sem serviço externo. A lista está em `/admin/erros` (link "Manutenção" no menu, aba "Erros"): quando, app, versão, rota, usuário e mensagem; clicar na mensagem mostra a pilha, o contexto e o navegador.
 
 ## Arquivos órfãos no R2 (simulação)
 
-Migration `20261125100000_orfaos_storage.sql` (contrato: `docs/contrato-erros-orfaos.md`, Parte B). Todo dia às 03:17 UTC o `pg_cron` roda `privado.varrer_orfaos_storage()`, que grava em `public.orfao_storage` os arquivos confirmados na tabela `arquivo` (pastas `fotos`, `plantas`, `originais`, `modelos`, `boletins`, `organizacao`, `relatorios` e `documentos`) que não aparecem em nenhuma coluna de caminho e foram criados há mais de 7 dias (`origem = 'sem_referencia'`). A coluna `origem` também admite `sem_registro`: objeto que está no R2 mas não tem linha em `arquivo`, gravado só pela rotina `manutencao` da Edge Function `armazenamento` (o banco não enxerga o R2). **A varredura não apaga nada**; a remoção é feita pela `manutencao`.
+Migration `20261125100000_orfaos_storage.sql` (contrato: `docs/contrato-erros-orfaos.md`, Parte B). Todo dia às 03:17 UTC o `pg_cron` roda `privado.varrer_orfaos_storage()`, que grava em `public.orfao_storage` os arquivos confirmados na tabela `arquivo` (pastas `fotos`, `plantas`, `originais`, `modelos`, `boletins`, `organizacao`, `relatorios`, `documentos` e `issues`) que não aparecem em nenhuma coluna de caminho e foram criados há mais de 7 dias (`origem = 'sem_referencia'`). A coluna `origem` também admite `sem_registro`: objeto que está no R2 mas não tem linha em `arquivo`, gravado só pela rotina `manutencao` da Edge Function `armazenamento` (o banco não enxerga o R2). **A varredura não apaga nada**; a remoção é feita pela `manutencao`.
 
 - **Como conferir no site:** `/admin/erros` (menu "Manutenção"), aba "Arquivos órfãos": resumo por pasta (quantidade e tamanho) e os 100 maiores.
 - **Como conferir no SQL:** `select public.admin_resumo_orfaos();` (como admin) ou, como superusuário, `select * from public.orfao_storage order by tamanho desc nulls last;`. Para forçar a varredura agora: `select privado.varrer_orfaos_storage();`.
