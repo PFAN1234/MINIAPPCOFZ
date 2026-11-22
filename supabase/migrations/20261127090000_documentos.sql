@@ -62,40 +62,7 @@ create policy documento_vinculo_select on public.documento_vinculo
 comment on table public.documento is
   'Documentos da obra (pranchas, memoriais, planilhas...), uma linha por revisão; escrita só pelas RPCs admin_*_documento.';
 
--- Bucket `documentos` -----------------------------------------------------------------------------
-
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('documentos', 'documentos', false, 104857600, array[
-  'application/pdf', 'image/png', 'image/jpeg', 'image/webp',
-  'application/acad', 'image/vnd.dwg', 'application/dxf', 'image/vnd.dxf',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/octet-stream'
-])
-on conflict (id) do nothing;
-
-create policy documentos_admin_select on storage.objects
-  for select to authenticated
-  using (bucket_id = 'documentos' and privado.eh_admin());
-
-create policy documentos_admin_insert on storage.objects
-  for insert to authenticated
-  with check (
-    bucket_id = 'documentos'
-    and privado.eh_admin()
-    and name ~ '^[0-9a-f-]{36}/[0-9a-f-]{36}/[0-9a-f]{64}\.(pdf|png|jpg|webp|dwg|dxf|xlsx|docx)$'
-    and privado.caminho_de_obra(name)
-  );
-
-create policy documentos_admin_update on storage.objects
-  for update to authenticated
-  using (bucket_id = 'documentos' and privado.eh_admin())
-  with check (
-    bucket_id = 'documentos'
-    and privado.eh_admin()
-    and name ~ '^[0-9a-f-]{36}/[0-9a-f-]{36}/[0-9a-f]{64}\.(pdf|png|jpg|webp|dwg|dxf|xlsx|docx)$'
-    and privado.caminho_de_obra(name)
-  );
+-- Os arquivos dos documentos ficam no R2 (pasta `documentos`, tabela `arquivo`); sem bucket nem políticas.
 
 -- Auxiliar: documento no formato da listagem --------------------------------------------------------
 
@@ -310,15 +277,14 @@ begin
     raise exception 'A revisão % já existe neste documento', v_revisao using errcode = '23505';
   end if;
 
-  select true, o.metadata into v_achou, v_meta
-    from storage.objects o where o.bucket_id = 'documentos' and o.name = v_caminho;
-  if v_achou is null then
-    raise exception 'Documento não encontrado no Storage (documentos/%): envie o arquivo antes de registrar', v_caminho
+  v_achou := privado.arquivo_confirmado('documentos', v_caminho);
+  if not v_achou then
+    raise exception 'Documento não encontrado no armazenamento (documentos/%): envie o arquivo antes de registrar', v_caminho
       using errcode = 'P0002';
   end if;
-  v_tamanho := v_meta ->> 'size';
+  v_tamanho := privado.arquivo_tamanho('documentos', v_caminho)::text;
   if v_tamanho is null or v_tamanho !~ '^\d{1,18}$' then
-    raise exception 'O Storage ainda não informou o tamanho de documentos/%: aguarde o fim do envio e tente de novo', v_caminho
+    raise exception 'Tamanho de documentos/% indisponível: aguarde o fim do envio e tente de novo', v_caminho
       using errcode = '22023';
   end if;
   if v_tamanho::bigint <> v_bytes then
@@ -472,3 +438,60 @@ $$;
 
 revoke execute on function public.admin_central_obras() from public, anon;
 grant execute on function public.admin_central_obras() to authenticated;
+
+-- Varredura de órfãos passa a incluir a pasta `documentos`.
+create or replace function privado.varrer_orfaos_storage()
+returns int
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_total int;
+begin
+  create temporary table _orfaos_atuais on commit drop as
+  with ref as (
+    select 'fotos'::text as bucket, f.storage_path as caminho from public.foto f
+    union all select 'plantas', p.imagem_path from public.planta p
+    union all select 'plantas', p.imagem_hd_path from public.planta p where p.imagem_hd_path is not null
+    union all select 'plantas', d.imagem_path from public.planta_detalhe d
+    union all select 'originais', pp.pdf_path from public.publicacao_planta pp
+    union all select 'modelos', m.caminho from public.modelo m
+    union all select 'modelos', pm.caminho from public.publicacao_modelo pm where pm.caminho is not null
+    union all select 'boletins', b.pdf_path from public.boletim b where b.pdf_path is not null
+    union all select 'boletins', b.etapa_id::text || '/' || replace(b.numero, '/', '') || '-clima.png'
+                from public.boletim b
+    union all select 'boletins', regexp_replace(b.pdf_path, '\.pdf$', '') || '-clima.png'
+                from public.boletim b where b.pdf_path is not null
+    union all select 'organizacao', o.logo_path from public.organizacao o where o.logo_path is not null
+    union all select 'documentos', d.caminho from public.documento d
+  )
+  select a.pasta as bucket, a.caminho as caminho, a.tamanho as tamanho, a.criado_em as criado_em
+    from public.arquivo a
+   where a.situacao = 'confirmado'
+     and a.pasta in ('fotos', 'plantas', 'originais', 'modelos', 'boletins', 'organizacao', 'relatorios', 'documentos')
+     and a.criado_em < now() - interval '7 days'
+     and not exists (select 1 from ref r where r.bucket = a.pasta and r.caminho = a.caminho)
+     and (a.pasta <> 'relatorios'
+          or (privado.uuid_ou_nulo(split_part(a.caminho, '/', 1)) is not null
+              and not exists (select 1 from public.obra ob
+                               where ob.id = privado.uuid_ou_nulo(split_part(a.caminho, '/', 1)))
+              and not exists (select 1 from public.etapa e
+                               where e.id = privado.uuid_ou_nulo(split_part(a.caminho, '/', 1)))));
+
+  -- Some da lista o que voltou a ter referência ou deixou de estar confirmado (itens já removidos ficam como histórico).
+  delete from public.orfao_storage t
+   where t.removido_em is null
+     and not exists (select 1 from _orfaos_atuais a where a.bucket = t.bucket and a.caminho = t.caminho);
+
+  insert into public.orfao_storage (bucket, caminho, tamanho, criado_em, origem)
+  select a.bucket, a.caminho, a.tamanho, a.criado_em, 'sem_referencia' from _orfaos_atuais a
+  on conflict (bucket, caminho) do update
+    set tamanho = excluded.tamanho, criado_em = excluded.criado_em
+    where public.orfao_storage.removido_em is null;
+
+  select count(*) into v_total from public.orfao_storage where removido_em is null;
+  drop table _orfaos_atuais;
+  return v_total;
+end;
+$$;

@@ -481,18 +481,20 @@ def test_storage_foto_vinculada_nao_pode_ser_sobrescrita(cenario):
     c = cenario
     rid, fid = uuid.uuid4(), uuid.uuid4()
     nome = f'{c.obra_a}/{rid}/{fid}.jpg'
-    with sessao(c.dsn, c.equipe_a) as cur:
-        cur.execute("insert into storage.objects (bucket_id, name, owner_id) values ('fotos', %s, %s)",
-                    (nome, str(c.equipe_a)))
-    with sessao(c.dsn, c.equipe_a) as cur:  # antes de concluir: reenvio permitido
-        cur.execute("update storage.objects set owner_id = owner_id where name = %s", (nome,))
-        assert cur.rowcount == 1
+
+    def pode_enviar():
+        with sessao(c.dsn, c.equipe_a) as cur:
+            cur.execute("select privado.pode_arquivo('enviar', 'fotos', %s)", (nome,))
+            return cur.fetchone()[0]
+
+    with sessao(c.dsn, papel=None) as cur:
+        cur.execute("insert into public.arquivo (pasta, caminho, tamanho, tipo, autor, situacao) "
+                    "values ('fotos', %s, 1, 'image/jpeg', %s, 'confirmado')", (nome, str(c.equipe_a)))
+    assert pode_enviar() is True  # antes de concluir: reenvio permitido
     with sessao(c.dsn, c.equipe_a) as cur:
         cur.execute(CONCLUIR, (rid, c.amb_a, 'pendencia', 'Fissura na parede', AGORA - timedelta(minutes=1),
                                json.dumps([{'id': str(fid), 'largura': 800, 'altura': 600, 'bytes': 1}])))
-    with sessao(c.dsn, c.equipe_a) as cur:  # depois: a evidência fica travada
-        cur.execute("update storage.objects set owner_id = owner_id where name = %s", (nome,))
-        assert cur.rowcount == 0
+    assert pode_enviar() is False  # depois: a evidência fica travada
 
 
 # --- solicitacao_acesso -------------------------------------------------------

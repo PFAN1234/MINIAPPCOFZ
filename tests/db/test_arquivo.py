@@ -345,3 +345,59 @@ def test_rpcs_de_usuario_negadas_a_anon_e_tabela_so_admin_le(c):
     with pytest.raises(psycopg.errors.InsufficientPrivilege):
         sql(c.dsn, "insert into public.arquivo (pasta, caminho, tamanho, tipo) values ('fotos', 'x', 1, 'y')",
             usuario=c.admin)
+
+
+# --- Parte 1b: funções do banco leem `arquivo` ---------------------------------------------------
+
+def test_excluir_obra_marca_so_os_arquivos_da_obra(c):
+    obra_b = str(c.cen.obra_b)
+    de_a = caminhos(c)
+    de_b = {p: (cam.replace(c.obra, obra_b, 1), t) for p, (cam, t) in de_a.items() if p != 'organizacao'}
+    for pasta in ('fotos', 'plantas', 'originais', 'modelos', 'documentos'):
+        servico(c, pasta, de_a[pasta][0])
+        servico(c, pasta, de_b[pasta][0])
+    servico(c, 'boletins', de_a['boletins'][0])  # pasta da etapa: não é prefixo da obra
+    slug, nome = su(c.dsn, 'select slug, nome from public.obra where id = %s', (c.obra,))[0]
+    rpc(c, c.admin, 'admin_excluir_obra', slug, nome)
+    for pasta in ('fotos', 'plantas', 'originais', 'modelos', 'documentos'):
+        assert linha(c, pasta, de_a[pasta][0])[0] == 'excluir'
+        assert linha(c, pasta, de_b[pasta][0])[0] == 'confirmado'
+    assert linha(c, 'boletins', de_a['boletins'][0])[0] == 'confirmado'
+
+
+def test_excluir_etapa_marca_os_boletins_da_etapa(c):
+    cam = caminhos(c)['boletins'][0]
+    servico(c, 'boletins', cam)
+    slug, nome = su(c.dsn, 'select slug, nome from public.etapa where id = %s', (c.etapa,))[0]
+    rpc(c, c.admin, 'admin_excluir_etapa', slug, nome)
+    assert linha(c, 'boletins', cam)[0] == 'excluir'
+
+
+def test_resumo_da_obra_conta_arquivos_nao_excluidos(c):
+    cam = caminhos(c)
+    servico(c, 'fotos', cam['fotos'][0])
+    servico(c, 'modelos', cam['modelos'][0])
+    resumo = su(c.dsn, 'select privado.resumo_obra(%s)', (c.obra,))[0][0]
+    assert resumo['arquivos'] == {'fotos': 1, 'plantas': 0, 'originais': 0, 'modelos': 1}
+    rpc(c, None, 'arquivo_marcar_exclusao_prefixo', ['fotos'], f'{c.obra}/', papel='service_role')
+    resumo = su(c.dsn, 'select privado.resumo_obra(%s)', (c.obra,))[0][0]
+    assert resumo['arquivos']['fotos'] == 0 and resumo['arquivos']['modelos'] == 1
+
+
+def test_nenhuma_funcao_le_storage_objects(c):
+    r = su(c.dsn, "select n.nspname || '.' || p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace "
+                  "where n.nspname in ('public', 'privado') "
+                  "and (p.prosrc ilike '%%storage.objects%%' or p.prosrc ilike '%%storage.foldername%%')")
+    assert r == []
+
+
+def test_documento_exige_arquivo_confirmado(c):
+    sha, serie = 'ab' * 32, str(uuid.uuid4())
+    cam = f'{c.obra}/{serie}/{sha}.pdf'
+    slug = su(c.dsn, 'select slug from public.obra where id = %s', (c.obra,))[0][0]
+    p = {'serie': serie, 'titulo': 'Memorial', 'tipo': 'memorial', 'revisao': 'R01', 'arquivo_nome': 'm.pdf',
+         'mime': 'application/pdf', 'bytes': 10, 'sha256': sha, 'caminho': cam}
+    assert tenta(c, c.admin, 'admin_registrar_documento', slug, json.dumps(p)).startswith('Documento não encontrado')
+    rpc(c, None, 'arquivo_registrar_servico', 'documentos', cam, 10, 'application/pdf', papel='service_role')
+    r = rpc(c, c.admin, 'admin_registrar_documento', slug, json.dumps(p))
+    assert r['caminho'] == cam

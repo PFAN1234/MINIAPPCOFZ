@@ -514,8 +514,9 @@ def test_criar_e_mover_obra(cenario):
 # --- Site: resumo e exclusão da etapa ----------------------------------------------------------
 
 def objeto(c, bucket, nome_objeto):
-    su(c, 'insert into storage.objects (bucket_id, name) values (%s, %s) on conflict do nothing',
-       (bucket, nome_objeto))
+    su(c, "insert into public.arquivo (pasta, caminho, tamanho, tipo, situacao) "
+          "values (%s, %s, 1, 'application/octet-stream', 'confirmado') "
+          "on conflict (pasta, caminho) do update set situacao = 'confirmado'", (bucket, nome_objeto))
 
 
 def test_admin_resumo_etapa(cenario):
@@ -668,24 +669,19 @@ def test_admin_salvar_organizacao(org):
     for dados in ({'nome': ''}, {'nome': 'x' * 81}, {'nome': 1}, {'logo_path': 1}, []):
         with pytest.raises(errors.InvalidParameterValue):
             rpc(c, c.sem_obra, salvar, (json.dumps(dados),))
-    su(c, "delete from storage.objects where bucket_id = 'organizacao'")
+    su(c, "delete from public.arquivo where pasta = 'organizacao'")
 
 
 def test_bucket_organizacao_so_admin_grava(org):
     c = org
-    inserir = "insert into storage.objects (bucket_id, name, owner_id) values ('organizacao', %s, 'x')"
+    def pode(usuario, acao, nome):
+        return sql(c, "select privado.pode_arquivo(%s, 'organizacao', %s)", (acao, nome), usuario=usuario)[0][0]
+
     nome_ok = f'logo-{uuid.uuid4().hex[:16]}.webp'
-    with pytest.raises(errors.InsufficientPrivilege):
-        sql(c, inserir, (nome_ok,), usuario=c.gestor_a)
+    assert pode(c.gestor_a, 'enviar', nome_ok) is False
     tornar_admin(c, c.sem_obra)
-    with pytest.raises(errors.InsufficientPrivilege):
-        sql(c, inserir, ('outro-nome.webp',), usuario=c.sem_obra)
-    sql(c, inserir, (nome_ok,), usuario=c.sem_obra)
-    assert sql(c, "select name from storage.objects where bucket_id = 'organizacao' and name = %s", (nome_ok,),
-               usuario=c.sem_obra) == [(nome_ok,)]
-    sql(c, "delete from storage.objects where bucket_id = 'organizacao' and name = %s", (nome_ok,),
-        usuario=c.gestor_a)  # não admin: a RLS não deixa apagar
-    assert su(c, "select count(*) from storage.objects where name = %s", (nome_ok,)) == [(1,)]
-    sql(c, "delete from storage.objects where bucket_id = 'organizacao' and name = %s", (nome_ok,),
-        usuario=c.sem_obra)
-    assert su(c, "select count(*) from storage.objects where name = %s", (nome_ok,)) == [(0,)]
+    assert pode(c.sem_obra, 'enviar', 'outro-nome.webp') is False
+    assert pode(c.sem_obra, 'enviar', nome_ok) is True
+    assert pode(c.gestor_a, 'ler', nome_ok) is True  # logo é público para quem está logado
+    assert pode(c.gestor_a, 'excluir', nome_ok) is False  # não admin
+    assert pode(c.sem_obra, 'excluir', nome_ok) is True

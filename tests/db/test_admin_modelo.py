@@ -41,11 +41,11 @@ def slug(c, obra):
 
 def subir(c, nome, tamanho=None):
     """Objeto no bucket `modelos` (como o Storage deixa ao fim do upload)."""
-    meta = None if tamanho is None else json.dumps({'size': tamanho, 'mimetype': 'application/octet-stream'})
     with sessao(c.dsn, papel=None) as cur:
-        cur.execute('insert into storage.objects (bucket_id, name, metadata) values (%s, %s, %s::jsonb) '
-                    'on conflict (bucket_id, name) do update set metadata = excluded.metadata',
-                    ('modelos', nome, meta))
+        cur.execute("insert into public.arquivo (pasta, caminho, tamanho, tipo, situacao) "
+                    "values ('modelos', %s, %s, 'application/octet-stream', 'confirmado') "
+                    "on conflict (pasta, caminho) do update set tamanho = excluded.tamanho, situacao = 'confirmado'",
+                    (nome, tamanho or 0))
 
 
 def payload(obra, sigla='ARQ', hash_='a', bytes_=1000, **extra):
@@ -123,25 +123,25 @@ def test_obra_inexistente(cenario, admin):
     assert e.value.sqlstate == 'P0002'
 
 
-# --- Storage -----------------------------------------------------------------------------------
+# --- Permissão por pasta (privado.pode_arquivo) -----------------------------------------------------------------------------------
 
 def inserir_objeto(c, usuario, nome):
-    sql(c, "insert into storage.objects (bucket_id, name) values ('modelos', %s)", (nome,), usuario=usuario)
+    """Exige `enviar` (privado.pode_arquivo) e então grava o arquivo confirmado."""
+    if not pode(c, usuario, 'enviar', 'modelos', nome):
+        raise errors.InsufficientPrivilege('sem permissão')
+    subir(c, nome, 1)
+
+
+def pode(c, usuario, acao, pasta, nome):
+    return sql(c, 'select privado.pode_arquivo(%s, %s, %s)', (acao, pasta, nome), usuario=usuario)[0][0]
 
 
 def test_admin_grava_le_e_atualiza(cenario, admin):
     nome = f'{cenario.obra_a}/ARQ/{"0123456789abcdef"}.frag'
     inserir_objeto(cenario, admin, nome)
-    assert sql(cenario, "select name from storage.objects where bucket_id = 'modelos' and name = %s", (nome,),
-               usuario=admin) == [(nome,)]
-    # update (upsert do Storage) também é permitido ao admin
-    sql(cenario, "update storage.objects set owner_id = 'x' where bucket_id = 'modelos' and name = %s", (nome,),
-        usuario=admin)
-    # sem delete: a linha continua lá
-    sql(cenario, "delete from storage.objects where bucket_id = 'modelos' and name = %s", (nome,), usuario=admin)
-    with sessao(cenario.dsn, papel=None) as cur:
-        cur.execute("select owner_id from storage.objects where bucket_id = 'modelos' and name = %s", (nome,))
-        assert cur.fetchall() == [('x',)]
+    assert pode(cenario, admin, 'ler', 'modelos', nome) is True
+    assert pode(cenario, admin, 'enviar', 'modelos', nome) is True  # reenvio
+    assert pode(cenario, admin, 'excluir', 'modelos', nome) is False  # sem exclusão direta
 
 
 @pytest.mark.parametrize('nome', [
@@ -169,14 +169,14 @@ def test_nao_admin_nao_grava_e_participante_le(cenario, admin):
         inserir_objeto(cenario, cenario.gestor_a, nome)
     subir(cenario, nome, 10)
     subir(cenario, f'{cenario.obra_b}/ARQ/{"b" * 16}.frag', 10)
-    consulta = "select name from storage.objects where bucket_id = 'modelos' and name like %s order by name"
-    # A leitura dos participantes continua pela `modelos_select`; outra obra não aparece.
-    assert sql(cenario, consulta, ('%',), usuario=cenario.equipe_a) == [(nome,)]
-    assert sql(cenario, consulta, (f'{cenario.obra_a}/%',), usuario=cenario.gestor_b) == []
+    outro = f'{cenario.obra_b}/ARQ/{"b" * 16}.frag'
+    # Participantes leem só a própria obra; outra obra não.
+    assert pode(cenario, cenario.equipe_a, 'ler', 'modelos', nome) is True
+    assert pode(cenario, cenario.equipe_a, 'ler', 'modelos', outro) is False
+    assert pode(cenario, cenario.gestor_b, 'ler', 'modelos', nome) is False
     # O admin lê tudo, mesmo sem participar das obras.
-    assert len(sql(cenario, consulta, ('%',), usuario=admin)) >= 2
-    with pytest.raises(errors.InsufficientPrivilege):
-        sql(cenario, "select name from storage.objects where bucket_id = 'modelos'", papel='anon')
+    assert pode(cenario, admin, 'ler', 'modelos', nome) is True and pode(cenario, admin, 'ler', 'modelos', outro) is True
+    assert pode(cenario, cenario.gestor_a, 'excluir', 'modelos', nome) is False
 
 
 # --- Registrar ---------------------------------------------------------------------------------
@@ -214,12 +214,12 @@ def test_registrar_invalido(cenario, admin, mudar, estado):
     assert modelos(cenario, cenario.obra_a) == [] and historico(cenario, cenario.obra_a) == 0
 
 
-def test_registrar_sem_tamanho_no_storage(cenario, admin):
+def test_registrar_com_tamanho_diferente_no_arquivo(cenario, admin):
     p = payload(cenario.obra_a)
-    subir(cenario, p['caminho'])  # metadata ainda vazio
+    subir(cenario, p['caminho'])  # arquivo confirmado com 0 bytes
     with pytest.raises(psycopg.Error) as e:
         registrar(cenario, admin, cenario.obra_a, p)
-    assert e.value.sqlstate == '22023' and 'tamanho' in str(e.value)
+    assert e.value.sqlstate == '22023' and 'bytes' in str(e.value)
 
 
 def test_registrar_cria_e_atualiza(cenario, admin):
@@ -302,8 +302,8 @@ def test_retirar_e_listar(cenario, admin):
     assert sorted(sql(cenario, 'select sigla from public.modelo', usuario=cenario.equipe_a)) == [('ARQ',), ('EST',)]
     # o arquivo fica no Storage
     with sessao(cenario.dsn, papel=None) as cur:
-        cur.execute("select count(*) from storage.objects where bucket_id = 'modelos' and name = %s",
-                    (f'{obra}/HID/{"b" * 16}.frag',))
+        cur.execute("select count(*) from public.arquivo where pasta = 'modelos' and caminho = %s "
+                    "and situacao = 'confirmado'", (f'{obra}/HID/{"b" * 16}.frag',))
         assert cur.fetchone()[0] == 1
 
     lista = listar(cenario, admin, obra)

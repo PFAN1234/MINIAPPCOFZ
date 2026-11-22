@@ -83,8 +83,9 @@ def membro(c, usuario, obra):
 
 
 def objeto(c, bucket, nome_objeto):
-    su(c, 'insert into storage.objects (bucket_id, name) values (%s, %s) on conflict do nothing',
-       (bucket, nome_objeto))
+    su(c, "insert into public.arquivo (pasta, caminho, tamanho, tipo, situacao) "
+          "values (%s, %s, 1, 'application/octet-stream', 'confirmado') "
+          "on conflict (pasta, caminho) do update set situacao = 'confirmado'", (bucket, nome_objeto))
 
 
 def visiveis(c, usuario, obra):
@@ -94,8 +95,10 @@ def visiveis(c, usuario, obra):
                    'planta', 'planta_detalhe', 'modelo'):
         coluna = 'id' if tabela == 'obra' else 'obra_id'
         r[tabela] = sql(c, f'select count(*) from public.{tabela} where {coluna} = %s', (obra,), usuario=usuario)[0][0]
-    r['storage'] = sql(c, "select count(*) from storage.objects where name like %s", (f'{obra}/%',),
-                       usuario=usuario)[0][0]
+    itens = su(c, "select pasta, caminho from public.arquivo where caminho like %s and situacao = 'confirmado'",
+               (f'{obra}/%',))
+    r['storage'] = sum(sql(c, 'select privado.pode_arquivo(%s, %s, %s)', ('ler', p, n), usuario=usuario)[0][0]
+                       for p, n in itens)
     return r
 
 
@@ -338,7 +341,7 @@ def excluir(c, usuario, obra, confirmacao):
 
 
 def objetos_storage(c):
-    return su(c, 'select bucket_id, name from storage.objects order by 1, 2')
+    return su(c, 'select pasta, caminho, situacao from public.arquivo order by 1, 2')
 
 
 def test_fks_dentro_da_obra_sem_cascata_sao_as_tratadas(dsn):
@@ -376,7 +379,11 @@ def test_excluir_apaga_tudo_da_obra_e_grava_auditoria(cheio):
 
     assert all(v == 0 for v in linhas_por_tabela(c, c.obra_a).values())
     assert linhas_por_tabela(c, c.obra_b) == antes_b
-    assert objetos_storage(c) == storage_antes  # o Storage sai pela Edge Function
+    # os arquivos da obra ficam marcados para o R2 limpar; os de outra obra não mudam
+    depois = objetos_storage(c)
+    da_obra = [x for x in storage_antes if x[1].startswith(f'{c.obra_a}/')]
+    assert da_obra and all(x[2] == 'confirmado' for x in da_obra)
+    assert [(p, n, 'excluir' if n.startswith(f'{c.obra_a}/') else s_) for p, n, s_ in storage_antes] == depois
 
     aud = su(c, 'select obra_id, slug, nome, excluida_por, resumo, arquivos_removidos_em, arquivos_removidos, '
                 'arquivos_erro from public.obra_excluida where id = %s', (r['exclusao_id'],))

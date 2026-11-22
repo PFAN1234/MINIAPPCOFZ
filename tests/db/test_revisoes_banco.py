@@ -101,8 +101,9 @@ def _membro_e_registro(dsn, slug, codigo):
 def _concluir(dsn, uid, obra, amb, rid=None, fid=None):
     rid, fid = rid or uuid.uuid4(), fid or uuid.uuid4()
     with sessao(dsn, papel=None) as cur:
-        cur.execute('insert into storage.objects (bucket_id, name, owner_id) values (%s, %s, %s)',
-                    ('fotos', f'{obra}/{rid}/{fid}.jpg', str(uid)))
+        cur.execute("insert into public.arquivo (pasta, caminho, tamanho, tipo, autor, situacao) "
+                    "values ('fotos', %s, 12345, 'image/jpeg', %s, 'confirmado')",
+                    (f'{obra}/{rid}/{fid}.jpg', str(uid)))
     fotos = [{'id': str(fid), 'largura': 800, 'altura': 600, 'bytes': 12345}]
     with sessao(dsn, uid) as cur:
         cur.execute('select id from public.concluir_registro(%s, %s, %s, %s, %s, %s::jsonb)',

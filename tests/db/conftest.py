@@ -164,12 +164,14 @@ class Cenario:
                         'values (%s, %s, %s, %s, %s)', (amb, obra, pav, f'amb{i}', f'Ambiente {i}'))
 
     def foto(self, obra, registro, subir=True, **extra):
-        """Cria uma foto (id novo) e, por padrão, o objeto correspondente no Storage."""
+        """Cria uma foto (id novo) e, por padrão, o arquivo confirmado correspondente."""
         fid = uuid.uuid4()
         if subir:
             with sessao(self.dsn, papel=None) as cur:
-                cur.execute('insert into storage.objects (bucket_id, name, owner_id) values (%s, %s, %s)',
-                            ('fotos', f'{obra}/{registro}/{fid}.jpg', str(self.gestor_a)))
+                cur.execute(
+                    "insert into public.arquivo (pasta, caminho, tamanho, tipo, autor, situacao) "
+                    "values ('fotos', %s, 12345, 'image/jpeg', %s, 'confirmado')",
+                    (f'{obra}/{registro}/{fid}.jpg', str(self.gestor_a)))
         return {'id': str(fid), 'largura': 800, 'altura': 600, 'bytes': 12345, **extra}
 
 
