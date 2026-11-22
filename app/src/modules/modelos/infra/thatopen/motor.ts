@@ -17,7 +17,7 @@ import * as THREE from 'three'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { criarMinimapa, type Minimapa } from './minimapa.ts'
 import { gruposDeDados, RELACOES_PROPRIEDADES, type DadosBrutos } from './propriedades.ts'
-import { ehToqueRepetido, projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs, type ToqueMedicao } from './vista.ts'
+import { alturaCortePlanta, ehToqueRepetido, profundidadePlanta, projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs, type ToqueMedicao } from './vista.ts'
 import type { EventoMotor, MotorVisualizador, TemaCentral } from '../../application/ports/MotorVisualizador.port.ts'
 import {
   ErroCarregamento,
@@ -292,6 +292,25 @@ export function criarMotorThatOpen(): MotorVisualizador {
   const bordasVistas = new Map<string, OBF.ClipEdges>()
 
   const escaparRegex = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+  /** Altura do corte da planta do pavimento (cena): usa o primeiro modelo carregado que tem o pavimento. */
+  type AtribPav = { Name?: { value?: unknown }; Elevation?: { value?: unknown } }
+  async function alturaPavimento(nome: string): Promise<number | null> {
+    if (!fragments) return null
+    const re = new RegExp(`^${escaparRegex(nome)}$`)
+    for (const m of fragments.list.values()) {
+      const cat = await m.getItemsOfCategories([/BUILDINGSTOREY/])
+      const ids = Object.values(cat).flat()
+      if (ids.length === 0) continue
+      const dados = await m.getItemsData(ids, { attributesDefault: true })
+      const achado = (dados as AtribPav[]).find((d) => re.test(String(d.Name?.value ?? '')))
+      const elevacao = Number(achado?.Elevation?.value)
+      if (!achado || !Number.isFinite(elevacao)) continue
+      const [, deslocY = 0] = await m.getCoordinates()
+      return alturaCortePlanta(elevacao, deslocY)
+    }
+    return null
+  }
 
   function listarCortes(): Corte[] {
     if (!components || liberado) return []
@@ -1208,11 +1227,11 @@ export function criarMotorThatOpen(): MotorVisualizador {
         const views = c.get(OBC.Views)
         views.world = w
         if (!views.list.has(pavimento)) {
-          const novas = await views.createFromIfcStoreys({
-            world: w,
-            storeyNames: [new RegExp(`^${escaparRegex(pavimento)}$`)],
-          })
-          for (const v of novas) {
+          // Corte a 1,20 m do piso, em coordenadas de cena (createFromIfcStoreys corta a 0,25 m, na face da laje).
+          const altura = await alturaPavimento(pavimento)
+          if (altura !== null && !views.list.has(pavimento)) {
+            const v = views.createFromPlane(new THREE.Plane(new THREE.Vector3(0, -1, 0), altura), { id: pavimento, world: w })
+            v.range = profundidadePlanta()
             vistasCriadas.add(v.id)
             preencherVista(c, v)
           }

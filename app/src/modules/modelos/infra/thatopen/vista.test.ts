@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { chaveRef, ehToqueRepetido, projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs } from './vista.ts'
+import { alturaCortePlanta, chaveRef, profundidadePlanta,ehToqueRepetido, projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs } from './vista.ts'
 
 const ref = (sigla: string, globalId: string) => ({ sigla, globalId })
 
@@ -52,5 +52,17 @@ describe('ehToqueRepetido', () => {
     expect(ehToqueRepetido(null, a)).toBe(false)
     expect(ehToqueRepetido(a, { x: 130, y: 100, t: 1100 })).toBe(false)
     expect(ehToqueRepetido(a, { x: 100, y: 100, t: 1500 })).toBe(false)
+  })
+})
+
+describe('alturaCortePlanta', () => {
+  it('soma elevação, deslocamento das coordenadas e o corte de 1,20 m', () => {
+    // HTO: 1º PAV. tem Elevation 4 e getCoordinates()[1] = -1,19 (piso em y = 2,81 na cena).
+    expect(alturaCortePlanta(4, -1.19)).toBeCloseTo(4.01, 5)
+    expect(alturaCortePlanta(0, -1.19)).toBeCloseTo(0.01, 5)
+  })
+  it('aceita outro corte e define a profundidade até o piso', () => {
+    expect(alturaCortePlanta(0, 0, 1)).toBe(1)
+    expect(profundidadePlanta()).toBeCloseTo(1.5, 5)
   })
 })
