@@ -24,7 +24,8 @@ test.describe('com o ARQ.frag gerado localmente', () => {
   test.skip(!existsSync(FRAG_LOCAL), 'ARQ.frag ausente: rode `npm run modelos -- --obra hto`')
 
   test('abre a obra, seleciona, isola, mostra tudo e troca o tema sem erros', async ({ page }) => {
-    test.setTimeout(480_000)
+    // O WebGL por software leva ~7,5 min sozinho (já antes da etapa 7); com outros specs em paralelo passa de 8.
+    test.setTimeout(900_000)
     const erros: string[] = []
     page.on('pageerror', (e) => erros.push(e.message))
     await page.route('**/modelos/hto/manifesto.json', (rota) =>
