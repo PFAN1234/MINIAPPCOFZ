@@ -14,6 +14,7 @@ import * as OBF from '@thatopen/components-front'
 import { RenderedFaces, type FragmentsModel, type ItemsQueryParams } from '@thatopen/fragments'
 import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { criarMinimapa, type Minimapa } from './minimapa.ts'
 import { gruposDeDados, RELACOES_PROPRIEDADES, type DadosBrutos } from './propriedades.ts'
 import { ehToqueRepetido, projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs, type ToqueMedicao } from './vista.ts'
@@ -43,11 +44,12 @@ type Mundo = OBC.World & {
   renderer: OBF.PostproductionRenderer
 }
 
-const PALETA: Record<TemaCentral, { fundo: string; grade: string }> = {
-  escuro: { fundo: '#0B1625', grade: '#263A55' },
-  claro: { fundo: '#ECEFF3', grade: '#CBD3DD' },
+const PALETA: Record<TemaCentral, { fundo: string; grade: string; corte: string; contorno: string }> = {
+  escuro: { fundo: '#0B1625', grade: '#263A55', corte: '#3A4C66', contorno: '#C9D4E3' },
+  claro: { fundo: '#ECEFF3', grade: '#CBD3DD', corte: '#9AA6B6', contorno: '#2B3544' },
 }
 
+const ESTILO_CORTE = 'corte'
 const COR_SELECAO = '#F5B700'
 const COR_HOVER = '#FFD966'
 const OPACIDADE_FANTASMA = 0.1
@@ -466,6 +468,42 @@ export function criarMotorThatOpen(): MotorVisualizador {
     return caixa
   }
 
+  /**
+   * Preenche a seção de cada corte do Clipper (ClipStyler: fill + contorno). O preenchimento é recalculado
+   * ao criar e ao soltar o plano (`onDraggingEnded`), nunca durante o arraste, para não travar a interação
+   * com o modelo inteiro. É descartado junto com o plano (`delete`/`deleteAll`).
+   */
+  function estilizarCortes(c: OBC.Components, w: Mundo) {
+    const styler = c.get(OBF.ClipStyler)
+    styler.world = w
+    styler.styles.set(ESTILO_CORTE, {
+      fillsMaterial: new THREE.MeshBasicMaterial({ color: cor(PALETA.escuro.corte), side: THREE.DoubleSide }),
+      linesMaterial: new LineMaterial({ color: cor(PALETA.escuro.contorno).getHex(), linewidth: 2 }),
+    })
+    const clipper = c.get(OBC.Clipper)
+    const aoCriar = (plano: OBC.SimplePlane) => {
+      const entrada = [...clipper.list].find(([, p]) => p === plano)
+      if (!entrada) return
+      try {
+        const bordas = styler.createFromClipping(entrada[0], { items: { corte: { style: ESTILO_CORTE } } })
+        void bordas.update().then(() => {
+          if (!liberado) w.renderer.needsUpdate = true
+        })
+      } catch {
+        // sem preenchimento: o corte continua valendo
+      }
+    }
+    clipper.onAfterCreate.add(aoCriar)
+    limpezas.push(() => clipper.onAfterCreate.remove(aoCriar))
+  }
+
+  /** Preenche o corte horizontal de uma planta (acompanha abrir/fechar e atualização da vista). */
+  function preencherVista(c: OBC.Components, v: OBC.View) {
+    const bordas = c.get(OBF.ClipStyler).createFromView(v, { items: { corte: { style: ESTILO_CORTE } } })
+    bordas.visible = v.open
+    void bordas.update()
+  }
+
   function descartarVistas() {
     if (!components) return
     const views = components.get(OBC.Views)
@@ -866,6 +904,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
       o.styles.add('select')
       o.enabled = true
 
+      estilizarCortes(c, w as unknown as Mundo)
       this.tema(tema)
       // Só no build de teste (fixture): os e2e inspecionam e comandam o motor por aqui.
       if (import.meta.env.VITE_DADOS === 'fixture') (window as JanelaTeste).__motorCentral = this as MotorVisualizador
@@ -887,6 +926,15 @@ export function criarMotorThatOpen(): MotorVisualizador {
       const p = PALETA[tema]
       w.scene.three.background = new THREE.Color(p.fundo)
       if (grade) grade.config.color = cor(p.grade)
+      if (components) {
+        const styler = components.get(OBF.ClipStyler)
+        const estilo = styler.styles.get(ESTILO_CORTE)
+        if (estilo) {
+          ;(estilo.fillsMaterial as THREE.MeshBasicMaterial).color.set(p.corte)
+          estilo.linesMaterial?.color.set(p.contorno)
+          styler.updateStyle(ESTILO_CORTE)
+        }
+      }
       w.renderer.needsUpdate = true
     },
 
@@ -1150,7 +1198,10 @@ export function criarMotorThatOpen(): MotorVisualizador {
             world: w,
             storeyNames: [new RegExp(`^${escaparRegex(pavimento)}$`)],
           })
-          for (const v of novas) vistasCriadas.add(v.id)
+          for (const v of novas) {
+            vistasCriadas.add(v.id)
+            preencherVista(c, v)
+          }
         }
         if (!liberado && views.list.has(pavimento)) abrirVista(pavimento)
       })()
@@ -1164,7 +1215,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
         const novas = views.createElevations({
           combine: true,
           world: w,
-          // Sem rotação de norte verdadeiro: a frente (+Z) olha o sul e a esquerda (+X) olha o leste.
+          // Sem rotação de norte verdadeiro: o +Y do IFC é o norte do projeto (a HTO foi exportada com o ponto base "oriented in True North"); a frente (+Z) olha o sul e a esquerda (+X) olha o leste.
           namingCallback: () => ({
             front: ID_ELEVACAO.S,
             back: ID_ELEVACAO.N,

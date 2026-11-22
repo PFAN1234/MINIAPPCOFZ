@@ -274,7 +274,7 @@ export default function BarraSuperior({
             type="button"
             className="central-botao central-botao-icone"
             aria-label={`Elevação ${l}`}
-            data-dica={`Elevação ${NOMES_LADO[l]}`}
+            data-dica={`Elevação ${NOMES_LADO[l]} (norte do projeto)`}
             aria-pressed={vista.tipo === 'elevacao' && vista.lado === l}
             disabled={!ativo}
             onClick={() => onElevacao(l)}
