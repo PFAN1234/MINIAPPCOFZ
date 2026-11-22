@@ -236,7 +236,7 @@ Segue `docs/padrao-contexto-modulo.md`.
 - **`supabase/functions/assinar-envio-plantas`:** remover. O único uso foi a carga de plantas, que passa ao script abaixo.
 - **`scripts/publicar_plantas.py` e `app/scripts/publicar_modelos.mjs`:**
   - em vez do POST em `/storage/v1/object/...` com a chave de serviço, chamar `armazenamento` no modo interno (`enviar` → PUT → `confirmar`);
-  - o segredo interno é lido de variável de ambiente;
+  - o segredo interno é lido de `SEGREDO_INTERNO` ou, se faltar, da RPC `segredo_interno` com a chave secreta;
   - atualizar `scripts/README.md`.
 - **`app/scripts/testar_modelos_supabase.mjs`:** remover, junto com o script `testar:modelos` do `package.json`.
 - **Pronto quando:** `grep -rn "storage\.from\|storage/v1\|\.storage\b"` em `app/servidor`, `supabase/functions`, `scripts` e `app/scripts` não encontra nada, e os testes dos servidores e das functions estão verdes.

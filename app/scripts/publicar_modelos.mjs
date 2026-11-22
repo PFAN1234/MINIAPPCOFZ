@@ -85,7 +85,7 @@ async function principal() {
     return 1
   }
   const raiz = fileURLToPath(new URL('..', import.meta.url))
-  const pasta = path.join(raiz,'public', 'modelos', obra)
+  const pasta = path.join(raiz, 'public', 'modelos', obra)
   const arqManifesto = path.join(pasta, 'manifesto.json')
   if (!existsSync(arqManifesto)) {
     console.error(`Sem ${arqManifesto}: rode \`npm run modelos -- --obra ${obra}\` antes.`)
