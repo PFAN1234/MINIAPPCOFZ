@@ -12,6 +12,7 @@ export const PASTAS = [
   "relatorios",
   "organizacao",
   "documentos",
+  "issues",
 ] as const;
 export type Pasta = typeof PASTAS[number];
 

@@ -18,7 +18,7 @@ from conftest import sessao  # noqa: E402
 
 CONCLUIR = 'select * from public.concluir_registro(%s, %s, %s, %s, %s, %s::jsonb)'
 ENCERRAR = 'select * from public.encerrar_pendencia(%s, %s, %s, %s::jsonb)'
-BUCKETS = ('fotos', 'plantas', 'originais', 'modelos', 'documentos')
+BUCKETS = ('fotos', 'plantas', 'originais', 'modelos', 'documentos', 'issues')
 
 
 @pytest.fixture(autouse=True)
@@ -137,6 +137,12 @@ def popular(c, obra, amb, gestor, equipe):
     objeto(c, 'originais', f'{obra}/R01/terreo/{"a" * 64}.pdf')
     objeto(c, 'modelos', f'{obra}/ARQ/{"b" * 16}.frag')
     objeto(c, 'documentos', doc_path)
+    iid, vid = uuid.uuid4(), uuid.uuid4()
+    su(c, "insert into public.issue (id, obra_id, numero, titulo) values (%s, %s, 1, 'Issue')", (iid, obra))
+    su(c, 'insert into public.issue_vista (id, issue_id, vista, imagem_path) values (%s, %s, %s, %s)',
+       (vid, iid, '{}', f'{obra}/{iid}/{vid}.png'))
+    su(c, "insert into public.issue_comentario (issue_id, texto, vista_id) values (%s, 'Comentário', %s)", (iid, vid))
+    objeto(c, 'issues', f'{obra}/{iid}/{vid}.png')
     return rid, pend
 
 
