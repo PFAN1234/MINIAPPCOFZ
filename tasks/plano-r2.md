@@ -11,6 +11,12 @@ Os arquivos que estão hoje no Storage são de teste e **não serão migrados**.
 - **Escopo:** todos os buckets vão para o R2. Ao final, o projeto não usa mais o Storage do Supabase.
 - **Permissão:** uma Edge Function nova do Supabase, `armazenamento`, confere a permissão no banco (mesmas regras de hoje) e assina as URLs do R2. Sem Worker da Cloudflare.
 - **Logo da organização:** URL assinada como os demais arquivos, com validade longa e cache no app. Nenhum bucket público.
+- **Servidores Vercel** (boletim e relatório): assinam direto no R2 com as chaves do token restrito, como variáveis da Vercel.
+- **Buckets:** `miniappcofz-arquivos` (produção) e `miniappcofz-arquivos-dev` (testes).
+- **Validade dos links:** envio 10 min, leitura 1 h, logo 7 dias. O prazo vale para o link, não para o arquivo: o app pede um link novo a cada tela aberta.
+- **`relatorios`:** sem limite próprio (só o servidor grava); vale o teto do R2, 5 GB por envio.
+- **Pendentes não confirmados:** apagados pela varredura diária depois de 7 dias.
+- **Backup:** GitHub Action semanal com `rclone`, copiando o bucket de produção para uma pasta do Google Drive (acesso do rclone como segredo do GitHub).
 
 ### Acesso conferido (2026-11-22)
 
@@ -29,7 +35,7 @@ Buckets atuais (8), com os limites que passam a ser conferidos pela function:
 | `originais` | 50 MB | application/pdf | PDF original da planta |
 | `modelos` | 200 MB | application/octet-stream | `.frag` do modelo federado |
 | `boletins` | 10 MB | application/pdf, image/png | boletim emitido (servidor Vercel) |
-| `relatorios` | sem limite hoje → definir | — | relatórios exportados (servidor Vercel) |
+| `relatorios` | sem limite próprio (teto do R2: 5 GB) | application/pdf | relatórios exportados (servidor Vercel) |
 | `organizacao` | 1 MB | image/png, jpeg, webp | logo (hoje público) |
 | `documentos` | 100 MB | pdf, imagens, dwg/dxf, xlsx, docx… | documentos da obra (admin) |
 
@@ -46,7 +52,7 @@ Pontos de código:
 
 ### Buckets R2
 
-Só existe um projeto Supabase (`miniappcofz-dev`, que é a produção; decisão de 2026-11-12). Por isso: um bucket de **produção**, ligado aos segredos das functions e da Vercel, e um bucket de **dev** usado só em testes locais, testes manuais da function e prévias, se configuradas para ele. As 8 pastas como prefixo da chave. A chave do objeto é `<pasta>/<caminho atual>`, mantendo as convenções de caminho de hoje para mexer o mínimo no SQL. CORS de cada bucket: `PUT`, `GET` e `HEAD` a partir do domínio da Vercel (produção e prévias) e do `localhost` de desenvolvimento, no bucket de dev.
+Só existe um projeto Supabase (`miniappcofz-dev`, que é a produção; decisão de 2026-11-12). Por isso: um bucket de **produção** (`miniappcofz-arquivos`), ligado aos segredos das functions e da Vercel, e um bucket de **dev** (`miniappcofz-arquivos-dev`) usado só em testes locais, testes manuais da function e prévias, se configuradas para ele. As 8 pastas como prefixo da chave. A chave do objeto é `<pasta>/<caminho atual>`, mantendo as convenções de caminho de hoje para mexer o mínimo no SQL. CORS de cada bucket: `PUT`, `GET` e `HEAD` a partir do domínio da Vercel (produção e prévias) e do `localhost` de desenvolvimento, no bucket de dev.
 
 ### Tabela `arquivo` (substitui `storage.objects`)
 
@@ -61,9 +67,9 @@ Só existe um projeto Supabase (`miniappcofz-dev`, que é a produção; decisão
 
 Recebe o JWT do usuário, chama RPCs de permissão (uma por operação, reaproveitando as regras das políticas de `storage.objects` de hoje) e assina com SigV4 (`aws4fetch` ou equivalente, em `_shared/r2.ts`). As chaves R2 ficam como segredos da function.
 
-- `enviar`: pasta, caminho, tamanho e tipo → URL de PUT com `Content-Length` e `Content-Type` assinados (validade curta, ~10 min).
+- `enviar`: pasta, caminho, tamanho e tipo → URL de PUT com `Content-Length` e `Content-Type` assinados (validade de 10 min).
 - `confirmar`: pasta e caminho → HEAD no R2 → `confirmado`.
-- `ler`: lista de (pasta, caminho) → URLs de GET (validade padrão ~1 h; logo com validade longa).
+- `ler`: lista de (pasta, caminho) → URLs de GET (validade de 1 h; logo, 7 dias).
 - `excluir` e `manutencao` (só com a chave de serviço): processa a fila `excluir` e a varredura de órfãos.
 
 **Fila offline:** a URL de envio expira, então a fila do app pede a URL **na hora de enviar**, não quando a foto é tirada. Reenvio do mesmo caminho é idempotente (PUT sobrescreve; `confirmar` repete sem efeito colateral).
@@ -72,7 +78,7 @@ Recebe o JWT do usuário, chama RPCs de permissão (uma por operação, reaprove
 
 - `publish-outbox` e `admin-excluir-obra` usam `_shared/r2.ts` direto (já rodam com a chave de serviço).
 - `assinar-envio-plantas` passa a assinar no R2; `publicar_plantas.py` segue chamando essa function.
-- Servidores Vercel (boletim e relatório): ver decisão em aberto 1.
+- Servidores Vercel (boletim e relatório): assinam direto no R2 com o mesmo módulo de assinatura e as chaves do token restrito.
 
 ## Partes
 
@@ -100,18 +106,9 @@ Cada parte vira um contrato (`docs/contrato-r2.md`, uma seção por parte) antes
 - **Pronto quando:** publicação no Telegram com fotos, emissão de boletim, exportação de relatório, exclusão de obra e publicação de plantas funcionam no dev.
 
 ### 5. Testes, documentação, backup e produção
-- Suíte completa; atualizar `scripts/README.md`, `docs/admin.md` e os contratos afetados; backup com `rclone` (cópia do bucket de produção para um destino a definir).
+- Suíte completa; atualizar `scripts/README.md`, `docs/admin.md` e os contratos afetados; backup com `rclone` (GitHub Action semanal copiando o bucket de produção para o Google Drive; documentar também a restauração).
 - Produção: token restrito, segredos das functions e da Vercel, migrations, deploy das functions, conferência no banco de produção, esvaziar e apagar os buckets do Supabase.
 - **Pronto quando:** fluxo completo em produção conferido e nenhum uso de `storage.` no código (fora do histórico de migrations).
-
-## Decisões em aberto (antes do contrato)
-
-1. **Servidores Vercel:** assinar direto no R2 com as chaves do token restrito (recomendado: menos uma chamada, e eles já rodam com a chave de serviço) ou pedir URLs à function `armazenamento`.
-2. **Nomes dos buckets** de dev e produção.
-3. **Validade das URLs:** envio ~10 min, leitura ~1 h, logo ~7 dias (proposta).
-4. **Limite de `relatorios`**, que hoje não tem limite.
-5. **Pendentes abandonados:** prazo para apagar o que ficou `pendente` sem confirmação (proposta: 24 h, na varredura diária).
-6. **Destino do backup** com `rclone` e frequência.
 
 ## Dependências
 

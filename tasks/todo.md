@@ -480,7 +480,7 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
 
 - [x] Acesso conferido (2026-11-22): token de conta ativo, listagem pela API e pelo endpoint S3 funcionando; conta sem buckets
 - [x] Decisões: tudo no R2; permissão pela Edge Function `armazenamento`; logo por URL assinada
-- [ ] Decisões em aberto do plano (servidores Vercel, nomes dos buckets, validades, limite de `relatorios`, pendentes abandonados, backup)
+- [x] Decisões do plano fechadas (2026-11-22): Vercel assina direto; buckets `miniappcofz-arquivos`/`-dev`; links 10 min/1 h/7 dias; `relatorios` sem limite próprio; pendentes apagados após 7 dias; backup semanal no Google Drive
 - [ ] Contrato `docs/contrato-r2.md`
 - [ ] 0 Cloudflare (buckets, CORS)
 - [ ] 1 Banco e permissões (tabela `arquivo`)
