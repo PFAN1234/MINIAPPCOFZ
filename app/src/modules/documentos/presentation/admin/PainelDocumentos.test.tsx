@@ -169,4 +169,47 @@ describe('PainelDocumentos (fixture)', () => {
     expect(nova.id).not.toBe(antes.id)
     expect(nova.vinculos).toEqual([expect.objectContaining({ globalId: 'g-parede-1' })])
   })
+
+  describe('falha ao copiar vínculos', () => {
+    async function prepararFalha() {
+      const user = userEvent.setup()
+      const original = { chamadas: 0 }
+      const { repo } = await renderizar([], async (r) => {
+        const d = (await r.listarDocumentos('hto')).find((x) => x.titulo === TITULO)!
+        await r.vincularDocumento(d.id, [{ tipo: 'elemento', ...REF_A }])
+        const vincular = r.vincularDocumento.bind(r)
+        vi.spyOn(r, 'vincularDocumento').mockImplementation(async (id, v) => {
+          original.chamadas += 1
+          if (original.chamadas === 1) throw new Error('rede caiu')
+          return vincular(id, v)
+        })
+      })
+      await screen.findByText(TITULO)
+      await waitFor(() => expect(item(TITULO)).toHaveTextContent('R06'))
+      await user.click(within(item(TITULO)).getByRole('button', { name: 'Nova revisão' }))
+      await user.upload(screen.getByLabelText('Arquivo'), pdf('nova.pdf'))
+      await user.click(screen.getByRole('button', { name: 'Enviar' }))
+      expect(await screen.findByText(/A revisão foi registrada, mas os vínculos não foram copiados: rede caiu/)).toBeInTheDocument()
+      return { user, repo }
+    }
+
+    it('"Tentar copiar de novo" repete só a cópia, sem registrar outra revisão', async () => {
+      const { user, repo } = await prepararFalha()
+      const docs = async () => (await repo.listarDocumentos('hto')).filter((d) => d.titulo === TITULO)
+      const antes = (await repo.listarDocumentos('hto')).length
+      await user.click(screen.getByRole('button', { name: 'Tentar copiar de novo' }))
+      await waitFor(() => expect(item(TITULO)).toHaveTextContent('R07'))
+      expect(await repo.listarDocumentos('hto')).toHaveLength(antes)
+      const nova = (await docs()).find((d) => d.revisao === 'R07')!
+      expect(nova.vinculos).toEqual([expect.objectContaining({ globalId: 'g-parede-1' })])
+    })
+
+    it('"Concluir sem vínculos" fecha o formulário mantendo a revisão sem vínculos', async () => {
+      const { user, repo } = await prepararFalha()
+      await user.click(screen.getByRole('button', { name: 'Concluir sem vínculos' }))
+      await waitFor(() => expect(screen.queryByRole('form', { name: 'Nova revisão' })).toBeNull())
+      const nova = (await repo.listarDocumentos('hto')).find((d) => d.revisao === 'R07')!
+      expect(nova.vinculos).toEqual([])
+    })
+  })
 })

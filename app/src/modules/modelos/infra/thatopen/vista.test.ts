@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
-import { chaveRef, projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs } from './vista.ts'
+import { chaveRef, ehToqueRepetido, projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs } from './vista.ts'
 
 const ref = (sigla: string, globalId: string) => ({ sigla, globalId })
 
@@ -40,5 +40,17 @@ describe('projetarParaTela', () => {
   })
   it('fora do enquadramento fica escondido', () => {
     expect(projetarParaTela([100, 0, 0], camera, 800, 400).visivel).toBe(false)
+  })
+})
+
+describe('ehToqueRepetido', () => {
+  const a = { x: 100, y: 100, t: 1000 }
+  it('ignora o segundo toque no mesmo lugar e em pouco tempo', () => {
+    expect(ehToqueRepetido(a, { x: 102, y: 101, t: 1150 })).toBe(true)
+  })
+  it('aceita o primeiro toque, toques distantes ou espaçados', () => {
+    expect(ehToqueRepetido(null, a)).toBe(false)
+    expect(ehToqueRepetido(a, { x: 130, y: 100, t: 1100 })).toBe(false)
+    expect(ehToqueRepetido(a, { x: 100, y: 100, t: 1500 })).toBe(false)
   })
 })

@@ -16,7 +16,7 @@ import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
 import { criarMinimapa, type Minimapa } from './minimapa.ts'
 import { gruposDeDados, RELACOES_PROPRIEDADES, type DadosBrutos } from './propriedades.ts'
-import { projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs } from './vista.ts'
+import { ehToqueRepetido, projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs, type ToqueMedicao } from './vista.ts'
 import type { EventoMotor, MotorVisualizador, TemaCentral } from '../../application/ports/MotorVisualizador.port.ts'
 import {
   ErroCarregamento,
@@ -390,6 +390,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
   /** Cliques sem arrasto no canvas alimentam a ferramenta ativa; Enter/duplo clique concluem área e volume. */
   function ligarEntradaMedicao(container: HTMLElement) {
     let inicio: { x: number; y: number } | null = null
+    let ultimo: ToqueMedicao | null = null
     const ativa = () => (modoMedicao ? ferramentas.get(modoMedicao) : undefined)
     const aoBaixar = (e: PointerEvent) => {
       inicio = { x: e.clientX, y: e.clientY }
@@ -400,6 +401,10 @@ export function criarMotorThatOpen(): MotorVisualizador {
       inicio = null
       if (!f || !i || e.button !== 0) return
       if (Math.hypot(e.clientX - i.x, e.clientY - i.y) > 5) return
+      // Duplo clique em área/volume: o segundo toque repetiria o último ponto; o dblclick só conclui.
+      const toque = { x: e.clientX, y: e.clientY, t: e.timeStamp }
+      if ((modoMedicao === 'area' || modoMedicao === 'volume') && ehToqueRepetido(ultimo, toque)) return
+      ultimo = toque
       void f.create()
     }
     const aoDuploClique = () => {
