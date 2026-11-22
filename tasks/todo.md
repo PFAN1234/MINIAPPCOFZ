@@ -484,7 +484,7 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
 - [x] Contrato `docs/contrato-r2.md` (2026-11-22); `documentos` nasce direto no R2
 - [x] 0 Cloudflare (2026-11-22): buckets `miniappcofz-arquivos` e `miniappcofz-arquivos-dev` criados (ENAM); CORS GET/PUT/HEAD para `https://miniappcofz.vercel.app`, `https://miniappcofz-*.vercel.app` (o R2 aceita curinga) e `http://localhost:5173` (só dev); teste no dev: PUT/HEAD/GET/DELETE assinados ok, PUT com tamanho diferente do assinado recusado (403), sem assinatura recusado, preflight de origem alheia recusado
 - [x] 1 Banco e permissões (2026-11-22, commits aa6196d e 5a9760d; não aplicada em produção): tabela `arquivo`, `pode_arquivo`, RPCs, funções trocadas, `documentos` sem Storage; suíte de banco 794 ok — pré-condição conferida: `admin_central_obras` e `documentos` não aplicadas (última aplicada: `20261125100000`)
-- [ ] 2 Function `armazenamento`
+- [x] 2 Function `armazenamento` (2026-11-22, commit 050cf36 + revisão; não publicada): `_shared/r2.ts`, handler com 5 ações, job `manutencao-arquivos` (04:41 UTC, Vault `url_projeto`/`segredo_interno`); deno 199 ok; `r2.ts` testado de verdade no bucket de dev (PUT/HEAD/GET/listar/apagar; tamanho ou tipo diferente do assinado → 403)
 - [ ] 3 App
 - [ ] 4 Servidores, órfãos e script
 - [ ] 5 Testes, documentação, backup e produção (criar antes o token restrito do app)

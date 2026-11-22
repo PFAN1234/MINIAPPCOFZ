@@ -201,7 +201,18 @@ export function criarHandler(deps: Deps) {
     lancarSeErro(error, "arquivo_confirmar");
     if (data === "confirmado") return { situacao: "confirmado" };
     if (data === "divergente") throw new ErroHttp(409, "divergente");
-    if (data === "nao_encontrado") throw new ErroHttp(404, "nao_encontrado");
+    if (data === "nao_encontrado") {
+      // Confirmar de novo (resposta anterior perdida) não é erro: se a linha já está
+      // confirmada e o usuário pode lê-la, devolve confirmado.
+      const lido = await deps.clienteUsuario(c.jwt).rpc("arquivo_pode_ler", {
+        p_itens: [{ pasta, caminho }],
+      });
+      lancarSeErro(lido.error, "arquivo_pode_ler");
+      if (Array.isArray(lido.data) && lido.data.length > 0) {
+        return { situacao: "confirmado" };
+      }
+      throw new ErroHttp(404, "nao_encontrado");
+    }
     throw new Error("arquivo_confirmar: resposta inesperada");
   }
 

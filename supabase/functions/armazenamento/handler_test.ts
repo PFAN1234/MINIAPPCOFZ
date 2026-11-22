@@ -312,6 +312,7 @@ Deno.test("confirmar: banco sem linha pendente é 404", async () => {
     servico: {
       arquivo_confirmar: () => ({ data: "nao_encontrado", error: null }),
     },
+    usuario: { arquivo_pode_ler: () => ({ data: [], error: null }) },
   });
   const r = await chamar(f, {
     acao: "confirmar",
@@ -319,6 +320,28 @@ Deno.test("confirmar: banco sem linha pendente é 404", async () => {
     caminho: "o/r/f.jpg",
   });
   assertEquals(r.status, 404);
+});
+
+Deno.test("confirmar de novo uma linha já confirmada devolve confirmado", async () => {
+  const f = montar({
+    cabecalho: { tamanho: 1, tipo: "image/jpeg" },
+    servico: {
+      arquivo_confirmar: () => ({ data: "nao_encontrado", error: null }),
+    },
+    usuario: {
+      arquivo_pode_ler: () => ({
+        data: [{ pasta: "fotos", caminho: "o/r/f.jpg" }],
+        error: null,
+      }),
+    },
+  });
+  const r = await chamar(f, {
+    acao: "confirmar",
+    pasta: "fotos",
+    caminho: "o/r/f.jpg",
+  });
+  assertEquals(r.status, 200);
+  assertEquals(await r.json(), { situacao: "confirmado" });
 });
 
 Deno.test("confirmar (interno): usa arquivo_registrar_servico e respeita o limite", async () => {
