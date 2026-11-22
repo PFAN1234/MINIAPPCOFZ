@@ -180,6 +180,36 @@ export function ehClasseDeElemento(classe: string): boolean {
   return !CLASSES_ESTRUTURAIS.has(c) && !PREFIXOS_ABSTRATOS.some((p) => c.startsWith(p))
 }
 
+/**
+ * Classes construtivas que entram no preenchimento da seção dos cortes. O That Open gera a seção num
+ * buffer fixo (100 mil segmentos): com mobiliário, vegetação, revestimentos e entorno o corte estoura
+ * e o preenchimento sai truncado, então só paredes, estrutura, escadas e esquadrias são preenchidas.
+ */
+const CLASSES_SECAO = new Set([
+  'IFCWALL',
+  'IFCWALLSTANDARDCASE',
+  'IFCWALLELEMENTEDCASE',
+  'IFCCURTAINWALL',
+  'IFCCOLUMN',
+  'IFCBEAM',
+  'IFCSLAB',
+  'IFCROOF',
+  'IFCFOOTING',
+  'IFCPILE',
+  'IFCMEMBER',
+  'IFCPLATE',
+  'IFCSTAIR',
+  'IFCSTAIRFLIGHT',
+  'IFCRAMP',
+  'IFCRAMPFLIGHT',
+  'IFCDOOR',
+  'IFCWINDOW',
+])
+
+export function ehClasseDeSecao(classe: string): boolean {
+  return CLASSES_SECAO.has(classe.toUpperCase())
+}
+
 const CLASSES_ESTRUTURAIS = new Set(['IFCPROJECT', 'IFCSITE', 'IFCBUILDING', 'IFCBUILDINGSTOREY', 'IFCGRID', 'IFCOPENINGELEMENT'])
 
 const PREFIXOS_ABSTRATOS = [

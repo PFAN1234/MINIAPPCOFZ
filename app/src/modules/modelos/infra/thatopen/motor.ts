@@ -24,6 +24,7 @@ import {
   agregarCategorias,
   corCategorica,
   ehClasseDeElemento,
+  ehClasseDeSecao,
   expressaoDoFiltro,
   montarArvore,
   type FiltroAtributo,
@@ -50,6 +51,10 @@ const PALETA: Record<TemaCentral, { fundo: string; grade: string; corte: string;
 }
 
 const ESTILO_CORTE = 'corte'
+const CLASSIFICACAO_SECAO = 'Corte'
+const GRUPO_SECAO = 'Construtivos'
+/** Só os elementos do grupo construtivo são preenchidos (ver `prepararGrupoSecao`). */
+const ITENS_SECAO = { corte: { style: ESTILO_CORTE, data: { [CLASSIFICACAO_SECAO]: [GRUPO_SECAO] } } }
 const COR_SELECAO = '#F5B700'
 const COR_HOVER = '#FFD966'
 const OPACIDADE_FANTASMA = 0.1
@@ -493,6 +498,23 @@ export function criarMotorThatOpen(): MotorVisualizador {
    * ao criar e ao soltar o plano (`onDraggingEnded`), nunca durante o arraste, para não travar a interação
    * com o modelo inteiro. É descartado junto com o plano (`delete`/`deleteAll`).
    */
+  /**
+   * Grupo do Classifier com os elementos construtivos de todos os modelos carregados (ver `ehClasseDeSecao`):
+   * só eles entram no preenchimento da seção. Refeito a cada atualização, porque modelos entram e saem.
+   */
+  async function prepararGrupoSecao() {
+    if (!components || !fragments) return
+    const classifier = components.get(OBC.Classifier)
+    classifier.list.get(CLASSIFICACAO_SECAO)?.delete(GRUPO_SECAO)
+    const mapa: Record<string, Set<number>> = {}
+    for (const [sigla, m] of fragments.list) {
+      const ids = new Set<number>()
+      for (const [id, classe] of await classesDe(m)) if (ehClasseDeSecao(classe)) ids.add(id)
+      if (ids.size) mapa[sigla] = ids
+    }
+    classifier.addGroupItems(CLASSIFICACAO_SECAO, GRUPO_SECAO, mapa)
+  }
+
   function estilizarCortes(c: OBC.Components, w: Mundo) {
     const styler = c.get(OBF.ClipStyler)
     styler.world = w
@@ -505,10 +527,13 @@ export function criarMotorThatOpen(): MotorVisualizador {
       const entrada = [...clipper.list].find(([, p]) => p === plano)
       if (!entrada) return
       try {
-        const bordas = styler.createFromClipping(entrada[0], { items: { corte: { style: ESTILO_CORTE } } })
-        void bordas.update().then(() => {
-          if (!liberado) w.renderer.needsUpdate = true
-        })
+        const bordas = styler.createFromClipping(entrada[0], { items: ITENS_SECAO })
+        void prepararGrupoSecao()
+          .then(() => bordas.update())
+          .then(() => {
+            if (!liberado) w.renderer.needsUpdate = true
+          })
+          .catch(() => {})
       } catch {
         // sem preenchimento: o corte continua valendo
       }
@@ -519,10 +544,12 @@ export function criarMotorThatOpen(): MotorVisualizador {
 
   /** Preenche o corte horizontal de uma planta (acompanha abrir/fechar e atualização da vista). */
   function preencherVista(c: OBC.Components, v: OBC.View) {
-    const bordas = c.get(OBF.ClipStyler).createFromView(v, { items: { corte: { style: ESTILO_CORTE } } })
+    const bordas = c.get(OBF.ClipStyler).createFromView(v, { items: ITENS_SECAO })
     bordas.visible = v.open
     bordasVistas.set(v.id, bordas)
-    void bordas.update()
+    void prepararGrupoSecao()
+      .then(() => bordas.update())
+      .catch(() => {})
   }
 
   /** Recalcula o preenchimento da planta ao abri-la (o cálculo feito ao criar, com a vista fechada, não basta). */
@@ -530,9 +557,12 @@ export function criarMotorThatOpen(): MotorVisualizador {
     const bordas = bordasVistas.get(id)
     if (!bordas) return
     bordas.visible = true
-    void bordas.update().then(() => {
-      if (!liberado && mundo) mundo.renderer.needsUpdate = true
-    })
+    void prepararGrupoSecao()
+      .then(() => bordas.update())
+      .then(() => {
+        if (!liberado && mundo) mundo.renderer.needsUpdate = true
+      })
+      .catch(() => {})
   }
 
   function descartarVistas() {
