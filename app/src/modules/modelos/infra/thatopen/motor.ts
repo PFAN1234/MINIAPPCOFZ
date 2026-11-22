@@ -92,6 +92,25 @@ export function criarMotorThatOpen(): MotorVisualizador {
     if (!components || !mundo || !fragments || liberado) throw new Error('motor não montado')
     return { components, mundo, fragments }
   }
+  /**
+   * Coordenadas do modelo-base (primeiro da lista, como o `FragmentsManager.baseCoordinationModel`).
+   * `getCoordinates()` devolve [x, y, z, ...] em metros, Y-up; a cena é deslocada por esse vetor.
+   */
+  let origem: Ponto3 = [0, 0, 0]
+  async function atualizarOrigemCena(f: OBC.FragmentsManager) {
+    const base = [...f.list.values()][0]
+    if (!base) {
+      origem = [0, 0, 0]
+      return
+    }
+    try {
+      const [x = 0, y = 0, z = 0] = await base.getCoordinates()
+      origem = [x, y, z]
+    } catch {
+      origem = [0, 0, 0]
+    }
+  }
+
   const modelo = (sigla: string): FragmentsModel | undefined => fragments?.list.get(sigla)
 
   async function classesDe(m: FragmentsModel): Promise<Map<number, string>> {
@@ -874,6 +893,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
         progresso((i + 1) / modelos.length)
       }
       await f.core.update(true)
+      await atualizarOrigemCena(f)
       if (modoCor !== 'nenhum') await aplicarCores()
       if (fantasmaLigado) await aplicarFantasma()
       if (falhas.length) throw new ErroCarregamento(falhas, detalhe)
@@ -893,7 +913,10 @@ export function criarMotorThatOpen(): MotorVisualizador {
       selecaoRefs = semSigla(selecaoRefs, sigla)
       if (isoladosRefs) isoladosRefs = semSigla(isoladosRefs, sigla)
       void f.core.disposeModel(sigla)
+      void atualizarOrigemCena(f)
     },
+
+    origemCena: () => origem,
 
     async arvore() {
       const { fragments: f } = pronto()

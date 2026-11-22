@@ -52,6 +52,13 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     await page.getByLabel('Título').fill('Issue do teste de BCF')
     const salvar = page.getByRole('button', { name: 'Salvar' })
     await expect(salvar).toBeEnabled({ timeout: 60_000 })
+    type MotorE2E = { origemCena(): number[]; vistaAtual(): { camera: { posicao: number[] } } }
+    const antes = await page.evaluate(() => {
+      const m = (window as never as { __motorCentral: MotorE2E }).__motorCentral
+      return { origem: m.origemCena(), posicao: m.vistaAtual().camera.posicao }
+    })
+    expect(antes.origem).toHaveLength(3)
+    antes.origem.forEach((n) => expect(Number.isFinite(n)).toBe(true))
     await salvar.click()
     await expect(page.getByRole('article', { name: /Issue #\d+/ })).toBeVisible({ timeout: 30_000 })
     await page.getByRole('button', { name: 'Voltar à lista' }).click()
@@ -75,6 +82,14 @@ test.describe('com o ARQ.frag gerado localmente', () => {
     const pasta = markup![0].replace(/markup\.bcf$/, '')
     const bcfv = Object.entries(arquivos).find(([n]) => n.startsWith(pasta) && n.endsWith('.bcfv'))
     expect(new TextDecoder().decode(bcfv![1])).toMatch(/<Selection><Component IfcGuid="[^"]{22}"/)
+    // A câmera sai em Z-up de mundo: (x + ox, -(z + oz), y + oy), com a origem lida do motor.
+    const cam = new TextDecoder().decode(bcfv![1]).match(/<CameraViewPoint>\s*<X>([^<]+)<\/X>\s*<Y>([^<]+)<\/Y>\s*<Z>([^<]+)<\/Z>/)
+    expect(cam).toBeTruthy()
+    const [px, py, pz] = antes.posicao
+    const [ox, oy, oz] = antes.origem
+    expect(Number(cam![1])).toBeCloseTo(px + ox, 1)
+    expect(Number(cam![2])).toBeCloseTo(-(pz + oz), 1)
+    expect(Number(cam![3])).toBeCloseTo(py + oy, 1)
     const totalAbertas = Object.keys(arquivos).filter((n) => n.endsWith('markup.bcf')).length
 
     // Reimporta o mesmo arquivo: nada é criado, tudo é atualizado, e o elemento é achado no modelo.

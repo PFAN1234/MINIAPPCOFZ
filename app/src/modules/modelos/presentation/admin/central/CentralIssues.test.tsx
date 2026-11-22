@@ -304,6 +304,29 @@ describe('Importar e exportar BCF no painel Issues', () => {
     expect(Object.keys(arquivos).filter((n) => n.endsWith('markup.bcf'))).toHaveLength(3)
   })
 
+  it('exporta e importa usando a origem de coordenadas do motor', async () => {
+    const usuario = userEvent.setup()
+    const exportar = async () => {
+      await usuario.click(screen.getByRole('button', { name: 'Exportar BCF' }))
+      await usuario.selectOptions(screen.getByLabelText('Conjunto'), 'todas')
+      await usuario.click(screen.getByRole('button', { name: 'Baixar .bcfzip' }))
+      await waitFor(() => expect(baixado.length).toBeGreaterThan(0))
+      return lerBcf(new Uint8Array(await baixado[baixado.length - 1].blob.arrayBuffer()))
+    }
+    const cameras = (p: ReturnType<typeof lerBcf>) =>
+      p.topicos.flatMap((t) => t.viewpoints.flatMap((v) => (v.camera ? [v.camera.posicao] : [])))
+    renderizar('/modelos/hto?painel=issues')
+    await screen.findByText(/2 abertas de 3/)
+    const base = cameras(await exportar())
+    expect(base.length).toBeGreaterThan(0)
+    motor.origemCenaDados = [100, 5, -200]
+    const deslocado = cameras(await exportar())
+    // mundo(Y-up) = cena + origem; em Z-up o deslocamento é (100, 200, 5).
+    expect(deslocado[0][0]).toBeCloseTo(base[0][0] + 100, 6)
+    expect(deslocado[0][1]).toBeCloseTo(base[0][1] + 200, 6)
+    expect(deslocado[0][2]).toBeCloseTo(base[0][2] + 5, 6)
+  })
+
   it('importa o BCF 2.1: cria a issue, anexa o snapshot e, ao reimportar, só atualiza', async () => {
     const usuario = userEvent.setup()
     renderizar('/modelos/hto?painel=issues')

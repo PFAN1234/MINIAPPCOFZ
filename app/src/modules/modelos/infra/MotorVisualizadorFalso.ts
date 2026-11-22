@@ -7,6 +7,7 @@ import {
   type FiltroAtributo,
   type GrupoPropriedades,
   type NoArvore,
+  type Ponto3,
   type RefElemento,
   type Vista,
 } from '../domain/central.ts'
@@ -192,6 +193,11 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   adicionarMedida(m: Medida) {
     this.medidasLista = [...this.medidasLista, m]
     this.emitir('medicao', this.medidasLista)
+  }
+  /** Resultado de `origemCena` (coordenadas do modelo-base). */
+  origemCenaDados: Ponto3 = [0, 0, 0]
+  origemCena(): Ponto3 {
+    return this.origemCenaDados
   }
   vistaAtual(): Vista {
     return {

@@ -70,6 +70,7 @@ export function useBcfIssues({
         codec: { escrever: escreverBcf },
         issues: lista,
         versao,
+        origemCena: motor?.origemCena(),
         projeto: { id: obra.obra_id, nome: obra.nome },
         baixarImagem: async (caminho) => {
           const url = await repo.urlImagemVista(caminho)
@@ -109,6 +110,7 @@ export function useBcfIssues({
         siglas,
         existem: (refs) => motor.existem(refs),
         paraPng: snapshotParaPng,
+        origemCena: motor.origemCena(),
       })
       await Promise.all([
         qc.invalidateQueries({ queryKey: ['admin', 'issues', obra.obra_id] }),

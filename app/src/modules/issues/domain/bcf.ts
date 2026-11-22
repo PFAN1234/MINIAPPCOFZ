@@ -10,9 +10,10 @@
  * DESLOCAMENTO DE COORDENAÇÃO. O Fragments grava no `.frag` as coordenadas do modelo (`getCoordinates()`)
  * e, ao carregar, move a cena para que o primeiro modelo fique na origem (`baseCoordinationMatrix`).
  * Logo mundo(Y-up) = cena + coordenadas do modelo-base. `origemCena` é esse vetor (as 3 primeiras
- * posições de `getCoordinates()` do modelo-base, em metros, Y-up). A porta do motor ainda não o expõe,
- * então o painel usa [0, 0, 0]: ida e volta no próprio app é exata, mas outra ferramenta vê as
- * posições relativas ao modelo-base, sem a coordenada de mundo.
+ * posições de `getCoordinates()` do modelo-base, em metros, Y-up, igual à translação do
+ * `getCoordinationMatrix()`); vem de `MotorVisualizador.origemCena()` e o painel o passa ao exportar e
+ * importar. Assim posições e pontos de corte saem em coordenadas de mundo para outras ferramentas, e a
+ * ida e volta no próprio app é exata.
  */
 import type { Ponto3, RefElemento, Vista } from '../../modelos/domain/central.ts'
 import {
