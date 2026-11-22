@@ -11,6 +11,7 @@ import { criarEtapasAdminSupabase } from '@modules/obras/infra/EtapasAdminSupaba
 import { criarObrasAdminSupabase } from '@modules/obras/infra/ObrasAdminSupabaseAdapter.ts'
 import { criarOrganizacaoAdminSupabase } from '@modules/obras/infra/OrganizacaoAdminSupabaseAdapter.ts'
 import { MENSAGEM_REDE } from '@modules/obras/infra/validacao.ts'
+import { criarIssuesSupabase } from '@modules/issues/infra/IssuesSupabaseAdapter.ts'
 import { criarDocumentosSupabase } from '@modules/documentos/infra/DocumentosSupabaseAdapter.ts'
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
 import { criarTelemetriaSupabase } from '@modules/operacao/infra/TelemetriaSupabaseAdapter.ts'
@@ -106,6 +107,7 @@ export function criarRepositorioAdminSupabase(
   const modelos = criarModelosSupabase(cliente, armazenamento, rpc)
   const plantas = criarPlantasSupabase(armazenamento, rpc)
   const documentos = criarDocumentosSupabase(armazenamento, rpc)
+  const issues = criarIssuesSupabase(armazenamento, rpc)
   const sessao = criarSessaoAdminSupabase(cliente, erroDaRpc)
   const acessos = criarAcessosAdminSupabase(rpc)
   const etapas = criarEtapasAdminSupabase(rpc, funcaoExcluir)
@@ -186,6 +188,12 @@ export function criarRepositorioAdminSupabase(
     retirarDocumento: documentos.retirarDocumento,
     vincularDocumento: documentos.vincularDocumento,
     baixarDocumento: documentos.baixarDocumento,
+    listarIssues: issues.listarIssues,
+    salvarIssue: issues.salvarIssue,
+    comentarIssue: issues.comentarIssue,
+    salvarVistaIssue: issues.salvarVistaIssue,
+    urlImagemVista: issues.urlImagemVista,
+    importarBcf: issues.importarBcf,
     listarErrosCliente: telemetria.listarErrosCliente,
     resumoOrfaos: telemetria.resumoOrfaos,
   }
