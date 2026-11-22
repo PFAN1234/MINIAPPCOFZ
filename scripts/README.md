@@ -31,7 +31,7 @@ Ambientes com o mesmo nome e áreas diferentes, sem entrada em `renomear`, são 
 - `gerar_plantas.py`: renderiza os PDFs e gera, em `data/<slug>/plantas/<revisao>/<pavimento>/`, a visão geral (`planta.webp`), a versão HD (`planta-hd.webp`), um recorte por ambiente (`ambientes/<id>.webp`) e `prova.png`. Também escreve o manifesto `data/<slug>/plantas.json`. Apaga de `ambientes/` os recortes de ids que saíram da lista, para o `publicar_plantas.py` não enviá-los.
 - `gerar_seed.py`: gera `supabase/seed/<slug>.sql` (obra, pavimentos, ambientes, plantas e detalhes) a partir de `ambientes.json` e `plantas.json`. Rode de novo depois de mudar qualquer um dos dois. Grava `ativo = true` nos ambientes da lista e `ativo = false` nos de `ambientes_removidos` e em qualquer outro da obra que esteja fora da lista, e desativa a planta de outra revisão do pavimento antes de gravar a nova (exige a migration `20261111130000_ambiente_ativo.sql`).
 - `importar_config_obras.py`: gera `supabase/seed/admin_config.sql`, que grava a configuração de cada `data/<slug>/obra.json` (sem `slug` e `nome`; pavimentos só com `codigo`, `pdf` e `pagina`) na tabela `obra_config` do site de administração (`docs/admin.md`). Idempotente; `--verificar` falha se o SQL estiver desatualizado. Rode de novo depois de mudar um `obra.json`.
-- `publicar_plantas.py`: envia os `.webp` de `data/<slug>/plantas/` ao bucket privado `plantas` (não envia `prova.png`). Usa só a biblioteca padrão e lê o `obra.id` pela API REST, então o seed precisa ter sido aplicado antes.
+- `publicar_plantas.py`: envia os `.webp` de `data/<slug>/plantas/` à pasta `plantas` do R2 pela Edge Function `armazenamento` (`enviar` -> `PUT` na URL assinada -> `confirmar`; não envia `prova.png`). Usa só a biblioteca padrão e lê o `obra.id` pela API REST, então o seed precisa ter sido aplicado antes.
 
 ## Ordem de execução
 
@@ -43,16 +43,17 @@ python3 scripts/gerar_plantas.py --obra hto
 python3 scripts/gerar_seed.py --obra hto
 ```
 
-## Publicar no Supabase
+## Publicar no R2
 
 ```bash
 python3 scripts/publicar_plantas.py --obra hto --dry-run   # lista caminho local -> caminho remoto
 export SUPABASE_URL=https://<ref>.supabase.co
 export SUPABASE_SECRET_KEY=...                              # chave secreta; nunca vai para o Git nem para a saída
+export SEGREDO_INTERNO=...                                  # opcional; sem ele, vem da RPC segredo_interno
 python3 scripts/publicar_plantas.py --obra hto
 ```
 
-O envio usa `x-upsert: true`, então pode ser repetido sem erro.
+Os arquivos vão para o R2 pela Edge Function `armazenamento` (modo interno, cabeçalho `x-segredo-interno`); o envio pode ser repetido, pois sobrescreve. Os modelos 3D seguem o mesmo caminho, com as mesmas variáveis, em `app/`: `npm run publicar:modelos -- --obra hto` (pasta `modelos`; o registro na tabela `modelo` vem depois do `confirmar`). Segredo, chave e URLs assinadas nunca são impressos.
 
 ## Cadastrar uma obra nova
 
