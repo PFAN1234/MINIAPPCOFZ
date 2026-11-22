@@ -30,6 +30,7 @@
     "@thatopen/components-front": "3.6.1",
     "@thatopen/fragments": "3.6.1",
     "@vercel/functions": "3.11.3",
+    "aws4fetch": "1.0.20",
     "camera-controls": "3.1.2",
     "idb": "8.0.4",
     "jsqr": "1.4.0",

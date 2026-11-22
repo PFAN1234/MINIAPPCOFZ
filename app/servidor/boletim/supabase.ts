@@ -1,9 +1,11 @@
 /**
- * Acesso do gerador ao Supabase: RPCs da fila com a chave secreta (service_role), Storage
+ * Acesso do gerador ao Supabase: RPCs da fila com a chave secreta (service_role), R2
  * (fotos, logo, boletins) e, na prévia, as RPCs de admin com o JWT de quem pediu.
- * Variáveis: `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (ver app/.env.example).
+ * Variáveis: `SUPABASE_URL` e `SUPABASE_SECRET_KEY`, mais `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+ * `R2_SECRET_ACCESS_KEY` e `R2_BUCKET` (ver app/.env.example).
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { chaveObjeto, configDoAmbiente, criarR2, type ClienteR2 } from '../_compartilhado/r2.js'
 import type { Edicao } from './edicao.js'
 import type { ClimaComDados, PedidoReivindicado, Snapshot } from './tipos.js'
 
@@ -21,7 +23,7 @@ export function configuracaoDoAmbiente(env: NodeJS.ProcessEnv = process.env): Co
   return { url, chaveSecreta }
 }
 
-/** O que o gerador usa do banco e do Storage (os testes trocam por uma versão em memória). */
+/** O que o gerador usa do banco e do R2 (os testes trocam por uma versão em memória). */
 export interface FonteBoletim {
   segredoInterno(): Promise<string | null>
   reivindicar(limite: number): Promise<PedidoReivindicado[]>
@@ -62,7 +64,43 @@ async function chamar<T>(cliente: SupabaseClient, nome: string, args?: Record<st
   return data as T
 }
 
-export function criarFonteSupabase(c: Configuracao): FonteBoletim {
+/** Cliente R2 a partir do ambiente (lança com o nome da variável que falta). */
+export function r2DoAmbiente(env: NodeJS.ProcessEnv = process.env): ClienteR2 {
+  return criarR2(configDoAmbiente((n) => env[n]))
+}
+
+/** Grava no R2 e registra o arquivo na tabela `arquivo` (RPC só do service_role). */
+export async function gravarERegistrar(
+  r2: ClienteR2,
+  cliente: SupabaseClient,
+  pasta: string,
+  caminho: string,
+  bytes: Uint8Array,
+  tipo: string,
+): Promise<void> {
+  const chave = chaveObjeto(pasta, caminho)
+  try {
+    await r2.gravar(chave, bytes, tipo)
+  } catch (e) {
+    throw new Error(`Não foi possível enviar ${chave}: ${e instanceof Error ? e.message : String(e)}`, { cause: e })
+  }
+  await chamar(cliente, 'arquivo_registrar_servico', {
+    p_pasta: pasta,
+    p_caminho: caminho,
+    p_tamanho: bytes.length,
+    p_tipo: tipo,
+  })
+}
+
+export async function baixarDoR2(r2: ClienteR2, pasta: string, caminho: string): Promise<Uint8Array> {
+  try {
+    return await r2.baixar(chaveObjeto(pasta, caminho))
+  } catch (e) {
+    throw new Error(`Não foi possível baixar ${pasta}/${caminho}: ${e instanceof Error ? e.message : String(e)}`, { cause: e })
+  }
+}
+
+export function criarFonteSupabase(c: Configuracao, r2: ClienteR2 = r2DoAmbiente()): FonteBoletim {
   const cliente = createClient(c.url, c.chaveSecreta, { auth: OPCOES_AUTH })
   return {
     async segredoInterno() {
@@ -107,14 +145,11 @@ export function criarFonteSupabase(c: Configuracao): FonteBoletim {
       if (!r || !c || c.indisponivel || typeof c.imagem_path !== 'string' || !c.imagem_path || typeof r.numero !== 'string') return null
       return { numero: r.numero, clima: c as ClimaComDados }
     },
-    async baixar(bucket, caminho) {
-      const { data, error } = await cliente.storage.from(bucket).download(caminho)
-      if (error || !data) throw new Error(`Não foi possível baixar ${bucket}/${caminho}: ${error?.message ?? 'vazio'}`)
-      return new Uint8Array(await data.arrayBuffer())
+    baixar(bucket, caminho) {
+      return baixarDoR2(r2, bucket, caminho)
     },
-    async enviar(bucket, caminho, bytes, tipo) {
-      const { error } = await cliente.storage.from(bucket).upload(caminho, bytes, { contentType: tipo, upsert: true })
-      if (error) throw new Error(`Não foi possível enviar ${bucket}/${caminho}: ${error.message}`)
+    enviar(bucket, caminho, bytes, tipo) {
+      return gravarERegistrar(r2, cliente, bucket, caminho, bytes, tipo)
     },
   }
 }
