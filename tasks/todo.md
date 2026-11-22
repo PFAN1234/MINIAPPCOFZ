@@ -488,7 +488,7 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
   - Conferências na HTO: norte verdadeiro do ARQ (-0,75; -0,66), ~131° do +Y; elevações e dicas seguem o norte do projeto (decisão do usuário). Minimapa com norte do projeto para cima, sem espelhamento
   - Testes e docs: `DocumentosSupabaseAdapter.test.ts`, `tests/db/test_documentos.py` (RLS de `documento`/`documento_vinculo`, RPCs, `admin_central_obras`); seção "Central de modelos" em `docs/admin.md`; contrato §3.1 (`modoCor`, `cores`) e §7 (testes de banco no lugar do script)
   - Produção: sem migration nova; conferido pela API que todas as migrations desde 20261115 estão registradas com a mesma versão, RLS ligada em todas as tabelas de `public`, RPCs da Central sem execute para `anon`
-  - Suítes: vitest 1212, banco 811, e2e E2E_RESULTADO; typecheck, lint, `build` e `build:fixture` verdes; precache sem chunks do visualizador
+  - Suítes: vitest 1212, banco 811, e2e 51 (12,7 min); typecheck, lint, `build` e `build:fixture` verdes; precache sem chunks do visualizador
   - Em aberto: plantas mostram as paredes cortadas sem o preenchimento (o dos cortes do usuário funciona); seta do minimapa não conferida com a câmera dentro do mapa; tempo do preenchimento só medido com WebGL por software
   - Usuário: testar no site Captura, cores numa vista salva, filtro por pset, corte e planta
 
