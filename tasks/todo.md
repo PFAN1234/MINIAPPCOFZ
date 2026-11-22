@@ -479,6 +479,8 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
   - Painel Issues: lista com filtro e busca, nova issue a partir da vista com miniatura, detalhe editável, vistas com "Restaurar vista", comentários, `?issue=N`, botão de marcadores na barra
   - BCF 2.1/3.0 próprio (`fflate` + DOMParser; o `BCFTopics` exige WebGL): eixos Y-up↔Z-up + origem do modelo-base; a direção exportada guarda a distância até o alvo; campos sem equivalente vão para a descrição com `[BCF]`; reimportar atualiza sem duplicar; snapshots JPEG viram PNG
   - Em aberto: a vista não guarda as cores por categoria/disciplina (modo global do motor)
+  - Produção (2026-11-22): migration aplicada pela API e registrada (RLS nas 3 tabelas, RPCs só para `authenticated`, pasta `issues` no check e nos limites); `admin-excluir-obra` v8 (CORS ok, 401 sem token); PR #64 em `main` (f29e687), deploy READY. Suítes: vitest 1191, e2e 51 (tempo-limite do teste longo da central em 15 min: já levava ~7,5 min antes da etapa), banco 801, functions 198
+  - Usuário: testar no site criar uma issue a partir da vista, restaurar, comentar e exportar/importar BCF
 - [ ] 8 Fechamento (e2e, docs, produção, PR)
 
 ## Arquivos no Cloudflare R2 (plano: `tasks/plano-r2.md`)
