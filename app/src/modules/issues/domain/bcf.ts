@@ -90,7 +90,7 @@ export interface PacoteBcf {
 
 /** Autor que o arquivo leva quando o app não sabe (o BCF exige o campo); ignorado ao importar. */
 export const AUTOR_DESCONHECIDO = 'desconhecido'
-/** Distância (m) do alvo à câmera ao importar: o BCF guarda a direção, não o ponto de interesse. */
+/** Distância (m) do alvo à câmera ao importar direção unitária (outras ferramentas): o BCF não guarda o ponto de interesse. */
 export const DISTANCIA_ALVO = 10
 const PROPORCAO_PADRAO = 16 / 9
 
@@ -283,7 +283,16 @@ export function vistaParaViewpoint(vista: Vista, guid: string, origemCena: Ponto
       camera.alvo[1] - camera.posicao[1],
       camera.alvo[2] - camera.posicao[2],
     ]) ?? [0, 0, -1]
-  const direcao = direcaoCenaParaIfc(dir)
+  // O BCF não tem ponto de interesse: a direção sai com o comprimento = distância até o alvo, para a
+  // ida e volta no app devolver o mesmo alvo (e o marcador no mesmo lugar). Outras ferramentas a normalizam.
+  const distancia = Math.hypot(
+    camera.alvo[0] - camera.posicao[0],
+    camera.alvo[1] - camera.posicao[1],
+    camera.alvo[2] - camera.posicao[2],
+  )
+  const unitaria = direcaoCenaParaIfc(dir)
+  const direcao: Ponto3 =
+    distancia > 1e-6 ? [unitaria[0] * distancia, unitaria[1] * distancia, unitaria[2] * distancia] : unitaria
   const ortografica = camera.projecao === 'ortografica'
   const isolados = vista.isolados && vista.isolados.length > 0 ? vista.isolados : null
   const ids = (refs: RefElemento[]) => unicos(refs.map((r) => r.globalId))
@@ -293,7 +302,7 @@ export function vistaParaViewpoint(vista: Vista, guid: string, origemCena: Ponto
       projecao: camera.projecao,
       posicao: pontoCenaParaIfc(camera.posicao, origemCena),
       direcao,
-      cima: cimaIfc(direcao),
+      cima: cimaIfc(unitaria),
       proporcao: PROPORCAO_PADRAO,
       campo: camera.campo && camera.campo > 0 ? camera.campo : ortografica ? 10 : 50,
     },
@@ -341,10 +350,13 @@ export function viewpointParaVista(
     })
   const posicao = pontoIfcParaCena(cam.posicao, origemCena)
   const d = direcaoIfcParaCena(dirIfc)
+  // Direção unitária (o comum em outras ferramentas): alvo a DISTANCIA_ALVO; senão o comprimento é a distância.
+  const comprimento = Math.hypot(cam.direcao[0], cam.direcao[1], cam.direcao[2])
+  const distancia = Math.abs(comprimento - 1) < 1e-6 ? DISTANCIA_ALVO : comprimento
   const alvo: Ponto3 = [
-    posicao[0] + d[0] * DISTANCIA_ALVO,
-    posicao[1] + d[1] * DISTANCIA_ALVO,
-    posicao[2] + d[2] * DISTANCIA_ALVO,
+    posicao[0] + d[0] * distancia,
+    posicao[1] + d[1] * distancia,
+    posicao[2] + d[2] * distancia,
   ]
   const selecionados = refs(vp.selecionados)
   const excecoes = refs(vp.excecoes)

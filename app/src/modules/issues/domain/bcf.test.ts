@@ -84,20 +84,30 @@ describe('eixos', () => {
   it('a câmera da cena sai em Z-up com "cima" = +Z', () => {
     const vp = vistaParaViewpoint(VISTA, 'g')
     expect(vp.camera?.posicao).toEqual([10, 6, 4])
-    expect(vp.camera?.direcao).toEqual([0, 1, 0]) // olha para -Z da cena = +Y do IFC
+    // olha para -Z da cena = +Y do IFC; o comprimento é a distância até o alvo (10 m)
+    expect(vp.camera?.direcao).toEqual([0, 10, 0])
     expect(vp.camera?.cima).toEqual([0, 0, 1])
     expect(vp.planos).toEqual([{ origem: [0, 0, 3], direcao: [0, 0, -1] }])
   })
 
   it('olhando na vertical, o "cima" cai para +Y', () => {
     const vp = vistaParaViewpoint({ ...VISTA, camera: { posicao: [0, 20, 0], alvo: [0, 0, 0], projecao: 'ortografica', campo: 30 } }, 'g')
-    expect(vp.camera?.direcao).toEqual([0, 0, -1])
+    expect(vp.camera?.direcao).toEqual([0, 0, -20])
     expect(vp.camera?.cima).toEqual([0, 1, 0])
     expect(vp.camera?.campo).toBe(30)
   })
 })
 
 describe('vista ↔ viewpoint', () => {
+  it('direção unitária (outras ferramentas): alvo a 10 m na mesma direção', () => {
+    const vp = vistaParaViewpoint(VISTA, 'g')
+    const d = vp.camera!.direcao
+    const n = Math.hypot(...d)
+    const unit = { ...vp, camera: { ...vp.camera!, direcao: [d[0] / n, d[1] / n, d[2] / n] as [number, number, number] } }
+    const v = viewpointParaVista(unit, achaTudoEmARQ)!.vista
+    expect(Math.hypot(...v.camera.alvo.map((x, i) => x - v.camera.posicao[i]))).toBeCloseTo(10, 9)
+  })
+
   it('ida e volta preserva posição, direção, campo, cortes, seleção e ocultos', () => {
     const vp = vistaParaViewpoint(VISTA, 'g')
     const volta = viewpointParaVista(vp, achaTudoEmARQ)!
@@ -106,8 +116,8 @@ describe('vista ↔ viewpoint', () => {
     expect(v.camera.posicao).toEqual(VISTA.camera.posicao)
     expect(v.camera.projecao).toBe('perspectiva')
     expect(v.camera.campo).toBe(55)
-    // Alvo: mesma direção, a 10 m (o BCF não guarda o ponto de interesse).
-    expect(v.camera.alvo).toEqual([10, 4, -16])
+    // Alvo: o comprimento da direção exportada guarda a distância, então volta o mesmo ponto.
+    v.camera.alvo.forEach((x, i) => expect(x).toBeCloseTo(VISTA.camera.alvo[i], 9))
     expect(v.cortes).toEqual(VISTA.cortes)
     expect(v.selecionados).toEqual(VISTA.selecionados)
     expect(v.ocultos).toEqual(VISTA.ocultos)
