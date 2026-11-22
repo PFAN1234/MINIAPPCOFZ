@@ -14,15 +14,17 @@ import * as OBF from '@thatopen/components-front'
 import { RenderedFaces, type FragmentsModel, type ItemsQueryParams } from '@thatopen/fragments'
 import workerUrl from '@thatopen/fragments/worker?url'
 import * as THREE from 'three'
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { criarMinimapa, type Minimapa } from './minimapa.ts'
 import { gruposDeDados, RELACOES_PROPRIEDADES, type DadosBrutos } from './propriedades.ts'
-import { projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs } from './vista.ts'
+import { alturaCortePlanta, ehToqueRepetido, profundidadePlanta, projetarParaTela, semSigla, somarRefs, tamanhoCaptura, tirarRefs, type ToqueMedicao } from './vista.ts'
 import type { EventoMotor, MotorVisualizador, TemaCentral } from '../../application/ports/MotorVisualizador.port.ts'
 import {
   ErroCarregamento,
   agregarCategorias,
   corCategorica,
   ehClasseDeElemento,
+  ehClasseDeSecao,
   expressaoDoFiltro,
   montarArvore,
   type FiltroAtributo,
@@ -43,11 +45,16 @@ type Mundo = OBC.World & {
   renderer: OBF.PostproductionRenderer
 }
 
-const PALETA: Record<TemaCentral, { fundo: string; grade: string }> = {
-  escuro: { fundo: '#0B1625', grade: '#263A55' },
-  claro: { fundo: '#ECEFF3', grade: '#CBD3DD' },
+const PALETA: Record<TemaCentral, { fundo: string; grade: string; corte: string; contorno: string }> = {
+  escuro: { fundo: '#0B1625', grade: '#263A55', corte: '#3A4C66', contorno: '#C9D4E3' },
+  claro: { fundo: '#ECEFF3', grade: '#CBD3DD', corte: '#9AA6B6', contorno: '#2B3544' },
 }
 
+const ESTILO_CORTE = 'corte'
+const CLASSIFICACAO_SECAO = 'Corte'
+const GRUPO_SECAO = 'Construtivos'
+/** Só os elementos do grupo construtivo são preenchidos (ver `prepararGrupoSecao`). */
+const ITENS_SECAO = { corte: { style: ESTILO_CORTE, data: { [CLASSIFICACAO_SECAO]: [GRUPO_SECAO] } } }
 const COR_SELECAO = '#F5B700'
 const COR_HOVER = '#FFD966'
 const OPACIDADE_FANTASMA = 0.1
@@ -237,7 +244,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
     void fragments.core.update(true)
   }
 
-  async function aplicarCores() {
+  async function aplicarCores(explicitas?: Vista['cores']) {
     if (!fragments || liberado) return
     for (const [sigla, m] of fragments.list) {
       await m.resetColor(undefined)
@@ -250,6 +257,11 @@ export function criarMotorThatOpen(): MotorVisualizador {
           if (ehClasseDeElemento(classe)) porClasse.set(classe, [...(porClasse.get(classe) ?? []), id])
         }
         for (const [classe, ids] of porClasse) await m.setColor(ids, cor(corCategorica(classe)))
+      }
+      // Cores explícitas da vista por cima do modo.
+      for (const { refs, cor: hex } of explicitas ?? []) {
+        const ids = (await mapaDeRefs(refs))[sigla]
+        if (ids?.size) await m.setColor([...ids], cor(hex))
       }
     }
     void fragments.core.update(true)
@@ -282,8 +294,28 @@ export function criarMotorThatOpen(): MotorVisualizador {
   let minimapa: Minimapa | null = null
   /** Ids de vistas criadas por nós (zeradas quando os modelos mudam). */
   const vistasCriadas = new Set<string>()
+  const bordasVistas = new Map<string, OBF.ClipEdges>()
 
   const escaparRegex = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+  /** Altura do corte da planta do pavimento (cena): usa o primeiro modelo carregado que tem o pavimento. */
+  type AtribPav = { Name?: { value?: unknown }; Elevation?: { value?: unknown } }
+  async function alturaPavimento(nome: string): Promise<number | null> {
+    if (!fragments) return null
+    const re = new RegExp(`^${escaparRegex(nome)}$`)
+    for (const m of fragments.list.values()) {
+      const cat = await m.getItemsOfCategories([/BUILDINGSTOREY/])
+      const ids = Object.values(cat).flat()
+      if (ids.length === 0) continue
+      const dados = await m.getItemsData(ids, { attributesDefault: true })
+      const achado = (dados as AtribPav[]).find((d) => re.test(String(d.Name?.value ?? '')))
+      const elevacao = Number(achado?.Elevation?.value)
+      if (!achado || !Number.isFinite(elevacao)) continue
+      const [, deslocY = 0] = await m.getCoordinates()
+      return alturaCortePlanta(elevacao, deslocY)
+    }
+    return null
+  }
 
   function listarCortes(): Corte[] {
     if (!components || liberado) return []
@@ -390,6 +422,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
   /** Cliques sem arrasto no canvas alimentam a ferramenta ativa; Enter/duplo clique concluem área e volume. */
   function ligarEntradaMedicao(container: HTMLElement) {
     let inicio: { x: number; y: number } | null = null
+    let ultimo: ToqueMedicao | null = null
     const ativa = () => (modoMedicao ? ferramentas.get(modoMedicao) : undefined)
     const aoBaixar = (e: PointerEvent) => {
       inicio = { x: e.clientX, y: e.clientY }
@@ -400,6 +433,10 @@ export function criarMotorThatOpen(): MotorVisualizador {
       inicio = null
       if (!f || !i || e.button !== 0) return
       if (Math.hypot(e.clientX - i.x, e.clientY - i.y) > 5) return
+      // Duplo clique em área/volume: o segundo toque repetiria o último ponto; o dblclick só conclui.
+      const toque = { x: e.clientX, y: e.clientY, t: e.timeStamp }
+      if ((modoMedicao === 'area' || modoMedicao === 'volume') && ehToqueRepetido(ultimo, toque)) return
+      ultimo = toque
       void f.create()
     }
     const aoDuploClique = () => {
@@ -456,6 +493,78 @@ export function criarMotorThatOpen(): MotorVisualizador {
     return caixa
   }
 
+  /**
+   * Preenche a seção de cada corte do Clipper (ClipStyler: fill + contorno). O preenchimento é recalculado
+   * ao criar e ao soltar o plano (`onDraggingEnded`), nunca durante o arraste, para não travar a interação
+   * com o modelo inteiro. É descartado junto com o plano (`delete`/`deleteAll`).
+   */
+  /**
+   * Grupo do Classifier com os elementos construtivos de todos os modelos carregados (ver `ehClasseDeSecao`):
+   * só eles entram no preenchimento da seção. Refeito a cada atualização, porque modelos entram e saem.
+   */
+  async function prepararGrupoSecao() {
+    if (!components || !fragments) return
+    const classifier = components.get(OBC.Classifier)
+    classifier.list.get(CLASSIFICACAO_SECAO)?.delete(GRUPO_SECAO)
+    const mapa: Record<string, Set<number>> = {}
+    for (const [sigla, m] of fragments.list) {
+      const ids = new Set<number>()
+      for (const [id, classe] of await classesDe(m)) if (ehClasseDeSecao(classe)) ids.add(id)
+      if (ids.size) mapa[sigla] = ids
+    }
+    classifier.addGroupItems(CLASSIFICACAO_SECAO, GRUPO_SECAO, mapa)
+  }
+
+  function estilizarCortes(c: OBC.Components, w: Mundo) {
+    const styler = c.get(OBF.ClipStyler)
+    styler.world = w
+    styler.styles.set(ESTILO_CORTE, {
+      fillsMaterial: new THREE.MeshBasicMaterial({ color: cor(PALETA.escuro.corte), side: THREE.DoubleSide }),
+      linesMaterial: new LineMaterial({ color: cor(PALETA.escuro.contorno).getHex(), linewidth: 2 }),
+    })
+    const clipper = c.get(OBC.Clipper)
+    const aoCriar = (plano: OBC.SimplePlane) => {
+      const entrada = [...clipper.list].find(([, p]) => p === plano)
+      if (!entrada) return
+      try {
+        const bordas = styler.createFromClipping(entrada[0], { items: ITENS_SECAO })
+        void prepararGrupoSecao()
+          .then(() => bordas.update())
+          .then(() => {
+            if (!liberado) w.renderer.needsUpdate = true
+          })
+          .catch(() => {})
+      } catch {
+        // sem preenchimento: o corte continua valendo
+      }
+    }
+    clipper.onAfterCreate.add(aoCriar)
+    limpezas.push(() => clipper.onAfterCreate.remove(aoCriar))
+  }
+
+  /** Preenche o corte horizontal de uma planta (acompanha abrir/fechar e atualização da vista). */
+  function preencherVista(c: OBC.Components, v: OBC.View) {
+    const bordas = c.get(OBF.ClipStyler).createFromView(v, { items: ITENS_SECAO })
+    bordas.visible = v.open
+    bordasVistas.set(v.id, bordas)
+    void prepararGrupoSecao()
+      .then(() => bordas.update())
+      .catch(() => {})
+  }
+
+  /** Recalcula o preenchimento da planta ao abri-la (o cálculo feito ao criar, com a vista fechada, não basta). */
+  function atualizarPreenchimentoVista(id: string) {
+    const bordas = bordasVistas.get(id)
+    if (!bordas) return
+    bordas.visible = true
+    void prepararGrupoSecao()
+      .then(() => bordas.update())
+      .then(() => {
+        if (!liberado && mundo) mundo.renderer.needsUpdate = true
+      })
+      .catch(() => {})
+  }
+
   function descartarVistas() {
     if (!components) return
     const views = components.get(OBC.Views)
@@ -463,6 +572,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
     vistaAberta = null
     habilitarCortes(true)
     for (const id of vistasCriadas) views.list.delete(id)
+    bordasVistas.clear()
     vistasCriadas.clear()
   }
 
@@ -472,6 +582,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
     habilitarCortes(false)
     c.get(OBC.Views).open(id)
     vistaAberta = id
+    atualizarPreenchimentoVista(id)
     w.renderer.needsUpdate = true
   }
 
@@ -553,7 +664,8 @@ export function criarMotorThatOpen(): MotorVisualizador {
       selecionados: selecaoRefs,
       ocultos: ocultosRefs,
       isolados: isoladosRefs,
-      // As cores por categoria/disciplina são um modo global (`colorirPor`), não uma lista de refs.
+      // `cores` (lista explícita) só vem do BCF; o modo global (`colorirPor`) vai em `modoCor`.
+      ...(modoCor !== 'nenhum' ? { modoCor } : {}),
     }
   }
 
@@ -614,6 +726,10 @@ export function criarMotorThatOpen(): MotorVisualizador {
     if (liberado) return
     if (Object.keys(mapaSel).length) await h.highlightByID('select', mapaSel, true, false)
     else await h.clear('select')
+    // Cores: modo da vista (ausente = nenhum) e depois as explícitas; some o que havia antes.
+    modoCor = v.modoCor ?? 'nenhum'
+    emitir('cor', modoCor)
+    await aplicarCores(v.cores)
     w.renderer.needsUpdate = true
   }
 
@@ -851,6 +967,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
       o.styles.add('select')
       o.enabled = true
 
+      estilizarCortes(c, w as unknown as Mundo)
       this.tema(tema)
       // Só no build de teste (fixture): os e2e inspecionam e comandam o motor por aqui.
       if (import.meta.env.VITE_DADOS === 'fixture') (window as JanelaTeste).__motorCentral = this as MotorVisualizador
@@ -872,6 +989,15 @@ export function criarMotorThatOpen(): MotorVisualizador {
       const p = PALETA[tema]
       w.scene.three.background = new THREE.Color(p.fundo)
       if (grade) grade.config.color = cor(p.grade)
+      if (components) {
+        const styler = components.get(OBF.ClipStyler)
+        const estilo = styler.styles.get(ESTILO_CORTE)
+        if (estilo) {
+          ;(estilo.fillsMaterial as THREE.MeshBasicMaterial).color.set(p.corte)
+          estilo.linesMaterial?.color.set(p.contorno)
+          styler.updateStyle(ESTILO_CORTE)
+        }
+      }
       w.renderer.needsUpdate = true
     },
 
@@ -1056,7 +1182,35 @@ export function criarMotorThatOpen(): MotorVisualizador {
       const { components: c } = pronto()
       const consulta: ItemsQueryParams = {}
       if (filtro.classe) consulta.categories = [new RegExp(`^${filtro.classe}$`, 'i')]
-      if (filtro.operador !== 'existe' || filtro.atributo) {
+      if (filtro.grupo) {
+        // Propriedade de pset: elemento -IsDefinedBy-> IFCPROPERTYSET (Name = pset) -HasProperties->
+        // IFCPROPERTYSINGLEVALUE (Name = propriedade E NominalValue comparado), com agregação
+        // `exclusive` (E) para nome e valor valerem na MESMA propriedade. Limitação: só psets de
+        // valor simples (não quantidades `IFCELEMENTQUANTITY`).
+        const valor = expressaoDoFiltro(filtro)
+        const nomeProp = filtro.atributo ? new RegExp(`^${escaparRegex(filtro.atributo)}$`) : /^.*$/
+        consulta.relation = {
+          name: 'IsDefinedBy',
+          query: {
+            categories: [/^IFCPROPERTYSET$/i],
+            attributes: { queries: [{ name: /^Name$/, value: new RegExp(`^${escaparRegex(filtro.grupo)}$`) }] },
+            relation: {
+              name: 'HasProperties',
+              query: {
+                attributes: {
+                  aggregation: 'exclusive',
+                  queries: [
+                    { name: /^Name$/, value: nomeProp },
+                    ...(valor
+                      ? [{ name: /^NominalValue$/, value: valor, ...(filtro.operador === 'diferente' ? { negate: true } : {}) }]
+                      : []),
+                  ],
+                },
+              },
+            },
+          },
+        }
+      } else if (filtro.operador !== 'existe' || filtro.atributo) {
         const valor = expressaoDoFiltro(filtro)
         consulta.attributes = {
           queries: [
@@ -1068,7 +1222,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
           ],
         }
       }
-      if (!consulta.categories && !consulta.attributes) return []
+      if (!consulta.categories && !consulta.attributes && !consulta.relation) return []
       const mapa = await c.get(OBC.ItemsFinder).getItems([consulta])
       return refsDe(mapa)
     },
@@ -1103,11 +1257,14 @@ export function criarMotorThatOpen(): MotorVisualizador {
         const views = c.get(OBC.Views)
         views.world = w
         if (!views.list.has(pavimento)) {
-          const novas = await views.createFromIfcStoreys({
-            world: w,
-            storeyNames: [new RegExp(`^${escaparRegex(pavimento)}$`)],
-          })
-          for (const v of novas) vistasCriadas.add(v.id)
+          // Corte a 1,20 m do piso, em coordenadas de cena (createFromIfcStoreys corta a 0,25 m, na face da laje).
+          const altura = await alturaPavimento(pavimento)
+          if (altura !== null && !views.list.has(pavimento)) {
+            const v = views.createFromPlane(new THREE.Plane(new THREE.Vector3(0, -1, 0), altura), { id: pavimento, world: w })
+            v.range = profundidadePlanta()
+            vistasCriadas.add(v.id)
+            preencherVista(c, v)
+          }
         }
         if (!liberado && views.list.has(pavimento)) abrirVista(pavimento)
       })()
@@ -1121,7 +1278,7 @@ export function criarMotorThatOpen(): MotorVisualizador {
         const novas = views.createElevations({
           combine: true,
           world: w,
-          // Sem rotação de norte verdadeiro: a frente (+Z) olha o sul e a esquerda (+X) olha o leste.
+          // N/S/L/O são do norte do projeto (+Y do IFC), sem rotação de norte verdadeiro: o TrueNorth do ARQ da HTO é (-0,75; -0,66), não (0, 1), então o norte geográfico fica girado (~131°) em relação a elas; a frente (+Z) olha o sul e a esquerda (+X) olha o leste.
           namingCallback: () => ({
             front: ID_ELEVACAO.S,
             back: ID_ELEVACAO.N,

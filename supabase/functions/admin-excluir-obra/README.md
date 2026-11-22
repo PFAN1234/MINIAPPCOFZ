@@ -1,8 +1,8 @@
 # admin-excluir-obra
 
 Exclusão de obra pelo site de administração (`/admin/`): apaga a obra no banco
-(RPC `admin_excluir_obra`, como o admin) e depois os arquivos dela no R2
-(pastas `fotos`, `plantas`, `originais`, `modelos`, `documentos` e `issues`, todas em
+(RPC `admin_excluir_obra`, como o admin) e depois os arquivos dela no R2 (pastas
+`fotos`, `plantas`, `originais`, `modelos`, `documentos` e `issues`, todas em
 `<obra_id>/...`). Regras, RPCs e o que acontece com o Telegram em
 `docs/admin.md` ("Arquivar e excluir obra").
 

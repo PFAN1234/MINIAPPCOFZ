@@ -93,6 +93,31 @@ function renderizar2(rota: string) {
 }
 
 describe('CentralObra', () => {
+  it('Captura baixa o PNG com o nome da obra e revoga a URL; falha mostra aviso', async () => {
+    const usuario = userEvent.setup()
+    const criar = vi.fn(() => 'blob:teste')
+    const revogar = vi.fn()
+    Object.assign(URL, { createObjectURL: criar, revokeObjectURL: revogar })
+    const nomes: string[] = []
+    const clique = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      nomes.push(this.download)
+    })
+    const capturar = vi.spyOn(motor, 'capturar')
+    renderizar('/modelos/hto')
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Captura' })).toBeEnabled())
+    await usuario.click(screen.getByRole('button', { name: 'Captura' }))
+    await waitFor(() => expect(revogar).toHaveBeenCalledWith('blob:teste'), { timeout: 2500 })
+    expect(capturar).toHaveBeenCalledTimes(1)
+    expect(criar).toHaveBeenCalledTimes(1)
+    expect(nomes[0]).toMatch(/^captura-hto-\d{4}-\d{2}-\d{2}-\d{4}\.png$/)
+
+    capturar.mockRejectedValueOnce(new Error('canvas sem tamanho'))
+    await usuario.click(screen.getByRole('button', { name: 'Captura' }))
+    expect(await screen.findByText(/Não foi possível capturar a vista: canvas sem tamanho/)).toBeInTheDocument()
+    expect(clique).toHaveBeenCalledTimes(1)
+    clique.mockRestore()
+  })
+
   it('abre em Itens por padrão e mostra o nome da obra e o canvas', async () => {
     renderizar('/modelos/hto')
     expect(await screen.findByRole('tab', { name: 'Itens', selected: true })).toBeInTheDocument()

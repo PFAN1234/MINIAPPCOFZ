@@ -47,3 +47,37 @@ export function projetarParaTela(p: Ponto3, camera: THREE.Camera, largura: numbe
   const visivel = Number.isFinite(v.x) && v.z >= -1 && v.z <= 1 && Math.abs(v.x) <= 1 && Math.abs(v.y) <= 1
   return { x: ((v.x + 1) / 2) * largura, y: ((1 - v.y) / 2) * altura, visivel }
 }
+
+export interface ToqueMedicao {
+  x: number
+  y: number
+  /** Instante do toque, em ms. */
+  t: number
+}
+
+/**
+ * Decide se um clique de área/volume é o segundo toque de um duplo clique (mesmo lugar, em poucos ms)
+ * e deve ser ignorado: o duplo clique conclui a medição e não pode acrescentar o último ponto de novo.
+ */
+export function ehToqueRepetido(anterior: ToqueMedicao | null, atual: ToqueMedicao, maxPx = 5, maxMs = 400): boolean {
+  if (!anterior) return false
+  const dt = atual.t - anterior.t
+  return dt >= 0 && dt < maxMs && Math.hypot(atual.x - anterior.x, atual.y - anterior.y) < maxPx
+}
+
+/** Altura típica do corte de uma planta, acima do piso do pavimento (m). */
+export const CORTE_PLANTA_M = 1.2
+/** Folga abaixo do piso mantida visível na planta (m): a espessura da laje. */
+export const FOLGA_PISO_M = 0.3
+
+/**
+ * Altura do corte da planta em coordenadas de cena: elevação IFC do pavimento + deslocamento Y das
+ * coordenadas do modelo (`getCoordinates()[1]`) + altura de corte. O padrão da biblioteca soma só 0,25 m,
+ * que cai na face da laje (sem paredes cortadas); a planta de projeto corta a 1,20 m.
+ */
+export function alturaCortePlanta(elevacao: number, deslocamentoY: number, corte = CORTE_PLANTA_M): number {
+  return elevacao + deslocamentoY + corte
+}
+
+/** Profundidade da vista (m) abaixo do corte: da altura de corte até o piso, mais a folga da laje. */
+export const profundidadePlanta = (corte = CORTE_PLANTA_M, folga = FOLGA_PISO_M): number => corte + folga

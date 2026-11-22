@@ -104,4 +104,36 @@ describe('Filtro', () => {
     await usuario.click(screen.getByRole('button', { name: 'Buscar' }))
     expect(await screen.findByText('0 resultados')).toBeInTheDocument()
   })
+
+  it('origem "Propriedade (pset)" monta o filtro com grupo e atributo', async () => {
+    const usuario = userEvent.setup()
+    const motor = new MotorVisualizadorFalso()
+    motor.buscaDados = [parede]
+    render(<Filtro motor={motor} versao={1} onSelecionar={() => {}} onIsolar={() => {}} />)
+    await usuario.selectOptions(screen.getByLabelText('Origem'), 'pset')
+    expect(screen.queryByLabelText('Atributo')).not.toBeInTheDocument()
+    await usuario.type(screen.getByLabelText('Pset'), 'Pset_WallCommon')
+    await usuario.type(screen.getByLabelText('Propriedade'), 'IsExternal')
+    await usuario.selectOptions(screen.getByLabelText('Operador'), 'igual')
+    await usuario.type(screen.getByLabelText('Valor'), 'Sim')
+    await usuario.click(screen.getByRole('button', { name: 'Buscar' }))
+    expect(await screen.findByText('1 resultado')).toBeInTheDocument()
+    expect(motor.chamadasDe('buscar')[0][0]).toEqual({
+      operador: 'igual',
+      grupo: 'Pset_WallCommon',
+      atributo: 'IsExternal',
+      valor: 'Sim',
+    })
+  })
+
+  it('motor falso filtra por pset (grupo, propriedade e valor)', async () => {
+    const motor = new MotorVisualizadorFalso()
+    motor.buscaDados = [parede]
+    const base = { operador: 'igual', grupo: 'Pset_WallCommon', atributo: 'IsExternal', valor: 'Sim' } as const
+    expect(await motor.buscar(base)).toEqual([parede])
+    expect(await motor.buscar({ ...base, valor: 'Não' })).toEqual([])
+    expect(await motor.buscar({ ...base, operador: 'existe' })).toEqual([parede])
+    expect(await motor.buscar({ ...base, grupo: 'Pset_Outro' })).toEqual([])
+    expect(await motor.buscar({ ...base, atributo: 'Nada', operador: 'existe' })).toEqual([])
+  })
 })

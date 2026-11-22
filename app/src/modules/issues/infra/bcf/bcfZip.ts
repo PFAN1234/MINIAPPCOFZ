@@ -138,6 +138,11 @@ function lerViewpoint(info: Element, guid: string, snapshot: Uint8Array | null):
   const componentes = filho(info, 'Components')
   const visibilidade = filho(componentes, 'Visibility')
   const padrao = atributo(visibilidade, 'DefaultVisibility')
+  const cores = filhos(filho(componentes, 'Coloring') ?? info, 'Color').flatMap((c) => {
+    const cor = atributo(c, 'Color')?.trim()
+    const ids = idsDe(c)
+    return cor && ids.length ? [{ cor, ids }] : []
+  })
   return {
     guid,
     camera: lerCamera(info),
@@ -150,6 +155,7 @@ function lerViewpoint(info: Element, guid: string, snapshot: Uint8Array | null):
     // Sem o elemento Visibility, tudo visível; com ele, o padrão do XSD do BCF é `false`.
     visibilidadePadrao: visibilidade ? padrao?.trim().toLowerCase() === 'true' : true,
     excecoes: idsDe(filho(visibilidade, 'Exceptions')),
+    ...(cores.length ? { cores } : {}),
     snapshot,
   }
 }
@@ -264,7 +270,12 @@ function xmlViewpoint(vp: BcfViewpoint): string {
   const visibilidade = `<Visibility DefaultVisibility="${vp.visibilidadePadrao}">${
     vp.excecoes.length ? `<Exceptions>${componentes(vp.excecoes)}</Exceptions>` : ''
   }</Visibility>`
-  return `${CABECALHO}<VisualizationInfo Guid="${esc(vp.guid)}"><Components>${selecao}${visibilidade}</Components>${camera}${planos}</VisualizationInfo>\n`
+  const coloracao = vp.cores?.length
+    ? `<Coloring>${vp.cores
+        .map((c) => `<Color Color="${esc(c.cor)}">${componentes(c.ids)}</Color>`)
+        .join('')}</Coloring>`
+    : ''
+  return `${CABECALHO}<VisualizationInfo Guid="${esc(vp.guid)}"><Components>${selecao}${visibilidade}${coloracao}</Components>${camera}${planos}</VisualizationInfo>\n`
 }
 
 const nomeBcfv = (vp: BcfViewpoint) => `${vp.guid}.bcfv`

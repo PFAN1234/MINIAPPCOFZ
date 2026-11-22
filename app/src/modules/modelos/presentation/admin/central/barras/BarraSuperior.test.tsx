@@ -31,6 +31,7 @@ function montar(medicao: TipoMedida | null = null) {
         onMedir={noop}
         marcadores
         onMarcadores={noop}
+        onCaptura={noop}
       />
     </div>,
   )

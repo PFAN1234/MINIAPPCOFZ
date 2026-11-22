@@ -104,6 +104,19 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   }
   async buscar(filtro: FiltroAtributo) {
     this.registrar('buscar', filtro)
+    if (filtro.grupo) {
+      // Por pset: acha a propriedade nos grupos falsos (`propriedadesDados`); sem ela, nenhum resultado.
+      const grupo = this.propriedadesDados.find((g) => g.nome === filtro.grupo)
+      const itens = grupo?.itens.filter((i) => !filtro.atributo || i.nome === filtro.atributo) ?? []
+      const v = (filtro.valor ?? '').toLowerCase()
+      const passa = (valor: string) => {
+        const x = valor.toLowerCase()
+        if (filtro.operador === 'existe') return true
+        if (filtro.operador === 'contem') return x.includes(v)
+        return filtro.operador === 'igual' ? x === v : x !== v
+      }
+      return itens.some((i) => passa(String(i.valor))) ? this.buscaDados : []
+    }
     return this.buscaDados
   }
   async existem(refs: RefElemento[]) {
@@ -136,6 +149,7 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   }
   colorirPor(modo: 'nenhum' | 'categoria' | 'disciplina') {
     this.registrar('colorirPor', modo)
+    this.modoCorAtual = modo
   }
   enquadrar(refs?: RefElemento[]) {
     this.registrar('enquadrar', refs)
@@ -199,8 +213,10 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   origemCena(): Ponto3 {
     return this.origemCenaDados
   }
+  modoCorAtual: 'nenhum' | 'categoria' | 'disciplina' = 'nenhum'
   vistaAtual(): Vista {
     return {
+      ...(this.modoCorAtual !== 'nenhum' ? { modoCor: this.modoCorAtual } : {}),
       camera: { posicao: [0, 0, 0], alvo: [0, 0, 0], projecao: 'perspectiva' },
       cortes: [],
       selecionados: [],
@@ -210,6 +226,8 @@ export class MotorVisualizadorFalso implements MotorVisualizador {
   }
   async aplicarVista(v: Vista) {
     this.registrar('aplicarVista', v)
+    this.modoCorAtual = v.modoCor ?? 'nenhum'
+    this.emitir('cor', this.modoCorAtual)
   }
   async capturar() {
     return new Blob()

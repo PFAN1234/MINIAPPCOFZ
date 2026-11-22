@@ -59,7 +59,9 @@ type Vista = {
   camera: { posicao: [number, number, number]; alvo: [number, number, number]; projecao: 'perspectiva' | 'ortografica'; campo?: number }  // campo: fov (graus) na perspectiva; altura visível (m) na ortográfica
   cortes: { origem: [number, number, number]; normal: [number, number, number] }[]
   selecionados: RefElemento[]; ocultos: RefElemento[]; isolados: RefElemento[] | null
+  modoCor?: 'disciplina' | 'categoria'   // modo global de cor do motor; ausente = sem cores
   cores?: { refs: RefElemento[]; cor: string }[]
+  // cores: cores explícitas (hex #rrggbb, vindas do BCF `Coloring`), aplicadas por cima do modoCor; o modoCor não vai para o BCF
 }
 interface MotorVisualizador {
   montar(el: HTMLElement, tema: 'escuro' | 'claro'): Promise<void>
@@ -202,6 +204,6 @@ Mesmo comportamento de `ModelosObra.tsx` (conversão IFC no worker, `.frag` dire
 - Domínio: validações de documento (tipo, tamanho, mime, revisão), mapeamento BCF ida e volta, montagem da árvore, formato de medidas.
 - Contract tests das portas `DocumentosRepositorio` e `IssuesRepositorio` (fixture e Supabase com cliente simulado).
 - Componentes (jsdom) com dublê de `MotorVisualizador`: lista de obras, troca de obra libera o motor, seleção → propriedades → documentos vinculados, criar issue a partir da vista, tema persistido.
-- Banco: script `npm run testar:central` no Supabase local, conferindo RLS (admin lê e grava; participante, estranho e anônimo não).
+- Banco: a RLS e as RPCs da Central são conferidas pelos testes de banco `tests/db/test_documentos.py`, `test_issues.py`, `test_admin_modelo.py` e `test_arquivo.py` (pytest com Postgres local), sem script próprio.
 - e2e Playwright (`VITE_DADOS=fixture`, Chromium com WebGL): abrir `/modelos`, entrar numa obra, carregar `.frag` de fixture, selecionar, isolar, cortar, medir, criar issue, exportar BCF.
 - Pronto: `npm run typecheck`, `lint`, `test`, `build` e `build:fixture` verdes; e2e completo verde; `precache-manifest.json` sem chunks do visualizador; migrations aplicadas e RLS conferida em produção; `docs/admin.md` atualizado.

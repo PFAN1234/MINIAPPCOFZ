@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent as EventoMouse, type ReactNode } from 'react'
 import {
   IconeAngulo,
   IconeArea,
@@ -23,7 +23,6 @@ import { NOMES_MEDIDA, type ModoCor, type TipoMedida, type Vista3dUi } from '../
 /** Botões ainda desabilitados (ganham função nas próximas etapas). */
 const BOTOES_FUTUROS: { nome: string; icone: ReactNode }[] = [
   { nome: 'Modelos', icone: <IconeModelos /> },
-  { nome: 'Captura', icone: <IconeCaptura /> },
   { nome: 'Obra', icone: <IconeObra /> },
 ]
 
@@ -69,6 +68,16 @@ function useFecharMenu(aberto: boolean, fechar: () => void) {
   return ref
 }
 
+/**
+ * Posição do menu abaixo do botão, para telas < 1024 px (onde a barra rola e o menu fica `fixed`, fora do corte).
+ * Entrega variáveis CSS; em telas largas o menu continua absoluto e as ignora.
+ */
+function posicaoMenu(e: EventoMouse<HTMLElement>): CSSProperties {
+  const r = e.currentTarget.getBoundingClientRect()
+  const x = Math.max(8, Math.min(r.left, window.innerWidth - 180))
+  return { '--menu-x': `${x}px`, '--menu-y': `${r.bottom + 4}px` } as CSSProperties
+}
+
 const LADOS = ['N', 'S', 'L', 'O'] as const
 const NOMES_LADO = { N: 'norte', S: 'sul', L: 'leste', O: 'oeste' }
 
@@ -105,6 +114,8 @@ interface Props {
   /** Marcadores de issues ligados no 3D. */
   marcadores: boolean
   onMarcadores(): void
+  /** Captura a vista atual e baixa o PNG. */
+  onCaptura(): void
 }
 
 /** Barra superior do visualizador: enquadrar (F), projeção, cor por categoria/disciplina e grade. */
@@ -130,10 +141,13 @@ export default function BarraSuperior({
   onMedir,
   marcadores,
   onMarcadores,
+  onCaptura,
 }: Props) {
   const [menuMedir, setMenuMedir] = useState(false)
   const [menu, setMenu] = useState(false)
   const [escolhido, setEscolhido] = useState('')
+  const [posCor, setPosCor] = useState<CSSProperties>()
+  const [posMedir, setPosMedir] = useState<CSSProperties>()
   const refCor = useFecharMenu(menu, () => setMenu(false))
   // Com um modo de medição ativo o submenu fica aberto (paleta): os cliques no canvas não o fecham.
   const refMedir = useFecharMenu(menuMedir && medicao === null, () => setMenuMedir(false))
@@ -183,12 +197,15 @@ export default function BarraSuperior({
             aria-expanded={menu}
             aria-pressed={cor !== 'nenhum'}
             disabled={!ativo}
-            onClick={() => setMenu((m) => !m)}
+            onClick={(e) => {
+              setPosCor(posicaoMenu(e))
+              setMenu((m) => !m)
+            }}
           >
             <IconeCor />
           </button>
           {menu && (
-            <div role="menu" aria-label="Colorir por" className="central-menu-lista">
+            <div role="menu" aria-label="Colorir por" className="central-menu-lista" style={posCor}>
               {MODOS.map((m) => (
                 <button
                   key={m.id}
@@ -257,7 +274,7 @@ export default function BarraSuperior({
             type="button"
             className="central-botao central-botao-icone"
             aria-label={`Elevação ${l}`}
-            data-dica={`Elevação ${NOMES_LADO[l]}`}
+            data-dica={`Elevação ${NOMES_LADO[l]} (norte do projeto)`}
             aria-pressed={vista.tipo === 'elevacao' && vista.lado === l}
             disabled={!ativo}
             onClick={() => onElevacao(l)}
@@ -297,12 +314,15 @@ export default function BarraSuperior({
             aria-expanded={menuMedir}
             aria-pressed={medicao !== null}
             disabled={!ativo}
-            onClick={() => setMenuMedir((m) => !m)}
+            onClick={(e) => {
+              setPosMedir(posicaoMenu(e))
+              setMenuMedir((m) => !m)
+            }}
           >
             <IconeMedir />
           </button>
           {menuMedir && (
-            <div role="group" aria-label="Modo de medição" className="central-menu-lista">
+            <div role="group" aria-label="Modo de medição" className="central-menu-lista" style={posMedir}>
               {(Object.keys(NOMES_MEDIDA) as TipoMedida[]).map((t) => (
                 <button
                   key={t}
@@ -332,6 +352,16 @@ export default function BarraSuperior({
           onClick={onMarcadores}
         >
           <IconeIssues />
+        </button>
+        <button
+          type="button"
+          className="central-botao central-botao-icone"
+          aria-label="Captura"
+          data-dica="Capturar a vista atual (PNG)"
+          disabled={!ativo}
+          onClick={onCaptura}
+        >
+          <IconeCaptura />
         </button>
         {BOTOES_FUTUROS.slice(1).map(botaoFuturo)}
       </div>

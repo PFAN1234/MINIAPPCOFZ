@@ -3,6 +3,7 @@ import {
   agregarCategorias,
   corCategorica,
   ehClasseDeElemento,
+  ehClasseDeSecao,
   expressaoDoFiltro,
   formatarMedida,
   filhosVisiveis, montarArvore, nivelDaClasse,
@@ -199,5 +200,13 @@ describe('formatarMedida', () => {
   })
   it('cola o símbolo de grau ao número', () => {
     expect(formatarMedida({ ...base, tipo: 'angulo', valor: 90, unidade: '°' })).toBe('90,00°')
+  })
+})
+
+describe('ehClasseDeSecao', () => {
+  it('preenche paredes, estrutura e esquadrias; deixa mobiliário, vegetação e entorno de fora', () => {
+    for (const c of ['IFCWALL', 'IfcWallStandardCase', 'IFCSLAB', 'IFCCOLUMN', 'IFCDOOR', 'IFCWINDOW']) expect(ehClasseDeSecao(c)).toBe(true)
+    for (const c of ['IFCFURNISHINGELEMENT', 'IFCBUILDINGELEMENTPROXY', 'IFCCOVERING', 'IFCSPACE', 'IFCGEOGRAPHICELEMENT'])
+      expect(ehClasseDeSecao(c)).toBe(false)
   })
 })

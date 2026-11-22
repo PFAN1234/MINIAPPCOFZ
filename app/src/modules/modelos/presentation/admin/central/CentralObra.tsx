@@ -161,6 +161,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   const [medidas, setMedidas] = useState<Medida[]>([])
   const [medidaMarcada, setMedidaMarcada] = useState<string | null>(null)
   const [medicao, setMedicao] = useState<TipoMedida | null>(null)
+  const [erroCaptura, setErroCaptura] = useState<string | null>(null)
   const [modo, setModo] = useState<'ver' | 'inspecionar'>('ver')
   const [categoriasOcultas, setCategoriasOcultas] = useState<ReadonlySet<string>>(new Set())
   const arrasto = useRef<{ x: number; largura: number } | null>(null)
@@ -193,7 +194,12 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   // Lista de cortes: o motor avisa quando muda (a criação é assíncrona).
   useEffect(() => {
     if (!motor) return
-    return motor.ao('cortes', (dados) => setCortes(dados as Corte[]))
+    const sair = motor.ao('cortes', (dados) => setCortes(dados as Corte[]))
+    const sairCor = motor.ao('cor', (dados) => setCor(dados as ModoCor))
+    return () => {
+      sair()
+      sairCor()
+    }
   }, [motor])
   // Lista de medições: o motor avisa a cada criação ou remoção.
   useEffect(() => {
@@ -278,6 +284,26 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   function mostrarRefs(refs: RefElemento[]) {
     selecionar(refs)
     motor?.enquadrar(refs)
+  }
+
+  /** Captura a vista e baixa o PNG `captura-<obra>-<AAAA-MM-DD-HHMM>.png`. */
+  async function capturar() {
+    if (!motor) return
+    setErroCaptura(null)
+    try {
+      const blob = await motor.capturar()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `captura-${obra.slug}-${carimboCaptura(new Date())}.png`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      // Revogar só depois: alguns navegadores abortam o download se a URL some no mesmo ciclo do clique.
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch (e) {
+      setErroCaptura(e instanceof Error && e.message ? `Não foi possível capturar a vista: ${e.message}` : 'Não foi possível capturar a vista.')
+    }
   }
 
   function enquadrar() {
@@ -621,10 +647,16 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
           onMedir={mudarMedicao}
           marcadores={marcadores}
           onMarcadores={alternarMarcadores}
+          onCaptura={() => void capturar()}
         />
         <div className="central-canvas" data-testid="canvas-central">
           <div ref={tela} className="central-tela" />
           <Estados estado={estado} />
+          {erroCaptura && (
+            <p className="central-aviso central-pilula" role="alert">
+              {erroCaptura}
+            </p>
+          )}
           <div className="central-modo central-segmentado" role="group" aria-label="Modo">
             <button
               type="button"
@@ -698,6 +730,12 @@ function Selecao({ refs }: { refs: RefElemento[] }) {
       </dl>
     </div>
   )
+}
+
+/** AAAA-MM-DD-HHMM no horário local. */
+function carimboCaptura(d: Date) {
+  const n = (v: number) => String(v).padStart(2, '0')
+  return `${d.getFullYear()}-${n(d.getMonth() + 1)}-${n(d.getDate())}-${n(d.getHours())}${n(d.getMinutes())}`
 }
 
 /** Avisos sobre o canvas: sem WebGL, sem modelos, carregando, erro e falhas por disciplina. */

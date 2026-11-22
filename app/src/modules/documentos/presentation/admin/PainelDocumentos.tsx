@@ -501,6 +501,9 @@ function Formulario({
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [copiar, setCopiar] = useState(true)
+  /** Revisão já registrada cuja cópia de vínculos falhou (evita registrar de novo). */
+  const [registrado, setRegistrado] = useState<Documento | null>(null)
+  const [erroCopia, setErroCopia] = useState<string | null>(null)
   const novaRevisao = inicial.serie !== undefined
 
   const mime = arquivo ? mimeDoArquivo(arquivo.name, arquivo.type) : ''
@@ -516,7 +519,7 @@ function Formulario({
         mime,
       })
     : null
-  const pode = !!arquivo && !problema && !enviando
+  const pode = !!arquivo && !problema && !enviando && !registrado
 
   function escolher(f: File) {
     setArquivo(f)
@@ -557,16 +560,39 @@ function Formulario({
           bytes,
         },
       })
-      const anteriores = inicial.vinculosAnteriores ?? []
-      if (novaRevisao && copiar && anteriores.length > 0) {
-        await repo.vincularDocumento(doc.id, anteriores)
-      }
-      void qc.invalidateQueries({ queryKey: ['admin'], predicate: (q) => q.queryKey[1] !== 'sessao' })
-      aoEnviar(doc)
+      await copiarVinculos(doc)
     } catch (e) {
       setErro(mensagemDe(e))
       setEnviando(false)
     }
+  }
+
+  /** Copia os vínculos da revisão anterior; se falhar, guarda o documento já registrado para repetir só a cópia. */
+  async function copiarVinculos(doc: Documento) {
+    const anteriores = inicial.vinculosAnteriores ?? []
+    if (novaRevisao && copiar && anteriores.length > 0) {
+      try {
+        await repo.vincularDocumento(doc.id, anteriores)
+      } catch (e) {
+        setRegistrado(doc)
+        setErroCopia(mensagemDe(e))
+        setEnviando(false)
+        return
+      }
+    }
+    concluir(doc)
+  }
+
+  function concluir(doc: Documento) {
+    void qc.invalidateQueries({ queryKey: ['admin'], predicate: (q) => q.queryKey[1] !== 'sessao' })
+    aoEnviar(doc)
+  }
+
+  async function tentarCopiarDeNovo() {
+    if (!registrado) return
+    setErroCopia(null)
+    setEnviando(true)
+    await copiarVinculos(registrado)
   }
 
   return (
@@ -663,11 +689,33 @@ function Formulario({
           {erro}
         </p>
       )}
+      {registrado && (
+        <>
+          {erroCopia && (
+            <p className="central-gestao-alerta" role="alert">
+              A revisão foi registrada, mas os vínculos não foram copiados: {erroCopia}.
+            </p>
+          )}
+          <div className="central-gestao-acoes">
+            <button
+              type="button"
+              className="central-botao central-botao-principal"
+              disabled={enviando}
+              onClick={() => void tentarCopiarDeNovo()}
+            >
+              Tentar copiar de novo
+            </button>
+            <button type="button" className="central-botao" disabled={enviando} onClick={() => concluir(registrado)}>
+              Concluir sem vínculos
+            </button>
+          </div>
+        </>
+      )}
       <div className="central-gestao-acoes">
         <button type="submit" className="central-botao central-botao-principal" disabled={!pode}>
           Enviar
         </button>
-        <button type="button" className="central-botao" disabled={enviando} onClick={aoCancelar}>
+        <button type="button" className="central-botao" disabled={enviando || !!registrado} onClick={aoCancelar}>
           Cancelar
         </button>
       </div>
