@@ -1,7 +1,7 @@
 /**
  * Painel Issues da central: lista das issues da obra (filtro por status e busca), criação a partir da
  * vista atual do 3D (com captura da imagem), detalhe editável com vistas restauráveis e comentários.
- * Em coluna única, para o painel estreito. BCF fica para a etapa 7D (botões desabilitados).
+ * Em coluna única, para o painel estreito. Importar e exportar BCF: `BcfIssues.tsx`.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ComDados, mensagemDe } from '../../../../admin/componentes.tsx'
@@ -18,6 +18,7 @@ import type { Vista } from '../../../modelos/domain/central.ts'
 import type { MotorVisualizador } from '../../../modelos/application/ports/MotorVisualizador.port.ts'
 import type { ObraCentral } from '../../../modelos/domain/tipos.ts'
 import { ErroImagemVista } from '../../application/use-cases/criarIssueComVista.ts'
+import { useBcfIssues } from './BcfIssues.tsx'
 import {
   contarPorStatus,
   ehAberta,
@@ -118,6 +119,7 @@ function Lista({
       (i) => !q || `#${i.numero} ${i.titulo} ${i.descricao ?? ''}`.toLowerCase().includes(q),
     )
   }, [issues, filtro, busca])
+  const bcf = useBcfIssues({ obra, motor, pronto, issues, visiveis })
   const abertas = issues.filter(ehAberta).length
   const contagem = contarPorStatus(issues)
 
@@ -143,13 +145,9 @@ function Lista({
         >
           Nova issue
         </button>
-        <button type="button" className="central-botao" disabled data-dica="Etapa 7D" aria-label="Importar BCF">
-          Importar BCF
-        </button>
-        <button type="button" className="central-botao" disabled data-dica="Etapa 7D" aria-label="Exportar BCF">
-          Exportar BCF
-        </button>
+        {bcf.botoes}
       </div>
+      {bcf.painel}
       {aviso && (
         <div className="central-gestao-alerta" role="alert">
           <p>{aviso}</p>

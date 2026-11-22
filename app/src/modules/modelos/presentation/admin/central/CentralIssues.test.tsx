@@ -8,6 +8,9 @@ import { criarRepositorioAdminFixture } from '../../../../../admin/dados/fixture
 import { MotorVisualizadorFalso } from '../../../infra/MotorVisualizadorFalso.ts'
 import { temWebGL } from '../../../infra/modelosLocais.ts'
 import type { ModeloFrag } from '../../../domain/modelos.ts'
+import { unzipSync } from 'fflate'
+import { BCF21, zipDe } from '../../../../issues/infra/bcf/__fixtures__/pacotes.ts'
+import { lerBcf } from '../../../../issues/infra/bcf/bcfZip.ts'
 import CentralObra from './CentralObra.tsx'
 import { PreviaPdfProvider } from '../../../../documentos/presentation/admin/previaPdf.tsx'
 import { FabricaMotorProvider } from './motorContexto.tsx'
@@ -115,8 +118,8 @@ describe('Painel Issues na central', () => {
     await usuario.clear(screen.getByLabelText('Buscar'))
     await usuario.type(screen.getByLabelText('Buscar'), 'nada disso')
     expect(screen.getByText(/Nenhuma issue encontrada/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Importar BCF' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Exportar BCF' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Exportar BCF' })).toBeEnabled()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Importar BCF' })).toBeEnabled())
   })
 
   it('cria uma issue a partir da vista atual (captura ao abrir) e a contagem de abertas muda', async () => {
@@ -253,5 +256,92 @@ describe('Painel Issues na central', () => {
       expect(botao).toHaveAttribute('aria-pressed', 'false')
       expect(motor.marcadoresAtuais).toHaveLength(0)
     })
+  })
+})
+
+describe('Importar e exportar BCF no painel Issues', () => {
+  let baixado: { blob: Blob; nome: string }[]
+
+  beforeEach(() => {
+    baixado = []
+    let nome = ''
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      baixado.push({ blob: b as Blob, nome: '' })
+      return 'blob:teste'
+    })
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      nome = this.download
+      baixado[baixado.length - 1].nome = nome
+    })
+  })
+  afterEach(() => vi.restoreAllMocks())
+
+  const arquivo = (dados: Uint8Array, nome = 'issues.bcfzip') => new File([new Uint8Array(dados)], nome, { type: 'application/zip' })
+
+  it('exporta as issues do filtro atual em BCF 2.1 e todas em 3.0', async () => {
+    const usuario = userEvent.setup()
+    renderizar('/modelos/hto?painel=issues')
+    await screen.findByText(/2 abertas de 3/)
+    await usuario.click(screen.getByRole('button', { name: 'Exportar BCF' }))
+    const form = screen.getByRole('form', { name: 'Exportar BCF' })
+    expect(within(form).getByLabelText('Versão do BCF')).toHaveValue('2.1')
+    expect(within(form).getByRole('option', { name: 'Do filtro atual (2)' })).toBeInTheDocument()
+    await usuario.click(within(form).getByRole('button', { name: 'Baixar .bcfzip' }))
+    expect(await screen.findByRole('status', { name: 'Resultado do BCF' })).toHaveTextContent('2 issues exportadas em BCF 2.1')
+    expect(baixado[0].nome).toMatch(/^hto-issues-\d{4}-\d{2}-\d{2}\.bcfzip$/)
+    const p21 = lerBcf(new Uint8Array(await baixado[0].blob.arrayBuffer()))
+    expect(p21.versao).toBe('2.1')
+    expect(p21.topicos).toHaveLength(2)
+
+    await usuario.click(screen.getByRole('button', { name: 'Exportar BCF' }))
+    await usuario.selectOptions(screen.getByLabelText('Versão do BCF'), '3.0')
+    await usuario.selectOptions(screen.getByLabelText('Conjunto'), 'todas')
+    await usuario.click(screen.getByRole('button', { name: 'Baixar .bcfzip' }))
+    await waitFor(() => expect(baixado).toHaveLength(2))
+    const arquivos = unzipSync(new Uint8Array(await baixado[1].blob.arrayBuffer()))
+    expect(new TextDecoder().decode(arquivos['bcf.version'])).toContain('VersionId="3.0"')
+    expect(Object.keys(arquivos).filter((n) => n.endsWith('markup.bcf'))).toHaveLength(3)
+  })
+
+  it('importa o BCF 2.1: cria a issue, anexa o snapshot e, ao reimportar, só atualiza', async () => {
+    const usuario = userEvent.setup()
+    renderizar('/modelos/hto?painel=issues')
+    await screen.findByText(/2 abertas de 3/)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Importar BCF' })).toBeEnabled())
+    const entrada = screen.getByLabelText('Arquivo BCF')
+    await usuario.upload(entrada, arquivo(zipDe(BCF21)))
+    expect(await screen.findByRole('status', { name: 'Resultado do BCF' })).toHaveTextContent(
+      'Importação concluída: 1 criada, 0 atualizadas, 0 elementos não encontrados, 0 imagens não enviadas.',
+    )
+    expect(await screen.findByText(/3 abertas de 4/)).toBeInTheDocument()
+    expect(screen.getByTestId('issue-4')).toHaveTextContent('Viga atravessa o shaft')
+    expect(screen.getByTestId('issue-4')).toHaveTextContent('Alta')
+    expect(screen.getByTestId('issue-4')).toHaveTextContent('1 comentário')
+
+    await usuario.upload(entrada, arquivo(zipDe(BCF21)))
+    await waitFor(() => expect(screen.getByRole('status', { name: 'Resultado do BCF' })).toHaveTextContent('0 criadas, 1 atualizada,'))
+    expect(await screen.findByText(/3 abertas de 4/)).toBeInTheDocument()
+  })
+
+  it('conta os elementos que nenhuma disciplina carregada contém', async () => {
+    const usuario = userEvent.setup()
+    motor.globalIdsAusentes.add('0Nj8yW4Tv0H8pQ2dK1x9aB')
+    renderizar('/modelos/hto?painel=issues')
+    await screen.findByText(/2 abertas de 3/)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Importar BCF' })).toBeEnabled())
+    await usuario.upload(screen.getByLabelText('Arquivo BCF'), arquivo(zipDe(BCF21)))
+    expect(await screen.findByRole('status', { name: 'Resultado do BCF' })).toHaveTextContent('1 criada, 0 atualizadas, 1 elemento não encontrado, 0 imagens não enviadas')
+  })
+
+  it('arquivo inválido ou de versão não suportada mostra a mensagem', async () => {
+    const usuario = userEvent.setup()
+    renderizar('/modelos/hto?painel=issues')
+    await screen.findByText(/2 abertas de 3/)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Importar BCF' })).toBeEnabled())
+    await usuario.upload(screen.getByLabelText('Arquivo BCF'), arquivo(new TextEncoder().encode('não sou zip')))
+    expect(await screen.findByRole('alert')).toHaveTextContent('não é um .bcfzip')
+    await usuario.upload(screen.getByLabelText('Arquivo BCF'), arquivo(zipDe({ 'bcf.version': '<Version VersionId="1.0"/>' })))
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Versão BCF 1.0 não suportada'))
   })
 })
