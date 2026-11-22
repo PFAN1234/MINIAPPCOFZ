@@ -478,10 +478,19 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
   - App: módulo `modules/issues` (domínio, porta, fixture com 3 issues na HTO, Supabase, `criarIssueComVista`/`adicionarVista`, hooks); motor com `vistaAtual`/`aplicarVista` (câmera com zoom da ortográfica, cortes, ocultos, isolados, seleção), `capturar` (PNG ≤ 1600 px), `marcadores` (pinos HTML, clique abre a issue) e `origemCena`
   - Painel Issues: lista com filtro e busca, nova issue a partir da vista com miniatura, detalhe editável, vistas com "Restaurar vista", comentários, `?issue=N`, botão de marcadores na barra
   - BCF 2.1/3.0 próprio (`fflate` + DOMParser; o `BCFTopics` exige WebGL): eixos Y-up↔Z-up + origem do modelo-base; a direção exportada guarda a distância até o alvo; campos sem equivalente vão para a descrição com `[BCF]`; reimportar atualiza sem duplicar; snapshots JPEG viram PNG
-  - Em aberto: a vista não guarda as cores por categoria/disciplina (modo global do motor)
+  - Em aberto: a vista não guarda as cores por categoria/disciplina (modo global do motor) — resolvido na etapa 8 (`modoCor`)
   - Produção (2026-11-22): migration aplicada pela API e registrada (RLS nas 3 tabelas, RPCs só para `authenticated`, pasta `issues` no check e nos limites); `admin-excluir-obra` v8 (CORS ok, 401 sem token); PR #64 em `main` (f29e687), deploy READY. Suítes: vitest 1191, e2e 51 (tempo-limite do teste longo da central em 15 min: já levava ~7,5 min antes da etapa), banco 801, functions 198
   - Usuário: testar no site criar uma issue a partir da vista, restaurar, comentar e exportar/importar BCF
-- [ ] 8 Fechamento (e2e, docs, produção, PR)
+- [x] 8 Fechamento (2026-11-22; decisões: entram todas as correções e recursos pendentes; contrato sem `testar:central`; elevações pelo norte do projeto)
+  - Correções: botão Captura baixa o PNG da vista; duplo clique em área/volume não repete o último ponto; menus Cor/Medir fixos abaixo de 1024 px e cabeçalho do admin em duas linhas entre 641 e 1023 px; cópia de vínculos que falha depois de registrar a revisão tem mensagem própria, "Tentar copiar de novo" e "Concluir sem vínculos"
+  - Recursos: vistas guardam `modoCor` (e aplicam `cores` explícitas do BCF, que agora importa/exporta `Coloring`); filtro por propriedade de pset (`IsDefinedBy` → `HasProperties`, nome e valor na mesma propriedade; conferido na HTO: `Pset_QuantityTakeOff.Reference` 6059 = 94 iguais + 5965 diferentes); corte com preenchimento (`ClipStyler`, só elementos construtivos: o That Open gera a seção num buffer fixo de 100 mil segmentos)
+  - Planta: corte a 1,20 m do piso (antes 0,25 m caía na face da laje e a planta saía quase vazia), profundidade 1,5 m
+  - Conferências na HTO: norte verdadeiro do ARQ (-0,75; -0,66), ~131° do +Y; elevações e dicas seguem o norte do projeto (decisão do usuário). Minimapa com norte do projeto para cima, sem espelhamento
+  - Testes e docs: `DocumentosSupabaseAdapter.test.ts`, `tests/db/test_documentos.py` (RLS de `documento`/`documento_vinculo`, RPCs, `admin_central_obras`); seção "Central de modelos" em `docs/admin.md`; contrato §3.1 (`modoCor`, `cores`) e §7 (testes de banco no lugar do script)
+  - Produção: sem migration nova; conferido pela API que todas as migrations desde 20261115 estão registradas com a mesma versão, RLS ligada em todas as tabelas de `public`, RPCs da Central sem execute para `anon`
+  - Suítes: vitest 1212, banco 811, e2e E2E_RESULTADO; typecheck, lint, `build` e `build:fixture` verdes; precache sem chunks do visualizador
+  - Em aberto: plantas mostram as paredes cortadas sem o preenchimento (o dos cortes do usuário funciona); seta do minimapa não conferida com a câmera dentro do mapa; tempo do preenchimento só medido com WebGL por software
+  - Usuário: testar no site Captura, cores numa vista salva, filtro por pset, corte e planta
 
 ## Arquivos no Cloudflare R2 (plano: `tasks/plano-r2.md`)
 
