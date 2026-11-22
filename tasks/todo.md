@@ -490,6 +490,7 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
   - Produção: sem migration nova; conferido pela API que todas as migrations desde 20261115 estão registradas com a mesma versão, RLS ligada em todas as tabelas de `public`, RPCs da Central sem execute para `anon`
   - Suítes: vitest 1212, banco 811, e2e 51 (12,7 min); typecheck, lint, `build` e `build:fixture` verdes; precache sem chunks do visualizador
   - Em aberto: plantas mostram as paredes cortadas sem o preenchimento (o dos cortes do usuário funciona); seta do minimapa não conferida com a câmera dentro do mapa; tempo do preenchimento só medido com WebGL por software
+  - PR #65 em `main` (c9757c6), deploy de produção READY
   - Usuário: testar no site Captura, cores numa vista salva, filtro por pset, corte e planta
 
 ## Arquivos no Cloudflare R2 (plano: `tasks/plano-r2.md`)
