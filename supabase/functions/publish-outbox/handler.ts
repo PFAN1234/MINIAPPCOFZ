@@ -1,4 +1,5 @@
 // Lógica da Edge Function publish-outbox, com dependências injetadas (testável sem rede).
+import { chaveObjeto, type ClienteR2 } from "../_shared/r2.ts";
 import type { ClienteRpc, Segredos } from "../_shared/segredo.ts";
 import {
   type ClienteTelegram,
@@ -13,18 +14,12 @@ type Linhas = PromiseLike<{ data: any; error: { message: string } | null }>;
 export interface ClienteAdmin extends ClienteRpc {
   // deno-lint-ignore no-explicit-any
   from(tabela: string): any;
-  storage: {
-    from(bucket: string): {
-      download(
-        caminho: string,
-      ): PromiseLike<{ data: Blob | null; error: { message: string } | null }>;
-    };
-  };
 }
 
 export interface Deps {
   telegram: ClienteTelegram;
   admin: ClienteAdmin;
+  r2: Pick<ClienteR2, "baixar">;
   segredos: Segredos;
   botUsername: string;
   appName: string;
@@ -171,7 +166,7 @@ export function nomeMostrado(
 }
 
 export function criarHandler(deps: Deps) {
-  const { admin, telegram } = deps;
+  const { admin, telegram, r2 } = deps;
   const agora = deps.agora ?? (() => new Date());
   const link = (param?: string) =>
     linkApp(deps.botUsername, deps.appName, param);
@@ -212,12 +207,13 @@ export function criarHandler(deps: Deps) {
   ): Promise<Blob[] | null> {
     const blobs: Blob[] = [];
     for (const c of caminhos) {
-      const { data, error } = await admin.storage.from("fotos").download(c);
-      if (error || !data) {
-        console.warn("publish-outbox: falha ao baixar foto do Storage");
+      try {
+        const bytes = await r2.baixar(chaveObjeto("fotos", c));
+        blobs.push(new Blob([new Uint8Array(bytes)]));
+      } catch {
+        console.warn("publish-outbox: falha ao baixar foto do R2");
         return null;
       }
-      blobs.push(data);
     }
     return blobs;
   }
@@ -462,11 +458,16 @@ export function criarHandler(deps: Deps) {
     if (!boletim.pdf_path) {
       return { estado: "falhou", erro: "Boletim sem PDF." };
     }
-    const { data: pdf, error } = await admin.storage.from("boletins")
-      .download(boletim.pdf_path);
-    if (error || !pdf) {
+    let pdf: Blob | null = null;
+    try {
+      const bytes = await r2.baixar(chaveObjeto("boletins", boletim.pdf_path));
+      pdf = new Blob([new Uint8Array(bytes)]);
+    } catch {
+      pdf = null;
+    }
+    if (!pdf) {
       console.warn("publish-outbox: falha ao baixar o PDF do boletim");
-      const erro = "Falha ao baixar o PDF do Storage.";
+      const erro = "Falha ao baixar o PDF do R2.";
       if (pub.tentativas >= MAX_TENTATIVAS) return { estado: "falhou", erro };
       return {
         estado: "pendente",
@@ -615,11 +616,11 @@ export function criarHandler(deps: Deps) {
       const blobs = await baixarFotos(m.fotos);
       if (!blobs) {
         if (pub.tentativas >= MAX_TENTATIVAS) {
-          return { estado: "falhou", erro: "Falha ao baixar foto do Storage." };
+          return { estado: "falhou", erro: "Falha ao baixar foto do R2." };
         }
         return {
           estado: "pendente",
-          erro: "Falha ao baixar foto do Storage.",
+          erro: "Falha ao baixar foto do R2.",
           proxima: backoff(),
         };
       }

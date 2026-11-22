@@ -1,3 +1,4 @@
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { RelatoriosRepositorio } from '@modules/relatorios/application/ports/RelatoriosRepositorio.port.ts'
 import type { PainelRelatorios, Relatorios, ResultadoExclusaoBoletim } from '@modules/relatorios/domain/tipos.ts'
@@ -5,7 +6,10 @@ import { ErroEnvio, erroDoSupabase } from '../../../dados/erros.ts'
 
 type Linha = Record<string, unknown>
 
-export function criarRelatoriosSupabase(cliente: SupabaseClient): RelatoriosRepositorio {
+export function criarRelatoriosSupabase(
+  cliente: SupabaseClient,
+  armazenamento: Armazenamento,
+): RelatoriosRepositorio {
   async function chamar(nome: string, args: Record<string, unknown>): Promise<unknown> {
     try {
       const { data, error } = await cliente.rpc(nome, args)
@@ -105,9 +109,9 @@ export function criarRelatoriosSupabase(cliente: SupabaseClient): RelatoriosRepo
 
     async urlPdfBoletim(caminho) {
       try {
-        const { data, error } = await cliente.storage.from('boletins').createSignedUrl(caminho, 300)
-        if (error) throw error
-        return data.signedUrl
+        const url = (await armazenamento.urls('boletins', [caminho])).get(caminho)
+        if (!url) throw new Error('Boletim indisponível.')
+        return url
       } catch (e) {
         throw erroDoSupabase(e)
       }

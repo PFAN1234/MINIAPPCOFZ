@@ -427,7 +427,9 @@ def estado_pedido(c, pid):
 
 
 def pdf(c, caminho):
-    su(c, "insert into storage.objects (bucket_id, name) values ('boletins', %s) on conflict do nothing", (caminho,))
+    su(c, "insert into public.arquivo (pasta, caminho, tamanho, tipo, situacao) "
+          "values ('boletins', %s, 1, 'application/pdf', 'confirmado') "
+          "on conflict (pasta, caminho) do update set situacao = 'confirmado'", (caminho,))
 
 
 def test_reivindicar_emissoes(cenario):

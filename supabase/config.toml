@@ -433,13 +433,14 @@ verify_jwt = false
 [functions.publish-outbox]
 verify_jwt = false
 
-[functions.assinar-envio-plantas]
-verify_jwt = false
-
 # Site de administração: confere o JWT (ação criar), o token de uso único e o Login Widget por conta própria.
 [functions.admin-sessao]
 verify_jwt = false
 
 # Site de administração: exclusão de obra; confere o JWT do admin por conta própria.
 [functions.admin-excluir-obra]
+verify_jwt = false
+
+# URLs assinadas do R2 (envio, leitura, exclusão); confere o JWT ou o x-segredo-interno por conta própria.
+[functions.armazenamento]
 verify_jwt = false

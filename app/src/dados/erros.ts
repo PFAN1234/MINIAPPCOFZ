@@ -71,7 +71,6 @@ export function erroDoSupabase(e: unknown): ErroEnvio {
   if (status === 403 || PADRAO_RLS.test(mensagem)) {
     return new ErroEnvio('permissao', 'Sem permissão para enviar esta foto.', { cause: e })
   }
-  // O Storage responde 400 com a mensagem de RLS ao reenviar um objeto já vinculado.
   if (status === 404) return new ErroEnvio('nao_encontrado', mensagem || 'Não encontrado.', { cause: e })
   if (status === 413) {
     return new ErroEnvio('validacao', 'A foto é grande demais para ser enviada.', { cause: e })

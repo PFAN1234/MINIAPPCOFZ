@@ -25,7 +25,7 @@ O **Mini App CO-FZ** é uma ferramenta móvel integrada ao Telegram destinada ao
   - `auth-telegram`: Validação de `initData` (HMAC-SHA256) e sincronização de perfil/papel via `getChatMember`.
   - `bot-webhook`: Processamento de comandos administrativos (`/vincular_obra`, `/fixar_botao`, `/start`).
   - `publish-outbox`: Despacho da fila de saída para a Bot API do Telegram via `pg_cron`/`pg_net`.
-  - `assinar-envio-plantas`: Upload seguro de derivados de plantas e recortes.
+  - `armazenamento`: Assina URLs de envio e leitura dos arquivos no Cloudflare R2 (fotos, plantas, modelos, documentos) e roda a manutenção de órfãos.
 - **Pipeline de Dados (Python CLI):** PyMuPDF (`fitz`) para leitura de plantas PDF, pareamento automatizado de cômodos com áreas `A=xx m²`, geração de WebP/HD e seeds SQL (`extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `publicar_plantas.py`).
 - **Módulo BIM 3D & RA:** Visualizador 3D federado (Three.js + `@thatopen/components`/`@thatopen/fragments` sobre arquivos `.frag` convertidos no `/admin/`) e Realidade Aumentada parada no registro de fotos (`app/src/ra/`).
 

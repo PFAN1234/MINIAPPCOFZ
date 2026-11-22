@@ -403,20 +403,15 @@ def test_admin_boletim(cenario):
     assert rpc(c, c.sem_obra, ver, (b1,))['emissao_em_andamento'] is False
 
 
-# --- Política de storage e acessos ------------------------------------------------------------------------------
+# --- Permissão de arquivo e acessos ------------------------------------------------------------------------------
 
 def test_politica_fotos_admin_select(cenario):
     c = cenario
     admin_pronto(c)
     nome = f'{c.obra_a}/{uuid.uuid4()}/{uuid.uuid4()}.jpg'
-    su(c, "insert into storage.objects (bucket_id, name) values ('fotos', %s)", (nome,))
-    q = "select bucket_id from storage.objects where name = %s"
-    assert sql(c, q, (nome,), usuario=c.sem_obra) == [('fotos',)]
-    assert sql(c, q, (nome,), usuario=uuid.uuid4()) == []
-    with pytest.raises(errors.InsufficientPrivilege):
-        sql(c, q, (nome,), papel='anon')
-    pol = su(c, "select roles::text, cmd from pg_policies where policyname = 'fotos_admin_select'")
-    assert pol == [('{authenticated}', 'SELECT')]
+    q = "select privado.pode_arquivo('ler', 'fotos', %s)"
+    assert sql(c, q, (nome,), usuario=c.sem_obra) == [(True,)]
+    assert sql(c, q, (nome,), usuario=uuid.uuid4()) == [(False,)]
 
 
 @pytest.mark.parametrize('comando', [

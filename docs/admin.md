@@ -97,6 +97,10 @@ Os scripts Python continuam lendo o `obra.json`; o banco passa a ser a fonte qua
 | | `ALLOWED_ORIGINS` | origens CORS separadas por vírgula; precisa incluir o domínio do site (`https://miniappcofz.vercel.app`, que é o mesmo do Mini App, e o domínio de preview se for testar nele) |
 | | `ADMIN_URL` | endereço do site, padrão `https://miniappcofz.vercel.app/admin/` |
 | Vercel (app) | `VITE_TELEGRAM_BOT` | nome do bot, sem `@` (Login Widget); `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` já existentes |
+| Edge Functions `armazenamento`, `publish-outbox` e `admin-excluir-obra` | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | Cloudflare R2 (assinatura de URLs, publicação no Telegram, exclusão de obra); os três primeiros são segredos; `R2_BUCKET=miniappcofz-arquivos` |
+| Vercel (servidor, sem `VITE_`), produção | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | arquivos do gerador de boletim e do relatório de pendências; `R2_BUCKET=miniappcofz-arquivos` (os três primeiros são segredos) |
+| Vercel (servidor), prévia | as mesmas quatro | `R2_BUCKET=miniappcofz-arquivos-dev`, para as prévias não gravarem no bucket de produção |
+| GitHub Actions (backup semanal) | `R2_BACKUP_ACCOUNT_ID`, `R2_BACKUP_ACCESS_KEY_ID`, `R2_BACKUP_SECRET_ACCESS_KEY`, `RCLONE_DRIVE_CONF` | token do R2 só de leitura e configuração do Drive; ver `scripts/README.md`, "Backup do R2" |
 | BotFather | `/setdomain` | escolher o bot e informar o domínio do site (`miniappcofz.vercel.app`); sem isso o widget mostra "Bot domain invalid" |
 | `supabase/config.toml` | `[functions.admin-sessao] verify_jwt = false` | a função confere o JWT, o token e o widget por conta própria |
 
@@ -129,7 +133,7 @@ O admin envia o PDF de arquitetura de um pavimento e publica a planta pelo naveg
 
 Obra → "Planta de <pavimento>" (ou `/admin/obras/<slug>/planta`, que lista os pavimentos com a planta publicada e o último PDF). O editor, em `/admin/obras/<slug>/planta/<pavimento>`, tem cinco etapas; nada é gravado antes de "Publicar".
 
-1. **Arquivo**: escolher o PDF (até 50 MB) ou "Reabrir o PDF guardado" (o da última publicação do pavimento, baixado do bucket `originais`); escolher a página; informar a revisão (vem do nome `...-R07.pdf` quando houver; nome e revisão diferentes bloqueiam). "Ler a página" extrai o texto.
+1. **Arquivo**: escolher o PDF (até 50 MB) ou "Reabrir o PDF guardado" (o da última publicação do pavimento, baixado da pasta `originais` do R2); escolher a página; informar a revisão (vem do nome `...-R07.pdf` quando houver; nome e revisão diferentes bloqueiam). "Ler a página" extrai o texto.
 2. **Recorte e máscaras**: a página inteira com o recorte do edifício (azul) e as máscaras (tracejado vermelho). Arrastar no desenho cria o recorte ou uma máscara (conforme a ferramenta), arrastar um retângulo o move e as alças dos cantos redimensionam; a tabela mostra os valores normalizados (0–1, como no `obra.json`), editáveis, com descrição e "Apagar". "Usar em todos os pavimentos" grava em `config.prancha`; desmarcado, só no pavimento (`config.pavimentos[i].prancha`).
 3. **Ambientes**: tabela e planta recortada lado a lado. Renomear (nome operacional), categoria (select com as categorias do extrator), arrastar pino, "Adicionar pino" (na linha, depois um clique na planta), "Remover pino N" (quando há mais de um), "Voltar pinos ao rótulo", "Incluir ambiente sem rótulo" (clicar na planta) e "Remover ambiente" (manuais). Os casos de `revisar` do extrator aparecem no topo e as linhas ficam marcadas; itens da configuração que não valem mais para a planta (renomear de outra área, `manter_codigo` antigo, pinos de um código que sumiu) são listados e ficam de fora ao publicar.
 4. **Nova revisão**: diferenças contra o que está no banco (novos, removidos com sucessor sugerido, códigos mantidos, nome e área alterados, pino deslocado). "Confirmar: é o mesmo ambiente" grava `manter_codigo` (o novo herda o código e os registros); "Desfazer" tira.
@@ -153,12 +157,12 @@ Tudo continua no formato do `obra.json`, em `obra_config.config`:
 | É o mesmo ambiente | `manter_codigo` |
 | Publicação | `revisao`, `pavimentos[i]` (`pdf`, `pagina`, `revisao` e, se for o caso, `prancha`), `status: aguardando_revisao_humana` |
 
-### Banco e Storage (`20261112090000_admin_planta.sql`)
+### Banco e arquivos (`20261112090000_admin_planta.sql`)
 
 | Peça | Regra |
 | --- | --- |
-| Bucket `originais` | Privado, 50 MB, só `application/pdf`. Caminho `<obra_id>/<revisao>/<pavimento>/<sha256>.pdf`. Políticas `originais_admin_select/insert/update`: só `privado.eh_admin()`, insert/update só no padrão do caminho e com obra existente. Sem delete. |
-| Bucket `plantas` | A leitura dos participantes não muda (`plantas_select`). Novas `plantas_admin_select/insert/update`: admin grava (e lê, porque o upsert do Storage exige select) em `<obra_id>/...` de obra existente. Sem delete. |
+| Pasta `originais` (R2) | PDF de até 50 MB. Caminho `<obra_id>/<revisao>/<pavimento>/<sha256>.pdf`. O envio e a leitura passam por URLs assinadas pela Edge Function `armazenamento`, que confere se quem pede é admin; o registro fica na tabela `arquivo`. As políticas antigas de `storage.objects` foram removidas pela migration `20261128090000_remover_storage.sql`. |
+| Pasta `plantas` (R2) | Participantes leem e o admin grava em `<obra_id>/...` de obra existente, sempre por URL assinada da `armazenamento` (matriz de permissões por pasta no banco, `arquivo`). Sem delete pelo site. |
 | `publicacao_planta` | `id, obra_id, pavimento_id, revisao, publicado_por, publicado_em, pdf_path, pdf_sha256, pdf_nome, pagina, resumo` (diferenças e contagens). RLS ligada, sem grant: só pelas RPCs. |
 | `admin_publicar_revisao(slug, p)` | Uma transação com o mesmo efeito do seed nos pavimentos enviados: upsert dos ambientes com `ativo = true` (na ordem da lista), `ativo = false` nos `ambientes_removidos` e em todo ambiente **dos pavimentos publicados** fora da lista (os outros pavimentos não mudam), ordem global renumerada (pavimento, depois a ordem dentro dele), planta de outra revisão do pavimento desativada, upsert de `planta` e `planta_detalhe` com os caminhos do contrato, uma linha em `publicacao_planta` por pavimento. Confere que o PDF e todas as imagens já estão no Storage (P0002), valida o payload (22023: pavimento desconhecido, revisão inválida, caminho do PDF diferente de `<obra_id>/<revisao>/<pavimento>/<sha256>.pdf`, ambiente sem detalhe ou sem pino, pino fora de 0–1, código repetido, código ao mesmo tempo na lista e nos removidos, pavimento sem ambientes, tamanhos não positivos) e, com `config`, grava `obra_config` (status volta para `aguardando_revisao_humana`) com trava otimista: `config_atualizada_em` tem de ser o carimbo atual, senão 40001 ("alterada por outra pessoa"). |
 | `admin_editor_planta(slug)` | Obra, configuração (com o carimbo), pavimentos com a planta ativa e o último PDF guardado, e todos os ambientes (inclusive inativos). |
@@ -197,7 +201,7 @@ As imagens saem do canvas em WebP (`toBlob('image/webp', 0,8)`; qualidade 80 com
 
 ### Aplicar num projeto
 
-1. Migration `20261112090000_admin_planta.sql` (depois da `20261111170000_admin.sql`). Cria o bucket `originais` e as políticas; não mexe em dados.
+1. Migration `20261112090000_admin_planta.sql` (depois da `20261111170000_admin.sql`). Criava o bucket `originais` e as políticas (hoje no R2); não mexe em dados.
 2. Deploy do app (o editor está no pacote do `/admin/`). Nenhuma variável nova.
 3. Conferir com um admin: enviar o PDF atual de um pavimento já publicado, ver "Nenhuma diferença" na etapa 4, publicar e conferir no Mini App e em "Publicações da planta".
 
@@ -220,14 +224,14 @@ Sigla e revisão saem do nome no padrão `<obra>-<projeto>-<SIGLA>-<REV>` (ex.: 
 | Tela | `app/src/modules/modelos/presentation/admin/ModelosObra.tsx` |
 | Testes | `app/src/modules/modelos/infra/modelos.node.test.ts`, `app/src/modules/modelos/presentation/admin/ModelosObra.test.tsx`, `app/e2e/admin-modelo.spec.ts` (converte de verdade `e2e/fixtures/TESTE-01-EST-R01.ifc`, gerado por `e2e/fixtures/gerar_ifc_teste.py`, e envia o `ARQ.frag` da HTO), `tests/db/test_admin_modelo.py` |
 
-### Banco e Storage (`20261112120000_admin_modelo.sql`)
+### Banco e arquivos (`20261112120000_admin_modelo.sql`)
 
 | Peça | Regra |
 | --- | --- |
-| Caminho no bucket `modelos` | `<obra_id>/<SIGLA>/<hash>.frag`, com o hash do conteúdo (16 primeiros hex do SHA-256, como o script). Um arquivo novo nunca sobrescreve o que os aparelhos já baixaram; o `hash` da tabela continua sendo a chave do cache no aparelho. O caminho antigo do script `publicar:modelos` (`<obra_id>/<SIGLA>.frag`) continua válido. |
+| Caminho na pasta `modelos` (R2) | `<obra_id>/<SIGLA>/<hash>.frag`, com o hash do conteúdo (16 primeiros hex do SHA-256, como o script). Um arquivo novo nunca sobrescreve o que os aparelhos já baixaram; o `hash` da tabela continua sendo a chave do cache no aparelho. O caminho antigo do script `publicar:modelos` (`<obra_id>/<SIGLA>.frag`) continua válido. |
 | Políticas `modelos_admin_select/insert/update` | Só `privado.eh_admin()`, gravação só no padrão do caminho e em obra existente. Sem delete. A leitura dos participantes (`modelos_select`) não muda. |
 | `publicacao_modelo` | Histórico: `acao` (`publicado` ou `retirado`), sigla, revisão, caminho, bytes, hash, `origem` (`ifc` ou `frag`), nome do arquivo, tamanho do IFC, quem e quando. RLS ligada, sem grant: só pelas RPCs. |
-| `admin_registrar_modelo(p_slug, p)` | Confere sigla, revisão, hash, caminho, que o objeto existe no Storage e que o tamanho bate com `metadata.size`; faz upsert em `modelo` por (obra, sigla) e grava o histórico. |
+| `admin_registrar_modelo(p_slug, p)` | Confere sigla, revisão, hash, caminho, que o arquivo está confirmado em `arquivo` e que o tamanho bate com o registrado; faz upsert em `modelo` por (obra, sigla) e grava o histórico. |
 | `admin_listar_modelos(p_slug)` | `{modelos, historico}` (histórico: os 100 mais recentes). |
 | `admin_retirar_modelo(p_slug, p_sigla)` | Apaga a linha de `modelo` e grava `retirado` no histórico. |
 
@@ -255,7 +259,7 @@ Migration `supabase/migrations/20261112150000_admin_arquivar_excluir.sql`; Edge 
 
 **Telegram:** as mensagens já postadas no tópico continuam no grupo nos dois casos (nada é apagado lá). Ao arquivar, os itens `pendente` da fila ficam parados (não são reivindicados) e saem quando a obra é desarquivada; os que já estavam `enviando` terminam normalmente. Ao excluir, os itens da fila são apagados com a obra e nunca saem.
 
-**Exclusão em duas etapas:** o Supabase não deixa apagar direto nas tabelas do Storage, então a RPC apaga só o banco e a Edge Function remove os arquivos pela API do Storage e chama `admin_registrar_limpeza`. Se a remoção falhar, a obra já está apagada, a resposta vem com `pendente: true` e a exclusão fica com `arquivos_erro` em `admin_listar_exclusoes`; basta repetir com a ação `limpar`.
+**Exclusão em duas etapas:** a RPC apaga só o banco e a Edge Function remove os arquivos do R2 (pelo prefixo da obra) e chama `admin_registrar_limpeza`. Se a remoção falhar, a obra já está apagada, a resposta vem com `pendente: true` e a exclusão fica com `arquivos_erro` em `admin_listar_exclusoes`; basta repetir com a ação `limpar`.
 
 **FKs sem cascata:** `registro → ambiente` e `planta_detalhe → ambiente` não apagam em cascata (de propósito: o ambiente não pode ser apagado com histórico). `admin_excluir_obra` apaga `registro` (que leva encerramentos, fotos e publicações) e `planta_detalhe` antes de `obra`; o resto sai pela cascata de `obra`. O teste `test_fks_dentro_da_obra_sem_cascata_sao_as_tratadas` falha se surgir outra FK sem cascata dentro da obra.
 
@@ -279,7 +283,7 @@ Erros como nas outras RPCs: 28000 sem sessão, 42501 não admin, P0002 obra não
 
 - `{"acao": "excluir", "slug": "...", "confirmacao": "<nome da obra>"}` → `200 {"ok": true, "exclusao_id", "obra_id", "resumo", "arquivos_removidos": {"fotos", "plantas", "originais", "modelos"}, "pendente": false}`.
 - `{"acao": "limpar", "exclusao_id": "<uuid>"}` → a mesma resposta, sem `resumo`.
-- Falha no Storage depois da exclusão: `200` com `"pendente": true, "erro": "<mensagem>"`.
+- Falha no R2 depois da exclusão: `200` com `"pendente": true, "erro": "<mensagem>"`.
 - `400` corpo inválido ou confirmação que não confere (mensagem da RPC), `401` sem JWT ou JWT inválido, `403` não admin, `404` obra/exclusão não encontrada, `405` método, `500` erro interno.
 
 Segredos: `SUPABASE_SECRET_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY`), `SUPABASE_PUBLISHABLE_KEY` (ou `SUPABASE_ANON_KEY`, já injetada) e `ALLOWED_ORIGINS`.
@@ -295,11 +299,11 @@ Segredos: `SUPABASE_SECRET_KEY` (ou `SUPABASE_SERVICE_ROLE_KEY`), `SUPABASE_PUBL
 
 Contrato: `docs/contrato-etapas.md`. O campus é implantado em etapas; cada etapa agrupa obras e tem um grupo do Telegram, com um tópico por obra. O app passou a se chamar **Fiscal Bot**.
 
-### Banco e Storage (`20261112180000_etapas.sql`)
+### Banco e arquivos (`20261112180000_etapas.sql`)
 
 - `etapa` (slug, nome, ordem, grupo do Telegram, arquivada) e `obra.etapa_id` obrigatório. A migration cria a "2ª ETAPA" (`2a-etapa`) e põe nela todas as obras existentes; se as obras vinculadas usavam um grupo só, a etapa herda esse grupo.
 - Obra "ativa" passou a ser obra não arquivada **e** etapa não arquivada: arquivar a etapa tira todas as obras dela do Mini App e para as publicações, sem mexer no arquivamento de cada obra. Desarquivar recoloca na fila o que ficou pendente.
-- `organizacao` (linha única: nome e logo) e bucket público `organizacao` (1 MB, PNG/JPEG/WebP; só admin grava). Leitura pela RPC `organizacao()`, aberta também para `anon`.
+- `organizacao` (linha única: nome e logo) e pasta `organizacao` do R2 (1 MB, PNG/JPEG/WebP; só admin grava, por URL assinada). Leitura pela RPC `organizacao()`, aberta também para `anon`.
 - RPCs do site: `admin_listar_etapas`, `admin_salvar_etapa`, `admin_arquivar_etapa`, `admin_desvincular_etapa`, `admin_resumo_etapa`, `admin_excluir_etapa` (confirmação = nome da etapa; uma linha em `obra_excluida` por obra, com `etapa_nome`) e `admin_salvar_organizacao`. `admin_salvar_obra` recebe `etapa_id` (obrigatório ao criar; ao mover para etapa de outro grupo, o tópico da obra é desvinculado).
 - RPC do bot: `vincular_etapa(slug, chat, título)`; `vincular_obra` agora exige que a etapa da obra esteja vinculada ao mesmo grupo.
 
@@ -315,7 +319,7 @@ Contrato: `docs/contrato-etapas.md`. O campus é implantado em etapas; cada etap
 
 ### Aplicar num projeto
 
-1. Aplicar a migration `20261112180000_etapas.sql` (cria o bucket `organizacao`).
+1. Aplicar a migration `20261112180000_etapas.sql` (criava o bucket `organizacao`, hoje a pasta no R2).
 2. Publicar `bot-webhook`, `publish-outbox` e `admin-excluir-obra`.
 3. Reconfigurar os comandos do bot (a ação de configuração do `bot-webhook`, como na fase 6), para `/vincular_etapa` aparecer no menu dos admins de grupo.
 4. No BotFather, trocar o nome do bot e do Mini App para Fiscal Bot (opcional, só exibição).
@@ -347,7 +351,7 @@ Contrato: `docs/contrato-boletim.md` (parte 3). O banco agenda e guarda (`boleti
 - **Clima**: imagem da linha da estação (principal; reserva se a leitura tiver mais de 3 h ou a linha não existir) na tabela "Últimas 24 horas" de `https://observatorio.fortaleza.ce.gov.br/riscos-climaticos/estacoes-meteorologicas`, com a legenda da fonte, da hora da leitura e da cópia. Sem nenhuma, "Dados meteorológicos indisponíveis (Observatório de Fortaleza)". Como a tabela cobre só as 24 h até a cópia, o clima entra no boletim do dia (ou do dia anterior até as 6 h); retificação de dia antigo sai sem clima.
 - **Prévia** (`app/api/previa-boletim.ts`, GET `?etapa=<slug>&data=AAAA-MM-DD` com o JWT do admin): confere `sou_admin`, lê `admin_boletim_snapshot` e devolve o PDF com a marca "PRÉVIA — sem número", sem gravar nada.
 - **Site** (página da etapa, seção **Boletins**): boletins emitidos (número, data, emitido em, por — "automático" quando foi o agendamento —, situação no Telegram e "Abrir PDF" por URL assinada de 5 min do bucket `boletins`), pedidos não emitidos (na fila, gerando, falhou, com tentativas e erro; a lista se atualiza a cada 10 s enquanto houver pedido em andamento), "Pré-visualizar" e "Emitir agora" / "Emitir retificação" para uma data até hoje (no fuso da etapa), com confirmação que mostra o número (`-R<n>` na retificação) e se o PDF vai ao grupo do Telegram. `RepositorioAdmin`: `listarBoletins`, `pedirEmissao`, `urlPdfBoletim`, `previaBoletim` (Supabase e fixture; na fixture a 2ª etapa tem três boletins e um pedido que falhou, e a prévia é um PDF mínimo).
-- **Configuração**: na Vercel, `SUPABASE_URL` e `SUPABASE_SECRET_KEY` (sem `VITE_`); `app/vercel.json` dá 2 GB e 300 s ao gerador (90 s à prévia), leva o Chromium do `@sparticuz/chromium` e tira `/api/*` das reescritas do SPA. No Vault, `url_gerador_boletim` = `https://<domínio do app>/api/gerar-boletim`. Como configurar e testar: `app/README.md` ("Gerador do boletim").
+- **Configuração**: na Vercel, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` e `R2_BUCKET` (sem `VITE_`; o servidor lê e grava as fotos, o logo e os PDFs no R2 e registra cada arquivo gravado em `arquivo`); `app/vercel.json` dá 2 GB e 300 s ao gerador (90 s à prévia), leva o Chromium do `@sparticuz/chromium` e tira `/api/*` das reescritas do SPA. No Vault, `url_gerador_boletim` = `https://<domínio do app>/api/gerar-boletim`. Como configurar e testar: `app/README.md` ("Gerador do boletim").
 
 ## Realidade aumentada (QR)
 
@@ -384,14 +388,14 @@ Página `/admin/obras/<slug>/ra` (link "Realidade aumentada" na página da obra,
 
 Erros do Mini App e do site admin ficam na tabela `public.erro_cliente` (migration `20261125090000_erro_cliente.sql`; contrato em `docs/contrato-erros-orfaos.md`, Parte A), sem serviço externo. A lista está em `/admin/erros` (link "Manutenção" no menu, aba "Erros"): quando, app, versão, rota, usuário e mensagem; clicar na mensagem mostra a pilha, o contexto e o navegador.
 
-## Arquivos órfãos nos buckets (simulação)
+## Arquivos órfãos no R2 (simulação)
 
-Migration `20261125100000_orfaos_storage.sql` (contrato: `docs/contrato-erros-orfaos.md`, Parte B). Todo dia às 03:17 UTC o `pg_cron` roda `privado.varrer_orfaos_storage()`, que grava em `public.orfao_storage` os objetos de `fotos`, `plantas`, `originais`, `modelos`, `boletins`, `organizacao` e `relatorios` que não aparecem em nenhuma coluna de caminho e foram criados há mais de 7 dias. **Nada é apagado do Storage**: a remoção real ficará para uma Edge Function futura.
+Migration `20261125100000_orfaos_storage.sql` (contrato: `docs/contrato-erros-orfaos.md`, Parte B). Todo dia às 03:17 UTC o `pg_cron` roda `privado.varrer_orfaos_storage()`, que grava em `public.orfao_storage` os arquivos confirmados na tabela `arquivo` (pastas `fotos`, `plantas`, `originais`, `modelos`, `boletins`, `organizacao`, `relatorios` e `documentos`) que não aparecem em nenhuma coluna de caminho e foram criados há mais de 7 dias (`origem = 'sem_referencia'`). A coluna `origem` também admite `sem_registro`: objeto que está no R2 mas não tem linha em `arquivo`, gravado só pela rotina `manutencao` da Edge Function `armazenamento` (o banco não enxerga o R2). **A varredura não apaga nada**; a remoção é feita pela `manutencao`.
 
-- **Como conferir no site:** `/admin/erros` (menu "Manutenção"), aba "Arquivos órfãos": resumo por bucket (quantidade e tamanho) e os 100 maiores.
+- **Como conferir no site:** `/admin/erros` (menu "Manutenção"), aba "Arquivos órfãos": resumo por pasta (quantidade e tamanho) e os 100 maiores.
 - **Como conferir no SQL:** `select public.admin_resumo_orfaos();` (como admin) ou, como superusuário, `select * from public.orfao_storage order by tamanho desc nulls last;`. Para forçar a varredura agora: `select privado.varrer_orfaos_storage();`.
 - **Mapeamento:** `fotos` = `foto.storage_path`; `plantas` = `planta.imagem_path`, `planta.imagem_hd_path`, `planta_detalhe.imagem_path`; `originais` = `publicacao_planta.pdf_path`; `modelos` = `modelo.caminho` e `publicacao_modelo.caminho`; `boletins` = `boletim.pdf_path` e a imagem `<etapa_id>/<numero sem barras>-clima.png`; `organizacao` = `organizacao.logo_path`. Em `relatorios` (sem coluna) só é órfão o objeto cuja primeira pasta é um uuid de obra/etapa que não existe mais; o resto conta como referenciado.
-- Um arquivo que ganha referência (ou some do bucket) sai da lista na varredura seguinte. Os 7 dias de carência cobrem o intervalo entre o envio e o registro no banco.
+- Um arquivo que ganha referência (ou some do R2) sai da lista na varredura seguinte. Os 7 dias de carência cobrem o intervalo entre o envio e o registro no banco.
 
 - **Captura:** `app/src/util/erros.ts` (`registrarErro`, `instalarCapturaGlobal`) pega `error` e `unhandledrejection` da janela; o `ErrorBoundary` (`app/src/components/`) mostra "Algo deu errado" com "Recarregar" e registra o erro com o `componentStack`. Os dois estão ligados em `app/src/main.tsx` e `app/src/admin/main.tsx`.
 - **Envio:** RPC `registrar_erro_cliente` (só `authenticated`; sem sessão ignora em silêncio; 20 registros por usuário por minuto; textos cortados em mensagem 1.000, pilha 8.000, rota 300, versão 50 e agente 300 caracteres; contexto acima de 4 KB vira `null`). No cliente, a mesma mensagem não é reenviada em 60 s e há no máximo 10 envios por carregamento. Com `VITE_DADOS=fixture` ou sem sessão só sai `console.error`.

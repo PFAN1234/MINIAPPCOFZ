@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { criarRepositorioSupabase } from './supabase.ts'
-import { urlPublicaLogo } from '@modules/obras/infra/OrganizacaoSupabaseAdapter.ts'
+import { criarOrganizacaoSupabase } from '@modules/obras/infra/OrganizacaoSupabaseAdapter.ts'
 
 const ETAPA = { id: 'e2', slug: '2a-etapa', nome: '2ª ETAPA', ordem: 2 }
 
@@ -40,27 +40,18 @@ describe('Supabase: etapas e organização', () => {
     expect(fake.rpc).toHaveBeenCalledWith('obras_disponiveis')
   })
 
-  it('organizacao chama a RPC e monta a URL pública do logo', async () => {
-    vi.stubEnv('VITE_SUPABASE_URL', 'https://proj.supabase.test/')
+  it('organizacao chama a RPC e pede a URL do logo à porta de armazenamento', async () => {
     const rpc = vi
       .fn()
       .mockResolvedValueOnce({ data: { nome: 'CO-FZ', logo_path: 'logo-0123456789abcdef.png' }, error: null })
       .mockResolvedValueOnce({ data: { nome: 'CO-FZ', logo_path: null }, error: null })
       .mockResolvedValueOnce({ data: null, error: { message: 'falhou' } })
-    const repo = criarRepositorioSupabase({ rpc } as never)
-    expect(await repo.organizacao()).toEqual({
-      nome: 'CO-FZ',
-      logo_url: 'https://proj.supabase.test/storage/v1/object/public/organizacao/logo-0123456789abcdef.png',
-    })
+    const urls = vi.fn().mockResolvedValue(new Map([['logo-0123456789abcdef.png', 'https://r2.test/logo']]))
+    const repo = criarOrganizacaoSupabase({ rpc } as never, { urls } as never)
+    expect(await repo.organizacao()).toEqual({ nome: 'CO-FZ', logo_url: 'https://r2.test/logo' })
+    expect(urls).toHaveBeenCalledWith('organizacao', ['logo-0123456789abcdef.png'])
     expect(rpc).toHaveBeenCalledWith('organizacao')
     expect(await repo.organizacao()).toEqual({ nome: 'CO-FZ', logo_url: null })
     await expect(repo.organizacao()).rejects.toThrow()
-  })
-
-  it('urlPublicaLogo escapa o caminho', () => {
-    vi.stubEnv('VITE_SUPABASE_URL', 'https://proj.supabase.test')
-    expect(urlPublicaLogo('pasta/logo novo.png')).toBe(
-      'https://proj.supabase.test/storage/v1/object/public/organizacao/pasta/logo%20novo.png',
-    )
   })
 })

@@ -4,13 +4,13 @@ import { criarRepositorioSupabase } from './supabase.ts'
 const ETAPA = '5d0c0c4e-8a47-4c1f-9d55-0a1b2c3d4b02'
 
 function cliente(rpcResposta: { data: unknown; error: unknown }, token: string | null = 'jwt-x') {
-  const assinar = vi.fn().mockResolvedValue({ data: { signedUrl: 'https://u/pdf' }, error: null })
+  const urls = vi.fn(async (_pasta: string, caminhos: string[]) => new Map(caminhos.map((c) => [c, 'https://u/pdf'])))
+  const armazenamento = { urls } as never
   const fake = {
     rpc: vi.fn().mockResolvedValue(rpcResposta),
     auth: { getSession: vi.fn().mockResolvedValue({ data: { session: token ? { access_token: token } : null } }) },
-    storage: { from: vi.fn(() => ({ createSignedUrl: assinar })) },
   }
-  return { fake, assinar }
+  return { fake, urls, armazenamento }
 }
 
 afterEach(() => vi.unstubAllGlobals())
@@ -50,11 +50,10 @@ describe('Supabase: relatórios', () => {
     expect(r.boletins[0]).toMatchObject({ pdf_path: null, publicado: true, ultima_revisao: true })
   })
 
-  it('URL assinada de 5 minutos no bucket boletins', async () => {
-    const { fake, assinar } = cliente({ data: null, error: null })
-    expect(await criarRepositorioSupabase(fake as never).urlPdfBoletim('a/b.pdf')).toBe('https://u/pdf')
-    expect(fake.storage.from).toHaveBeenCalledWith('boletins')
-    expect(assinar).toHaveBeenCalledWith('a/b.pdf', 300)
+  it('URL do PDF pela pasta boletins', async () => {
+    const { fake, urls, armazenamento } = cliente({ data: null, error: null })
+    expect(await criarRepositorioSupabase(fake as never, armazenamento).urlPdfBoletim('a/b.pdf')).toBe('https://u/pdf')
+    expect(urls).toHaveBeenCalledWith('boletins', ['a/b.pdf'])
   })
 
   it('emitir chama admin_pedir_emissao; 23505 vira mensagem amigável', async () => {

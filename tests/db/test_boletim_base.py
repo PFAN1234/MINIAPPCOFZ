@@ -794,23 +794,17 @@ def test_rls_das_observacoes(cenario):
 def test_bucket_boletins(cenario):
     c = cenario
     nome = f'{c.etapa}/BA2261111COFZ.pdf'
-    su(c, "insert into storage.objects (bucket_id, name) values ('boletins', %s)", (nome,))
-    ler = "select count(*) from storage.objects where bucket_id = 'boletins' and name = %s"
-    assert sql(c, ler, (nome,), usuario=c.equipe_a) == [(1,)]
-    assert sql(c, ler, (nome,), usuario=c.gestor_b) == [(1,)]
-    assert sql(c, ler, (nome,), usuario=c.sem_obra) == [(0,)]
+    def pode(usuario, acao):
+        return sql(c, "select privado.pode_arquivo(%s, 'boletins', %s)", (acao, nome), usuario=usuario)[0][0]
+
+    assert pode(c.equipe_a, 'ler') is True
+    assert pode(c.gestor_b, 'ler') is True
+    assert pode(c.sem_obra, 'ler') is False
     tornar_admin(c, c.sem_obra)
-    assert sql(c, ler, (nome,), usuario=c.sem_obra) == [(1,)]
-    for u in (c.equipe_a, c.sem_obra):  # escrita só service_role
-        with pytest.raises(errors.InsufficientPrivilege):
-            sql(c, "insert into storage.objects (bucket_id, name, owner_id) values ('boletins', %s, 'x')",
-                (f'{c.etapa}/{uuid.uuid4().hex}.pdf',), usuario=u)
-        assert sql(c, "update storage.objects set owner_id = 'y' where bucket_id = 'boletins' and name = %s "
-                      'returning 1', (nome,), usuario=u) == []
-        assert sql(c, "delete from storage.objects where bucket_id = 'boletins' and name = %s returning 1",
-                   (nome,), usuario=u) == []
-    sql(c, "delete from storage.objects where bucket_id = 'boletins' and name = %s", (nome,), papel='service_role')
-    assert su(c, ler, (nome,)) == [(0,)]
+    assert pode(c.sem_obra, 'ler') is True
+    for u in (c.equipe_a, c.sem_obra):  # escrita só service_role (arquivo_registrar_servico)
+        assert pode(u, 'enviar') is False
+        assert pode(u, 'excluir') is False
 
 
 # --- Acesso às RPCs novas -----------------------------------------------------------------------------

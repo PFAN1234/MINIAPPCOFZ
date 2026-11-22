@@ -49,8 +49,9 @@ class Obra:
 
     def subir(self, bucket, nome):
         with sessao(self.c.dsn, papel=None) as cur:
-            cur.execute('insert into storage.objects (bucket_id, name) values (%s, %s) on conflict do nothing',
-                        (bucket, nome))
+            cur.execute("insert into public.arquivo (pasta, caminho, tamanho, tipo, situacao) "
+                        "values (%s, %s, 1, 'application/octet-stream', 'confirmado') "
+                        "on conflict (pasta, caminho) do update set situacao = 'confirmado'", (bucket, nome))
 
     def pavimento(self, codigo, revisao, ambientes, sha='a', subir=True):
         """Bloco de um pavimento do payload (e os arquivos no Storage, se `subir`)."""
@@ -280,10 +281,20 @@ def test_removido_na_lista_e_imagem_faltando(obra, cenario):
     assert e.value.sqlstate == 'P0002' and 'planta.webp' in str(e.value)
 
 
-# --- Storage -----------------------------------------------------------------------------------
+# --- Permissão por pasta (privado.pode_arquivo) -----------------------------------------------------------------------------------
+
+def pode(c, usuario, acao, pasta, nome):
+    return sql(c, 'select privado.pode_arquivo(%s, %s, %s)', (acao, pasta, nome), usuario=usuario)[0][0]
+
 
 def inserir_objeto(c, usuario, bucket, nome):
-    sql(c, 'insert into storage.objects (bucket_id, name) values (%s, %s)', (bucket, nome), usuario=usuario)
+    """Exige `enviar` (privado.pode_arquivo) e então grava o arquivo confirmado."""
+    if not pode(c, usuario, 'enviar', bucket, nome):
+        raise errors.InsufficientPrivilege('sem permissão')
+    with sessao(c.dsn, papel=None) as cur:
+        cur.execute("insert into public.arquivo (pasta, caminho, tamanho, tipo, situacao) "
+                    "values (%s, %s, 1, 'application/octet-stream', 'confirmado') "
+                    "on conflict (pasta, caminho) do update set situacao = 'confirmado'", (bucket, nome))
 
 
 def test_buckets(dsn):
@@ -298,11 +309,8 @@ def test_admin_grava_e_le_originais(obra, cenario):
     admin = cenario.sem_obra
     nome = f'{obra.id}/R01/terreo/{"f" * 64}.pdf'
     inserir_objeto(cenario, admin, 'originais', nome)
-    assert sql(cenario, "select name from storage.objects where bucket_id = 'originais' and name = %s", (nome,),
-               usuario=admin) == [(nome,)]
-    # update (upsert do Storage) também é permitido ao admin
-    sql(cenario, "update storage.objects set owner_id = 'x' where bucket_id = 'originais' and name = %s", (nome,),
-        usuario=admin)
+    assert pode(cenario, admin, 'ler', 'originais', nome) is True
+    assert pode(cenario, admin, 'enviar', 'originais', nome) is True  # reenvio
 
 
 @pytest.mark.parametrize('nome', [
@@ -324,10 +332,8 @@ def test_nao_admin_nao_grava_nem_le_originais(obra, cenario):
     with pytest.raises(errors.InsufficientPrivilege):
         inserir_objeto(cenario, cenario.gestor_a, 'originais', nome)
     obra.subir('originais', nome)
-    assert sql(cenario, "select name from storage.objects where bucket_id = 'originais' and name = %s", (nome,),
-               usuario=cenario.gestor_a) == []
-    with pytest.raises(errors.InsufficientPrivilege):
-        sql(cenario, "select name from storage.objects where bucket_id = 'originais'", papel='anon')
+    assert pode(cenario, cenario.gestor_a, 'ler', 'originais', nome) is False
+    assert pode(cenario, None, 'ler', 'originais', nome) is False
 
 
 def test_plantas_admin_grava_outros_nao(obra, cenario):
@@ -339,5 +345,5 @@ def test_plantas_admin_grava_outros_nao(obra, cenario):
         inserir_objeto(cenario, cenario.gestor_a, 'plantas', f'{cenario.obra_a}/R01/terreo/planta.webp')
     # A leitura dos participantes continua como antes.
     obra.subir('plantas', f'{cenario.obra_a}/R01/terreo/planta-hd.webp')
-    assert sql(cenario, "select name from storage.objects where bucket_id = 'plantas' and name like %s",
-               (f'{cenario.obra_a}/%',), usuario=cenario.equipe_a) == [(f'{cenario.obra_a}/R01/terreo/planta-hd.webp',)]
+    assert pode(cenario, cenario.equipe_a, 'ler', 'plantas', f'{cenario.obra_a}/R01/terreo/planta-hd.webp') is True
+    assert pode(cenario, cenario.equipe_a, 'ler', 'plantas', f'{cenario.obra_b}/R01/terreo/planta-hd.webp') is False

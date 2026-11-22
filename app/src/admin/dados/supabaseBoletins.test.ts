@@ -1,19 +1,19 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { listaBoletinsDe } from '@modules/relatorios/infra/BoletinsAdminSupabaseAdapter.ts'
 import { criarRepositorioAdminSupabase } from './supabase.ts'
 
 function clienteFalso(rpc: (nome: string, args: unknown) => { data: unknown; error: unknown }) {
-  const assinar = vi.fn(async (caminho: string, segundos: number) => ({
-    data: { signedUrl: `https://sb/assinada/${caminho}?s=${segundos}` },
-    error: null,
-  }))
+  const urls = vi.fn(async (_pasta: string, caminhos: string[]) =>
+    new Map(caminhos.map((c) => [c, `https://r2/assinada/${c}`])),
+  )
+  const armazenamento = { urls } as unknown as Armazenamento
   const cliente = {
     rpc: vi.fn(async (nome: string, args: unknown) => rpc(nome, args)),
-    storage: { from: vi.fn(() => ({ createSignedUrl: assinar })) },
     auth: { getSession: vi.fn(async () => ({ data: { session: { access_token: 'jwt-do-admin' } } })) },
   }
-  return { cliente: cliente as unknown as SupabaseClient, falso: cliente, assinar }
+  return { cliente: cliente as unknown as SupabaseClient, falso: cliente, armazenamento, urls }
 }
 
 afterEach(() => vi.unstubAllGlobals())
@@ -46,20 +46,19 @@ describe('repositório Supabase: boletins', () => {
     expect(listaBoletinsDe(null)).toEqual({ boletins: [], pedidos: [] })
   })
 
-  it('chama as RPCs e assina a URL do PDF no bucket boletins', async () => {
-    const { cliente, falso, assinar } = clienteFalso((nome) =>
+  it('chama as RPCs e pede a URL do PDF à pasta boletins', async () => {
+    const { cliente, falso, armazenamento, urls } = clienteFalso((nome) =>
       nome === 'admin_pedir_emissao'
         ? { data: { id: 3, data: '2026-11-13', revisao: 0, estado: 'pendente' }, error: null }
         : { data: { boletins: [], pedidos: [] }, error: null },
     )
-    const repo = criarRepositorioAdminSupabase(cliente)
+    const repo = criarRepositorioAdminSupabase(cliente, armazenamento)
     expect(await repo.listarBoletins('2a-etapa')).toEqual({ boletins: [], pedidos: [] })
     expect(falso.rpc).toHaveBeenCalledWith('admin_listar_boletins', { p_slug: '2a-etapa' })
     expect(await repo.pedirEmissao('2a-etapa', '2026-11-13')).toMatchObject({ id: 3, estado: 'pendente' })
     expect(falso.rpc).toHaveBeenCalledWith('admin_pedir_emissao', { p_slug: '2a-etapa', p_data: '2026-11-13' })
-    expect(await repo.urlPdfBoletim('e/x.pdf')).toBe('https://sb/assinada/e/x.pdf?s=300')
-    expect(falso.storage.from).toHaveBeenCalledWith('boletins')
-    expect(assinar).toHaveBeenCalledWith('e/x.pdf', 300)
+    expect(await repo.urlPdfBoletim('e/x.pdf')).toBe('https://r2/assinada/e/x.pdf')
+    expect(urls).toHaveBeenCalledWith('boletins', ['e/x.pdf'])
   })
 
   it('lê publicacao_erro e publicacao_tentativas (padrão: null e 0)', () => {

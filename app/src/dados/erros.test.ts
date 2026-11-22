@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ErroEnvio, erroDoSupabase, MENSAGEM_REDE } from './erros.ts'
 import { criarRepositorioSupabase } from './supabase.ts'
 
@@ -51,15 +51,35 @@ describe('erroDoSupabase', () => {
 })
 
 describe('repositório Supabase: envio', () => {
-  function cliente(upload: unknown, rpc: unknown) {
-    const subir = vi.fn(async () => upload)
-    const chamar = vi.fn(async () => rpc)
-    const fake = {
-      storage: { from: vi.fn(() => ({ upload: subir })) },
-      rpc: chamar,
+  function respostaHttp(status: number, erro: string) {
+    return {
+      name: 'FunctionsHttpError',
+      context: new Response(JSON.stringify({ erro }), { status }),
     }
-    return { fake, subir, chamar }
   }
+  /** `invoke` responde em sequência; `fetch` é o PUT no R2. */
+  function cliente(
+    invoke: unknown[],
+    rpc: unknown,
+    put: () => Promise<Response> = async () => new Response(null, { status: 200 }),
+  ) {
+    const chamarFunction = vi.fn(async () => invoke.shift())
+    const chamar = vi.fn(async () => rpc)
+    const http = vi.fn(put)
+    vi.stubGlobal('fetch', http)
+    const fake = { functions: { invoke: chamarFunction }, rpc: chamar }
+    return { fake, chamarFunction, chamar, http }
+  }
+  afterEach(() => vi.unstubAllGlobals())
+  const PERMITIDO = {
+    data: {
+      situacao: 'enviar',
+      url: 'https://r2.test/put?x=1',
+      cabecalhos: { 'content-type': 'image/jpeg' },
+    },
+    error: null,
+  }
+  const CONFIRMADO = { data: { situacao: 'confirmado' }, error: null }
   const dados = {
     id: REG,
     ambienteId: OBRA,
@@ -69,41 +89,68 @@ describe('repositório Supabase: envio', () => {
     fotos: [{ id: FOTO, largura: 1, altura: 1, bytes: 1 }],
   }
 
-  it('monta o caminho a partir dos ids e faz upsert como image/jpeg', async () => {
-    const { fake, subir } = cliente({ error: null }, { data: null, error: null })
+  it('monta o caminho a partir dos ids e envia como image/jpeg pela function', async () => {
+    const { fake, chamarFunction, http } = cliente([PERMITIDO, CONFIRMADO], {
+      data: null,
+      error: null,
+    })
     const repo = criarRepositorioSupabase(fake as never)
     const blob = new Blob(['x'])
     await repo.enviarFoto({ obraId: OBRA, registroId: REG, fotoId: FOTO }, blob)
-    expect(fake.storage.from).toHaveBeenCalledWith('fotos')
-    expect(subir).toHaveBeenCalledWith(`${OBRA}/${REG}/${FOTO}.jpg`, blob, {
-      upsert: true,
-      contentType: 'image/jpeg',
+    expect(chamarFunction).toHaveBeenNthCalledWith(1, 'armazenamento', {
+      body: {
+        acao: 'enviar',
+        pasta: 'fotos',
+        caminho: `${OBRA}/${REG}/${FOTO}.jpg`,
+        tamanho: 1,
+        tipo: 'image/jpeg',
+      },
+    })
+    expect(http).toHaveBeenCalledWith(
+      'https://r2.test/put?x=1',
+      expect.objectContaining({ method: 'PUT' }),
+    )
+    expect(chamarFunction).toHaveBeenNthCalledWith(2, 'armazenamento', {
+      body: {
+        acao: 'confirmar',
+        pasta: 'fotos',
+        caminho: `${OBRA}/${REG}/${FOTO}.jpg`,
+      },
     })
   })
 
+  it('foto já confirmada no servidor conta como enviada', async () => {
+    const { fake, http } = cliente([{ data: { situacao: 'ja_confirmado' }, error: null }], null)
+    await expect(
+      criarRepositorioSupabase(fake as never).enviarFoto(
+        { obraId: OBRA, registroId: REG, fotoId: FOTO },
+        new Blob(['x']),
+      ),
+    ).resolves.toBeUndefined()
+    expect(http).not.toHaveBeenCalled()
+  })
+
   it('recusa ids que não são UUID antes de montar o caminho', async () => {
-    const { fake, subir } = cliente({ error: null }, { data: null, error: null })
+    const { fake, chamarFunction } = cliente([], { data: null, error: null })
     const repo = criarRepositorioSupabase(fake as never)
     await expect(
       repo.enviarFoto({ obraId: OBRA, registroId: '../x', fotoId: FOTO }, new Blob(['x'])),
     ).rejects.toMatchObject({ tipo: 'validacao' })
-    expect(subir).not.toHaveBeenCalled()
+    expect(chamarFunction).not.toHaveBeenCalled()
   })
 
-  it('erro de RLS e falha de rede no upload viram ErroEnvio', async () => {
-    const rls = cliente(
-      { error: { statusCode: '403', message: 'new row violates row-level security policy' } },
-      null,
-    )
+  it('sem_permissao da function e falha de rede no PUT viram ErroEnvio', async () => {
+    const perm = cliente([{ data: null, error: respostaHttp(403, 'sem_permissao') }], null)
     await expect(
-      criarRepositorioSupabase(rls.fake as never).enviarFoto(
+      criarRepositorioSupabase(perm.fake as never).enviarFoto(
         { obraId: OBRA, registroId: REG, fotoId: FOTO },
         new Blob(['x']),
       ),
     ).rejects.toMatchObject({ tipo: 'permissao' })
 
-    const rede = cliente(null, null)
-    rede.subir.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    const rede = cliente([PERMITIDO], null, async () => {
+      throw new TypeError('Failed to fetch')
+    })
     await expect(
       criarRepositorioSupabase(rede.fake as never).enviarFoto(
         { obraId: OBRA, registroId: REG, fotoId: FOTO },
@@ -113,7 +160,7 @@ describe('repositório Supabase: envio', () => {
   })
 
   it('chama a RPC com os parâmetros p_* e devolve o id', async () => {
-    const { fake, chamar } = cliente(null, { data: { id: REG }, error: null })
+    const { fake, chamar } = cliente([], { data: { id: REG }, error: null })
     const r = await criarRepositorioSupabase(fake as never).concluirRegistro(dados)
     expect(r).toEqual({ id: REG })
     expect(chamar).toHaveBeenCalledWith('concluir_registro', {
@@ -127,9 +174,12 @@ describe('repositório Supabase: envio', () => {
   })
 
   it('erros da RPC viram ErroEnvio com tipo e mensagem do servidor', async () => {
-    const { fake } = cliente(null, {
+    const { fake } = cliente([], {
       data: null,
-      error: { code: '22023', message: 'A legenda deve ter de 1 a 1000 caracteres' },
+      error: {
+        code: '22023',
+        message: 'A legenda deve ter de 1 a 1000 caracteres',
+      },
     })
     await expect(
       criarRepositorioSupabase(fake as never).concluirRegistro(dados),

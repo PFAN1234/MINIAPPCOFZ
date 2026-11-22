@@ -31,7 +31,7 @@ Ambientes com o mesmo nome e áreas diferentes, sem entrada em `renomear`, são 
 - `gerar_plantas.py`: renderiza os PDFs e gera, em `data/<slug>/plantas/<revisao>/<pavimento>/`, a visão geral (`planta.webp`), a versão HD (`planta-hd.webp`), um recorte por ambiente (`ambientes/<id>.webp`) e `prova.png`. Também escreve o manifesto `data/<slug>/plantas.json`. Apaga de `ambientes/` os recortes de ids que saíram da lista, para o `publicar_plantas.py` não enviá-los.
 - `gerar_seed.py`: gera `supabase/seed/<slug>.sql` (obra, pavimentos, ambientes, plantas e detalhes) a partir de `ambientes.json` e `plantas.json`. Rode de novo depois de mudar qualquer um dos dois. Grava `ativo = true` nos ambientes da lista e `ativo = false` nos de `ambientes_removidos` e em qualquer outro da obra que esteja fora da lista, e desativa a planta de outra revisão do pavimento antes de gravar a nova (exige a migration `20261111130000_ambiente_ativo.sql`).
 - `importar_config_obras.py`: gera `supabase/seed/admin_config.sql`, que grava a configuração de cada `data/<slug>/obra.json` (sem `slug` e `nome`; pavimentos só com `codigo`, `pdf` e `pagina`) na tabela `obra_config` do site de administração (`docs/admin.md`). Idempotente; `--verificar` falha se o SQL estiver desatualizado. Rode de novo depois de mudar um `obra.json`.
-- `publicar_plantas.py`: envia os `.webp` de `data/<slug>/plantas/` ao bucket privado `plantas` (não envia `prova.png`). Usa só a biblioteca padrão e lê o `obra.id` pela API REST, então o seed precisa ter sido aplicado antes.
+- `publicar_plantas.py`: envia os `.webp` de `data/<slug>/plantas/` à pasta `plantas` do R2 pela Edge Function `armazenamento` (`enviar` -> `PUT` na URL assinada -> `confirmar`; não envia `prova.png`). Usa só a biblioteca padrão e lê o `obra.id` pela API REST, então o seed precisa ter sido aplicado antes.
 
 ## Ordem de execução
 
@@ -43,16 +43,17 @@ python3 scripts/gerar_plantas.py --obra hto
 python3 scripts/gerar_seed.py --obra hto
 ```
 
-## Publicar no Supabase
+## Publicar no R2
 
 ```bash
 python3 scripts/publicar_plantas.py --obra hto --dry-run   # lista caminho local -> caminho remoto
 export SUPABASE_URL=https://<ref>.supabase.co
 export SUPABASE_SECRET_KEY=...                              # chave secreta; nunca vai para o Git nem para a saída
+export SEGREDO_INTERNO=...                                  # opcional; sem ele, vem da RPC segredo_interno
 python3 scripts/publicar_plantas.py --obra hto
 ```
 
-O envio usa `x-upsert: true`, então pode ser repetido sem erro.
+Os arquivos vão para o R2 pela Edge Function `armazenamento` (modo interno, cabeçalho `x-segredo-interno`); o envio pode ser repetido, pois sobrescreve. Os modelos 3D seguem o mesmo caminho, com as mesmas variáveis, em `app/`: `npm run publicar:modelos -- --obra hto` (pasta `modelos`; o registro na tabela `modelo` vem depois do `confirmar`). Segredo, chave e URLs assinadas nunca são impressos.
 
 ## Cadastrar uma obra nova
 
@@ -141,3 +142,28 @@ python3 scripts/supabase_api.py sql "select count(*) from public.etapa"
 ```
 
 `aplicar` roda o arquivo numa transação e grava a migration em `supabase_migrations.schema_migrations` (versão e nome tirados do nome do arquivo). Depois de aplicar, conferir as funções alteradas comparando `md5(prosrc)` com um banco local montado a partir do repositório.
+
+## Backup do R2
+
+O workflow `.github/workflows/backup-r2.yml` copia o bucket `miniappcofz-arquivos` para a pasta `backup-r2/` do Google Drive, todo domingo às 03:47 (Brasília) e sob demanda. Usa `rclone copy` (nunca `sync`): o que for apagado no R2 continua no Drive.
+
+**Gerar o `[drive]` (numa máquina local).** Instale o rclone, rode `rclone config` e crie um remote chamado `drive`, tipo `drive` (Google Drive), escopo `drive`. Deixe `client_id` e `client_secret` em branco: o rclone usa o client id padrão dele, cujo refresh token não expira em 7 dias, como expira o de um app OAuth próprio em modo de teste. Autorize no navegador. Depois rode `rclone config show drive` e copie o trecho `[drive]` inteiro (inclui o `token`). Esse trecho é um segredo: não vai para o Git nem para o chat.
+
+**Segredos no GitHub** (Settings, Secrets and variables, Actions):
+
+| Segredo | Conteúdo |
+|---|---|
+| `R2_BACKUP_ACCOUNT_ID` | ID da conta Cloudflare |
+| `R2_BACKUP_ACCESS_KEY_ID` | Chave de acesso de um token do R2 só de leitura (Object Read only) no bucket de produção |
+| `R2_BACKUP_SECRET_ACCESS_KEY` | Segredo desse token |
+| `RCLONE_DRIVE_CONF` | O trecho `[drive]` do `rclone.conf` |
+
+**Rodar manualmente.** Na aba Actions, escolha "Backup do R2" e clique em "Run workflow"; ou `gh workflow run backup-r2.yml`. Acompanhe com `gh run list --workflow backup-r2.yml`.
+
+**Restaurar.** Com o `[drive]` e um remote `r2` com permissão de escrita configurados localmente:
+
+```bash
+rclone copy drive:backup-r2/<pasta> r2:<bucket>/<pasta>
+```
+
+`<pasta>` é uma das pastas do bucket (`fotos`, `plantas`, `originais`, `modelos`, `boletins`, `relatorios`, `organizacao`, `documentos`). Isso devolve só os objetos: as linhas da tabela `arquivo` (e as demais tabelas) vêm do backup do banco. Restaurados os dois, o que ficar sem linha aparece na varredura de órfãos.

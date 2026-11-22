@@ -1,7 +1,8 @@
-// Edge Function admin-excluir-obra: exclui uma obra (banco e arquivos do Storage) pelo site
+// Edge Function admin-excluir-obra: exclui uma obra (banco e arquivos do R2) pelo site
 // de administração (/admin/).
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { listarOrigens } from "../_shared/http.ts";
+import { configDoAmbiente, criarR2 } from "../_shared/r2.ts";
 import { criarClienteTelegram } from "../_shared/telegram.ts";
 import { criarHandler } from "./handler.ts";
 
@@ -29,6 +30,7 @@ const handler = criarHandler({
     Deno.env.get("ALLOWED_ORIGINS") ?? "https://miniappcofz.vercel.app",
   ),
   admin: criarClienteServico(),
+  r2: criarR2(configDoAmbiente((n) => Deno.env.get(n))),
   clienteUsuario: criarClienteUsuario,
   telegram: criarClienteTelegram(Deno.env.get("TELEGRAM_BOT_TOKEN") ?? ""),
 });

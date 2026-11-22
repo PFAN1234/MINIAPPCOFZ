@@ -39,11 +39,11 @@ def novo_usuario(c, admin=False):
     return uid
 
 
-def objeto(c, bucket, nome, antigo=True, tamanho=None):
+def objeto(c, bucket, nome, antigo=True, tamanho=None, situacao='confirmado'):
     idade = "now() - interval '8 days'" if antigo else 'now()'
-    meta = '{"size": %d}' % tamanho if tamanho is not None else None
-    su(c, f'insert into storage.objects (bucket_id, name, created_at, metadata) '
-          f'values (%s, %s, {idade}, %s::jsonb)', (bucket, nome, meta))
+    su(c, f"insert into public.arquivo (pasta, caminho, tamanho, tipo, situacao, criado_em) "
+          f"values (%s, %s, %s, 'application/octet-stream', %s, {idade})",
+       (bucket, nome, tamanho if tamanho is not None else 1, situacao))
 
 
 def varrer(c):
@@ -114,7 +114,7 @@ def test_ganhar_referencia_tira_da_lista_e_nada_e_apagado(c):
        (obra, nome))
     varrer(c)
     assert orfaos(c, str(obra)) == set()
-    assert su(c, 'select count(*) from storage.objects where name = %s', (nome,))[0][0] == 1
+    assert su(c, "select count(*) from public.arquivo where caminho = %s and situacao = 'confirmado'", (nome,))[0][0] == 1
 
 
 def test_sumiu_do_bucket_sai_da_lista(c):
@@ -122,7 +122,7 @@ def test_sumiu_do_bucket_sai_da_lista(c):
     objeto(c, 'boletins', f'{p}/b.pdf')
     varrer(c)
     assert orfaos(c, p) == {('boletins', f'{p}/b.pdf')}
-    su(c, 'delete from storage.objects where name = %s', (f'{p}/b.pdf',))
+    su(c, "update public.arquivo set situacao = 'excluir' where caminho = %s", (f'{p}/b.pdf',))
     varrer(c)
     assert orfaos(c, p) == set()
 
@@ -148,3 +148,13 @@ def test_resumo_so_admin_e_agrupa(c):
 def test_cron_agendado(c):
     r = su(c, "select schedule, command from cron.job where jobname = 'varrer-orfaos-storage'")
     assert r == [('17 3 * * *', 'select privado.varrer_orfaos_storage()')]
+
+
+def test_pendente_e_excluir_sao_ignorados_e_origem_padrao(c):
+    p = uuid.uuid4().hex
+    objeto(c, 'modelos', f'{p}/pendente.frag', situacao='pendente')
+    objeto(c, 'modelos', f'{p}/marcado.frag', situacao='excluir')
+    objeto(c, 'modelos', f'{p}/solto.frag')
+    varrer(c)
+    assert orfaos(c, p) == {('modelos', f'{p}/solto.frag')}
+    assert su(c, 'select origem from public.orfao_storage where caminho = %s', (f'{p}/solto.frag',)) == [('sem_referencia',)]

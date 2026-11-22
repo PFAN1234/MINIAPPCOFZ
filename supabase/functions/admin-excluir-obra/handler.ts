@@ -2,18 +2,19 @@
 // Exclui uma obra pelo site de administração (/admin/), no corpo JSON `{acao}`:
 // - `excluir` `{slug, confirmacao}`: chama `admin_excluir_obra` como o admin (o banco confere
 //   o admin e a confirmação, apaga as linhas e grava `obra_excluida`) e depois remove os
-//   arquivos da obra no Storage com a chave secreta;
+//   arquivos da obra no R2 (linhas `excluir` de `arquivo`, apagadas com `arquivo_remover`);
 // - `limpar` `{exclusao_id}`: repete só a remoção dos arquivos (quando a primeira falhou);
 // - `excluir_etapa` `{slug, confirmacao}`: chama `admin_excluir_etapa` como o admin (apaga a
-//   etapa e todas as obras dela, uma linha de `obra_excluida` por obra) e limpa o Storage de
+//   etapa e todas as obras dela, uma linha de `obra_excluida` por obra) e limpa o R2 de
 //   cada exclusão devolvida, como em `excluir`;
 // - `excluir_boletim` `{boletim_id}`: chama `admin_excluir_boletim` como o admin (apaga o dia
-//   inteiro do boletim no banco e devolve as mensagens do Telegram e os arquivos do bucket
-//   `boletins`); depois apaga as mensagens no grupo (`deleteMessage`) e remove os arquivos.
+//   inteiro do boletim no banco e devolve as mensagens do Telegram e os arquivos da pasta
+//   `boletins`, já marcados `excluir`); depois apaga as mensagens no grupo (`deleteMessage`) e remove os arquivos.
 //   Falhas dessa limpeza não derrubam a resposta: viram contagem (`falhas`) e `arquivos_erro`.
-// Os arquivos de todos os buckets ficam em `<obra_id>/...`; o resultado vai para
+// Os arquivos de todas as pastas ficam em `<obra_id>/...`; o resultado vai para
 // `admin_registrar_limpeza`. O token nunca vai para o log.
 import { cabecalhosCors, json } from "../_shared/http.ts";
+import { chaveObjeto, type ClienteR2 } from "../_shared/r2.ts";
 import type { ClienteTelegram } from "../_shared/telegram.ts";
 
 export const BUCKETS = [
@@ -26,9 +27,8 @@ export const BUCKETS = [
 export type Bucket = typeof BUCKETS[number];
 export type Contagem = Record<Bucket, number>;
 
-/** Itens por página no `list` e por chamada no `remove` do Storage. */
-export const LOTE_LISTAGEM = 100;
-export const LOTE_REMOCAO = 100;
+/** Linhas de `arquivo` lidas por consulta (e, portanto, chaves por chamada ao R2). */
+export const LOTE_LEITURA = 1000;
 
 export const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -42,25 +42,7 @@ export interface ClienteRpc {
   ): PromiseLike<{ data: unknown; error: ErroSupabase }>;
 }
 
-/** Item do `list` do Storage: pastas vêm com `id === null`. */
-export interface ItemStorage {
-  name: string;
-  id: string | null;
-}
-
-export interface BucketStorage {
-  list(
-    prefixo: string,
-    opcoes: { limit: number; offset: number; sortBy?: { column: string } },
-  ): PromiseLike<
-    { data: ItemStorage[] | null; error: { message: string } | null }
-  >;
-  remove(
-    caminhos: string[],
-  ): PromiseLike<{ data: unknown[] | null; error: { message: string } | null }>;
-}
-
-/** Cliente com a chave secreta: confere o JWT, chama RPCs da service role e mexe no Storage. */
+/** Cliente com a chave secreta: confere o JWT, chama RPCs da service role e lê `arquivo`. */
 export interface ClienteServico extends ClienteRpc {
   auth: {
     getUser(jwt: string): Promise<{
@@ -68,12 +50,15 @@ export interface ClienteServico extends ClienteRpc {
       error: { message: string } | null;
     }>;
   };
-  storage: { from(bucket: string): BucketStorage };
+  // deno-lint-ignore no-explicit-any
+  from(tabela: string): any;
 }
 
 export interface Deps {
   origensPermitidas: string[];
   admin: ClienteServico;
+  /** Cloudflare R2: só a remoção de objetos é usada aqui. */
+  r2: Pick<ClienteR2, "apagar">;
   /** Cliente que fala com o banco como o dono do JWT (auth.uid() e exigir_admin valem). */
   clienteUsuario: (jwt: string) => ClienteRpc;
   /** Bot do Telegram, para apagar as mensagens de um boletim excluído. */
@@ -91,73 +76,87 @@ function zerada(): Contagem {
   return { fotos: 0, plantas: 0, originais: 0, modelos: 0, documentos: 0 };
 }
 
-/** Todos os caminhos de arquivos sob `prefixo`, descendo nas pastas (listagem paginada). */
-export async function listarRecursivo(
-  bucket: BucketStorage,
-  prefixo: string,
-): Promise<string[]> {
-  const arquivos: string[] = [];
-  const pastas = [prefixo];
-  while (pastas.length > 0) {
-    const pasta = pastas.pop()!;
-    for (let offset = 0;; offset += LOTE_LISTAGEM) {
-      const { data, error } = await bucket.list(pasta, {
-        limit: LOTE_LISTAGEM,
-        offset,
-        sortBy: { column: "name" },
-      });
-      if (error) throw new ErroLimpeza(error.message);
-      const itens = data ?? [];
-      for (const item of itens) {
-        const caminho = `${pasta}/${item.name}`;
-        if (item.id === null) pastas.push(caminho);
-        else arquivos.push(caminho);
-      }
-      if (itens.length < LOTE_LISTAGEM) break;
-    }
-  }
-  return arquivos;
+/** Linha de `arquivo` marcada para exclusão. */
+interface LinhaExcluir {
+  id: number;
+  pasta: string;
+  caminho: string;
 }
 
 /**
- * Remove todos os arquivos `<obraId>/...` dos quatro buckets. Lista tudo antes de remover
- * (a paginação por offset não muda no meio). Um bucket com falha não impede os outros; o
- * erro descreve os que falharam e `removidos` conta o que já saiu.
+ * Apaga no R2 as linhas `excluir` de `arquivo` que `filtrar` deixar passar e chama
+ * `arquivo_remover` com os ids apagados. Lê em páginas por id (o que falhar fica `excluir`
+ * para a `manutencao`, sem travar a leitura). Uma pasta com falha não impede as outras: o
+ * erro descreve as que falharam e `removidos` conta o que já saiu.
  */
-export async function removerArquivos(
-  admin: ClienteServico,
-  obraId: string,
+export async function removerLinhas(
+  deps: Pick<Deps, "r2"> & { admin: ClienteServico },
+  pastas: readonly string[],
+  // deno-lint-ignore no-explicit-any
+  filtrar: (consulta: any) => any,
 ): Promise<{ removidos: Contagem; erro: string | null }> {
-  // Guarda contra prefixo vazio ou estranho: nunca listar a raiz de um bucket.
-  if (!UUID.test(obraId)) throw new Error("obra_id inválido");
   const removidos = zerada();
-  const falhas: string[] = [];
-  for (const nome of BUCKETS) {
-    const bucket = admin.storage.from(nome);
-    try {
-      const caminhos = await listarRecursivo(bucket, obraId);
-      for (let i = 0; i < caminhos.length; i += LOTE_REMOCAO) {
-        const lote = caminhos.slice(i, i + LOTE_REMOCAO);
-        const { data, error } = await bucket.remove(lote);
-        if (error) throw new ErroLimpeza(error.message);
-        removidos[nome] += Array.isArray(data) ? data.length : lote.length;
-      }
-    } catch (e) {
-      falhas.push(
-        `${nome} (${
-          e instanceof ErroLimpeza ? e.message : "erro desconhecido"
-        })`,
-      );
+  const falhas = new Set<string>();
+  let ultimo = 0;
+  for (;;) {
+    // deno-lint-ignore no-explicit-any
+    let consulta: any = deps.admin.from("arquivo").select("id, pasta, caminho")
+      .eq("situacao", "excluir").in("pasta", [...pastas]);
+    consulta = filtrar(consulta).gt("id", ultimo).order("id", {
+      ascending: true,
+    }).limit(LOTE_LEITURA);
+    const { data, error } = await consulta;
+    if (error) {
+      falhas.add(`leitura (${error.message})`);
+      break;
     }
+    const linhas = (data ?? []) as LinhaExcluir[];
+    if (linhas.length === 0) break;
+    ultimo = linhas[linhas.length - 1].id;
+    const porPasta = new Map<string, LinhaExcluir[]>();
+    for (const l of linhas) {
+      porPasta.set(l.pasta, [...porPasta.get(l.pasta) ?? [], l]);
+    }
+    for (const [pasta, grupo] of porPasta) {
+      try {
+        await deps.r2.apagar(grupo.map((l) => chaveObjeto(l.pasta, l.caminho)));
+        const { error: eRem } = await deps.admin.rpc("arquivo_remover", {
+          p_ids: grupo.map((l) => l.id),
+        });
+        if (eRem) throw new ErroLimpeza(eRem.message);
+        if (pasta in removidos) removidos[pasta as Bucket] += grupo.length;
+      } catch (e) {
+        falhas.add(
+          `${pasta} (${
+            e instanceof ErroLimpeza ? e.message : "erro desconhecido"
+          })`,
+        );
+      }
+    }
+    if (linhas.length < LOTE_LEITURA) break;
   }
-  if (falhas.length === 0) return { removidos, erro: null };
+  if (falhas.size === 0) return { removidos, erro: null };
   return {
     removidos,
-    erro: `Falha ao remover arquivos do Storage: ${falhas.join("; ")}`.slice(
+    erro: `Falha ao remover arquivos do R2: ${[...falhas].join("; ")}`.slice(
       0,
       500,
     ),
   };
+}
+
+/** Remove os arquivos `<obraId>/...` (linhas `excluir` já marcadas pelo banco). */
+export function removerArquivos(
+  deps: Pick<Deps, "r2"> & { admin: ClienteServico },
+  obraId: string,
+): Promise<{ removidos: Contagem; erro: string | null }> {
+  // Guarda contra prefixo vazio ou estranho: nunca varrer além da obra.
+  if (!UUID.test(obraId)) throw new Error("obra_id inválido");
+  return removerLinhas(
+    deps,
+    BUCKETS,
+    (q) => q.like("caminho", `${obraId}/%`),
+  );
 }
 
 const NAO_AUTORIZADO = { erro: "Não autorizado" };
@@ -177,7 +176,7 @@ export function criarHandler(deps: Deps) {
 
   /** Remove os arquivos e registra o resultado; monta a parte comum da resposta. */
   async function limparERegistrar(exclusaoId: string, obraId: string) {
-    const { removidos, erro } = await removerArquivos(deps.admin, obraId);
+    const { removidos, erro } = await removerArquivos(deps, obraId);
     const { error } = await deps.admin.rpc("admin_registrar_limpeza", {
       p_id: exclusaoId,
       p_removidos: removidos,
@@ -332,7 +331,7 @@ export function criarHandler(deps: Deps) {
         exclusoes,
         pendente: pendentes > 0,
         erro: pendentes > 0
-          ? `Sobraram arquivos no Storage de ${pendentes} obra(s) excluída(s). Tente de novo em "Obras excluídas".`
+          ? `Sobraram arquivos no R2 de ${pendentes} obra(s) excluída(s). Tente de novo em "Obras excluídas".`
           : null,
       },
       200,
@@ -462,9 +461,12 @@ export function criarHandler(deps: Deps) {
     let arquivosErro: string | undefined;
     if (arquivos.length > 0) {
       try {
-        const { error: eRem } = await deps.admin.storage.from("boletins")
-          .remove(arquivos);
-        if (eRem) arquivosErro = eRem.message;
+        const { erro } = await removerLinhas(
+          deps,
+          ["boletins"],
+          (q) => q.in("caminho", arquivos),
+        );
+        if (erro) arquivosErro = erro;
       } catch (e) {
         arquivosErro = e instanceof Error ? e.message : "erro desconhecido";
       }

@@ -236,7 +236,7 @@ MINIAPPCOFZ/
 │       ├── _shared/
 │       ├── admin-excluir-obra/
 │       ├── admin-sessao/
-│       ├── assinar-envio-plantas/
+│       ├── armazenamento/
 │       ├── auth-telegram/
 │       ├── bot-webhook/
 │       └── publish-outbox/

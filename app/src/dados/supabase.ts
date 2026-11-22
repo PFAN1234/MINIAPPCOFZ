@@ -1,7 +1,13 @@
-import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js'
+import {
+  createClient,
+  type SupabaseClient,
+  type SupabaseClientOptions,
+} from '@supabase/supabase-js'
 import { criarAcessosSupabase } from '@modules/acessos/infra/AcessosSupabaseAdapter.ts'
 import { criarEquipeServicoSupabase } from '@modules/acessos/infra/EquipeServicoSupabaseAdapter.ts'
 import { criarSessaoSupabase } from '@modules/acessos/infra/SessaoSupabaseAdapter.ts'
+import type { Armazenamento } from '@modules/armazenamento/application/ports/Armazenamento.port.ts'
+import { criarArmazenamentoSupabase } from '@modules/armazenamento/infra/ArmazenamentoSupabaseAdapter.ts'
 import { criarPublicacoesSupabase } from '@modules/fiscalizacao/infra/PublicacoesSupabaseAdapter.ts'
 import { criarRegistrosSupabase } from '@modules/fiscalizacao/infra/RegistrosSupabaseAdapter.ts'
 import { criarModelosSupabase } from '@modules/modelos/infra/ModelosSupabaseAdapter.ts'
@@ -28,19 +34,20 @@ export function criarClienteSupabase(opcoes?: SupabaseClientOptions<'public'>): 
 
 export function criarRepositorioSupabase(
   cliente: SupabaseClient = criarClienteSupabase(),
+  armazenamento: Armazenamento = criarArmazenamentoSupabase(cliente),
 ): Repositorio {
   configurarEnvioErros(cliente, 'miniapp')
-  const ra = criarRaSupabase(cliente)
-  const modelos = criarModelosSupabase(cliente)
+  const ra = criarRaSupabase(cliente, armazenamento)
+  const modelos = criarModelosSupabase(cliente, armazenamento)
   const acessos = criarAcessosSupabase(cliente)
   const sessao = criarSessaoSupabase(cliente)
   const equipe = criarEquipeServicoSupabase(cliente)
   const obras = criarObrasSupabase(cliente)
-  const organizacao = criarOrganizacaoSupabase(cliente)
+  const organizacao = criarOrganizacaoSupabase(cliente, armazenamento)
   const etapasInicio = criarEtapasInicioSupabase(cliente)
-  const registros = criarRegistrosSupabase(cliente)
+  const registros = criarRegistrosSupabase(cliente, armazenamento)
   const publicacoes = criarPublicacoesSupabase(cliente)
-  const relatorios = criarRelatoriosSupabase(cliente)
+  const relatorios = criarRelatoriosSupabase(cliente, armazenamento)
   const observacoes = criarObservacoesSupabase(cliente)
 
   return {

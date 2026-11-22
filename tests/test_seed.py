@@ -111,6 +111,108 @@ def test_mapeamento_de_caminhos_da_publicacao(tmp_path):
     assert len(reais) == 2 * 2 + 87
 
 
+class _Resp:
+    def __init__(self, corpo=b""):
+        self._corpo = corpo
+
+    def read(self):
+        return self._corpo
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+
+def _falso_urlopen(chamadas, falhar_em=None):
+    import io
+    import urllib.error
+
+    def urlopen(req, timeout=None):
+        corpo = json.loads(req.data) if req.full_url.endswith("/functions/v1/armazenamento") else None
+        chamadas.append((req.full_url, req.get_method(), dict(req.header_items()), corpo, req.data))
+        acao = corpo["acao"] if corpo else "put"
+        if acao == falhar_em:
+            raise urllib.error.HTTPError(req.full_url, 409, "x", {}, io.BytesIO(b'{"erro":"divergente"}'))
+        if acao == "enviar":
+            return _Resp(json.dumps({
+                "situacao": "enviar", "url": "https://r2.exemplo/assinada?sig=SEGREDO-ASSINADO", "metodo": "PUT",
+                "cabecalhos": {"content-type": "image/webp"}, "expira_em": "x",
+            }).encode())
+        if acao == "confirmar":
+            return _Resp(b'{"situacao":"confirmado"}')
+        return _Resp()
+
+    return urlopen
+
+
+def test_enviar_planta_pelo_armazenamento(tmp_path, monkeypatch):
+    import urllib.request
+    publicar = _carregar("publicar_plantas", "scripts/publicar_plantas.py")
+    arq = tmp_path / "planta.webp"
+    arq.write_bytes(b"12345")
+    chamadas = []
+    monkeypatch.setattr(urllib.request, "urlopen", _falso_urlopen(chamadas))
+    publicar.enviar("https://p.supabase.co", "CHAVE", "SEG", arq, "O/R05/terreo/planta.webp")
+    assert [(c[1], c[3] and c[3]["acao"]) for c in chamadas] == [
+        ("POST", "enviar"), ("PUT", None), ("POST", "confirmar")]
+    assert chamadas[0][3] == {"acao": "enviar", "pasta": "plantas", "caminho": "O/R05/terreo/planta.webp",
+                              "tamanho": 5, "tipo": "image/webp"}
+    assert chamadas[0][2]["X-segredo-interno"] == "SEG"
+    assert chamadas[0][0] == "https://p.supabase.co/functions/v1/armazenamento"
+    put = chamadas[1]
+    assert put[0].startswith("https://r2.exemplo/assinada")
+    assert put[4] == b"12345"
+    assert put[2]["Content-type"] == "image/webp"
+    assert "Authorization" not in put[2] and "Apikey" not in put[2]
+    assert chamadas[2][3] == {"acao": "confirmar", "pasta": "plantas", "caminho": "O/R05/terreo/planta.webp"}
+
+
+def test_enviar_planta_para_em_erro_sem_vazar(tmp_path, monkeypatch):
+    import urllib.request
+    publicar = _carregar("publicar_plantas", "scripts/publicar_plantas.py")
+    arq = tmp_path / "planta.webp"
+    arq.write_bytes(b"1")
+    chamadas = []
+    monkeypatch.setattr(urllib.request, "urlopen", _falso_urlopen(chamadas, falhar_em="confirmar"))
+    with pytest.raises(publicar.ErroArmazenamento) as e:
+        publicar.enviar("https://p.supabase.co", "CHAVE", "SEG", arq, "O/a.webp")
+    msg = str(e.value)
+    assert "409" in msg and "divergente" in msg
+    assert "CHAVE" not in msg and "SEG" not in msg and "SEGREDO-ASSINADO" not in msg
+
+
+def test_enviar_planta_nao_confirma_se_put_falha(tmp_path, monkeypatch):
+    import urllib.request
+    publicar = _carregar("publicar_plantas", "scripts/publicar_plantas.py")
+    arq = tmp_path / "planta.webp"
+    arq.write_bytes(b"1")
+    chamadas = []
+    monkeypatch.setattr(urllib.request, "urlopen", _falso_urlopen(chamadas, falhar_em="put"))
+    with pytest.raises(publicar.ErroArmazenamento) as e:
+        publicar.enviar("https://p.supabase.co", "CHAVE", "SEG", arq, "O/a.webp")
+    assert "SEGREDO-ASSINADO" not in str(e.value)
+    assert [c[1] for c in chamadas] == ["POST", "PUT"]
+
+
+def test_segredo_interno_do_ambiente_ou_da_rpc(monkeypatch):
+    import urllib.request
+    publicar = _carregar("publicar_plantas", "scripts/publicar_plantas.py")
+    monkeypatch.setenv("SEGREDO_INTERNO", "DO_AMBIENTE")
+    assert publicar.obter_segredo("https://p.supabase.co", "CHAVE") == "DO_AMBIENTE"
+    monkeypatch.delenv("SEGREDO_INTERNO")
+    visto = []
+
+    def urlopen(req, timeout=None):
+        visto.append(req.full_url)
+        return _Resp(b'"DA_RPC"')
+
+    monkeypatch.setattr(urllib.request, "urlopen", urlopen)
+    assert publicar.obter_segredo("https://p.supabase.co", "CHAVE") == "DA_RPC"
+    assert visto == ["https://p.supabase.co/rest/v1/rpc/segredo_interno"]
+
+
 def test_geracao_deterministica():
     assert seed_mod.gerar(DADOS) == SQL
 
