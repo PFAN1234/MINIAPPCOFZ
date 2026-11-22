@@ -59,7 +59,9 @@ type Vista = {
   camera: { posicao: [number, number, number]; alvo: [number, number, number]; projecao: 'perspectiva' | 'ortografica'; campo?: number }  // campo: fov (graus) na perspectiva; altura visível (m) na ortográfica
   cortes: { origem: [number, number, number]; normal: [number, number, number] }[]
   selecionados: RefElemento[]; ocultos: RefElemento[]; isolados: RefElemento[] | null
+  modoCor?: 'disciplina' | 'categoria'   // modo global de cor do motor; ausente = sem cores
   cores?: { refs: RefElemento[]; cor: string }[]
+  // cores: cores explícitas (hex #rrggbb, vindas do BCF `Coloring`), aplicadas por cima do modoCor; o modoCor não vai para o BCF
 }
 interface MotorVisualizador {
   montar(el: HTMLElement, tema: 'escuro' | 'claro'): Promise<void>

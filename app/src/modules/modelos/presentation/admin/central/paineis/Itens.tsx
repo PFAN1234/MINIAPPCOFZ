@@ -72,7 +72,7 @@ export default function Itens({
           onAlternar={onAlternarCategoria}
         />
       )}
-      {aba === 'filtro' && <Filtro motor={motor} versao={versao} onSelecionar={onSelecionar} onIsolar={onIsolar} />}
+      {aba === 'filtro' && <Filtro motor={motor} versao={versao} onSelecionar={onSelecionar} onIsolar={onIsolar} selecionado={selecionados[0] ?? null} />}
       {aba === 'modelos' && (
         <Modelos modelos={modelos} ativos={ativos} falhas={falhas} onAlternar={onAlternarModelo} />
       )}

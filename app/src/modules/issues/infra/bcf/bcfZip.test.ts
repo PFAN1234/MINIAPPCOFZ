@@ -202,3 +202,35 @@ describe('escreverBcf: casos de borda', () => {
     expect(xml('2.1')).toMatch(/<\/Topic><Comment Guid=.*<Viewpoints Guid=/s)
   })
 })
+
+describe('Coloring (cores explícitas)', () => {
+  const vpArq = `${GUID_T1}/viewpoint.bcfv`
+  const comCor = {
+    ...BCF21,
+    [vpArq]: (BCF21[vpArq] as string).replace(
+      '</Components>',
+      `<Coloring><Color Color="80FF8000"><Component IfcGuid="${GLOBAL_ID_A}" /></Color><Color Color="00ff00"><Component IfcGuid="${GLOBAL_ID_B}" /></Color></Coloring></Components>`,
+    ),
+  }
+
+  it('importa cores AARRGGBB e RRGGBB como estão no arquivo', () => {
+    const vp = lerBcf(zipDe(comCor)).topicos[0].viewpoints[0]
+    expect(vp.cores).toEqual([
+      { cor: '80FF8000', ids: [GLOBAL_ID_A] },
+      { cor: '00ff00', ids: [GLOBAL_ID_B] },
+    ])
+  })
+
+  it('exporta e relê o Coloring', () => {
+    const t = lerBcf(zipDe(comCor)).topicos[0]
+    const volta = lerBcf(escreverBcf({ versao: '2.1', projeto: null, topicos: [t] })).topicos[0].viewpoints[0]
+    expect(volta.cores).toEqual([
+      { cor: '80FF8000', ids: [GLOBAL_ID_A] },
+      { cor: '00ff00', ids: [GLOBAL_ID_B] },
+    ])
+  })
+
+  it('sem Coloring, cores fica ausente', () => {
+    expect(lerBcf(zipDe(BCF21)).topicos[0].viewpoints[0].cores).toBeUndefined()
+  })
+})

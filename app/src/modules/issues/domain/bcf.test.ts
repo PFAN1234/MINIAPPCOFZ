@@ -15,6 +15,7 @@ import {
   tipoDeBcf,
   topicoBcfParaTopico,
   vistaParaViewpoint,
+  normalizarCorBcf,
   viewpointParaVista,
   type BcfTopico,
 } from './bcf.ts'
@@ -122,6 +123,18 @@ describe('vista ↔ viewpoint', () => {
     expect(v.selecionados).toEqual(VISTA.selecionados)
     expect(v.ocultos).toEqual(VISTA.ocultos)
     expect(v.isolados).toBeNull()
+  })
+
+  it('cores explícitas: ida e volta e normalização da cor importada', () => {
+    const comCores = { ...VISTA, cores: [{ refs: [{ sigla: 'ARQ', globalId: 'G7' }], cor: '#ff8000' }] }
+    const vp = vistaParaViewpoint(comCores, 'g')
+    expect(vp.cores).toEqual([{ cor: 'FFFF8000', ids: ['G7'] }])
+    expect(viewpointParaVista(vp, achaTudoEmARQ)!.vista.cores).toEqual(comCores.cores)
+    expect(normalizarCorBcf('80AbCdEf')).toBe('#abcdef')
+    expect(normalizarCorBcf('#00FF00')).toBe('#00ff00')
+    expect(normalizarCorBcf('xyz')).toBeNull()
+    // modoCor não vai para o BCF.
+    expect(vistaParaViewpoint({ ...VISTA, modoCor: 'categoria' }, 'g').cores).toBeUndefined()
   })
 
   it('isolados viram DefaultVisibility=false com exceções, e voltam como isolados', () => {

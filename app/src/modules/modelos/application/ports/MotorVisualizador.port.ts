@@ -13,7 +13,7 @@ import type {
 } from '../../domain/central.ts'
 
 export type TemaCentral = 'escuro' | 'claro'
-export type EventoMotor = 'selecao' | 'medicao' | 'marcador' | 'cortes'
+export type EventoMotor = 'selecao' | 'medicao' | 'marcador' | 'cortes' | 'cor'
 
 /**
  * Porta do motor 3D da Central de modelos. O adaptador (That Open + three) fica em
