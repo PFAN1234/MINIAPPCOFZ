@@ -111,7 +111,7 @@ describe('CentralObra', () => {
     await usuario.click(screen.getByRole('tab', { name: 'Issues' }))
     expect(screen.getByTestId('url')).toHaveTextContent('/modelos/hto?painel=issues')
     expect(screen.getByRole('tab', { name: 'Issues', selected: true })).toBeInTheDocument()
-    expect(screen.getByText('Disponível na etapa 7')).toBeInTheDocument()
+    expect(await screen.findByText(/Viga colidindo/)).toBeInTheDocument()
   })
 
   it('Ver um documento abre a prévia em ?doc= sobre o visualizador; Esc fecha e preserva o painel', async () => {

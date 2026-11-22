@@ -29,6 +29,8 @@ function montar(medicao: TipoMedida | null = null) {
         onMinimapa={noop}
         medicao={medicao}
         onMedir={noop}
+        marcadores
+        onMarcadores={noop}
       />
     </div>,
   )

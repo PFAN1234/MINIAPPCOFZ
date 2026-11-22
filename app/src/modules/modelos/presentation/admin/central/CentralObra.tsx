@@ -14,7 +14,9 @@ import Dicas from './Dica.tsx'
 import PainelDocumentos from '../../../../documentos/presentation/admin/PainelDocumentos.tsx'
 import DocumentosDoContexto from '../../../../documentos/presentation/admin/DocumentosDoContexto.tsx'
 import PreviaDocumento from '../../../../documentos/presentation/admin/PreviaDocumento.tsx'
-import { useDocumentos } from '../../../../../admin/dados/hooks.ts'
+import PainelIssues from '../../../../issues/presentation/admin/PainelIssues.tsx'
+import { ehAberta } from '../../../../issues/domain/issues.ts'
+import { useDocumentos, useIssues } from '../../../../../admin/dados/hooks.ts'
 import type { Documento } from '../../../../documentos/domain/documentos.ts'
 import { useMotorCentral, type EstadoCentral } from './useMotorCentral.ts'
 import type { Corte, Medida, ModoCor, TipoMedida, NoArvore, RefElemento, Vista3dUi } from '../../../domain/central.ts'
@@ -45,7 +47,7 @@ const ICONES_PAINEL: Record<string, ReactNode> = {
 const PAINEIS = [
   { id: 'itens', nome: 'Itens', etapa: 2 },
   { id: 'documentos', nome: 'Documentos' },
-  { id: 'issues', nome: 'Issues', etapa: 7 },
+  { id: 'issues', nome: 'Issues' },
   { id: 'medicoes', nome: 'Medições', etapa: 4 },
   { id: 'gestao', nome: 'Gestão' },
 ] as const
@@ -91,6 +93,23 @@ function refsPavimentosDe(nos: NoArvore[]): RefElemento[] {
 }
 
 const SEM_DOCUMENTOS: Documento[] = []
+const CHAVE_MARCADORES = 'central.marcadores'
+
+/** Preferência dos marcadores de issue (ligado por padrão); o armazenamento pode estar indisponível. */
+function lerMarcadores(): boolean {
+  try {
+    return localStorage.getItem(CHAVE_MARCADORES) !== '0'
+  } catch {
+    return true
+  }
+}
+function gravarMarcadores(ligado: boolean) {
+  try {
+    localStorage.setItem(CHAVE_MARCADORES, ligado ? '1' : '0')
+  } catch {
+    // sem armazenamento: vale só nesta sessão
+  }
+}
 const LARGURA_MIN = 240
 const LARGURA_MAX = 520
 const limitar = (n: number) => Math.min(LARGURA_MAX, Math.max(LARGURA_MIN, n))
@@ -134,6 +153,7 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
   const [vista, setVista] = useState<Vista3dUi>({ tipo: '3d' })
   const [caminhando, setCaminhando] = useState(false)
   const [minimapa, setMinimapa] = useState(false)
+  const [marcadores, setMarcadores] = useState(lerMarcadores)
   const [pavimentos, setPavimentos] = useState<string[]>([])
   const [refsPavimentos, setRefsPavimentos] = useState<RefElemento[]>([])
   const [cortes, setCortes] = useState<Corte[]>([])
@@ -204,6 +224,50 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
       { replace: true },
     )
   }, [setParams])
+
+  const numeroParam = Number(params.get('issue'))
+  const issueAberta = Number.isInteger(numeroParam) && numeroParam > 0 ? numeroParam : null
+  const issues = useIssues(obra.obra_id)
+  /** Abre a issue no painel Issues (ou volta à lista com null), mantendo a URL em dia. */
+  const abrirIssue = useCallback(
+    (numero: number | null) => {
+      setParams(
+        (atual) => {
+          const novo = new URLSearchParams(atual)
+          novo.set('painel', 'issues')
+          if (numero === null) novo.delete('issue')
+          else novo.set('issue', String(numero))
+          return novo
+        },
+        { replace: true },
+      )
+      if (numero !== null) setAberto(true)
+    },
+    [setParams],
+  )
+  // Marcadores 3D: uma issue aberta ou em andamento com vista vira um pino na alvo da primeira vista.
+  useEffect(() => {
+    if (!motor || !pronto) return
+    const lista = marcadores ? (issues.data ?? []) : []
+    motor.marcadores(
+      lista
+        .filter((i) => ehAberta(i) && i.vistas.length > 0)
+        .map((i) => ({ id: i.id, posicao: i.vistas[0].vista.camera.alvo, rotulo: `#${i.numero}` })),
+    )
+  }, [motor, pronto, estado.versao, marcadores, issues.data])
+  useEffect(() => {
+    if (!motor) return
+    return motor.ao('marcador', (dados) => {
+      const id = (dados as { id: string }).id
+      const issue = issues.data?.find((i) => i.id === id)
+      if (issue) abrirIssue(issue.numero)
+    })
+  }, [motor, issues.data, abrirIssue])
+  function alternarMarcadores() {
+    const novo = !marcadores
+    setMarcadores(novo)
+    gravarMarcadores(novo)
+  }
 
   function abrirPainelDocumentos() {
     const novo = new URLSearchParams(params)
@@ -477,7 +541,9 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
                 pavimentos={refsPavimentos}
                 onMostrar={mostrarRefs}
               />
-            ) : painel.id === 'gestao' ? (
+            ) : painel.id === 'issues' ? (
+              <PainelIssues obra={obra} motor={motor} pronto={pronto} numeroAberto={issueAberta} aoAbrir={abrirIssue} />
+            ) : (
               <Gestao
                 obra={obra}
                 aoMudar={(s) => void estado.recarregarModelo(s)}
@@ -485,8 +551,6 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
                 versao={estado.versao}
                 documentos={documentos.data ?? SEM_DOCUMENTOS}
               />
-            ) : (
-              <p className="central-sec">Disponível na etapa {'etapa' in painel ? painel.etapa : ''}</p>
             )}
           </section>
           <section className="central-contexto" aria-label="Contexto">
@@ -555,6 +619,8 @@ function CentralAberta({ obra }: { obra: ObraCentral }) {
           onMinimapa={alternarMinimapa}
           medicao={medicao}
           onMedir={mudarMedicao}
+          marcadores={marcadores}
+          onMarcadores={alternarMarcadores}
         />
         <div className="central-canvas" data-testid="canvas-central">
           <div ref={tela} className="central-tela" />

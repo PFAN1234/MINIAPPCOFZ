@@ -787,3 +787,112 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Issues: lista, selos de status, detalhe */
+.central[data-tema='escuro'] {
+  --c-st-aberta: #ff8a3d;
+  --c-st-em_andamento: #8fb4f0;
+  --c-st-resolvida: #5fd08a;
+  --c-st-fechada: #9fb0c6;
+}
+.central[data-tema='claro'] {
+  --c-st-aberta: #c2410c;
+  --c-st-em_andamento: #2459b8;
+  --c-st-resolvida: #166534;
+  --c-st-fechada: #4a5868;
+}
+.central-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.central-issues-contagem {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.central-issues-lista > li {
+  padding: 0;
+}
+.central-issue-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 8px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.central-issue-item:hover {
+  background: var(--c-painel);
+}
+.central-issue-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.central-issue-titulo {
+  overflow-wrap: anywhere;
+}
+.central-issue-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.central-selo {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+.central-selo-aberta {
+  color: var(--c-st-aberta);
+}
+.central-selo-em_andamento {
+  color: var(--c-st-em_andamento);
+}
+.central-selo-resolvida {
+  color: var(--c-st-resolvida);
+}
+.central-selo-fechada {
+  color: var(--c-st-fechada);
+}
+.central-issue-vencido {
+  color: var(--c-alerta);
+  font-weight: 600;
+}
+.central-issue-captura {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.central-issue-captura img,
+.central-issue-miniatura {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--c-borda);
+  border-radius: 4px;
+}
+.central-issue-texto {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.central-issue-detalhe h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.central .central-gestao-form textarea {
+  background: var(--c-fundo);
+  color: var(--c-texto);
+  border: 1px solid var(--c-borda);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font: inherit;
+}
