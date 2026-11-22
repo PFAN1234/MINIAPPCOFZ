@@ -3,12 +3,7 @@ import type {
   ClienteTelegram,
   ResultadoTelegram,
 } from "../_shared/telegram.ts";
-import {
-  type BucketStorage,
-  criarHandler,
-  type ItemStorage,
-  LOTE_REMOCAO,
-} from "./handler.ts";
+import { criarHandler, LOTE_LEITURA } from "./handler.ts";
 
 const ORIGEM = "https://miniappcofz.vercel.app";
 const JWT_ADMIN = "jwt-do-admin";
@@ -34,54 +29,99 @@ const BOLETIM_RETORNO = {
 
 type Arquivos = Record<string, string[]>;
 
-/** Storage falso: caminhos por bucket; `list` devolve os filhos diretos (pastas com id null). */
-function storageFalso(
+type Linha = { id: number; pasta: string; caminho: string; situacao: string };
+
+/**
+ * Banco e R2 falsos: tabela `arquivo` (consulta encadeada com eq, in, like, gt, order e limit),
+ * `arquivo_remover` e `apagar` do R2, com o registro das chamadas.
+ */
+function armazenamentoFalso(
   inicial: Arquivos,
-  opts: { falharRemover?: string; falharListar?: string } = {},
+  opts: {
+    falharRemover?: string;
+    falharListar?: string;
+    confirmados?: Arquivos;
+  } = {},
 ) {
-  const buckets = new Map<string, Set<string>>(
-    Object.entries(inicial).map(([b, cs]) => [b, new Set(cs)]),
-  );
-  const chamadas = {
-    list: [] as { bucket: string; prefixo: string; offset: number }[],
-    remove: [] as { bucket: string; caminhos: string[] }[],
+  let proximo = 1;
+  const linhas: Linha[] = [];
+  const semear = (a: Arquivos, situacao: string) => {
+    for (const [pasta, cs] of Object.entries(a)) {
+      for (const caminho of cs) {
+        linhas.push({ id: proximo++, pasta, caminho, situacao });
+      }
+    }
   };
-  const from = (bucket: string): BucketStorage => ({
-    list(prefixo, { limit, offset }) {
-      chamadas.list.push({ bucket, prefixo, offset });
-      if (opts.falharListar === bucket) {
-        return Promise.resolve({ data: null, error: { message: "fora" } });
+  semear(inicial, "excluir");
+  semear(opts.confirmados ?? {}, "confirmado");
+  const chamadas = {
+    consultas: [] as number[],
+    apagar: [] as string[][],
+    remover: [] as number[][],
+  };
+  const consulta = () => {
+    const filtros: ((l: Linha) => boolean)[] = [];
+    let limite = Infinity;
+    const q = {
+      select: () => q,
+      eq: (c: keyof Linha, v: unknown) => (filtros.push((l) => l[c] === v), q),
+      in: (c: keyof Linha, vs: unknown[]) => (
+        filtros.push((l) => vs.includes(l[c])), q
+      ),
+      like: (c: keyof Linha, padrao: string) => {
+        assert(padrao.endsWith("/%") && !padrao.slice(0, -1).includes("%"));
+        filtros.push((l) => String(l[c]).startsWith(padrao.slice(0, -1)));
+        return q;
+      },
+      gt: (
+        c: keyof Linha,
+        v: number,
+      ) => (filtros.push((l) => Number(l[c]) > v), q),
+      order: () => q,
+      limit: (n: number) => (limite = n, q),
+      then: (
+        ok: (
+          r: { data: Linha[] | null; error: { message: string } | null },
+        ) => unknown,
+      ) => {
+        chamadas.consultas.push(1);
+        if (opts.falharListar) {
+          return Promise.resolve({ data: null, error: { message: "fora" } })
+            .then(ok);
+        }
+        const data = linhas.filter((l) => filtros.every((f) => f(l)))
+          .sort((x, y) => x.id - y.id).slice(0, limite);
+        return Promise.resolve({ data, error: null }).then(ok);
+      },
+    };
+    return q;
+  };
+  const r2 = {
+    apagar(chaves: string[]) {
+      chamadas.apagar.push(chaves);
+      if (
+        opts.falharRemover &&
+        chaves.some((c) => c.startsWith(`${opts.falharRemover}/`))
+      ) {
+        return Promise.reject(new Error("503"));
       }
-      const filhos = new Map<string, ItemStorage>();
-      for (const c of buckets.get(bucket) ?? []) {
-        if (!c.startsWith(`${prefixo}/`)) continue;
-        const resto = c.slice(prefixo.length + 1);
-        const [primeiro] = resto.split("/");
-        const pasta = resto.includes("/");
-        filhos.set(primeiro, {
-          name: primeiro,
-          id: pasta ? null : `id-${primeiro}`,
-        });
-      }
-      const itens = [...filhos.values()].sort((a, b) =>
-        a.name.localeCompare(b.name)
-      ).slice(offset, offset + limit);
-      return Promise.resolve({ data: itens, error: null });
+      return Promise.resolve();
     },
-    remove(caminhos) {
-      chamadas.remove.push({ bucket, caminhos });
-      if (opts.falharRemover === bucket) {
-        return Promise.resolve({ data: null, error: { message: "503" } });
-      }
-      const s = buckets.get(bucket) ?? new Set();
-      const removidos = caminhos.filter((c) => s.delete(c)).map((name) => ({
-        name,
-      }));
-      return Promise.resolve({ data: removidos, error: null });
-    },
-  });
-  const restantes = (bucket: string) => [...(buckets.get(bucket) ?? [])].sort();
-  return { from, chamadas, restantes };
+  };
+  const remover = (ids: number[]) => {
+    chamadas.remover.push(ids);
+    for (const id of ids) {
+      const i = linhas.findIndex((l) => l.id === id);
+      if (i >= 0) linhas.splice(i, 1);
+    }
+  };
+  /** Caminhos que ainda constam em `arquivo` para a pasta. */
+  const restantes = (pasta: string, situacao?: string) =>
+    linhas.filter((l) =>
+      l.pasta === pasta && (!situacao || l.situacao === situacao)
+    )
+      .map((l) => l.caminho).sort();
+  return { consulta, r2, remover, chamadas, restantes };
 }
 
 type Rpc = { jwt: string | null; nome: string; args: Record<string, unknown> };
@@ -99,12 +139,20 @@ function montar(
     boletimErro?: [string, string];
     /** Resposta do Telegram por message_id (padrão: ok). */
     telegram?: Record<number, ResultadoTelegram>;
-    removerBoletinsErro?: string;
+    removerBoletinsErro?: boolean;
+    confirmados?: Arquivos;
   } = {},
 ) {
-  const storage = storageFalso(arquivos, opts);
+  const seed: Arquivos = { ...arquivos };
+  {
+    const arqs = (opts.boletim ?? BOLETIM_RETORNO).arquivos as string[];
+    if (!seed.boletins && arqs.length > 0) seed.boletins = arqs;
+  }
+  const armaz = armazenamentoFalso(seed, {
+    ...opts,
+    falharRemover: opts.removerBoletinsErro ? "boletins" : opts.falharRemover,
+  });
   const delecoes: { chat_id: unknown; message_id: number }[] = [];
-  const removidosBoletins: string[][] = [];
   const telegram: ClienteTelegram = {
     chamar(metodo, corpo) {
       const c = corpo as { chat_id: unknown; message_id: number };
@@ -129,24 +177,16 @@ function montar(
             : { data: { user: null }, error: { message: "jwt inválido" } },
         ),
     },
-    storage: {
-      from: (bucket: string) => {
-        if (bucket !== "boletins") return storage.from(bucket);
-        return {
-          ...storage.from(bucket),
-          remove: (caminhos: string[]) => {
-            removidosBoletins.push(caminhos);
-            return Promise.resolve(
-              opts.removerBoletinsErro
-                ? { data: null, error: { message: opts.removerBoletinsErro } }
-                : { data: caminhos.map((name) => ({ name })), error: null },
-            );
-          },
-        };
-      },
+    from: (tabela: string) => {
+      assertEquals(tabela, "arquivo");
+      return armaz.consulta();
     },
     rpc: (nome: string, args: Record<string, unknown> = {}) => {
       rpcs.push({ jwt: null, nome, args });
+      if (nome === "arquivo_remover") {
+        armaz.remover(args.p_ids as number[]);
+        return ok(null);
+      }
       if (nome === "admin_registrar_limpeza") {
         return opts.registrarErro ? erro("banco fora") : ok(null);
       }
@@ -210,10 +250,14 @@ function montar(
   const handler = criarHandler({
     origensPermitidas: [ORIGEM],
     admin,
+    r2: armaz.r2,
     clienteUsuario,
     telegram,
   });
-  return { handler, storage, rpcs, delecoes, removidosBoletins };
+  const removidosBoletins = () =>
+    armaz.chamadas.apagar.map((c) => c.filter((k) => k.startsWith("boletins/")))
+      .filter((c) => c.length > 0);
+  return { handler, armaz, rpcs, delecoes, removidosBoletins };
 }
 
 function pedir(
@@ -308,33 +352,46 @@ Deno.test("excluir: apaga no banco como o admin, remove tudo em lotes e registra
     },
   });
 
-  // Lotes de até 100 e a outra obra intacta.
-  const lotes = m.storage.chamadas.remove.filter((c) => c.bucket === "fotos")
-    .map((c) => c.caminhos.length);
-  assertEquals(lotes, [100, 100, 50]);
+  // Só as chaves `<pasta>/<obra_id>/...`, e arquivo_remover com os ids apagados.
+  const apagadas = m.armaz.chamadas.apagar.flat();
+  assertEquals(apagadas.length, 257);
   assert(
-    m.storage.chamadas.remove.every((c) => c.caminhos.length <= LOTE_REMOCAO),
-  );
-  assert(
-    m.storage.chamadas.remove.every((c) =>
-      c.caminhos.every((p) => p.startsWith(`${OBRA_ID}/`))
+    apagadas.every((k) =>
+      /^(fotos|plantas|originais|modelos|documentos)\//.test(k) &&
+      k.split("/")[1] === OBRA_ID
     ),
   );
-  assertEquals(m.storage.restantes("fotos"), [`${OUTRA_OBRA}/reg-1/f.jpg`]);
-  assertEquals(m.storage.restantes("plantas"), [
+  assertEquals(m.armaz.chamadas.remover.flat().length, 257);
+  assertEquals(m.armaz.restantes("fotos"), [`${OUTRA_OBRA}/reg-1/f.jpg`]);
+  assertEquals(m.armaz.restantes("plantas"), [
     `${OUTRA_OBRA}/R01/terreo/planta.webp`,
   ]);
-  assertEquals(m.storage.restantes("originais"), []);
+  assertEquals(m.armaz.restantes("originais"), []);
+});
 
-  // Listagem paginada (reg-1 tem 150 arquivos; a raiz da obra tem 101 pastas).
-  const offsets = (prefixo: string) =>
-    m.storage.chamadas.list.filter((c) =>
-      c.bucket === "fotos" && c.prefixo === prefixo
-    ).map((c) => c.offset);
-  assertEquals(offsets(`${OBRA_ID}/reg-1`), [0, 100]);
-  assertEquals(offsets(OBRA_ID), [0, 100]);
-  // Nunca lista a raiz do bucket nem outra obra.
-  assert(m.storage.chamadas.list.every((c) => c.prefixo.startsWith(OBRA_ID)));
+Deno.test("excluir: só as linhas excluir da obra são apagadas no R2; confirmadas ficam", async () => {
+  const m = montar(
+    { fotos: [`${OBRA_ID}/reg-1/a.jpg`] },
+    { confirmados: { fotos: [`${OBRA_ID}/reg-1/b.jpg`] } },
+  );
+  const r = await m.handler(pedir(EXCLUIR));
+  assertEquals((await r.json()).pendente, false);
+  assertEquals(m.armaz.chamadas.apagar, [[`fotos/${OBRA_ID}/reg-1/a.jpg`]]);
+  assertEquals(m.armaz.chamadas.remover, [[1]]);
+  assertEquals(m.armaz.restantes("fotos"), [`${OBRA_ID}/reg-1/b.jpg`]);
+});
+
+Deno.test("excluir: lê e apaga em páginas de até 1.000 chaves", async () => {
+  const fotos: string[] = [];
+  for (let i = 0; i < 2300; i++) fotos.push(`${OBRA_ID}/reg-1/f${i}.jpg`);
+  const m = montar({ fotos });
+  const corpo = await (await m.handler(pedir(EXCLUIR))).json();
+  assertEquals(corpo.arquivos_removidos.fotos, 2300);
+  assertEquals(
+    m.armaz.chamadas.apagar.map((c) => c.length),
+    [LOTE_LEITURA, LOTE_LEITURA, 300],
+  );
+  assertEquals(m.armaz.restantes("fotos"), []);
 });
 
 Deno.test("excluir: confirmação que não confere dá 400 e nada é removido", async () => {
@@ -346,8 +403,8 @@ Deno.test("excluir: confirmação que não confere dá 400 e nada é removido", 
   assertEquals(await r.json(), {
     erro: `Para excluir, digite exatamente o nome da obra: ${NOME}`,
   });
-  assertEquals(m.storage.chamadas.list.length, 0);
-  assertEquals(m.storage.chamadas.remove.length, 0);
+  assertEquals(m.armaz.chamadas.consultas.length, 0);
+  assertEquals(m.armaz.chamadas.apagar.length, 0);
   assertEquals(m.rpcs.map((x) => x.nome), ["admin_excluir_obra"]);
 });
 
@@ -356,7 +413,7 @@ Deno.test("excluir: quem não é admin recebe 403 e nada é removido", async () 
   const r = await m.handler(pedir(EXCLUIR, { jwt: JWT_COMUM }));
   assertEquals(r.status, 403);
   assertEquals(await r.json(), { erro: "Acesso negado" });
-  assertEquals(m.storage.chamadas.remove.length, 0);
+  assertEquals(m.armaz.chamadas.apagar.length, 0);
   assertEquals(m.rpcs.map((x) => x.nome), ["admin_excluir_obra"]);
 });
 
@@ -367,7 +424,7 @@ Deno.test("sem JWT ou com JWT inválido: 401 sem chamar o banco", async () => {
     assertEquals(r.status, 401);
     assertEquals(await r.json(), { erro: "Não autorizado" });
     assertEquals(m.rpcs, []);
-    assertEquals(m.storage.chamadas.list.length, 0);
+    assertEquals(m.armaz.chamadas.consultas.length, 0);
   }
   const m = montar();
   const r = await m.handler(
@@ -387,7 +444,7 @@ Deno.test("excluir: obra inexistente dá 404", async () => {
   assertEquals(await r.json(), { erro: "Obra não encontrada" });
 });
 
-Deno.test("excluir: falha no Storage depois do banco dá 200 pendente e registra o erro", async () => {
+Deno.test("excluir: falha no R2 depois do banco dá 200 pendente e registra o erro", async () => {
   const m = montar(arquivosDaObra(), { falharRemover: "plantas" });
   const r = await m.handler(pedir(EXCLUIR));
   assertEquals(r.status, 200);
@@ -408,15 +465,17 @@ Deno.test("excluir: falha no Storage depois do banco dá 200 pendente e registra
   assertEquals(registro.nome, "admin_registrar_limpeza");
   assertEquals(registro.args.p_removidos, corpo.arquivos_removidos);
   assertEquals(registro.args.p_erro, corpo.erro);
-  assertEquals(m.storage.restantes("plantas").length, 6);
+  assertEquals(m.armaz.restantes("plantas").length, 6);
+  // A linha que falhou segue `excluir` para a manutenção; arquivo_remover só levou as apagadas.
+  assertEquals(m.armaz.restantes("plantas", "excluir").length, 6);
 });
 
-Deno.test("excluir: falha na listagem também deixa pendente", async () => {
+Deno.test("excluir: falha ao ler arquivo também deixa pendente", async () => {
   const m = montar(arquivosDaObra(), { falharListar: "fotos" });
   const corpo = await (await m.handler(pedir(EXCLUIR))).json();
   assertEquals(corpo.pendente, true);
-  assertMatch(corpo.erro, /fotos \(fora\)/);
-  assertEquals(corpo.arquivos_removidos.plantas, 5);
+  assertMatch(corpo.erro, /leitura \(fora\)/);
+  assertEquals(m.armaz.chamadas.apagar.length, 0);
 });
 
 Deno.test("excluir: falha ao registrar a limpeza deixa pendente", async () => {
@@ -432,7 +491,7 @@ Deno.test("excluir: erro inesperado do banco dá 500 sem detalhes", async () => 
   const r = await m.handler(pedir(EXCLUIR));
   assertEquals(r.status, 500);
   assertEquals(await r.json(), { erro: "Erro interno" });
-  assertEquals(m.storage.chamadas.remove.length, 0);
+  assertEquals(m.armaz.chamadas.apagar.length, 0);
 });
 
 Deno.test("limpar: confere o admin, pega o obra_id pela service role e remove o que sobrou", async () => {
@@ -457,9 +516,10 @@ Deno.test("limpar: confere o admin, pega o obra_id pela service role e remove o 
   assertEquals(m.rpcs.map((x) => [x.jwt, x.nome]), [
     [JWT_ADMIN, "sou_admin"],
     [null, "admin_exclusao_para_limpar"],
+    ...m.armaz.chamadas.remover.map(() => [null, "arquivo_remover"]),
     [null, "admin_registrar_limpeza"],
   ]);
-  assertEquals(m.storage.restantes("fotos"), [`${OUTRA_OBRA}/reg-1/f.jpg`]);
+  assertEquals(m.armaz.restantes("fotos"), [`${OUTRA_OBRA}/reg-1/f.jpg`]);
 });
 
 Deno.test("limpar: não admin 403, exclusão inexistente 404, id inválido 400", async () => {
@@ -468,14 +528,14 @@ Deno.test("limpar: não admin 403, exclusão inexistente 404, id inválido 400",
     pedir({ acao: "limpar", exclusao_id: EXCLUSAO }, { jwt: JWT_COMUM }),
   );
   assertEquals(r.status, 403);
-  assertEquals(m.storage.chamadas.list.length, 0);
+  assertEquals(m.armaz.chamadas.consultas.length, 0);
 
   m = montar(arquivosDaObra());
   r = await m.handler(
     pedir({ acao: "limpar", exclusao_id: OUTRA_OBRA }),
   );
   assertEquals(r.status, 404);
-  assertEquals(m.storage.chamadas.list.length, 0);
+  assertEquals(m.armaz.chamadas.consultas.length, 0);
 
   for (const exclusao_id of [undefined, "", "abc", 1]) {
     m = montar(arquivosDaObra());
@@ -530,20 +590,20 @@ Deno.test("excluir_etapa: apaga no banco como o admin e limpa os arquivos de cad
     nome: "admin_excluir_etapa",
     args: { p_slug: "2a-etapa", p_confirmacao: ETAPA },
   });
-  assertEquals(m.storage.restantes("fotos"), []);
-  assertEquals(m.storage.restantes("plantas"), []);
+  assertEquals(m.armaz.restantes("fotos"), []);
+  assertEquals(m.armaz.restantes("plantas"), []);
 });
 
-Deno.test("excluir_etapa: etapa sem obras não toca no Storage", async () => {
+Deno.test("excluir_etapa: etapa sem obras não toca no R2", async () => {
   const m = montar(arquivosDaObra());
   const r = await m.handler(pedir({ ...EXCLUIR_ETAPA, slug: "vazia" }));
   assertEquals(r.status, 200);
   assertEquals(await r.json(), { exclusoes: [], pendente: false, erro: null });
-  assertEquals(m.storage.chamadas.list.length, 0);
-  assertEquals(m.storage.chamadas.remove.length, 0);
+  assertEquals(m.armaz.chamadas.consultas.length, 0);
+  assertEquals(m.armaz.chamadas.apagar.length, 0);
 });
 
-Deno.test("excluir_etapa: falha no Storage de uma obra deixa pendente sem parar as outras", async () => {
+Deno.test("excluir_etapa: falha no R2 de uma obra deixa pendente sem parar as outras", async () => {
   const m = montar(arquivosDaObra(), { falharRemover: "plantas" });
   const r = await m.handler(pedir(EXCLUIR_ETAPA));
   assertEquals(r.status, 200);
@@ -555,7 +615,7 @@ Deno.test("excluir_etapa: falha no Storage de uma obra deixa pendente sem parar 
     true,
   ]);
   // As fotos das duas obras saíram mesmo com a falha nas plantas.
-  assertEquals(m.storage.restantes("fotos"), []);
+  assertEquals(m.armaz.restantes("fotos"), []);
 });
 
 Deno.test("excluir_etapa: confirmação errada 400, não admin 403, inexistente 404, corpo inválido 400", async () => {
@@ -569,7 +629,7 @@ Deno.test("excluir_etapa: confirmação errada 400, não admin 403, inexistente 
   assertEquals(r.status, 404);
   r = await m.handler(pedir({ acao: "excluir_etapa", slug: "2a-etapa" }));
   assertEquals(r.status, 400);
-  assertEquals(m.storage.chamadas.remove.length, 0);
+  assertEquals(m.armaz.chamadas.apagar.length, 0);
 });
 
 Deno.test("método e corpo inválidos", async () => {
@@ -622,7 +682,7 @@ Deno.test("CORS: preflight e respostas só ecoam origem permitida", async () => 
 const EXCLUIR_BOLETIM = { acao: "excluir_boletim", boletim_id: BOLETIM_ID };
 
 Deno.test("excluir_boletim: apaga mensagens e arquivos e responde com o resumo", async () => {
-  const { handler, delecoes, removidosBoletins, rpcs } = montar();
+  const { handler, delecoes, removidosBoletins, rpcs, armaz } = montar();
   const res = await handler(pedir(EXCLUIR_BOLETIM));
   assertEquals(res.status, 200);
   assertEquals(await res.json(), {
@@ -636,8 +696,11 @@ Deno.test("excluir_boletim: apaga mensagens e arquivos e responde com o resumo",
     { chat_id: -1001234, message_id: 10 },
     { chat_id: -1001234, message_id: 11 },
   ]);
-  assertEquals(removidosBoletins, [["e/n.pdf", "e/n-clima.png"]]);
-  assertEquals(rpcs[rpcs.length - 1], {
+  assertEquals(removidosBoletins(), [
+    ["boletins/e/n.pdf", "boletins/e/n-clima.png"],
+  ]);
+  assertEquals(armaz.chamadas.remover.length, 1);
+  assertEquals(rpcs.find((x) => x.nome === "admin_excluir_boletim"), {
     jwt: JWT_ADMIN,
     nome: "admin_excluir_boletim",
     args: { p_id: BOLETIM_ID },
@@ -679,11 +742,11 @@ Deno.test("excluir_boletim: chat nulo conta todas as mensagens como falha sem ch
   assertEquals(delecoes, []);
 });
 
-Deno.test("excluir_boletim: erro ao remover arquivos vira arquivos_erro; sem arquivos não chama o Storage", async () => {
-  const falho = montar({}, { removerBoletinsErro: "503" });
+Deno.test("excluir_boletim: erro ao remover arquivos vira arquivos_erro; sem arquivos não chama o R2", async () => {
+  const falho = montar({}, { removerBoletinsErro: true });
   const r1 = await (await falho.handler(pedir(EXCLUIR_BOLETIM))).json();
   assertEquals(r1.ok, true);
-  assertEquals(r1.arquivos_erro, "503");
+  assertMatch(r1.arquivos_erro, /boletins/);
 
   const vazio = montar({}, {
     boletim: { ...BOLETIM_RETORNO, arquivos: [], mensagens: [] },
@@ -691,7 +754,7 @@ Deno.test("excluir_boletim: erro ao remover arquivos vira arquivos_erro; sem arq
   const r2 = await (await vazio.handler(pedir(EXCLUIR_BOLETIM))).json();
   assertEquals(r2.mensagens, { apagadas: 0, falhas: 0 });
   assertEquals("arquivos_erro" in r2, false);
-  assertEquals(vazio.removidosBoletins, []);
+  assertEquals(vazio.removidosBoletins(), []);
 });
 
 Deno.test("excluir_boletim: erros do banco viram 401, 403, 404, 409 e 400", async () => {

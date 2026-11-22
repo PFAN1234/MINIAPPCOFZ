@@ -177,20 +177,13 @@ function montar(o: Opcoes = {}) {
           : { data: null, error: null },
       );
     },
-    storage: {
-      from: (b: string) => {
-        assert(b === "fotos" || b === "boletins", b);
-        return {
-          download: (caminho: string) => {
-            baixadas.push(b === "fotos" ? caminho : `${b}:${caminho}`);
-            return Promise.resolve(
-              o.storageErro
-                ? { data: null, error: { message: "não achou" } }
-                : { data: new Blob(["jpeg"]), error: null },
-            );
-          },
-        };
-      },
+  };
+  const r2 = {
+    baixar: (chave: string) => {
+      baixadas.push(chave);
+      return o.storageErro
+        ? Promise.reject(new Error("não achou"))
+        : Promise.resolve(new TextEncoder().encode("jpeg"));
     },
   };
   const handler = criarHandler({
@@ -205,6 +198,7 @@ function montar(o: Opcoes = {}) {
       },
     },
     admin,
+    r2,
     segredos: criarSegredos(admin),
     botUsername: "diarioobra_cofz_bot",
     appName: "diario",
@@ -284,7 +278,7 @@ Deno.test("foto única: sendPhoto, multipart, legenda HTML e publicado", async (
   const m = montar({ publicacoes: [pub()] });
   const r = await rodar(m.handler);
   assertEquals((await r.json()).publicadas, 1);
-  assertEquals(m.baixadas, ["obra-1/reg-1/f0.jpg"]);
+  assertEquals(m.baixadas, ["fotos/obra-1/reg-1/f0.jpg"]);
   assertEquals(m.chamadas.length, 1);
   assertEquals(m.chamadas[0].metodo, "sendPhoto");
   const f = form(m.chamadas[0]);
@@ -532,7 +526,7 @@ Deno.test("encerramento: reply_parameters, observação e gestor", async () => {
     tabelas: t,
   });
   await rodar(m.handler);
-  assertEquals(m.baixadas, ["obra-1/reg-1/fe.jpg"]);
+  assertEquals(m.baixadas, ["fotos/obra-1/reg-1/fe.jpg"]);
   const f = form(m.chamadas[0]);
   assertEquals(JSON.parse(String(f.get("reply_parameters"))), {
     message_id: 321,
@@ -790,7 +784,7 @@ Deno.test("boletim: sendDocument no grupo da etapa (tópico Geral) com o PDF", a
   });
   const r = await rodar(m.handler);
   assertEquals((await r.json()).publicadas, 1);
-  assertEquals(m.baixadas, ["boletins:etapa-1/BA2261113COFZ.pdf"]);
+  assertEquals(m.baixadas, ["boletins/etapa-1/BA2261113COFZ.pdf"]);
   assertEquals(m.chamadas.length, 1);
   assertEquals(m.chamadas[0].metodo, "sendDocument");
   const f = form(m.chamadas[0]);
@@ -828,7 +822,7 @@ Deno.test("boletim: retificação na legenda", async () => {
     form(m.chamadas[0]).get("caption"),
     "📄 <b>Boletim BA2/261113/COFZ-R2</b>\n2ª ETAPA · 13/11/2026 · retificação R2",
   );
-  assertEquals(m.baixadas, ["boletins:etapa-1/BA2261113COFZ-R2.pdf"]);
+  assertEquals(m.baixadas, ["boletins/etapa-1/BA2261113COFZ-R2.pdf"]);
 });
 
 const BOLETIM_R1 = {
@@ -965,7 +959,7 @@ Deno.test("boletim: falha ao baixar o PDF → backoff; na 8ª tentativa, falhou"
   await rodar(m.handler);
   assertEquals(m.chamadas.length, 0);
   assertEquals(m.finalizacoes[0].p_estado, "pendente");
-  assertEquals(m.finalizacoes[0].p_erro, "Falha ao baixar o PDF do Storage.");
+  assertEquals(m.finalizacoes[0].p_erro, "Falha ao baixar o PDF do R2.");
   assertEquals(
     m.finalizacoes[0].p_proxima,
     new Date(AGORA.getTime() + 4 * 60_000).toISOString(),

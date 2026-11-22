@@ -2,6 +2,7 @@
 // pendentes, envia ao grupo da etapa os boletins emitidos (PDF) e avisa os pedidos de acesso.
 // Acionada pelo cron e pelos gatilhos do banco.
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { configDoAmbiente, criarR2 } from "../_shared/r2.ts";
 import { criarSegredos } from "../_shared/segredo.ts";
 import { criarClienteTelegram } from "../_shared/telegram.ts";
 import { criarHandler } from "./handler.ts";
@@ -16,6 +17,7 @@ const admin = createClient(
 const handler = criarHandler({
   telegram: criarClienteTelegram(Deno.env.get("TELEGRAM_BOT_TOKEN") ?? ""),
   admin,
+  r2: criarR2(configDoAmbiente((n) => Deno.env.get(n))),
   segredos: criarSegredos(admin),
   botUsername: Deno.env.get("TELEGRAM_BOT_USERNAME") ?? "diarioobra_cofz_bot",
   appName: Deno.env.get("TELEGRAM_APP_NAME") ?? "fiscalcofz",
