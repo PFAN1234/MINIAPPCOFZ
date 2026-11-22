@@ -127,7 +127,7 @@ begin
     return false;
   end if;
 
-  v_obra := privado.uuid_ou_nulo((storage.foldername(p_caminho))[1]);
+  v_obra := privado.uuid_ou_nulo(split_part(p_caminho, '/', 1));
 
   case p_pasta
     when 'fotos' then
@@ -234,7 +234,7 @@ begin
 
   -- Foto já vinculada a um registro: o reenvio não é erro, o arquivo já está lá.
   if p_pasta = 'fotos'
-     and privado.eh_participante(privado.uuid_ou_nulo((storage.foldername(p_caminho))[1]))
+     and privado.eh_participante(privado.uuid_ou_nulo(split_part(p_caminho, '/', 1)))
      and p_caminho ~ '^[0-9a-f-]{36}/[0-9a-f-]{36}/[0-9a-f-]{36}\.jpg$'
      and privado.foto_registrada(p_caminho) then
     return 'ja_confirmado';
@@ -251,14 +251,20 @@ begin
     raise exception 'sem_permissao' using errcode = '42501';
   end if;
 
+  -- Os caminhos não se repetem com conteúdo diferente (UUID, hash ou revisão no nome): um
+  -- arquivo confirmado nunca volta a pendente, senão poderia sumir de quem já o usa.
+  if v_existe and v_linha.situacao = 'confirmado' then
+    return 'ja_confirmado';
+  end if;
+
   select * into v_lim from privado.limite_pasta(p_pasta);
   if p_tamanho is null or p_tamanho < 0 or p_tamanho > v_lim.tamanho_max
      or p_tipo is null or not (p_tipo = any (v_lim.tipos)) then
     raise exception 'fora_do_limite' using errcode = '22023';
   end if;
 
-  -- Linha nova ou voltando a pendente conta no limite de 300 pendentes por usuário.
-  if not v_existe or v_linha.situacao <> 'pendente' then
+  -- Linha nova conta no limite de 300 pendentes por usuário.
+  if not v_existe then
     if (select count(*) from public.arquivo a where a.autor = v_uid and a.situacao = 'pendente') >= 300 then
       raise exception 'fora_do_limite' using errcode = '22023';
     end if;
@@ -269,8 +275,7 @@ begin
     values (p_pasta, p_caminho, p_tamanho, p_tipo, v_uid);
   else
     update public.arquivo
-       set tamanho = p_tamanho, tipo = p_tipo, autor = v_uid, situacao = 'pendente',
-           confirmado_em = null, atualizado_em = now()
+       set tamanho = p_tamanho, tipo = p_tipo, autor = v_uid, atualizado_em = now()
      where id = v_linha.id;
   end if;
   return 'enviar';

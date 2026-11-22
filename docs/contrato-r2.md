@@ -85,7 +85,7 @@ As regex devem ser copiadas das migrations citadas, não reescritas.
   - Erros, sempre com `raise exception` e mensagem igual ao código: `sem_sessao`, `sem_permissao` (42501), `caminho_invalido`, `fora_do_limite`, `em_exclusao` (22023).
   - Caminho sem linha: cria `pendente` com `autor = auth.uid()` e devolve `'enviar'`.
   - Linha `pendente`: atualiza tamanho, tipo, autor e `atualizado_em` e devolve `'enviar'`.
-  - Linha `confirmado`, com reenvio permitido pela regra da tabela: volta para `pendente` e devolve `'enviar'`.
+  - Linha `confirmado` (com permissão de envio): devolve `'ja_confirmado'` e não muda a linha. Os caminhos não se repetem com conteúdo diferente (UUID, hash ou revisão no nome), e voltar a `pendente` deixaria a manutenção apagar um arquivo em uso.
   - Foto já registrada (`foto_registrada`): devolve `'ja_confirmado'` sem erro. Hoje o app trata o erro de RLS do reenvio como "já enviada" (`app/src/dados/erros.ts:74`); isso passa a ser esse retorno.
   - Linha `excluir`: erro `em_exclusao`.
   - Limite: 300 `pendente` por usuário. Acima disso, erro `fora_do_limite`.

@@ -191,6 +191,15 @@ def test_caminho_fora_do_padrao_e_sem_permissao(c):
                  'image/webp') == 'sem_permissao'
 
 
+def test_reenvio_de_confirmado_nao_volta_a_pendente(c):
+    for pasta in ('originais', 'modelos', 'documentos', 'organizacao', 'plantas'):
+        cam, tipo = caminhos(c)[pasta]
+        assert rpc(c, c.admin, 'arquivo_preparar_envio', pasta, cam, 10, tipo) == 'enviar'
+        assert rpc(c, None, 'arquivo_confirmar', pasta, cam, 10, tipo, c.admin, papel='service_role') == 'confirmado'
+        assert rpc(c, c.admin, 'arquivo_preparar_envio', pasta, cam, 99, tipo) == 'ja_confirmado'
+        assert linha(c, pasta, cam)[:2] == ('confirmado', 10)
+
+
 def test_reenvio_de_foto(c):
     cam, tipo = caminhos(c)['fotos']
     outro = c.cen.gestor_a
@@ -200,10 +209,12 @@ def test_reenvio_de_foto(c):
     assert linha(c, 'fotos', cam)[1] == 20
     # outro autor (também participante): sem permissão
     assert tenta(c, outro, 'arquivo_preparar_envio', 'fotos', cam, 30, tipo) == 'sem_permissao'
-    # confirmada (ainda não registrada): mesmo autor volta a pendente
+    # confirmada (ainda não registrada): ja_confirmado, sem voltar a pendente
     assert rpc(c, None, 'arquivo_confirmar', 'fotos', cam, 20, tipo, c.part, papel='service_role') == 'confirmado'
-    assert rpc(c, c.part, 'arquivo_preparar_envio', 'fotos', cam, 25, tipo) == 'enviar'
-    assert linha(c, 'fotos', cam)[0] == 'pendente'
+    assert rpc(c, c.part, 'arquivo_preparar_envio', 'fotos', cam, 25, tipo) == 'ja_confirmado'
+    assert linha(c, 'fotos', cam)[:2] == ('confirmado', 20)
+    # outro autor continua sem permissão
+    assert tenta(c, outro, 'arquivo_preparar_envio', 'fotos', cam, 25, tipo) == 'sem_permissao'
     # registrada: ja_confirmado
     reg = cam.split('/')[1]
     foto_id = cam.split('/')[2][:-4]
