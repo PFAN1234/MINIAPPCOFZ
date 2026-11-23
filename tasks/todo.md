@@ -2,7 +2,20 @@
 
 Detalhes de cada fase em `tasks/plano-app.md`. Decisão de 2026-11-09: o visualizador do modelo federado e a integração IFC/planta clicável ficam para a última fase. Stack: Supabase (Postgres, RLS, Storage, Edge Functions) e frontend React/Vite/TypeScript na Vercel. Publicação no tópico de cada obra do supergrupo CO-FZ.
 
-## Prioridade atual — fundação e dados da HTO (2026-11-09)
+## Situação em 2026-11-23
+
+Código das fases 0 a 10, do site `/admin/`, do boletim, da Central de modelos e da virada para o R2 concluído e em produção (6 Edge Functions ativas, 5 crons, banco com 21 MB, 201 arquivos e 53 MB no R2). O banco não tem dados operacionais: registros, fotos, boletins e publicações foram zerados depois dos testes; há 4 obras (hto, cofz, adm, teste), 2 etapas e 7 usuários. Custos de hospedagem profissional: `docs/custos-hospedagem.md`.
+
+Prioridades, em ordem:
+
+1. Backup do Postgres e teste de restauração (único dado sem cópia fora do Supabase).
+2. Contratar os planos pagos (Supabase Pro e Vercel Pro), que incluem backup diário e permitem uso comercial (`docs/custos-hospedagem.md`).
+3. Rodada de testes no celular e no Telegram real (itens "Usuário:" abaixo, RA0 e fase 5 no Android).
+4. Dados pendentes: nomes de exibição (3 usuários sem nome), revisão da prova da COFZ, tópicos da COFZ e da ADM, nome "Fiscal Bot" no BotFather.
+5. Piloto assistido da HTO (fase 8) e, depois dele, o supergrupo CO-FZ.
+6. Pendências técnicas: remoção real de órfãos, retenção dos relatórios exportados, preenchimento das paredes na planta da Central, README da raiz.
+
+## Fundação e dados da HTO (2026-11-09, concluído)
 
 - [x] Criar o projeto Supabase de desenvolvimento e o projeto Vercel ligado a `app/` (2026-11-09).
 - [x] Decisão de 2026-11-12: um banco só. O `miniappcofz-dev` é o banco oficial do Mini App e do site `/admin/` (é o que a Vercel usa em produção); não há projeto de produção separado. Se um dia houver, aplicar todas as migrations, publicar as Edge Functions, cadastrar os segredos e trocar `VITE_SUPABASE_URL`/`VITE_SUPABASE_PUBLISHABLE_KEY` na Vercel.
@@ -25,7 +38,7 @@ Detalhes de cada fase em `tasks/plano-app.md`. Decisão de 2026-11-09: o visuali
 
 - [x] Criar projetos Supabase (dev) e Vercel: Supabase `miniappcofz-dev` (ref `nyfcualazkngqmrxcczh`, sa-east-1, organização PFAN1234) e Vercel `miniappcofz` (equipe PFAN1234, Root Directory `app`, framework Vite, ligado a `pfan1234/miniappcofz`). Segredos apenas em variáveis de ambiente.
 - [x] `.env.example` versionado (raiz e `app/`).
-- [ ] Liberar a URL de produção da Vercel para o Telegram: o projeto nasceu com Vercel Authentication em todas as URLs exceto domínios próprios, o que bloqueia a abertura pelo Telegram (resolver antes da fase 6).
+- [x] Liberar a URL de produção da Vercel para o Telegram (conferido em 2026-11-23: o Mini App abre pelo Telegram em `miniappcofz.vercel.app`).
 - [x] Scaffold `app/` com Vite, React, TypeScript, ESLint, Vitest e o script `telegram-web-app.js`.
 - [x] Adicionar `requirements-dev.txt` com `pytest` e fazer `tests/` passar.
 - [x] CI no GitHub Actions: typecheck, lint, Vitest, build e pytest (`.github/workflows/ci.yml`).
@@ -51,9 +64,9 @@ Verificação: pytest confere APTO. 101 = 23,88 m², SALÃO DE EVENTOS = 158,59 
 - [x] RLS por participação na obra; encerramento só por gestor; bucket privado `fotos` com política pelo caminho da obra; foto vinculada a registro não pode ser sobrescrita.
 - [x] RPCs `concluir_registro` (idempotente pelo id do cliente) e `encerrar_pendencia` (gestor, pendência aberta, `for update`), ambas enfileirando a publicação na mesma transação.
 - [x] Edge Function `auth-telegram`: validar `initData` (assinatura e `auth_date`), criar/atualizar usuário e emitir sessão (código e testes; 18 testes Deno).
-- [ ] Deploy da `auth-telegram` com `TELEGRAM_BOT_TOKEN` e `ALLOWED_ORIGINS` (depende do bot de teste, fase 6) e teste com um `initData` real, conferindo o campo `signature`.
-- [ ] Teste de ponta a ponta no projeto remoto: sessão real → upload no Storage → `concluir_registro` (confere `owner_id` e acesso do `postgres` a `storage.objects`).
-- [ ] Descoberta de obras para quem ainda não participa (pedir acesso sem conhecer o `obra_id`) — fase 7.
+- [x] Deploy da `auth-telegram` com `TELEGRAM_BOT_TOKEN` e `ALLOWED_ORIGINS` e login com `initData` real (conferido em 2026-11-23: versão 3 ativa, 7 usuários entraram pelo Telegram).
+- [x] Teste de ponta a ponta no projeto remoto: sessão real → upload → `concluir_registro` (feito na virada para o R2, 2026-11-22: registro com foto publicado no Telegram; o Storage do Supabase foi substituído pelo R2).
+- [x] Descoberta de obras para quem ainda não participa: "Outras obras" com pedido de acesso (fase 6).
 
 Verificação: testes de banco — outra obra não lê nem grava; equipe não encerra; repetir `concluir_registro` não duplica; initData adulterado ou expirado é rejeitado. Dependência: 1.
 
@@ -68,7 +81,7 @@ Contrato: `docs/contrato-fase3.md`. Decisões de 2026-11-09: login real só na f
 - [x] Tela do ambiente: abas Histórico / Pendências e cartão “Onde fica” com o recorte da planta; botão Novo registro oculto até a fase 4.
 - [x] Aba Planta na obra: marcadores tocáveis, zoom/arraste, busca centralizando o ambiente, contagem de pendências e aviso “posição indicativa”; cache das imagens por service worker.
 - [x] Testes Playwright em viewport móvel (lista, pino, “Onde fica”, Telegram simulado) e job `e2e` no CI.
-- [ ] Enviar as imagens ao bucket `plantas` com `scripts/publicar_plantas.py` (exige a chave secreta; necessário antes do teste com login real na fase 6).
+- [x] Enviar as imagens das plantas (fase 7; reenviadas ao R2 por `scripts/publicar_plantas.py` em 2026-11-22: 91 da HTO e 21 da COFZ).
 
 Verificação: Playwright em viewport móvel com Telegram simulado navega Obras → HTO → Apto. 101, pela lista e pelo marcador na planta. Dependência: 2.
 
@@ -80,7 +93,7 @@ Contrato: `docs/contrato-fase4.md`. Desenvolvido e testado com a fixture; o envi
 - [x] Tipo Serviço/Pendência e legenda obrigatória; upload ao Storage e `concluir_registro` com os mesmos ids em toda tentativa (retomada sem duplicar).
 - [x] Erro com "Tentar de novo"; formulário travado depois de envio parcial; confirmação ao sair com o formulário preenchido.
 - [x] Histórico com miniatura, tipo, legenda, autor, horário, estado de publicação e visualizador de fotos.
-- [ ] Teste no Supabase remoto (sessão real → upload → `concluir_registro` → leitura com URL assinada) — junto com a fase 6.
+- [x] Teste no projeto remoto (sessão real → upload → `concluir_registro` → leitura com URL assinada), feito na virada para o R2 (2026-11-22).
 
 Verificação: Playwright (fixture) salva uma pendência com foto de 2400×1600 com GPS e confere o JPEG enviado (≤ 1920 px, 3:2, sem `Exif`/APP1); Vitest cobre orquestrador, erros e tela. Dependência: 3.
 
@@ -106,10 +119,10 @@ Contrato: `docs/contrato-fase6.md`. Decisão de 2026-11-10: acesso "grupo + apro
 - [x] `bot-webhook`: `/vincular_obra <slug>` grava chat e tópico da obra; `/fixar_botao`; `/start` em privado.
 - [x] `publish-outbox`: foto(s), obra, pavimento, ambiente, tipo, legenda, autor e link `startapp` de retorno; backoff e estado `incerto` para respostas ambíguas; aviso de pedido de acesso no tópico.
 - [x] App: login real, "Outras obras" com pedido de acesso, tela de pedidos para o gestor, abertura pelo link `startapp`.
-- [ ] Cadastrar `TELEGRAM_BOT_TOKEN` nos segredos das Edge Functions (usuário) e dar ao bot as permissões de fixar mensagens e gerenciar tópicos.
-- [ ] Aplicar a migration, criar os segredos do Vault, publicar as funções e configurar o webhook.
-- [ ] `/vincular_obra hto` no tópico HTO e `/fixar_botao` no Geral.
-- [ ] Teste real: login, registro publicado no tópico, link de volta, pedido de acesso de um segundo membro.
+- [x] Cadastrar `TELEGRAM_BOT_TOKEN` nos segredos das Edge Functions e dar ao bot as permissões de fixar mensagens e gerenciar tópicos.
+- [x] Aplicar a migration, criar os segredos do Vault, publicar as funções e configurar o webhook (conferido em 2026-11-23: `bot-webhook` v5, `publish-outbox` v9 e cron `publicar-telegram` ativos).
+- [x] `/vincular_obra hto` no tópico HTO e `/fixar_botao` no Geral (a HTO tem tópico vinculado; o grupo passou para a 2ª ETAPA).
+- [x] Teste real: login, registro publicado no tópico (msg 88, 2026-11-22) e pedidos de acesso de outros membros (7 pedidos no banco). Falta conferir o link de volta (`startapp`).
 
 Verificação: registro publicado no tópico certo do grupo de teste; falha simulada do Telegram mantém o registro no histórico. Dependência: 5.
 
@@ -131,7 +144,7 @@ Verificação: pendência aberta e resolvida aparece no histórico e no grupo de
 
 - [ ] Grupo real, equipe e gestores cadastrados.
 - [ ] Testes em Android e iOS reais: câmera, permissões, WebView, rascunho após fechar, desempenho.
-- [ ] Backup e restauração do Postgres e do Storage.
+- [ ] Backup e restauração: os arquivos já têm backup semanal do R2 para o Google Drive (`backup-r2.yml`); **falta o backup do Postgres** e um teste de restauração.
 - [ ] Registrar aceite do fluxo com a equipe da obra.
 
 Dependência: 7. Tokens do bot, grupo real, hospedagem e aparelho de teste ainda não foram fornecidos/configurados.
@@ -214,7 +227,7 @@ Plano: `tasks/plano-admin.md` (decisões de 2026-11-11).
 - [ ] Fase 2 no `miniappcofz-dev` (migration aplicada em 2026-11-12; falta o teste de fumaça; passo a passo em `docs/admin.md`, "Planta (fase 2)" → "Aplicar num projeto"):
   - [x] Aplicar a migration `20261112090000_admin_planta.sql` (cria o bucket `originais` e as políticas de Storage).
   - [x] Conferir: bucket `originais` privado, 50 MB, só `application/pdf`; políticas `originais_admin_*` e `plantas_admin_*` em `storage.objects`.
-  - [ ] Deploy do app na Vercel (o merge na main publica o editor em `/admin/`).
+  - [x] Deploy do app na Vercel (o editor está em `/admin/` desde os merges seguintes).
   - [ ] Teste de fumaça: como admin, enviar o PDF da COFZ no térreo, conferir que a etapa "Nova revisão" não mostra diferenças, publicar (mesma revisão R06: substitui as imagens) e conferir no Mini App a planta e um "Onde fica"; ver a linha nova em "Publicações da planta".
   - [x] Banco único (decisão de 2026-11-12): a migration já está no `miniappcofz-dev`, o banco oficial.
 - [x] Pinos e ambientes manuais depois de publicar (código, 2026-11-12): "Adicionar pino" em qualquer ambiente (rotulado → `marcadores_ajustados`; sem rótulo → `marcadores` em `ambientes_manuais`, lido também pelo `extrair_ambientes.py`) e atalho "Ajustar ambientes e pinos" na lista de pavimentos, que reabre o PDF guardado direto na etapa 3. Sem migration.
@@ -288,12 +301,13 @@ Plano: `tasks/plano-boletim.md`. Decisões de 2026-11-13: um boletim por etapa p
 - [x] Site: seção Boletins na página da etapa (emitidos, pedidos, pré-visualizar, emitir agora/retificação); Vitest 577, e2e 48.
 - [x] Produção (2026-11-13, PR #26): migration aplicada (21 funções conferidas por hash), cron `agendar-boletins` ativo, `publish-outbox` versão 5 publicado, Vault `url_gerador_boletim` = `https://miniappcofz.vercel.app/api/gerar-boletim`, `SUPABASE_URL` criado na Vercel (Production).
 - [x] Vercel: `SUPABASE_SECRET_KEY` (Production, Sensitive) criada pelo usuário e redeploy feito; banco → gerador responde 202 (pg_net), gerador lê o segredo interno do banco.
-- [ ] Testar "Pré-visualizar" no site (confirma o Chromium na função) e acompanhar a primeira emissão automática da 2ª etapa (23:30, horário de Fortaleza).
+- [x] Testar "Pré-visualizar" no site (feito na virada para o R2, 2026-11-22).
+- [ ] Acompanhar uma emissão automática da 2ª etapa (23:30, horário de Fortaleza): em 2026-11-23 o banco não tem boletins, registros nem publicações (os dados de teste foram apagados).
 - [x] Retificação de dia antigo reaproveita o clima do boletim anterior do mesmo dia (imagem copiada para o arquivo da retificação; legenda "reaproveitada do boletim <número>"); sem anterior, sai sem clima (2026-11-13).
 - [x] Botão "Reenviar ao Telegram" no site para publicação `falhou` ou `incerto` (com confirmação), erro do envio na tabela; migration `20261114150000_boletim_reenvio_clima.sql` (`admin_reenviar_boletim`, `admin_listar_boletins` com erro e tentativas, `boletim_clima_anterior`) (2026-11-13; testes de banco 584, Vitest 590, e2e 48).
 - [x] Migration `20261114150000_boletim_reenvio_clima.sql` aplicada no `miniappcofz-dev` (2026-11-13; as 3 funções conferidas por hash, `boletim_clima_anterior` só para `service_role`) e merge na main.
 - [x] Prévia e emissão falhavam na Vercel ("Não foi possível gerar o boletim"): o `--single-process` do `@sparticuz/chromium` derrubava o navegador ao fechar o contexto do clima. Corrigido com `argsServerless()` (2026-11-13, PR #30, merge na main). Em seguida o upload da imagem do clima falhava porque o bucket `boletins` só aceitava PDF: migration `20261114160000_boletim_bucket_png.sql` aplicada no `miniappcofz-dev` (2026-11-13).
-- [ ] Exclusão de etapa com boletins: remover também os PDFs do bucket `boletins` (Edge Function de exclusão).
+- [x] Exclusão de etapa com boletins: os PDFs saem do R2 (a `admin_excluir_etapa` marca a pasta `boletins/<etapa>/` para exclusão desde a migração `20261126080000_arquivo_r2.sql`).
 - [ ] Externo: avisar o Observatório/IPPLAN do uso dos dados; coordenadas e dados administrativos da 2ª etapa; nomes de exibição dos participantes.
 
 ## Aba Boletins e edição do boletim (contrato: `docs/contrato-boletim.md`, parte 4)
@@ -323,7 +337,7 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 
 - [x] Contrato `docs/contrato-servico.md`; banco (tabela `servico`, RPCs, snapshot), boletim (seção 8) e aviso no grupo; Mini App (abas de etapa, Equipe de serviço, sem "Últimos registros") (PR #35, merge).
 - [x] Produção: migração `20261116090000_equipe_servico` aplicada e registrada; `publish-outbox` publicada.
-- [ ] Usuário: cadastrar latitude e longitude da 2ª ETAPA no site (sem elas o check-in é recusado).
+- [x] Usuário: cadastrar latitude e longitude da 2ª ETAPA no site (conferido no banco em 2026-11-23).
 - [ ] Usuário: testar check-in e check-out no celular e conferir o aviso no grupo.
 
 
@@ -340,7 +354,7 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Cadastro da etapa: mapa Leaflet (Mapa/Satélite) em que o toque preenche latitude e longitude.
 - [x] 2ª ETAPA em produção: objeto, local, endereço, contratante, contrato, contratada, CNPJ, OS, vigência, valor e área (do boletim de 12/11/26).
 - [x] Aba "Boletins" do site passa a se chamar "Relatórios" (rota `/boletins` mantida).
-- [ ] Usuário: marcar no mapa o local da 2ª ETAPA, salvar e preencher os responsáveis.
+- [x] Usuário: marcar no mapa o local da 2ª ETAPA, salvar e preencher os responsáveis (coordenadas e 2 responsáveis no banco em 2026-11-23).
 
 ## Site: excluir boletim publicado
 
@@ -373,7 +387,7 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Câmera no Telegram Android: o WebView ignora `capture` do input e abria a galeria. No Android (`cameraNoApp()`), o botão Câmera abre `CameraFotos`, câmera em tela cheia por getUserMedia (várias fotos seguidas, "Concluir", erro com "Usar galeria"). iOS e navegador seguem com o input nativo. Falta testar em aparelho Android.
 - [x] Acessos por lista (`docs/contrato-acessos.md`): tela `/acessos` "Acessos da equipe" (pessoas × obras, Sem acesso/Equipe/Gestor; qualquer gestor altera qualquer obra; admin do grupo fixo em Gestor). RPCs `matriz_acessos`/`definir_acesso`; `membro_grupo.admin`; `sincronizar_acesso` com `visto`. O `bot-webhook` registra quem fala, entra ou sai do grupo (`allowed_updates` com `chat_member`). "Solicitar acesso" continua. Bot já é admin do grupo TesteDev.
 - [x] Controle de acesso (`docs/contrato-controle-acesso.md`): "Acessos da equipe" virou "Controle de acesso", botão embaixo de Administração (com selo de pedidos), para gestor ou admin. Sai o botão Gestão; as publicações com problema aparecem num aviso no cartão (`/obras/:slug/publicacoes`; `/gestao` redireciona). `definir_acesso('nenhum')` recusa o pedido pendente. Portal: aba Pessoas com uma coluna por obra. Migration `20261124090000_controle_acesso` aplicada. Falta: teste no Telegram e no portal; limpar hooks sem uso (`useParticipantes`, `useDefinirPapel`, `useRemoverParticipante`).
-- [ ] Exclusão de etapa/obra: remover também os PDFs do bucket `relatorios`.
+- [ ] Relatórios de pendências exportados (`relatorios/pendencias/<usuário>/` no R2): definir retenção (ex.: apagar depois de 30 dias). A exclusão de obra/etapa não os alcança porque a pasta é por usuário.
 
 ## Melhorias de 2026-11-18: dependências, erros do cliente e órfãos (contrato: `docs/contrato-erros-orfaos.md`)
 
@@ -384,7 +398,7 @@ Verificação: `importar_config_obras.py --verificar`, `pytest -q --ignore=tests
 - [x] Tela Manutenção conferida no site admin pelo usuário (abas Erros e Arquivos órfãos).
 - [x] E2E: testes da Gestão passam a usar o Controle de acesso (PR #57).
 - [ ] Depois de conferir a lista de órfãos por alguns dias: remoção real por Edge Function (API do Storage), tratando envios de planta/modelo pendentes há mais de 7 dias.
-- [ ] Backup e restauração do Postgres e do Storage (adiado pelo usuário).
+- [ ] Backup do Postgres e teste de restauração (adiado pelo usuário; os arquivos do R2 já têm backup semanal). Ver `docs/custos-hospedagem.md`: o plano Pro do Supabase inclui backup diário.
 
 ## Arquitetura — Fase 0 (baseline)
 

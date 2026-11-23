@@ -1,5 +1,7 @@
 # Plano de implementação — Diário da obra (sem o modelo federado)
 
+> **Situação em 2026-11-23:** as fases 0 a 7, 9 e 10 estão implementadas e em produção; falta a fase 8 (piloto assistido da HTO). Desde este plano, o app passou a se chamar Fiscal Bot, ganhou etapas, site `/admin/`, boletim diário e Central de modelos, e os arquivos saíram do Storage do Supabase para o Cloudflare R2. Estado atual: `docs/ROADMAP.md` e `tasks/todo.md`; custos de hospedagem: `docs/custos-hospedagem.md`. O texto abaixo é o plano original, mantido como registro.
+
 ## Contexto
 
 O repositório só tem mockups (`docs/mockups/mini-app-v2.png`, `entrada-telegram-v2.png`), o plano `tasks/plan.md` e o diagnóstico IFC/PDF. O usuário quer adiar o **visualizador do modelo federado** (e toda a integração IFC/planta clicável) para o fim e implementar antes o restante: entrada pelo Telegram, obras → pavimento → ambiente, histórico, novo registro com fotos, pendências, encerramento pelo gestor, modo sem conexão e publicação no tópico da obra.
