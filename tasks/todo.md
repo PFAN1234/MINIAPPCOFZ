@@ -516,3 +516,11 @@ Plano: `tasks/plano-central-modelos.md`; contrato: `docs/contrato-central-modelo
     - Cópia do Storage para o R2 (decisão do usuário): o banco ainda apontava para 80 objetos só no Storage (9 boletins, fotos, modelos, original, logo, relatórios); copiados com os mesmos caminhos e registrados em `arquivo` como confirmados. Toda referência do banco tem arquivo no R2; R2 = `arquivo` (195 objetos, 54 MB).
     - `20261128090000_remover_storage.sql` aplicada (0 políticas em `storage.objects`); 7 buckets do Storage esvaziados e apagados.
     - Primeiro backup (2026-11-22): token `miniappcofz-backup` (Object Read only em `miniappcofz-arquivos`) e os quatro segredos cadastrados pelo usuário; o `[drive]` usa cliente OAuth próprio, publicado "Em produção", com escopo `drive.file` (o client id compartilhado do rclone está sendo desativado). Run 44984063991 concluída com sucesso em 1 min 44 s. Permissão *Account API Tokens: Edit* removida do token da sessão (conferido: 9109); `[drive]` local apagado; logo conferido no `/admin/` e no relatório.
+
+## Virada para o grupo oficial (roteiro: `tasks/virada-grupo-oficial.md`)
+
+- [x] Decisões (2026-11-23): só dados de uso; arquivos deles apagados no R2; bot atual; mover a `2a-etapa`; etapa/obra `teste` mantidas
+- [x] 1 Reset em produção (2026-11-23): cópia em JSON entregue ao usuário; registros, fotos, encerramentos, publicações, serviços, boletins, observações, `obra_excluida`, `erro_cliente` zerados; 43 linhas de `arquivo` (fotos, boletins, relatórios) marcadas `excluir` para o job `manutencao-arquivos`
+- [ ] Conferir depois das 04:41 UTC que o job apagou os 43 objetos no R2
+- [ ] 2 Usuário: supergrupo com tópicos, bot admin, desvincular no site, `/vincular_etapa 2a-etapa`, `/vincular_obra` em cada tópico, `/fixar_botao`
+- [ ] 3 Conferência: registro com foto publicado no tópico certo
