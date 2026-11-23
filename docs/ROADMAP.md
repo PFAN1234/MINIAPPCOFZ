@@ -1,215 +1,137 @@
-# Roadmap do Projeto — Mini App CO-FZ (Diário da Obra)
+# Roadmap do Projeto — Fiscal Bot CO-FZ (Diário da Obra)
 
-Documento oficial de planejamento, marcos evolutivos e acompanhamento do desenvolvimento do Mini App para Telegram do grupo CO-FZ.
+Documento de planejamento geral: visão, arquitetura, situação por módulo, marcos e riscos. O detalhe de cada tarefa fica em `tasks/todo.md`; os custos de hospedagem, em `docs/custos-hospedagem.md`.
+
+Atualizado em 2026-11-23.
 
 ---
 
 ## 1. Visão do Produto e Arquitetura
 
-O **Mini App CO-FZ** é uma ferramenta móvel integrada ao Telegram destinada ao acompanhamento diário, fiscalização e registro de serviços e pendências nas obras do grupo CO-FZ.
+O **Fiscal Bot** (antes "Diário da obra") é um Mini App do Telegram para o acompanhamento diário e a fiscalização das obras da CO-FZ, com um site de administração em `/admin/`.
 
 ### 1.1 Fluxo Operacional
-1. **Entrada pelo Telegram:** Via mensagem fixada com botão de URL no tópico *Geral* ou Direct Link (`t.me/<bot>/<app>`).
-2. **Seleção de Contexto:** Usuário seleciona a **Obra** autorizada $\rightarrow$ **Pavimento**.
-3. **Localização:** Navegação por lista alfabética de ambientes ou visualização da **Planta 2D com pinos indicativos** (zoom, pan e centralização).
-4. **Ambiente:** Consulta ao histórico cronológico e às pendências abertas do local.
-5. **Registro de Campo:** Criação de novo registro fotográfico (Serviço ou Pendência), com compressão automática no cliente e remoção de metadados sensíveis (EXIF/GPS).
-6. **Operação com Sinal Instável (Offline-first):** Gravação imediata em IndexedDB e envio assíncrono em segundo plano assim que a conectividade for restabelecida.
-7. **Publicação no Telegram:** Envio automático das fotos e dados ao tópico específico da obra no supergrupo CO-FZ.
-8. **Encerramento de Pendências:** Ação restrita a gestores, exigindo foto de comprovação e respondendo à mensagem original do tópico.
+1. **Entrada pelo Telegram:** mensagem fixada com botão no tópico *Geral* do grupo da etapa ou link direto (`t.me/diarioobra_cofz_bot/fiscalcofz`).
+2. **Início:** abas por etapa do campus; por obra, contagem de serviços, pendências abertas e resolvidas.
+3. **Obra:** pendências, prévia do modelo 3D, pavimentos com lista de ambientes ou planta com pinos, observações do dia.
+4. **Ambiente:** histórico, pendências, "Onde fica", "Visualizar modelo" e comparação com o modelo em RA.
+5. **Registro de campo:** fotos (câmera própria no Android), tipo Serviço ou Pendência, legenda; compressão no aparelho sem EXIF/GPS.
+6. **Sinal instável:** rascunho no IndexedDB e envio em segundo plano, sem duplicar.
+7. **Publicação:** fotos e dados no tópico da obra no grupo da etapa.
+8. **Encerramento de pendência:** qualquer participante da obra, com foto de comprovação, publicado como resposta à mensagem original.
+9. **Equipe de serviço:** check-in e check-out por localização, com aviso no grupo.
+10. **Relatórios:** boletim diário por etapa (PDF automático às 23:30, com clima e retificação), painel e PDF de pendências.
 
 ### 1.2 Arquitetura Técnica
-- **Frontend:** React + Vite + TypeScript (hospedado na Vercel), integrado com `@telegram-apps/sdk` / `window.Telegram.WebApp`, TanStack Query, `idb` (IndexedDB) e Service Worker para precache.
-- **Backend / BaaS:** Supabase (`miniappcofz-dev`, PostgreSQL 17 + RLS rigorosa baseada em participação, Storage privado com URLs assinadas e Edge Functions Deno).
-- **Edge Functions:**
-  - `auth-telegram`: Validação de `initData` (HMAC-SHA256) e sincronização de perfil/papel via `getChatMember`.
-  - `bot-webhook`: Processamento de comandos administrativos (`/vincular_obra`, `/fixar_botao`, `/start`).
-  - `publish-outbox`: Despacho da fila de saída para a Bot API do Telegram via `pg_cron`/`pg_net`.
-  - `armazenamento`: Assina URLs de envio e leitura dos arquivos no Cloudflare R2 (fotos, plantas, modelos, documentos) e roda a manutenção de órfãos.
-- **Pipeline de Dados (Python CLI):** PyMuPDF (`fitz`) para leitura de plantas PDF, pareamento automatizado de cômodos com áreas `A=xx m²`, geração de WebP/HD e seeds SQL (`extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `publicar_plantas.py`).
-- **Módulo BIM 3D & RA:** Visualizador 3D federado (Three.js + `@thatopen/components`/`@thatopen/fragments` sobre arquivos `.frag` convertidos no `/admin/`) e Realidade Aumentada parada no registro de fotos (`app/src/ra/`).
+- **Frontend:** React + Vite + TypeScript na Vercel (Mini App e `/admin/` no mesmo build), módulos por contexto (`app/src/modules/*`) com regras de fronteira no lint, Service Worker e IndexedDB.
+- **Servidor na Vercel:** `app/api/` gera o boletim e o relatório de pendências em PDF (Chromium).
+- **Banco:** Supabase `miniappcofz-dev` (banco único e oficial, PostgreSQL 17, RLS por participação, `pg_cron` e `pg_net`).
+- **Edge Functions:** `auth-telegram`, `bot-webhook`, `publish-outbox`, `admin-sessao`, `admin-excluir-obra` e `armazenamento` (assina leitura e envio no R2 e faz a manutenção de arquivos).
+- **Arquivos:** Cloudflare R2 (`miniappcofz-arquivos`) para fotos, plantas, originais, modelos `.frag`, documentos, boletins e relatórios; backup semanal para o Google Drive pelo GitHub Actions.
+- **Pipeline de dados (Python):** `extrair_ambientes.py`, `gerar_plantas.py`, `gerar_seed.py`, `gerar_geometria.py`, `publicar_plantas.py`.
+- **BIM e RA:** visualizador federado `.frag` (`@thatopen/components` e `@thatopen/fragments`), Central de modelos no admin (inspeção, cortes, medições, documentos, issues e BCF) e RA parada no registro de fotos.
 
 ```mermaid
 flowchart LR
-    A["Telegram\n(Supergrupo CO-FZ)"] -->|"Direct Link\n/startapp"| B["Mini App React\n(Vite / Vercel)"]
-    B <-->|"Offline-first\n(IndexedDB idb)"| C["Cache Local &\nFila de Sync"]
-    B <-->|"initData (HMAC-SHA256)\n& REST / RPCs"| D["Supabase\n(PostgreSQL + RLS)"]
-    D -->|"Fila transacional\n(publicacao_telegram)"| E["pg_cron / pg_net\nEdge Function"]
-    E -->|"Bot Telegram API\n(sendPhoto/MediaGroup)"| A
+    A["Telegram\n(grupo da etapa)"] -->|"link /startapp"| B["Mini App e /admin/\n(Vercel)"]
+    B <-->|"offline-first"| C["IndexedDB e\nfila de envio"]
+    B <-->|"initData e RPCs"| D["Supabase\n(Postgres + RLS)"]
+    B <-->|"URLs assinadas"| R["Cloudflare R2"]
+    D -->|"fila de publicação\n(pg_cron / pg_net)"| E["Edge Functions"]
+    D -->|"boletim agendado"| V["Gerador de PDF\n(Vercel)"]
+    E -->|"Bot API"| A
+    R -->|"backup semanal"| G["Google Drive"]
 ```
 
 ---
 
 ## 2. Matriz de Status Atual
 
-| Fase / Módulo | Escopo Principal | Estado Atual | Próximo Passo para Conclusão |
-| :--- | :--- | :--- | :--- |
-| **Mockups & Demo** | Telas conceituais, GIF de 36s e roteiros visuais. | **Concluído (100%)** | Entregue em `docs/mockups/`. |
-| **0. Fundação** | Scaffold Vite/React, Supabase, Vercel, CI no GitHub Actions. | **Concluído (95%)** | Desativar Vercel Authentication para liberar acesso ao Telegram. |
-| **1. Dados HTO** | Extração de 87 ambientes de DE017/DE018, plantas WebP, seed SQL. | **Concluído (100%)** | Entregue em `data/hto/` e aplicado no banco. |
-| **2. Schema & Auth** | Migrations com RLS, RPCs idempotentes, função `auth-telegram`. | **Concluído (90%)** | Cadastrar `TELEGRAM_BOT_TOKEN` e testar com `initData` real. |
-| **3. Navegação** | Lista de ambientes, `PlantaViewer` SVG com pinos, testes Playwright. | **Concluído (95%)** | Validar carregamento com URLs assinadas em produção. |
-| **4. Registros & Fotos** | Câmera, galeria, compressão client-side $\le$ 1920px, histórico. | **Concluído (95%)** | Teste integrado com storage remoto e sessão real. |
-| **5. Sinal Instável** | IndexedDB, cache de dados por 7 dias, fila em segundo plano. | **Concluído (95%)** | Homologar WebView real (Android e limitações do iOS). |
-| **6. Bot & Publicação** | `bot-webhook`, `publish-outbox`, vínculo de tópicos no grupo. | **Concluído (80%)** | Deploy das Edge Functions e vínculo do tópico `TesteDev`. |
-| **7. Gestão & Pendências** | Encerramento de pendência por gestor com foto réplica, gestão de acessos. | **Concluído (85%)** | Homologar encerramento e aprovação no grupo de teste. |
-| **Multi-Obras (COFZ)** | Pipeline parametrizado (`--obra`), 19 ambientes extraídos, seed gerado. | **Concluído (90%)** | Revisão humana de `prova.png` e vínculo do tópico. |
-| **8. Piloto Assistido** | Testes de campo com equipe real, Android/iOS, rotinas de backup. | **Pendente** | Depende das fases 6 e 7 homologadas. |
-| **Organização de Pastas** | Limpeza da raiz, padronização `DOCS *` → `obras/<slug>/`, `README.md` e `app/src/` (`miniapp/` + `shared/`). | **Planejado** | Executar fases 1–4 de `tasks/plano-organizacao-pastas.md`. |
-| **9. Modelo Federado BIM** | Visualizador 3D `.frag` (`@thatopen/fragments`), federação ARQ/ELT e conversão no `/admin/`. | **Concluído (95%)** | Publicar disciplinas restantes após validação. |
-| **10. Realidade Aumentada (RA)** | Alinhamento por cantos e QR, par de fotos `ra_limpa`/`ra_modelo`, diagnóstico `/ra-teste` e QR no `/admin/`. | **Em homologação (90%)** | Repetir piloto em campo e aplicar migrations pendentes (`20261122*`, `20261123*`). |
+| Módulo | Estado | Falta para concluir |
+| :--- | :--- | :--- |
+| 0–1. Fundação e dados HTO | Concluído | — |
+| 2. Banco, RLS e login Telegram | Concluído e em produção | — |
+| 3–4. Navegação, registro e histórico | Concluído e em produção | Teste no celular |
+| 5. Sinal instável | Concluído | Conferir Android sem sinal no Telegram real |
+| 6. Bot e publicação | Concluído e em produção | Conferir o link de volta (`startapp`) |
+| 7. Pendências e gestão | Concluído | Teste real do encerramento publicado como resposta |
+| Novas obras (COFZ) | Concluído | Revisão humana da prova; tópicos da COFZ e da ADM |
+| Site de administração | Concluído | Testes de fumaça (planta, modelo, arquivar) |
+| Boletim diário e Relatórios | Concluído | Acompanhar uma emissão automática real; dados administrativos da 2ª ETAPA |
+| Equipe de serviço | Concluído | Teste de check-in no celular |
+| 9. Modelo federado | Concluído | — |
+| 10. RA | Código pronto | RA0 no aparelho, QRs fixados, piloto em campo (RA5) |
+| Central de modelos | Concluído (etapas 0–8) | Preenchimento das paredes na planta; testes do usuário |
+| Arquivos no R2 | Concluído | Remoção real de órfãos; retenção dos relatórios exportados |
+| Arquitetura modular | Concluído | — |
+| Novo visual | V0, V1 e redesign "Farda" | Conferir o que resta de V2 a V5 |
+| **Backup do Postgres** | **Não feito** | Plano pago do Supabase ou dump agendado, e teste de restauração |
+| **8. Piloto assistido HTO** | **Não iniciado** | Grupo real, equipe, testes em Android e iPhone, aceite |
+
+Situação do banco em 2026-11-23: 4 obras, 2 etapas, 7 usuários, sem registros, boletins nem publicações (dados de teste apagados).
 
 ---
 
-## 3. Linha do Tempo e Marcos do Roadmap
+## 3. Marcos
 
 ```mermaid
 flowchart TD
-    subgraph M1["Marco 1: Fundação, Core e Dados (Concluído)"]
-        F0["Fase 0: Scaffold, CI & Configuração"]
-        F1["Fase 1: Dados HTO (PDFs & Seed)"]
-        F2["Fase 2: Banco, RLS & Auth Telegram"]
-        F3["Fase 3: Navegação & Plantas 2D com Pinos"]
-        F4["Fase 4: Novo Registro, Fotos & Câmera"]
-        F5["Fase 5: Operação Offline & Sincronização"]
-    end
-
-    subgraph M2["Marco 2: Ativação Telegram & Homologação (Foco Atual)"]
-        F6["Fase 6: Deploy Edge Functions & Configuração de Segredos"]
-        F7["Fase 7: Homologação no Grupo TesteDev"]
-        COFZ["Validação Humana da Obra COFZ (prova.png)"]
-    end
-
-    subgraph M3["Marco 3: Piloto Assistido em Campo (Curto Prazo)"]
-        F8["Fase 8: Rollout no Supergrupo Oficial CO-FZ"]
-        HOM["Homologação em Dispositivos Físicos (Android & iOS)"]
-        BKP["Rotina de Backup Postgres & Storage"]
-    end
-
-    subgraph M4["Marco 4: Escala Multi-Obras & Governança (Médio Prazo)"]
-        AUTO["Esteira Automatizada de Onboarding de Obras"]
-        ORG["Organização de Pastas & Consolidação do Repo"]
-        DASH["Dashboard de Indicadores & Gestão Corporativa"]
-    end
-
-    subgraph M5["Marco 5: Engenharia BIM, Modelo 3D & RA (Em Homologação)"]
-        F9["Fase 9: Visualizador 3D Federado (.frag / That Open)"]
-        F10["Fase 10: Realidade Aumentada (2 Cantos & QR)"]
-    end
-
-    M1 --> M2
-    M2 --> M3
-    M3 --> M4
-    M3 --> M5
+    M1["Marco 1: Fundação, núcleo e dados\n(concluído)"]
+    M2["Marco 2: Telegram, bot, admin e boletim\n(concluído)"]
+    M3["Marco 3: Profissionalização da hospedagem\n(próximo)"]
+    M4["Marco 4: Piloto assistido HTO"]
+    M5["Marco 5: Escala multi-obras\n(supergrupo CO-FZ)"]
+    M6["Marco 6: BIM, Central de modelos e RA\n(código concluído; piloto de RA pendente)"]
+    M1 --> M2 --> M3 --> M4 --> M5
+    M2 --> M6
+    M4 --> M6
 ```
 
----
+### Marco 1 — Fundação, núcleo e dados (concluído)
+Scaffold, CI, banco com RLS, RPCs idempotentes, pipeline das plantas, navegação, registro com fotos e operação sem sinal.
 
-### Marco 1: Fundação, Core e Dados
-*Status: Concluído e Estabilizado*
+### Marco 2 — Telegram, bot, admin e boletim (concluído)
+Login real, bot e publicação nos tópicos, gestão de acessos, site `/admin/`, etapas, boletim diário, Relatórios, equipe de serviço, virada dos arquivos para o R2 e reorganização modular do código.
 
-- **Entregas Realizadas:**
-  - Estrutura completa do frontend Vite + React + TypeScript com testes automatizados (Vitest, Playwright e ESLint).
-  - Modelagem do banco de dados relacional com isolamento total via Row Level Security (RLS) por obra.
-  - Implementação de RPCs transacionais seguras: `concluir_registro` (com idempotência por GUID gerado no cliente) e `encerrar_pendencia` (com bloqueio pessimista `FOR UPDATE`).
-  - Pipeline de processamento de plantas com PyMuPDF, gerando imagens WebP em resolução normal e HD, recortes por ambiente e provas de conferência com marcadores SVG.
-  - Suporte abrangente para modo sem conexão (IndexedDB `idb` com persistência de fotos e metadados, detecção de cota de armazenamento e sincronização automática com backoff exponencial).
+### Marco 3 — Profissionalização da hospedagem (próximo)
+1. Contratar Supabase Pro (backup diário, sem pausa por inatividade) e Vercel Pro (uso comercial). Estimativa em `docs/custos-hospedagem.md`.
+2. Backup do Postgres com teste de restauração.
+3. Domínio próprio (opcional) e alerta de gastos nos três serviços.
 
----
+### Marco 4 — Piloto assistido HTO
+1. Grupo real com equipe e gestores cadastrados; nomes de exibição.
+2. Testes em Android e iPhone reais: câmera, permissões, WebView, rascunho depois de fechar, desempenho, tela cheia.
+3. Acompanhar a fila de publicações e o primeiro boletim real.
+4. Aceite do fluxo com a equipe da obra.
 
-### Marco 2: Ativação Telegram, Bot e Homologação
-*Status: Foco Imediato (Semana Vigente)*
+### Marco 5 — Escala multi-obras
+1. Vincular as obras no supergrupo CO-FZ (um tópico por obra).
+2. COFZ e ADM: revisão da planta e tópicos.
+3. Novas obras pelo site (`/admin/`) ou pelo pipeline Python.
 
-- **Objetivos:** Colocar a aplicação em funcionamento integrado com a API do Telegram no ambiente de testes.
-- **Entregas Planejadas:**
-  1. **Configuração de Segredos:** Cadastrar `TELEGRAM_BOT_TOKEN` nos segredos do Supabase Vault e das Edge Functions.
-  2. **Deploy das Funções:** Realizar o deploy de `auth-telegram`, `bot-webhook` e `publish-outbox` no projeto `miniappcofz-dev`.
-  3. **Configuração do Bot de Testes:**
-     - Adicionar o bot `@diarioobra_cofz_bot` como administrador do supergrupo de testes `TesteDev`.
-     - Executar `/vincular_obra hto` dentro do tópico HTO.
-     - Executar `/fixar_botao` no tópico Geral para fixar a mensagem com o botão de acesso rápido.
-  4. **Testes Ponta a Ponta Integrados:**
-     - Abertura do app via Telegram com validação de assinatura HMAC no `initData`.
-     - Criação de novo registro de serviço com foto e confirmação de postagem no tópico HTO.
-     - Encerramento de pendência por gestor com postagem de foto em resposta (`reply_to_message_id`) ao registro original.
-  5. **Conferência da Obra COFZ:**
-     - Aprovação humana da imagem `data/cofz/plantas/R06/terreo/prova.png`.
-     - Vinculação do tópico da COFZ no grupo de testes.
-
----
-
-### Marco 3: Piloto Assistido em Campo (Rollout HTO)
-*Status: Curto Prazo (2 a 4 semanas)*
-
-- **Objetivos:** Habilitar a equipe de engenharia e fiscalização para uso real na obra física da HTO.
-- **Entregas Planejadas:**
-  1. **Migração para o Supergrupo Oficial:**
-     - Entrada do bot oficial no supergrupo corporativo da CO-FZ.
-     - Vinculação dos tópicos oficiais de cada obra ativa.
-     - Cadastramento inicial dos administradores como gestores das respectivas obras.
-  2. **Homologação em Condições de Campo:**
-     - Verificação em dispositivos Android reais (permissões de câmera, galeria, navegação em WebView).
-     - Verificação em dispositivos iOS / iPhone reais (comportamento de upload e políticas de suspensão de abas).
-     - Validação de resiliência: simulação de fiscalização em pavimentos sem sinal (subsolo), confirmando enfileiramento local e sincronização ao alcançar a área de vivência com Wi-Fi.
-  3. **Operação e Segurança:**
-     - Configuração de rotina de backup diário do banco de dados e políticas de retenção no Storage.
-     - Monitoramento proativo da fila de publicações para tratamento de falhas ou mensagens com status `incerto`.
-     - Coleta de feedback com mestres de obras e engenheiros residentes para refinamento de usabilidade.
-
----
-
-### Marco 4: Escala Multi-Obras & Governança
-*Status: Médio Prazo (1 a 2 meses)*
-
-- **Objetivos:** Padronizar o onboarding contínuo de novos empreendimentos e fornecer visão consolidada para a gestão.
-- **Entregas Planejadas:**
-  1. **Esteira Padronizada de Novas Obras:**
-     - Documentação do rito de recepção de arquivos CAD/BIM e plantas em `DOCS <SIGLA>/PDF/`.
-     - Script único de orquestração:
-       ```bash
-       python3 scripts/extrair_ambientes.py --obra <slug>
-       python3 scripts/gerar_plantas.py --obra <slug>
-       python3 scripts/gerar_seed.py --obra <slug>
-       python3 scripts/publicar_plantas.py --obra <slug>
-       ```
-     - Rito padronizado de validação de provas visuais e homologação de nomes operacionais antes da liberação do seed.
-  2. **Organização de Pastas e Consolidação do Repositório (`tasks/plano-organizacao-pastas.md`):**
-     - Limpeza da raiz: capturas `Screenshot*.png` removidas em 2026-11-12 (ficam no histórico do Git).
-     - Padronização de `DOCS COFZ/` e `DOCS HTO/` → `obras/<slug>/` (sem espaços/maiúsculas), com regeneração dos seeds/manifestos e atualização de E2E/scripts.
-     - Atualização do `README.md` raiz e separação interna de `app/src/` em `miniapp/` e `shared/` (mantendo `admin/` isolado).
-  3. **Dashboard de Indicadores & Gestão:**
-     - Painel web gerencial para diretoria técnica: volume de pendências por obra, tempo médio até resolução e mapas de calor de ambientes mais demandados.
-     - Gestão centralizada de solicitações de acesso e relatórios de auditoria.
-
----
-
-### Marco 5: Engenharia BIM, Modelo 3D Federado & RA
-*Status: Implementado (em homologação de campo)*
-
-- **Entregas realizadas:**
-  1. **Federação e Ajuste de Coordenadas:** referencial `ARQ.frag` (`ra_referencial`), correções opcionais em `modelo.matriz` e vínculo ambiente ↔ `IfcSpace` (`scripts/gerar_geometria.py`).
-  2. **Conversão e Visualizador `.frag`:** conversão IFC → `.frag` no `/admin/` (Web Worker + `web-ifc.wasm`) e visualizador federado com Three.js + `@thatopen/components` + `@thatopen/fragments`, com cache offline por hash.
-  3. **Realidade Aumentada (RA):** sobreposição em câmera ao vivo por 2 cantos ou QR, captura do par (`ra_limpa` + `ra_modelo`) com rótulos nos boletins/relatórios e impressão A4 de QR no `/admin/`.
+### Marco 6 — BIM, Central de modelos e RA
+Código concluído. Falta o RA0 no aparelho, cadastrar e fixar os QRs, o piloto em quatro ambientes com medição do erro e os pontos em aberto da Central (preenchimento das paredes na planta, seta do minimapa).
 
 ---
 
 ## 4. Matriz de Riscos e Mitigações
 
-| Risco Identificado | Impacto | Estratégia de Mitigação |
+| Risco | Impacto | Mitigação |
 | :--- | :--- | :--- |
-| **Limitações do WebView iOS** (suspensão de Service Worker e limites de armazenamento). | Médio | Depender primariamente do IndexedDB (`idb`) para fila de sincronização, sem assumir persistência indeterminada do Service Worker no Safari/Telegram WebView. |
-| **Respostas ambíguas da API do Telegram** (timeouts durante envio de fotos). | Médio | Utilização do estado transacional `incerto` na fila `publicacao_telegram`, permitindo reconciliação visual pelo gestor antes de retentativas automáticas, evitando duplicações no grupo. |
-| **Alteração de código de ambiente após início dos registros.** | Alto | Regra rígida no banco: IDs operacionais de ambientes são imutáveis e protegidos por chave estrangeira após o primeiro registro. Novas plantas entram com versionamento de revisão mantendo os IDs. |
-| **Sobrecarga de memória em celulares de campo com modelos 3D.** | Alto | Manter o visualizador 3D estritamente na última fase e usar recortes GLB restritos ao ambiente em foco (pesando menos de 1–2 MB), sem carregar o IFC completo no aparelho. |
+| **Banco sem backup fora do Supabase** (plano atual sem backup diário). | Alto | Plano Pro (backup diário de 7 dias) e dump próprio para o R2, com teste de restauração. |
+| **Plano gratuito pausa ou limita o serviço** (Supabase pausa projeto parado; Vercel Hobby não permite uso comercial). | Alto | Planos pagos antes do piloto (Marco 3). |
+| **Limitações do WebView do iPhone** (sem Service Worker). | Médio | A fila em IndexedDB funciona sem o Service Worker; só a abertura sem sinal fica restrita ao Android. |
+| **Respostas ambíguas da API do Telegram.** | Médio | Estado `incerto` na fila e "Reenviar/marcar como publicada" na Gestão. |
+| **Mudança de código de ambiente depois dos registros.** | Alto | Códigos imutáveis, revisões de planta com `manter_codigo` e ambientes inativos preservando o histórico. |
+| **Memória dos celulares com modelos 3D.** | Médio | `.frag` com cache por hash, corte em volta do ambiente e chunks do visualizador fora do precache. |
+| **Dependência de uma pessoa para operar** (segredos, BotFather, Cloudflare). | Médio | Procedimentos em `docs/admin.md` e `tasks/virada-r2.md`; Claude Team para a equipe manter o projeto. |
 
 ---
 
 ## 5. Próximos Passos Imediatos
 
-1. [ ] **Homologação da Imagem de Prova COFZ:** Inspecionar `data/cofz/plantas/R06/terreo/prova.png` e aprovar os 19 ambientes.
-2. [ ] **Cadastro de Variáveis de Ambiente no Supabase:** Preencher `TELEGRAM_BOT_TOKEN` e segredos das Edge Functions.
-3. [ ] **Deploy das Edge Functions:** Publicar `auth-telegram`, `bot-webhook` e `publish-outbox`.
-4. [ ] **Configuração do Webhook Telegram:** Apontar o webhook do `@diarioobra_cofz_bot` para a Edge Function correspondente.
-5. [ ] **Vincular Tópico no Grupo de Homologação:** Executar `/vincular_obra hto` no tópico HTO e `/fixar_botao` no Geral.
-6. [ ] **Executar Teste Operacional Completo:** Validar autenticação, novo registro com foto, modo offline e encerramento de pendência.
-7. [ ] **Organização de Pastas (Fases 1–3 de `tasks/plano-organizacao-pastas.md`):** Capturas da raiz já removidas; falta padronizar `DOCS *` → `obras/<slug>/` com regeneração do pipeline/E2E e atualizar o `README.md`.
+1. [ ] Contratar Supabase Pro e Vercel Pro e ligar os alertas de gasto.
+2. [ ] Backup do Postgres e teste de restauração.
+3. [ ] Rodada de testes no celular (itens "Usuário:" de `tasks/todo.md`).
+4. [ ] Nomes de exibição, prova da COFZ, tópicos da COFZ e da ADM, nome "Fiscal Bot" no BotFather.
+5. [ ] Grupo real e início do piloto da HTO.
