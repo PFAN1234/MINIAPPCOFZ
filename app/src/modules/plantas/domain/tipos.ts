@@ -81,6 +81,8 @@ export interface ObraConfig {
   renomear?: Renomear[]
   ambientes_manuais?: AmbienteManual[]
   manter_codigo?: Record<string, string>
+  /** Rótulos da planta que não são ambientes (nome no texto do PDF), por pavimento. */
+  ignorar_rotulos?: { pavimento: string; nome_planta: string }[]
   /** Só no site (o extrator Python ignora): pinos arrastados ou removidos no editor. */
   marcadores_ajustados?: Record<string, AjusteMarcadores>
   revisao_humana?: unknown

@@ -9,6 +9,8 @@ import {
   edicaoInicial,
   extrairPavimento,
   incluirManual,
+  ignorarRotulo,
+  voltarRotulo,
   moverPino,
   problemaRevisao,
   removerPino,
@@ -137,6 +139,23 @@ describe('editor: base do banco e extração do pavimento', () => {
     expect(problemaRevisao('R 1', 'x.pdf')).toMatch(/inválida/)
     expect(problemaRevisao('R07', 'X-R06.pdf')).toMatch(/é da revisão R06/)
     expect(problemaRevisao('r06', 'X-R06.pdf')).toBeNull()
+  })
+})
+
+describe('editor: ignorar rótulo', () => {
+  it('ignorar tira o ambiente da extração, voltar o devolve; manual não pode', async () => {
+    const dados = await dadosHto()
+    let e = edicaoInicial(dados, 'terreo')
+    const r0 = extrairPavimento(dados, 'terreo', e, pagina).resultado
+    const a = r0.ambientes.find((x) => x.id === 'terreo-apto-101')!
+    e = ignorarRotulo(e, a)
+    e = ignorarRotulo(e, a)
+    expect(e.ignorar_rotulos).toEqual([{ pavimento: 'terreo', nome_planta: a.nome_planta }])
+    const r1 = extrairPavimento(dados, 'terreo', e, pagina).resultado
+    expect(r1.ambientes.some((x) => x.nome_planta === a.nome_planta)).toBe(false)
+    e = voltarRotulo(e, 'terreo', a.nome_planta!)
+    expect(e.ignorar_rotulos).toEqual([])
+    expect(() => ignorarRotulo(e, { ...a, nome_planta: null })).toThrow()
   })
 })
 

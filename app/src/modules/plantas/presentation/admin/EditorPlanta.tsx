@@ -23,6 +23,8 @@ import {
   mudarCategoria,
   problemaRevisao,
   removerManual,
+  ignorarRotulo,
+  voltarRotulo,
   removerPino,
   renomearAmbiente,
   restaurarPinos,
@@ -197,9 +199,19 @@ function Editor({ dados, pav }: { dados: DadosEditorPlanta; pav: PavimentoEditor
     adicionarPino: (a, x, y) => editarDireto(() => adicionarPino(edicao, a, x, y)),
     incluir: (nome, cat, x, y) => editarDireto(() => incluirManual(edicao, pav.codigo, nome, cat, x, y)),
     removerManual: (a: Ambiente) => editar((e) => removerManual(e, a)),
+    ignorarRotulo: (a: Ambiente) => editar((e) => ignorarRotulo(e, a)),
+    voltarRotulo: (nome: string) => editar((e) => voltarRotulo(e, pav.codigo, nome)),
   }
+  const semAmbientes = !!extracao?.ok && extracao.ok.resultado.ambientes.length === 0
+  const rotulosIgnorados = edicao.ignorar_rotulos.filter((r) => r.pavimento === pav.codigo).map((r) => r.nome_planta)
 
-  const liberadas = [true, !!pagina, !!pagina && !erroPrancha, !!extracao?.ok && !erroPrancha, !!extracao?.ok && !!calculada]
+  const liberadas = [
+    true,
+    !!pagina,
+    !!pagina && !erroPrancha,
+    !!extracao?.ok && !erroPrancha && !semAmbientes,
+    !!extracao?.ok && !!calculada && !semAmbientes,
+  ]
   const ajustados = useMemo(
     () => new Set(Object.keys(extracao?.ok?.config.marcadores_ajustados ?? {})),
     [extracao],
@@ -296,9 +308,17 @@ function Editor({ dados, pav }: { dados: DadosEditorPlanta; pav: PavimentoEditor
             revisar={extracao.ok.resultado.revisar}
             ignorados={extracao.ok.ignorados}
             ajustados={ajustados}
+            rotulosIgnorados={rotulosIgnorados}
             acoes={acoes}
           />
-          <Avancar onClick={() => setEtapa(3)} />
+          {semAmbientes && (
+            <p className="adm-alerta adm-alerta-erro" role="alert">
+              Nenhum ambiente foi encontrado. O app procura nomes de ambientes em texto no PDF (com ou sem a área
+              "A= … m²" abaixo). A planta pode ter os textos convertidos em desenho ou estar fora do recorte. Você
+              também pode incluir ambientes clicando na planta.
+            </p>
+          )}
+          <Avancar disabled={semAmbientes} onClick={() => setEtapa(3)} />
         </>
       )}
       {etapa === 3 && extracao?.ok && (

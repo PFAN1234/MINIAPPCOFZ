@@ -20,6 +20,8 @@ export interface AcoesAmbientes {
   adicionarPino(a: Ambiente, x: number, y: number): void;
   incluir(nome: string, cat: string, x: number, y: number): void;
   removerManual(a: Ambiente): void;
+  ignorarRotulo(a: Ambiente): void;
+  voltarRotulo(nomePlanta: string): void;
 }
 
 function NomeEditavel({
@@ -74,6 +76,7 @@ export default function Ambientes({
   revisar,
   ignorados,
   ajustados,
+  rotulosIgnorados = [],
   acoes,
 }: {
   pagina: PaginaAberta;
@@ -84,6 +87,8 @@ export default function Ambientes({
   revisar: ItemRevisar[];
   ignorados: string[];
   ajustados: Set<string>;
+  /** Nomes (na planta) dos rótulos descartados neste pavimento. */
+  rotulosIgnorados?: string[];
   acoes: AcoesAmbientes;
 }) {
   const { imagem, erro } = usePrevia(
@@ -229,6 +234,26 @@ export default function Ambientes({
           </ul>
         </div>
       )}
+      {rotulosIgnorados.length > 0 && (
+        <div className="adm-alerta adm-alerta-info">
+          <p>Rótulos ignorados:</p>
+          <ul>
+            {rotulosIgnorados.map((n) => (
+              <li key={n}>
+                {n}{" "}
+                <button
+                  type="button"
+                  className="adm-botao adm-botao-discreto adm-botao-mini"
+                  aria-label={`Voltar o rótulo ${n}`}
+                  onClick={() => acoes.voltarRotulo(n)}
+                >
+                  Voltar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="adm-editor-ambientes">
         <div className="adm-editor-tabela">
           <table className="adm-tabela adm-tabela-compacta">
@@ -322,6 +347,15 @@ export default function Ambientes({
                           onClick={() => acoes.restaurarPinos(a)}
                         >
                           Voltar pinos ao rótulo
+                        </button>
+                      )}
+                      {!ehManual(a) && (
+                        <button
+                          type="button"
+                          className="adm-botao adm-botao-discreto adm-botao-mini"
+                          onClick={() => acoes.ignorarRotulo(a)}
+                        >
+                          Não é ambiente
                         </button>
                       )}
                       {ehManual(a) && (

@@ -52,6 +52,7 @@ export interface EstadoEdicao {
   renomear: Renomear[]
   ambientes_manuais: AmbienteManual[]
   manter_codigo: Record<string, string>
+  ignorar_rotulos: { pavimento: string; nome_planta: string }[]
   marcadores_ajustados: Record<string, AjusteMarcadores>
 }
 
@@ -79,6 +80,7 @@ export function edicaoInicial(dados: DadosEditorPlanta, pav: string): EstadoEdic
     renomear: copia(c.renomear ?? []),
     ambientes_manuais: copia(c.ambientes_manuais ?? []),
     manter_codigo: copia(c.manter_codigo ?? {}),
+    ignorar_rotulos: copia(c.ignorar_rotulos ?? []),
     marcadores_ajustados: copia(c.marcadores_ajustados ?? {}),
   }
 }
@@ -140,6 +142,7 @@ export function configDoPavimento(dados: DadosEditorPlanta, pav: string, e: Esta
     renomear: e.renomear.filter((r) => r.pavimento === pav),
     ambientes_manuais: e.ambientes_manuais.filter((m) => m.pavimento === pav),
     manter_codigo: Object.fromEntries(Object.entries(e.manter_codigo).filter(([, v]) => doPavimento(dados, pav, v))),
+    ignorar_rotulos: e.ignorar_rotulos.filter((r) => r.pavimento === pav),
     marcadores_ajustados: Object.fromEntries(
       Object.entries(e.marcadores_ajustados).filter(([k]) => doPavimento(dados, pav, k)),
     ),
@@ -344,6 +347,23 @@ export function removerManual(e0: EstadoEdicao, a: Ambiente): EstadoEdicao {
   return e
 }
 
+/** Descarta o rótulo da planta (não é ambiente). Só para ambientes lidos da planta. */
+export function ignorarRotulo(e0: EstadoEdicao, a: Ambiente): EstadoEdicao {
+  if (ehManual(a)) throw new ErroPlanta('Ambiente manual não tem rótulo na planta; remova-o em vez de ignorar.')
+  const e = copia(e0)
+  if (!e.ignorar_rotulos.some((r) => r.pavimento === a.pavimento && r.nome_planta === a.nome_planta)) {
+    e.ignorar_rotulos.push({ pavimento: a.pavimento, nome_planta: a.nome_planta! })
+  }
+  return e
+}
+
+/** Desfaz `ignorarRotulo`. */
+export function voltarRotulo(e0: EstadoEdicao, pav: string, nome_planta: string): EstadoEdicao {
+  const e = copia(e0)
+  e.ignorar_rotulos = e.ignorar_rotulos.filter((r) => !(r.pavimento === pav && r.nome_planta === nome_planta))
+  return e
+}
+
 /** "É o mesmo ambiente": o novo (código calculado) herda o código antigo. */
 export function confirmarMesmo(e0: EstadoEdicao, idNovo: string, idAntigo: string): EstadoEdicao {
   const e = copia(e0)
@@ -410,6 +430,7 @@ export function configParaSalvar(dados: DadosEditorPlanta, pav: string, e: Estad
     ...Object.fromEntries(Object.entries(e.manter_codigo).filter(([, v]) => !doPavimento(dados, pav, v))),
     ...copia(efetiva.manter_codigo ?? {}),
   }
+  c.ignorar_rotulos = copia(e.ignorar_rotulos)
   c.marcadores_ajustados = {
     ...Object.fromEntries(Object.entries(e.marcadores_ajustados).filter(([k]) => !doPavimento(dados, pav, k))),
     ...copia(efetiva.marcadores_ajustados ?? {}),

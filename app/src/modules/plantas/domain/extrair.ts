@@ -8,6 +8,7 @@
  * Único acréscimo em relação ao Python: `marcadores_ajustados` (pinos arrastados ou
  * removidos no editor), aplicado depois dos códigos e antes das diferenças.
  */
+import { prancha } from './plantas.ts'
 import { arredondar } from './spans.ts'
 import {
   ErroPlanta,
@@ -21,6 +22,8 @@ import {
   type PaginaLida,
   type PavimentoConfig,
   type PontoXY,
+  type Prancha,
+  type Retangulo,
   type Removido,
   type ResultadoExtracao,
   type Span,
@@ -212,7 +215,8 @@ export function compararListas(a: readonly (string | number)[], b: readonly (str
 
 export interface Par {
   nome: Span
-  area: Span
+  /** `null` no modo só nomes (planta sem etiquetas `A=`). */
+  area: Span | null
 }
 
 /** Pareia cada span de área com o nome logo acima. Retorna os pares e as áreas sem nome. */
@@ -244,6 +248,33 @@ export function parearRotulos(spans: Span[]): { pares: Par[]; orfas: string[] } 
     pares.push({ nome: n, area: a })
   }
   return { pares, orfas }
+}
+
+const CODIGO_MOBILIARIO = /^[A-Z]{1,4}\d[\w.\-/]*$/
+const TRES_LETRAS = /\p{L}{3}/u
+
+/**
+ * Modo "só nomes": plantas sem etiquetas `A=` (outro escritório). Aceita como nome de ambiente os
+ * spans horizontais dentro do recorte do edifício e fora das máscaras, com pelo menos 3 letras
+ * seguidas, que não sejam códigos de mobiliário (`MI005-0`) nem percentuais, sem duplicatas no
+ * mesmo lugar (mesmo texto, bbox a menos de 2 pt). O script Python não tem este modo.
+ */
+export function rotulosSoNome(spans: Span[], pranchaCfg: Prancha, largura: number, altura: number): Span[] {
+  const { recorte, mascaras } = prancha(pranchaCfg)
+  const dentro = (r: Retangulo, cx: number, cy: number) => cx >= r[0] && cx <= r[2] && cy >= r[1] && cy <= r[3]
+  const aceitos: Span[] = []
+  for (const s of spans) {
+    const dir = s.direction ?? [1, 0]
+    if (dir[0] !== 1 || dir[1] !== 0) continue
+    const texto = s.text.trim()
+    if (!TRES_LETRAS.test(texto) || CODIGO_MOBILIARIO.test(texto) || texto.includes('%')) continue
+    const cx = centroX(s.bbox) / largura
+    const cy = (s.bbox[1] + s.bbox[3]) / 2 / altura
+    if (!dentro(recorte, cx, cy) || mascaras.some((m) => dentro(m, cx, cy))) continue
+    const repetido = aceitos.some((o) => o.text === s.text && o.bbox.every((v, i) => Math.abs(v - s.bbox[i]) < 2))
+    if (!repetido) aceitos.push(s)
+  }
+  return aceitos
 }
 
 function areaArred(valor: number | null | undefined): number | null {
@@ -651,15 +682,25 @@ export function extrair(
     if (!pagina) falhar(`sem a página do pavimento '${pav}'`)
     const w = pagina.largura
     const h = pagina.altura
-    const { pares, orfas } = parearRotulos(pagina.spans)
-    for (const texto of orfas) revisar.push({ pavimento: pav, motivo: 'área sem nome acima', rotulo: texto })
+    const soNomes = !pagina.spans.some((s) => s.text.startsWith('A='))
+    const ignorados = new Set((obra.ignorar_rotulos ?? []).filter((r) => r.pavimento === pav).map((r) => r.nome_planta))
+    let pares: Par[]
+    if (soNomes) {
+      pares = rotulosSoNome(pagina.spans, obra.prancha, w, h).map((nome) => ({ nome, area: null }))
+      revisar.push({ pavimento: pav, motivo: 'planta sem etiquetas de área (A=); ambientes lidos só pelo nome' })
+    } else {
+      const lidos = parearRotulos(pagina.spans)
+      pares = lidos.pares
+      for (const texto of lidos.orfas) revisar.push({ pavimento: pav, motivo: 'área sem nome acima', rotulo: texto })
+    }
+    pares = pares.filter((p) => !ignorados.has(p.nome.text))
 
     const porChave = new Map<string, AmbienteTrabalho>()
     for (const par of pares) {
       const nome = par.nome.text
-      const area = parseArea(par.area.text)
+      const area = par.area ? parseArea(par.area.text) : null
       const nb = par.nome.bbox
-      const ab = par.area.bbox
+      const ab = par.area?.bbox ?? nb
       const rotulo = [Math.min(nb[0], ab[0]), nb[1], Math.max(nb[2], ab[2]), ab[3]]
       const marcador: Marcador = {
         // Pino acima do nome: x no centro do rótulo, y no topo do nome.
@@ -737,7 +778,7 @@ export function extrair(
           nome: item.nome_operacional,
         })
       }
-      if (item.area_m2 === null) {
+      if (item.area_m2 === null && !soNomes) {
         revisar.push({
           pavimento: pav,
           motivo: "área marcada como 'Não incluso' na planta",

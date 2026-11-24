@@ -157,6 +157,18 @@ describe('editor de planta (fixture)', () => {
     await user.click(screen.getByRole('button', { name: 'Desfazer' }))
     expect(await screen.findByRole('heading', { name: 'Removidos (1)' })).toBeInTheDocument()
   })
+  it('"Não é ambiente" tira o rótulo da lista e "Voltar" o devolve', async () => {
+    const user = userEvent.setup()
+    renderizar('/obras/cofz/planta/terreo')
+    await abrirAmbientes(user)
+    const antes = screen.getAllByRole('button', { name: 'Não é ambiente' }).length
+    await user.click(screen.getAllByRole('button', { name: 'Não é ambiente' })[0])
+    expect(await screen.findByText('Rótulos ignorados:')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Não é ambiente' }).length).toBeLessThan(antes)
+    await user.click(screen.getByRole('button', { name: /^Voltar o rótulo/ }))
+    await waitFor(() => expect(screen.queryByText('Rótulos ignorados:')).not.toBeInTheDocument())
+    expect(screen.getAllByRole('button', { name: 'Não é ambiente' })).toHaveLength(antes)
+  })
   it('adicionar pino a um ambiente e, depois de publicar, reabrir direto nos ambientes', async () => {
     const user = userEvent.setup()
     renderizar('/obras/cofz/planta/terreo')

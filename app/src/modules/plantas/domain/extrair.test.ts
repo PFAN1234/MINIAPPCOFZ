@@ -8,6 +8,7 @@ import {
   LIMIAR_DESLOCAMENTO,
   nomeOperacional,
   parearRotulos,
+  rotulosSoNome,
   slug,
   temDiferencas,
   validarObra,
@@ -327,5 +328,67 @@ describe('regras do extrator (tests/test_ambientes.py)', () => {
     const original = rodar(obraSintetica(), paginaDeSpans(spans)).ambientes[0].marcadores[0]
     expect(a.marcadores[0].rotulo_bbox[0] - original.rotulo_bbox[0]).toBeCloseTo(0.2 - original.x, 6)
     expect(res.revisar.at(-1)).toEqual({ pavimento: 'terreo', motivo: 'pinos ajustados no editor', nome: 'Circ. sul' })
+  })
+})
+
+describe('modo só nomes (planta sem A=)', () => {
+  const sp = (text: string, x: number, y: number, extra: Partial<Span> = {}): Span => ({
+    text,
+    bbox: [x, y, x + 4 * text.length, y + 6.6],
+    size: 5.5,
+    direction: [1, 0],
+    ...extra,
+  })
+  const lixo = ['MO13', 'MI005-0', 'MI0002-1500', 'C0001-4800', 'MI006-2900_2', '4.44%', '7,94%', 'D', 'S', '01'].map(
+    (t, i) => sp(t, 100 + i * 30, 50),
+  )
+  const spans = [sp('PADARIA', 100, 100), sp('PADARIA', 100.5, 100.4), sp('BHO. PCD 2', 300, 100), ...lixo]
+  const pagina = paginaDeSpans(spans)
+
+  it('aceita nomes, descarta códigos, percentuais e letras soltas; dedupe no mesmo lugar', () => {
+    const aceitos = rotulosSoNome(spans, obraSintetica().prancha, 1000, 500).map((s) => s.text)
+    expect(aceitos).toEqual(['PADARIA', 'BHO. PCD 2'])
+  })
+
+  it('área null, id pelo nome e item de revisar do modo', () => {
+    const r = rodar(obraSintetica(), pagina)
+    expect(ids(r)).toEqual(['terreo-bho-pcd-2', 'terreo-padaria'])
+    expect(r.ambientes.every((a) => a.area_m2 === null)).toBe(true)
+    const motivos = r.revisar.map((x) => x.motivo)
+    expect(motivos.filter((m) => m.startsWith('planta sem etiquetas')).length).toBe(1)
+    expect(motivos.some((m) => m.includes('Não incluso'))).toBe(false)
+  })
+
+  it('mesmo nome em dois lugares: 1 ambiente com 2 pinos', () => {
+    const r = rodar(obraSintetica(), paginaDeSpans([sp('CIRCULAÇÃO', 100, 100), sp('CIRCULAÇÃO', 500, 300)]))
+    expect(r.ambientes).toHaveLength(1)
+    expect(r.ambientes[0].marcadores).toHaveLength(2)
+    expect(r.revisar.some((x) => x.motivo.startsWith('ambiente rotulado mais de uma vez'))).toBe(true)
+  })
+
+  it('recorte e máscara descartam spans', () => {
+    const base = obraSintetica()
+    const dois = paginaDeSpans([sp('SALA A', 100, 100), sp('LEGENDA', 800, 100), sp('SALA B', 300, 300)])
+    const recortada = rodar({ ...base, prancha: { recorte_edificio: [0, 0, 0.5, 1], mascaras: [] } }, dois)
+    expect(recortada.ambientes.map((a) => a.nome_planta)).toEqual(['SALA A', 'SALA B'])
+    const mascarada = rodar(
+      { ...base, prancha: { recorte_edificio: [0, 0, 1, 1], mascaras: [{ retangulo: [0.7, 0, 1, 0.5] }] } },
+      dois,
+    )
+    expect(mascarada.ambientes.map((a) => a.nome_planta)).toEqual(['SALA A', 'SALA B'])
+  })
+
+  it('página com A= continua no modo antigo', () => {
+    const r = rodar(obraSintetica(), paginaDeSpans([...rotulo('COPA', '15.16', 240, 300), sp('PADARIA', 100, 100)]))
+    expect(r.ambientes.map((a) => a.nome_planta)).toEqual(['COPA'])
+    expect(r.revisar.some((x) => x.motivo.startsWith('planta sem etiquetas'))).toBe(false)
+  })
+
+  it('ignorar_rotulos vale nos dois modos', () => {
+    const ign = { ignorar_rotulos: [{ pavimento: 'terreo', nome_planta: 'PADARIA' }] }
+    const so = rodar(obraSintetica('R01', ign), pagina)
+    expect(so.ambientes.map((a) => a.nome_planta)).toEqual(['BHO. PCD 2'])
+    const com = rodar(obraSintetica('R01', ign), paginas(['PADARIA', '5.00', 100, 100], ['COPA', '15.16', 240, 300]))
+    expect(com.ambientes.map((a) => a.nome_planta)).toEqual(['COPA'])
   })
 })
